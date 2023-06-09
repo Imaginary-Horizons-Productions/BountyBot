@@ -1,5 +1,5 @@
-# {bot} Change Log
-## {bot} Version 0.1.0:
+# BountyBot Change Log
+## BountyBot Version 2.0.0:
 - inital deploy
 
 ## Example Version 0.0.0:
