@@ -9,7 +9,7 @@ commandSets.forEach(commandSet => {
 	commandSet.fileNames.forEach(filename => {
 		/** @type {CommandWrapper} */
 		const command = require(`./../commands/${filename}`);
-		text += `### /${command.customId}\n${command.description}\n`;
+		text += `### /${command.customId}\n> Cooldown: ${command.cooldown / 1000} second(s)\n\n${command.description}\n`;
 		for (const optionData of command.data.options) {
 			text += `#### ${optionData.name}${optionData.required ? "" : " (optional)"}\n`;
 			if (optionData.choices?.length > 0) {
