@@ -10,7 +10,7 @@ const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getModal } = require("./modals/_modalDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion } = require("./constants.js");
-const { getVersionEmbed } = require("./helpers.js");
+const { buildVersionEmbed } = require("./embedHelpers.js");
 //#endregion
 
 //#region Executing Code
@@ -59,7 +59,7 @@ client.on(Events.ClientReady, () => {
 				}
 			}
 
-			getVersionEmbed(client.user.displayAvatarURL()).then(embed => {
+			buildVersionEmbed(client.user.displayAvatarURL()).then(embed => {
 				client.guilds.fetch(testGuildId).then(guild => {
 					guild.channels.fetch(announcementsChannelId).then(announcementsChannel => {
 						announcementsChannel.send({ embeds: [embed] }).then(message => {

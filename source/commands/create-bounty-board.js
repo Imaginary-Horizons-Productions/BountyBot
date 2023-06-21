@@ -1,6 +1,7 @@
 const { PermissionFlagsBits, ChannelType, SortOrderType, ForumLayoutType, OverwriteType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
+const { generateScorelines } = require('../embedHelpers');
 
 const customId = "create-bounty-board";
 const options = [];
@@ -36,12 +37,12 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 
 			guildProfile.bountyBoardId = bountyBoard.id;
 
-			const scoreboard = await bountyBoard.threads.create({
+			const scoreboardPost = await bountyBoard.threads.create({
 				name: "The Scoreboard",
-				message: "placeholder" //TODO generate scoreboard content
+				message: { content: await generateScorelines(interaction.guild, true) }
 			});
-			scoreboard.pin();
-			guildProfile.scoreId = scoreboard.id;
+			scoreboardPost.pin();
+			guildProfile.scoreId = scoreboardPost.id;
 
 			//TODO create posts for existing bounties
 

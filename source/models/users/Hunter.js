@@ -111,16 +111,6 @@ exports.Hunter = class Hunter extends Model {
 	// 	return Math.floor(6 + 0.5 * this.level - 3 * slotNum + 0.5 * slotNum % 2);
 	// }
 
-	// myScore(guild, rankMoji) {
-	// 	if (this.userId === getBotID()) {
-	// 		return new Promise((resolve, _) => resolve(''));
-	// 	} else {
-	// 		return guild.members.fetch(this.id).then(me => {
-	// 			return `${rankMoji ? rankMoji : ""} #${this.seasonPlacement} **${me.displayName}** __Level ${this.level}__ *${this.seasonXP} season XP*\n`;
-	// 		});
-	// 	}
-	// }
-
 	// xpBarBuilder(xpCoefficient, barLength) {
 	// 	const thisLevelThreshold = Hunter.xpThreshold(this.level, xpCoefficient);
 	// 	const filledBlocks = Math.floor((this.xp - thisLevelThreshold) / (Hunter.xpThreshold(this.level + 1, xpCoefficient) - thisLevelThreshold) * barLength);
