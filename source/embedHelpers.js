@@ -1,4 +1,4 @@
-const { EmbedBuilder, Guild } = require("discord.js");
+const { EmbedBuilder, Guild, Colors } = require("discord.js");
 const fs = require("fs");
 const { database } = require("../database");
 const { Op } = require("sequelize");
@@ -6,7 +6,7 @@ const { Op } = require("sequelize");
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 /** @type {import("discord.js").EmbedFooterData[]} */
 const discordTips = [
-	{ text: "Message starting with @silent don't send notifications. This is good for when everyone's asleep.", iconURL: discordIconURL },
+	{ text: "Message starting with @silent don't send notifications; good for when everyone's asleep.", iconURL: discordIconURL },
 	{ text: "Surround your message with || to mark it a spoiler (not shown until reader clicks on it).", iconURL: discordIconURL },
 	{ text: "Surround a part of your messag with ~~ to add strikethrough styling.", iconURL: discordIconURL },
 	{ text: "Don't forget to check slash commands for optional arguments.", iconURL: discordIconURL },
@@ -15,6 +15,8 @@ const discordTips = [
 /** @type {import("discord.js").EmbedFooterData[]} */
 const applicationSpecificTips = [];
 const tipPool = applicationSpecificTips.concat(applicationSpecificTips, discordTips);
+
+const ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };
 
 /** twice as likely to roll an application specific tip as a discord tip */
 exports.randomFooterTip = function () {
@@ -47,10 +49,13 @@ exports.generateScorelines = async function (guild, isSeasonScoreboard) {
  * @param {boolean} isSeasonScoreboard
  */
 exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
-	return new EmbedBuilder()
+	return new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(ihpAuthorPayload)
+		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle(`The ${isSeasonScoreboard ? "Season " : ""}Scoreboard`)
 		.setDescription(await exports.generateScorelines(guild, isSeasonScoreboard))
-		.setFooter(exports.randomFooterTip());
+		.setFooter(exports.randomFooterTip())
+		.setTimestamp();
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project
@@ -71,8 +76,8 @@ exports.buildVersionEmbed = async function (avatarURL) {
 	}
 	let knownIssuesEnd = dividerRegEx.exec(data).index;
 
-	const embed = new EmbedBuilder().setColor('6b81eb')
-		.setAuthor({ name: "Click here to check out the Imaginary Horizons GitHub", iconURL: avatarURL, url: "https://github.com/Imaginary-Horizons-Productions" })
+	const embed = new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(ihpAuthorPayload)
 		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
 		.setURL('https://discord.gg/JxqE9EpKt9')
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')
