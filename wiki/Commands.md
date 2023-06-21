@@ -1,5 +1,13 @@
 ## General Commands
 These are the bot's default commands that are available to everyone.
+### /scoreboard
+> Cooldown: 3 second(s)
+
+View the XP scoreboard
+#### scoreboard-type
+> Choices: `Season Scoreboard`, `Overall Scoreboard`
+
+The Season Scoreboard only includes hunters with XP this season
 ### /feedback
 > Cooldown: 3 second(s)
 
