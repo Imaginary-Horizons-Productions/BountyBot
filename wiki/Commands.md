@@ -16,3 +16,7 @@ Get the most recent changes or the full change log
 Otherwise get the full change log
 ## Configuration Commands
 These commands change how the bot operates on your server. They require bot management permission (a role above the bot's roles).
+### /create-bounty-board
+> Cooldown: 30 second(s)
+
+Create a new bounty board forum channel sibling to this channel
