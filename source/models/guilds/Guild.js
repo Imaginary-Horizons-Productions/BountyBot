@@ -23,18 +23,14 @@ const guildModel = {
 		type: BIGINT,
 		defaultValue: 3600000
 	},
-	// pinMessages: {
-	// 	type: BOOLEAN,
-	// 	defaultValue: false
-	// },
-	// pinChannelId: {
-	// 	type: STRING,
-	// 	defaultValue: ''
-	// },
-	// scoreId: {
-	// 	type: STRING,
-	// 	defaultValue: ''
-	// },
+	bountyBoardId: {
+		type: STRING,
+		defaultValue: ''
+	},
+	scoreId: {
+		type: STRING,
+		defaultValue: ''
+	},
 	raffleDate: {
 		type: STRING,
 		defaultValue: ''
