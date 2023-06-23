@@ -1,3 +1,11 @@
+### /about
+> Permission Level: ViewChannel
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+Get BountyBot's description and contributors
 ### /commands
 > Permission Level: ViewChannel
 
