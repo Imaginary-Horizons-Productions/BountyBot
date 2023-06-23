@@ -1,18 +1,9 @@
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const { token, botId, testGuildId } = require('../../config/auth.json');
-const { commandFiles } = require('../commands/_commandDictionary');
-
-const commands = [];
-for (const file of commandFiles) {
-	const command = require(`../commands/${file}`);
-	if (command.data) {
-		commands.push(command.data.toJSON());
-	}
-}
+const { slashData } = require('../commands/_commandDictionary');
 
 const rest = new REST({ version: 9 }).setToken(token);
-
 
 (async () => {
 	try {
@@ -20,7 +11,7 @@ const rest = new REST({ version: 9 }).setToken(token);
 
 		await rest.put(
 			Routes.applicationGuildCommands(botId, testGuildId),
-			{ body: commands },
+			{ body: slashData },
 		);
 
 		console.log('Successfully reloaded slash commands on test guild.');
