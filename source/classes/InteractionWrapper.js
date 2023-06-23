@@ -70,22 +70,6 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 				return built;
 			})
 		})
-		this.data.setDefaultMemberPermissions()
 	}
 };
 module.exports.CommandWrapper = CommandWrapper;
-
-module.exports.CommandSet = class {
-	/** slash command linker
-	 * @param {string} nameInput
-	 * @param {string} descriptionInput
-	 * @param {boolean} cullforNonManagers
-	 * @param {string[]} fileNamesInput
-	 */
-	constructor(nameInput, descriptionInput, cullforNonManagers, fileNamesInput) {
-		this.name = nameInput;
-		this.description = descriptionInput;
-		this.managerCommands = cullforNonManagers;
-		this.fileNames = fileNamesInput;
-	}
-};

@@ -1,3 +1,3 @@
-const { InteractionWrapper, CommandSet, CommandWrapper } = require("./InteractionWrapper");
+const { InteractionWrapper, CommandWrapper } = require("./InteractionWrapper");
 
-module.exports = { CommandWrapper, CommandSet, InteractionWrapper };
+module.exports = { CommandWrapper, InteractionWrapper };
