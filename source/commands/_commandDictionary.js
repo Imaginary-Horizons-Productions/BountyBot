@@ -1,13 +1,13 @@
-const { CommandSet, CommandWrapper } = require('../classes');
-
-// A maximum of 25 command sets are supported by /commands to conform with MessageEmbed limit of 25 fields
-exports.commandSets = [
-	new CommandSet("General Commands", "These are the bot's default commands that are available to everyone.", false, ["scoreboard.js", "feedback.js", "version.js"]),
-	new CommandSet("Configuration Commands", "These commands change how the bot operates on your server. They require bot management permission (a role above the bot's roles).", true, ["create-bounty-board.js"]),
-];
+const { CommandWrapper } = require('../classes');
 
 /** @type {string[]} */
-exports.commandFiles = exports.commandSets.reduce((allFiles, set) => allFiles.concat(set.fileNames), []);
+exports.commandFiles = [
+	"commands.js",
+	"create-bounty-board.js",
+	"feedback.js",
+	"scoreboard.js",
+	"version.js"
+];
 /** @type {Record<string, CommandWrapper>} */
 const commandDictionary = {};
 exports.slashData = [];
