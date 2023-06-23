@@ -2,6 +2,7 @@ const { CommandWrapper } = require('../classes');
 
 /** @type {string[]} */
 exports.commandFiles = [
+	"about.js",
 	"commands.js",
 	"create-bounty-board.js",
 	"feedback.js",
