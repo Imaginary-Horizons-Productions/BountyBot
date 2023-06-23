@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MAX_SET_TIMEOUT } = require("../constants");
+const { CommandInteraction } = require("discord.js");
 
 class InteractionWrapper {
 	/** IHP wrapper for interaction responses
@@ -28,7 +29,7 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 	 * @param {number} cooldownInMS
 	 * @param {{type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, choices: { name: string, value }[]}[]} optionsInput
 	 * @param {{name: string, description: string, optionsInput: {type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, choices: { name: string, value }[]}}[]} subcommandsInput
-	 * @param {(interaction: import("discord.js").Interaction) => void} executeFunction
+	 * @param {(interaction: CommandInteraction) => void} executeFunction
 	 */
 	constructor(customIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, optionsInput, subcommandsInput, executeFunction) {
 		super(customIdInput, cooldownInMS, executeFunction);
