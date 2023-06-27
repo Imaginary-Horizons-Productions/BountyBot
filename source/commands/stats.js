@@ -47,7 +47,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 								.setAuthor(ihpAuthorPayload)
 								.setThumbnail(target.user.avatarURL())
 								.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
-								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned * ${hunter.seasonXP} XP * this season.`)
+								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.seasonXP} XP* this season.`)
 								.addFields(
 									//TODO previous season placements
 									{ name: "Season Placements", value: `Currently: ${hunter.seasonPlacement == 0 ? "Unranked" : "#" + hunter.seasonPlacement}` },
