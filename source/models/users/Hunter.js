@@ -18,9 +18,6 @@ const hunterModel = {
 			model: 'Guild'
 		}
 	},
-	boardId: {
-		type: STRING
-	},
 	level: {
 		type: BIGINT,
 		defaultValue: 1
@@ -89,54 +86,26 @@ const hunterModel = {
 	}
 };
 exports.Hunter = class Hunter extends Model {
-	// static xpThreshold(level, xpCoefficient) {
-	// 	// xp = xpCoefficient*(level - 1)^2
-	// 	return xpCoefficient * (level - 1) ** 2;
-	// }
+	static xpThreshold(level, xpCoefficient) {
+		// xp = xpCoefficient*(level - 1)^2
+		return xpCoefficient * (level - 1) ** 2;
+	}
 
-	// maxSlots(maxSimBounties) {
-	// 	let slots = 1 + Math.floor(this.level / 12) * 2;
-	// 	let remainder = this.level % 12;
-	// 	if (remainder >= 3) {
-	// 		slots++;
-	// 		remainder -= 3;
-	// 	}
-	// 	if (remainder >= 7) {
-	// 		slots++;
-	// 	}
-	// 	return Math.min(slots, maxSimBounties);
-	// }
+	maxSlots(maxSimBounties) {
+		let slots = 1 + Math.floor(this.level / 12) * 2;
+		let remainder = this.level % 12;
+		if (remainder >= 3) {
+			slots++;
+			remainder -= 3;
+		}
+		if (remainder >= 7) {
+			slots++;
+		}
+		return Math.min(slots, maxSimBounties);
+	}
 
 	// slotWorth(slotNum) {
 	// 	return Math.floor(6 + 0.5 * this.level - 3 * slotNum + 0.5 * slotNum % 2);
-	// }
-
-	// xpBarBuilder(xpCoefficient, barLength) {
-	// 	const thisLevelThreshold = Hunter.xpThreshold(this.level, xpCoefficient);
-	// 	const filledBlocks = Math.floor((this.xp - thisLevelThreshold) / (Hunter.xpThreshold(this.level + 1, xpCoefficient) - thisLevelThreshold) * barLength);
-	// 	let bar = '';
-	// 	for (let i = 0; i < barLength; i++) {
-	// 		if (filledBlocks > i) {
-	// 			bar += "▰";
-	// 		} else {
-	// 			bar += "▱";
-	// 		}
-	// 	}
-	// 	return bar;
-	// }
-
-	// finalStats(embed, footerText, footerURL) {
-	// 	embed.addField("Bounties Hunted", `${this.othersFinished} bount${this.othersFinished == 1 ? 'y' : 'ies'}`, true)
-	// 		.addField("Bounty Postings", `${this.mineFinished} bount${this.mineFinished == 1 ? 'y' : 'ies'}`, true)
-	// 		.addField("Total XP Earned", `${this.xp} XP`, true)
-	// 		.addBlankField()
-	// 		.addField(`Toasts Raised`, `${this.toastsRaised} toast${this.toastsRaised == 1 ? "" : "s"}`, true)
-	// 		.addField(`Toasts Recieved`, `${this.toastsReceived} toast${this.toastsReceived == 1 ? "" : "s"}`, true)
-	// 		.setFooter({ text: footerText, iconURL: footerURL })
-	// 		.addBlankField(true)
-	// 		.setTimestamp();
-
-	// 	return embed;
 	// }
 
 	// myModDetails(guild, member, { maxSimBounties, pinChannelId }, lastFiveBounties) {
@@ -164,21 +133,21 @@ exports.Hunter = class Hunter extends Model {
 	// 	return embed.addField("Last 5 Completed Bounties Created by this User", bountyHistory);
 	// }
 
-	// levelUpReward(level, maxSlots, futureReward = true) {
-	// 	let text = "";
-	// 	if (level % 2) {
-	// 		text += `Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`;
-	// 	} else {
-	// 		text += `Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`;
-	// 	}
-	// 	const currentSlots = this.maxSlots(maxSlots);
-	// 	if (currentSlots < maxSlots) {
-	// 		if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
-	// 			text += ` You ${futureReward ? "will" : "have"} unlock${futureReward ? "" : "ed"} bounty slot #${currentSlots}.`;
-	// 		};
-	// 	}
-	// 	return text;
-	// }
+	levelUpReward(level, maxSlots, futureReward = true) {
+		let text = "";
+		if (level % 2) {
+			text += `Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`;
+		} else {
+			text += `Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`;
+		}
+		const currentSlots = this.maxSlots(maxSlots);
+		if (currentSlots < maxSlots) {
+			if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
+				text += ` You ${futureReward ? "will" : "have"} unlock${futureReward ? "" : "ed"} bounty slot #${currentSlots}.`;
+			};
+		}
+		return text;
+	}
 }
 
 exports.initModel = function (sequelize) {

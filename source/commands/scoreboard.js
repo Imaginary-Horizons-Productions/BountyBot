@@ -19,7 +19,7 @@ const subcommands = [];
 module.exports = new CommandWrapper(customId, "View the XP scoreboard", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
 	/** View the XP scoreboard */
 	(interaction) => {
-		buildScoreboardEmbed(interaction.guild, interaction.options.getString("scoreboard-type") === "season").then(embed => {
+		buildScoreboardEmbed(interaction.guild, interaction.options.getString(options[0].name) === "season").then(embed => {
 			interaction.reply({
 				embeds: [embed],
 				ephemeral: true

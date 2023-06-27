@@ -2,6 +2,9 @@ const { EmbedBuilder, Guild, Colors } = require("discord.js");
 const fs = require("fs");
 const { database } = require("../database");
 const { Op } = require("sequelize");
+const { Hunter } = require("./models/users/Hunter");
+const { GUILD_XP_COEFFICIENT } = require("./constants");
+const { generateTextBar } = require("./helpers");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 /** @type {import("discord.js").EmbedFooterData[]} */
@@ -16,11 +19,43 @@ const discordTips = [
 const applicationSpecificTips = [];
 const tipPool = applicationSpecificTips.concat(applicationSpecificTips, discordTips);
 
-const ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };
+exports.ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };
 
 /** twice as likely to roll an application specific tip as a discord tip */
 exports.randomFooterTip = function () {
 	return tipPool[Math.floor(Math.random() * tipPool.length)];
+}
+
+exports.buildGuildStatsEmbed = async function (guild) {
+	return database.models.Hunter.findAll({ where: { guildId: guild.id, seasonXP: { [Op.gt]: 0 } }, order: [["seasonXP", "DESC"]] }).then(async allHunters => {
+		const { level: guildLevel, seasonXP, lastSeasonXP, seasonBounties, bountiesLastSeason, seasonToasts, toastsLastSeason } = await database.models.Guild.findByPk(guild.id);
+		let seasonParticipants = [];
+		let hunterLevelsTotal = 0;
+		for (const hunter of allHunters) {
+			if (hunter.seasonXP > 0) {
+				seasonParticipants.push(hunter);
+			}
+			hunterLevelsTotal += hunter.level;
+		}
+		const currentLevelThreshold = Hunter.xpThreshold(guildLevel, GUILD_XP_COEFFICIENT);
+		const nextLevelThreshold = Hunter.xpThreshold(guildLevel + 1, GUILD_XP_COEFFICIENT);
+		const particpantPercentage = seasonParticipants.length / guild.memberCount * 100;
+		const seasonXPDifference = seasonXP - lastSeasonXP;
+		const seasonBountyDifference = seasonBounties - bountiesLastSeason;
+		const seasonToastDifference = seasonToasts - toastsLastSeason;
+		return new EmbedBuilder().setColor(Colors.Blurple)
+			.setAuthor(exports.ihpAuthorPayload)
+			.setTitle(`${guild.name} is __Level ${guildLevel}__`)
+			.setThumbnail(guild.iconURL())
+			.setDescription(`${generateTextBar(hunterLevelsTotal - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - hunterLevelsTotal} Bounty Hunter Levels`)
+			.addFields(
+				{ name: "Total Bounty Hunter Level", value: `${hunterLevelsTotal} levels`, inline: true },
+				{ name: "Participation", value: `${seasonParticipants.length} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
+				{ name: `${seasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${seasonBounties} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${seasonToasts} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
+			)
+			.setFooter(exports.randomFooterTip())
+			.setTimestamp()
+	});
 }
 
 /** Returns the text of a guild's bounty hunters' scores in descending order
@@ -50,7 +85,7 @@ exports.generateScorelines = async function (guild, isSeasonScoreboard) {
  */
 exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(ihpAuthorPayload)
+		.setAuthor(exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle(`The ${isSeasonScoreboard ? "Season " : ""}Scoreboard`)
 		.setDescription(await exports.generateScorelines(guild, isSeasonScoreboard))
@@ -77,7 +112,7 @@ exports.buildVersionEmbed = async function (avatarURL) {
 	let knownIssuesEnd = dividerRegEx.exec(data).index;
 
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(ihpAuthorPayload)
+		.setAuthor(exports.ihpAuthorPayload)
 		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
 		.setURL('https://discord.gg/JxqE9EpKt9')
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')

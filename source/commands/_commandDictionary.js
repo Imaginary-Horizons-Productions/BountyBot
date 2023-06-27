@@ -7,6 +7,7 @@ exports.commandFiles = [
 	"create-bounty-board.js",
 	"feedback.js",
 	"scoreboard.js",
+	"stats.js",
 	"version.js"
 ];
 /** @type {Record<string, CommandWrapper>} */

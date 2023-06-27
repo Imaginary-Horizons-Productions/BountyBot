@@ -7,6 +7,10 @@ const guildModel = {
 		type: STRING,
 		allowNull: false
 	},
+	level: {
+		type: INTEGER,
+		defaultValue: 1
+	},
 	announcementPrefix: {
 		type: STRING,
 		defaultValue: '@here'
