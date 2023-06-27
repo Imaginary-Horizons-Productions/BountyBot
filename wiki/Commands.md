@@ -46,6 +46,16 @@ View the XP scoreboard
 > Choices: `Season Scoreboard`, `Overall Scoreboard`
 
 The Season Scoreboard only includes hunters with XP this season
+### /stats
+> Permission Level: ViewChannel
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Get the BountyBot stats for yourself or someone else
+#### bounty-hunter (optional)
+Whose stats to check, BountyBot for the guild's stats
 ### /version
 > Permission Level: ViewChannel
 
