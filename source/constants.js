@@ -11,3 +11,5 @@ exports.announcementsChannelId = announcementsChannelId;
 exports.lastPostedVersion = lastPostedVersion;
 
 exports.MAX_EMBED_TITLE_LENGTH = 256;
+
+exports.GUILD_XP_COEFFICIENT = 3;
