@@ -17,7 +17,7 @@ const subcommands = [];
 module.exports = new CommandWrapper(customId, "Provide feedback on this bot to the developers", PermissionFlagsBits.SendMessages, false, true, 3000, options, subcommands,
 	/** Open the modal associated with the feedback type to prompt more specific information */
 	(interaction) => {
-		const feedbackType = interaction.options.getString("feedback-type");
+		const feedbackType = interaction.options.getString(options[0].name);
 		let modal = new ModalBuilder();
 		switch (feedbackType) {
 			case "bug":
