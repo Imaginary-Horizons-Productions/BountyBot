@@ -140,10 +140,12 @@ exports.getRankUpdates = async function (guild, force = false) {
 				let destinationRole;
 				if (member.manageable) {
 					await member.roles.remove(roleIds);
-					const rankRoleId = ranks[hunter.rank].roleId;
-					if (rankRoleId) {
-						await member.roles.add(rankRoleId);
-						destinationRole = await guild.roles.fetch(rankRoleId);
+					if (hunter.isRankEligible) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+						const rankRoleId = ranks[hunter.rank].roleId;
+						if (rankRoleId) {
+							await member.roles.add(rankRoleId);
+							destinationRole = await guild.roles.fetch(rankRoleId);
+						}
 					}
 				}
 				if (hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
