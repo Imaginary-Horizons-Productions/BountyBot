@@ -44,7 +44,7 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 			scoreboardPost.pin();
 			guildProfile.scoreId = scoreboardPost.id;
 
-			database.models.Bounty.findAll({ where: { guildId: interaction.guildId, state: "open" } }).then(bounties => {
+			database.models.Bounty.findAll({ where: { guildId: interaction.guildId, state: "open" }, order: [["createdAt", "DESC"]] }).then(bounties => {
 				for (const bounty of bounties) {
 					bounty.asEmbed(interaction.guild, undefined, guildProfile).then(bountyEmbed => {
 						return bountyBoard.threads.create({
