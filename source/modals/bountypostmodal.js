@@ -69,7 +69,6 @@ module.exports = new InteractionWrapper(customId, 3000,
 			const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
 			poster.addXP(interaction.guild, 1, true).then(() => {
 				getRankUpdates(interaction.guild);
-				//TODONOW not adding rank?
 			});
 
 			if (shouldMakeEvent) {
@@ -95,7 +94,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
 			const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
 			if (hunterGuild.bountyBoardId) {
-				//TODONOW handle auto-mod catching phrases in bounty content
+				//TODO figure out how to trip auto-mod or re-add taboos
 				interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.create({
 						name: bounty.title,
