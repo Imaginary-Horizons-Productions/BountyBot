@@ -1,5 +1,5 @@
 ﻿// Database Entity Class
-const { DataTypes: { BIGINT, STRING }, Model } = require('sequelize');
+const { DataTypes: { BIGINT, STRING, INTEGER }, Model } = require('sequelize');
 
 // Store receipt information of a bounty completion and relevant stats of that bounty
 const completionModel = {
@@ -26,6 +26,9 @@ const completionModel = {
 			model: 'Guild',
 			key: 'id'
 		}
+	},
+	xpAwarded: {
+		type: INTEGER
 	}
 };
 exports.Completion = class Completion extends Model { }
