@@ -79,9 +79,18 @@ exports.setRanks = async (participants, ranks) => {
 			hunter.nextRankXP = 0;
 		}
 	}
-	const n = Math.max(rankableHunters.length, 2);
-	mean /= n;
-	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => total + (hunter.seasonXP - mean) ** 2, 0) / n);
+
+	if (rankableHunters.length < 2) {
+		for (const hunter of participants) {
+			hunter.rank = null;
+			hunter.seasonPlacement = 0;
+			hunter.save();
+		}
+		return null;
+	}
+
+	mean /= rankableHunters.length;
+	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => total + (hunter.seasonXP - mean) ** 2, 0) / rankableHunters.length);
 	for (const hunter of rankableHunters) {
 		let variance = (hunter.seasonXP - mean) / stdDev;
 		ranks.forEach((rank, index) => {
@@ -133,7 +142,7 @@ exports.getRankUpdates = async function (guild, force = false) {
 				if (member.manageable) {
 					await member.roles.remove(roleIds);
 					if (hunter.isRankEligible) { // Feature: remove rank roles from DQ'd users but don't give them new ones
-						const rankRoleId = ranks[hunter.rank].roleId;
+						const rankRoleId = ranks[hunter.rank]?.roleId;
 						if (rankRoleId) {
 							await member.roles.add(rankRoleId);
 							destinationRole = await guild.roles.fetch(rankRoleId);
