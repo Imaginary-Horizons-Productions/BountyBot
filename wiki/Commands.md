@@ -6,6 +6,16 @@
 > Cooldown: 3 second(s)
 
 Get BountyBot's description and contributors
+### /bounty
+> Permission Level: ViewChannel
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Bounties are user-created objectives for other server members to complete
+#### /bounty post
+Post your own bounty (+1 XP)
 ### /commands
 > Permission Level: ViewChannel
 
@@ -55,7 +65,7 @@ The Season Scoreboard only includes hunters with XP this season
 
 Get the BountyBot stats for yourself or someone else
 #### bounty-hunter (optional)
-Whose stats to check, BountyBot for the guild's stats
+Whose stats to check; BountyBot for the server stats, empty for yourself
 ### /version
 > Permission Level: ViewChannel
 

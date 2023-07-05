@@ -33,7 +33,6 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 	 */
 	constructor(customIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, optionsInput, subcommandsInput, executeFunction) {
 		super(customIdInput, cooldownInMS, executeFunction);
-		this.description = descriptionInput;
 		this.premiumCommand = isPremiumCommand;
 		this.data = new SlashCommandBuilder()
 			.setName(customIdInput)
