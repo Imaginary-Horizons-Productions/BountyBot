@@ -118,7 +118,7 @@ exports.setRanks = async (participants, ranks) => {
  * @returns an array of rank and placement update strings
  */
 exports.getRankUpdates = async function (guild, force = false) {
-	const allHunters = await database.models.Hunter.findAll({ where: { guildId: guild.id, seasonXP: { [Op.gt]: 0 } }, order: [["seasonXP", "DESC"]] });
+	const allHunters = await database.models.Hunter.findAll({ where: { guildId: guild.id }, order: [["seasonXP", "DESC"]] });
 	const ranks = await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "ASC"]] });
 	return exports.setRanks(allHunters, ranks).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
