@@ -10,7 +10,7 @@ const options = [
 	{
 		type: "User",
 		name: "bounty-hunter",
-		description: "Whose stats to check (defaults to yourself); input BountyBot for the server stats",
+		description: "Whose stats to check; BountyBot for the server stats, empty for yourself",
 		required: false,
 		choices: []
 	}
