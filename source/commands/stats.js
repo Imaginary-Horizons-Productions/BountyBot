@@ -16,7 +16,7 @@ const options = [
 	}
 ];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yourself or someone else", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000, options, subcommands,
 	/** Get the BountyBot stats for yourself or someone else */
 	(interaction) => {
 		const target = interaction.options.getMember("user"); //TODO switch from magic string "user" to options[0].name
