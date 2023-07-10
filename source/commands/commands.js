@@ -1,4 +1,3 @@
-const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 
 const customId = "commands";

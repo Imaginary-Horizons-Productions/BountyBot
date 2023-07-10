@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, EmbedBuilder, Colors } = require('discord.js');
+const { EmbedBuilder, Colors } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 
 const customId = "about";
