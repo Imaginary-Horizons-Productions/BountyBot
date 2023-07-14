@@ -65,48 +65,49 @@ module.exports = new InteractionWrapper(customId, 3000,
 
 		if (errors.length > 0) {
 			interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
-		} else {
-			const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
-			poster.addXP(interaction.guild, 1, true).then(() => {
-				getRankUpdates(interaction.guild);
-			});
-
-			if (shouldMakeEvent) {
-				const eventPayload = {
-					name: `Bounty: ${title}`,
-					description,
-					scheduledStartTime: startTimestamp * 1000,
-					scheduledEndTime: endTimestamp * 1000,
-					privacyLevel: 2,
-					entityType: GuildScheduledEventEntityType.External,
-					entityMetadata: { location: `${interaction.member.displayName}'s #${slotNumber} Bounty` }
-				};
-				if (imageURL) {
-					eventPayload.image = imageURL;
-				}
-				const event = await interaction.guild.scheduledEvents.create(eventPayload);
-				rawBounty.scheduledEventId = event.id;
-			}
-
-			const bounty = await database.models.Bounty.create(rawBounty);
-
-			// post in bounty board forum
-			const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
-			const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
-			if (hunterGuild.bountyBoardId) {
-				//TODO figure out how to trip auto-mod or re-add taboos
-				interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
-					return bountyBoard.threads.create({
-						name: bounty.title,
-						message: { embeds: [bountyEmbed] }
-					})
-				}).then(posting => {
-					bounty.postingId = posting.id;
-					bounty.save()
-				})
-			}
-
-			interaction.reply({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] });
+			return;
 		}
+
+		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
+		poster.addXP(interaction.guild, 1, true).then(() => {
+			getRankUpdates(interaction.guild);
+		});
+
+		if (shouldMakeEvent) {
+			const eventPayload = {
+				name: `Bounty: ${title}`,
+				description,
+				scheduledStartTime: startTimestamp * 1000,
+				scheduledEndTime: endTimestamp * 1000,
+				privacyLevel: 2,
+				entityType: GuildScheduledEventEntityType.External,
+				entityMetadata: { location: `${interaction.member.displayName}'s #${slotNumber} Bounty` }
+			};
+			if (imageURL) {
+				eventPayload.image = imageURL;
+			}
+			const event = await interaction.guild.scheduledEvents.create(eventPayload);
+			rawBounty.scheduledEventId = event.id;
+		}
+
+		const bounty = await database.models.Bounty.create(rawBounty);
+
+		// post in bounty board forum
+		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
+		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
+		if (hunterGuild.bountyBoardId) {
+			//TODO figure out how to trip auto-mod or re-add taboos
+			interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
+				return bountyBoard.threads.create({
+					name: bounty.title,
+					message: { embeds: [bountyEmbed] }
+				})
+			}).then(posting => {
+				bounty.postingId = posting.id;
+				bounty.save()
+			})
+		}
+
+		interaction.reply({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] });
 	}
 );
