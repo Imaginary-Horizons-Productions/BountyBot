@@ -39,13 +39,11 @@ const bountyModel = {
 	},
 	title: {
 		type: STRING,
-		allowNull: false,
-		defaultValue: "\u200B"
+		allowNull: false
 	},
 	description: {
 		type: STRING,
-		allowNull: false,
-		defaultValue: "\u200B"
+		allowNull: false
 	},
 	attachmentURL: {
 		type: STRING,
