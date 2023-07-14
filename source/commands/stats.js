@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildGuildStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../embedHelpers');
 const { database } = require('../../database');
@@ -10,13 +10,13 @@ const options = [
 	{
 		type: "User",
 		name: "bounty-hunter",
-		description: "Whose stats to check, BountyBot for the guild's stats",
+		description: "Whose stats to check; BountyBot for the server stats, empty for yourself",
 		required: false,
 		choices: []
 	}
 ];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yourself or someone else", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000, options, subcommands,
 	/** Get the BountyBot stats for yourself or someone else */
 	(interaction) => {
 		const target = interaction.options.getMember("user"); //TODO switch from magic string "user" to options[0].name

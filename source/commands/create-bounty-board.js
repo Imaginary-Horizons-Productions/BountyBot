@@ -27,7 +27,7 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 			],
 			//TODO use "availableTags" to allow tagging bounties ("completed", "event", "open" as default tags?)
 			defaultSortOrder: SortOrderType.CreationDate,
-			defaultForumLayout: ForumLayoutType.GalleryView,
+			defaultForumLayout: ForumLayoutType.ListView,
 			reason: `/create-bounty-board by ${interaction.user}`
 		}).then(async bountyBoard => {
 			let guildProfile = await database.models.Guild.findByPk(interaction.guildId);
@@ -44,7 +44,19 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 			scoreboardPost.pin();
 			guildProfile.scoreId = scoreboardPost.id;
 
-			//TODO create posts for existing bounties
+			database.models.Bounty.findAll({ where: { guildId: interaction.guildId, state: "open" }, order: [["createdAt", "DESC"]] }).then(bounties => {
+				for (const bounty of bounties) {
+					bounty.asEmbed(interaction.guild, undefined, guildProfile).then(bountyEmbed => {
+						return bountyBoard.threads.create({
+							name: bounty.title,
+							message: { embeds: [bountyEmbed] }
+						})
+					}).then(posting => {
+						bounty.postingId = posting.id;
+						bounty.save()
+					})
+				}
+			});
 
 			guildProfile.save();
 			interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, ephemeral: true });

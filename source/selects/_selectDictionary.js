@@ -4,6 +4,7 @@ const { InteractionWrapper } = require("../classes");
 const selectDictionary = {};
 
 for (const file of [
+	"bountypostselect.js"
 ]) {
 	const select = require(`./${file}`);
 	selectDictionary[select.customId] = select;

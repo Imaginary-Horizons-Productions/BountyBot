@@ -1,5 +1,6 @@
 exports.SAFE_DELIMITER = "→";
 exports.MAX_SET_TIMEOUT = 2 ** 31 - 1;
+exports.YEAR_IN_MS = 31556926000;
 
 exports.authPath = "../config/auth.json";
 const { testGuildId, feedbackChannelId } = require(exports.authPath);

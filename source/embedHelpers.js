@@ -13,7 +13,8 @@ const discordTips = [
 	{ text: "Surround your message with || to mark it a spoiler (not shown until reader clicks on it).", iconURL: discordIconURL },
 	{ text: "Surround a part of your messag with ~~ to add strikethrough styling.", iconURL: discordIconURL },
 	{ text: "Don't forget to check slash commands for optional arguments.", iconURL: discordIconURL },
-	{ text: "Some slash commands can be used in DMs, others can't.", iconURL: discordIconURL }
+	{ text: "Some slash commands can be used in DMs, others can't.", iconURL: discordIconURL },
+	{ text: "Server subscriptions cost more on mobile because the mobile app stores take a cut.", iconURL: discordIconURL }
 ];
 /** @type {import("discord.js").EmbedFooterData[]} */
 const applicationSpecificTips = [];

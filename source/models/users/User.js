@@ -1,7 +1,7 @@
 const { DataTypes: { STRING, BOOLEAN }, Model } = require('sequelize');
 
 /** This class stores global information for bot users */
-let userModel = {
+const userModel = {
 	id: {
 		primaryKey: true,
 		type: STRING,
