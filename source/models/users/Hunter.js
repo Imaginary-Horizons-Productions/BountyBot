@@ -137,9 +137,7 @@ exports.Hunter = class Hunter extends Model {
 		this.level = Math.floor(Math.sqrt(this.xp / guildProfile.xpCoefficient) + 1);
 		this.save();
 
-		// Guild XP is the total Hunter levels
-		const guildXP = await database.models.Hunter.sum("level", { where: { guildId: guild.id } });
-		guildProfile.level = Math.floor(Math.sqrt(guildXP / 3) + 1);
+		guildProfile.level = Math.floor(Math.sqrt(await guildProfile.xp / 3) + 1);
 		guildProfile.save();
 
 		let levelText = "";

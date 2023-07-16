@@ -1,81 +1,6 @@
-const { DataTypes: { STRING, BOOLEAN, INTEGER, BIGINT }, Model } = require('sequelize');
+const { DataTypes: { STRING, BOOLEAN, INTEGER, BIGINT, VIRTUAL }, Model, QueryTypes } = require('sequelize');
 
 /** Guild information and bot settings */
-const guildModel = {
-	id: {
-		primaryKey: true,
-		type: STRING,
-		allowNull: false
-	},
-	level: {
-		type: INTEGER,
-		defaultValue: 1
-	},
-	announcementPrefix: {
-		type: STRING,
-		defaultValue: '@here'
-	},
-	disableBoostXP: {
-		type: BOOLEAN,
-		defaultValue: true
-	},
-	maxSimBounties: {
-		type: INTEGER,
-		defaultValue: 5
-	},
-	backupTimer: {
-		type: BIGINT,
-		defaultValue: 3600000
-	},
-	bountyBoardId: {
-		type: STRING,
-		defaultValue: ''
-	},
-	scoreId: {
-		type: STRING,
-		defaultValue: ''
-	},
-	raffleDate: {
-		type: STRING,
-		defaultValue: ''
-	},
-	eventMultiplier: {
-		type: INTEGER,
-		defaultValue: 1
-	},
-	xpCoefficient: {
-		type: INTEGER,
-		defaultValue: 3
-	},
-	seasonXP: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	seasonBounties: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	seasonToasts: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	resetSchedulerId: {
-		type: STRING,
-		defaultValue: ""
-	},
-	lastSeasonXP: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	bountiesLastSeason: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	toastsLastSeason: {
-		type: BIGINT,
-		defaultValue: 0
-	}
-};
 exports.Guild = class Guild extends Model {
 	eventMultiplierString = () => {
 		if (this.eventMultiplier != 1) {
@@ -136,7 +61,91 @@ exports.Guild = class Guild extends Model {
 }
 
 exports.initModel = function (sequelize) {
-	exports.Guild.init(guildModel, {
+	exports.Guild.init({
+		id: {
+			primaryKey: true,
+			type: STRING,
+			allowNull: false
+		},
+		xp: {
+			type: VIRTUAL,
+			async get() {
+				const [hunterLevels] = await sequelize.query("SELECT SUM(level) FROM Hunter WHERE guildId = :guildId", {
+					replacements: { guildId: this.id },
+					type: QueryTypes.SELECT
+				});
+				return hunterLevels["SUM(level)"];
+			}
+		},
+		level: {
+			type: INTEGER,
+			defaultValue: 1
+		},
+		announcementPrefix: {
+			type: STRING,
+			defaultValue: '@here'
+		},
+		disableBoostXP: {
+			type: BOOLEAN,
+			defaultValue: true
+		},
+		maxSimBounties: {
+			type: INTEGER,
+			defaultValue: 5
+		},
+		backupTimer: {
+			type: BIGINT,
+			defaultValue: 3600000
+		},
+		bountyBoardId: {
+			type: STRING,
+			defaultValue: ''
+		},
+		scoreId: {
+			type: STRING,
+			defaultValue: ''
+		},
+		raffleDate: {
+			type: STRING,
+			defaultValue: ''
+		},
+		eventMultiplier: {
+			type: INTEGER,
+			defaultValue: 1
+		},
+		xpCoefficient: {
+			type: INTEGER,
+			defaultValue: 3
+		},
+		seasonXP: {
+			type: BIGINT,
+			defaultValue: 0
+		},
+		seasonBounties: {
+			type: BIGINT,
+			defaultValue: 0
+		},
+		seasonToasts: {
+			type: BIGINT,
+			defaultValue: 0
+		},
+		resetSchedulerId: {
+			type: STRING,
+			defaultValue: ""
+		},
+		lastSeasonXP: {
+			type: BIGINT,
+			defaultValue: 0
+		},
+		bountiesLastSeason: {
+			type: BIGINT,
+			defaultValue: 0
+		},
+		toastsLastSeason: {
+			type: BIGINT,
+			defaultValue: 0
+		}
+	}, {
 		sequelize,
 		modelName: 'Guild',
 		freezeTableName: true
