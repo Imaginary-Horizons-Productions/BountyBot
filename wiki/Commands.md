@@ -1,5 +1,4 @@
 ### /about
-> Permission Level: ViewChannel
 
 > Usable in DMs: true
 
@@ -17,7 +16,6 @@ Bounties are user-created objectives for other server members to complete
 #### /bounty post
 Post your own bounty (+1 XP)
 ### /commands
-> Permission Level: ViewChannel
 
 > Usable in DMs: true
 
@@ -45,7 +43,6 @@ Provide feedback on this bot to the developers
 
 the type of feedback you'd like to provide
 ### /scoreboard
-> Permission Level: ViewChannel
 
 > Usable in DMs: false
 
@@ -57,7 +54,6 @@ View the XP scoreboard
 
 The Season Scoreboard only includes hunters with XP this season
 ### /stats
-> Permission Level: ViewChannel
 
 > Usable in DMs: false
 
@@ -67,7 +63,6 @@ Get the BountyBot stats for yourself or someone else
 #### bounty-hunter (optional)
 Whose stats to check; BountyBot for the server stats, empty for yourself
 ### /version
-> Permission Level: ViewChannel
 
 > Usable in DMs: true
 
