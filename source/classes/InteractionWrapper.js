@@ -23,7 +23,7 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 	/** Additional wrapper properties for command parsing
 	 * @param {string} customIdInput
 	 * @param {string} descriptionInput
-	 * @param {import("discord.js").PermissionFlags} defaultMemberPermission
+	 * @param {import("discord.js").PermissionFlags | null} defaultMemberPermission
 	 * @param {boolean} isPremiumCommand
 	 * @param {boolean} allowInDMsInput
 	 * @param {number} cooldownInMS
@@ -33,13 +33,14 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 	 */
 	constructor(customIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, optionsInput, subcommandsInput, executeFunction) {
 		super(customIdInput, cooldownInMS, executeFunction);
-		this.description = descriptionInput;
 		this.premiumCommand = isPremiumCommand;
 		this.data = new SlashCommandBuilder()
 			.setName(customIdInput)
 			.setDescription(descriptionInput)
-			.setDefaultMemberPermissions(defaultMemberPermission)
 			.setDMPermission(allowInDMsInput);
+		if (defaultMemberPermission) {
+			this.data.setDefaultMemberPermissions(defaultMemberPermission);
+		}
 		optionsInput.forEach(option => {
 			this.data[`add${option.type}Option`](built => {
 				built.setName(option.name).setDescription(option.description).setRequired(option.required);

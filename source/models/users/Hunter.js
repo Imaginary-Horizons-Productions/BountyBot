@@ -1,4 +1,7 @@
 const { DataTypes: { STRING, BIGINT, INTEGER, BOOLEAN }, Model } = require('sequelize');
+const { database } = require('../../../database');
+const { congratulationBuilder } = require('../../helpers');
+const { Guild } = require('discord.js');
 
 /** This class stores information for bot users on a specific guild */
 const hunterModel = {
@@ -30,11 +33,17 @@ const hunterModel = {
 		type: BIGINT,
 		defaultValue: 0
 	},
+	isRankEligible: {
+		type: BOOLEAN,
+		allowNull: false
+	},
 	rank: {
-		type: STRING
+		type: INTEGER,
+		defaultValue: null
 	},
 	lastRank: {
-		type: STRING
+		type: INTEGER,
+		defaultValue: null
 	},
 	seasonPlacement: {
 		type: INTEGER,
@@ -104,9 +113,48 @@ exports.Hunter = class Hunter extends Model {
 		return Math.min(slots, maxSimBounties);
 	}
 
-	// slotWorth(slotNum) {
-	// 	return Math.floor(6 + 0.5 * this.level - 3 * slotNum + 0.5 * slotNum % 2);
-	// }
+	slotWorth(slotNum) {
+		return Math.floor(6 + 0.5 * this.level - 3 * slotNum + 0.5 * slotNum % 2);
+	}
+
+	/**
+	 * @param {Guild} guild
+	 * @param {number} points
+	 * @param {boolean} ignoreMultiplier
+	 * @returns {string} level-up text
+	 */
+	async addXP(guild, points, ignoreMultiplier) {
+		const guildProfile = await database.models.Guild.findByPk(guild.id);
+		const totalPoints = points * (!ignoreMultiplier ? guildProfile.eventMultiplier : 1);
+
+		const previousLevel = this.level;
+		const previousGuildLevel = guildProfile.level;
+
+		this.xp += totalPoints;
+		this.seasonXP += totalPoints;
+		guildProfile.seasonXP += totalPoints;
+
+		this.level = Math.floor(Math.sqrt(this.xp / guildProfile.xpCoefficient) + 1);
+		this.save();
+
+		guildProfile.level = Math.floor(Math.sqrt(await guildProfile.xp / 3) + 1);
+		guildProfile.save();
+
+		let levelText = "";
+		if (this.level > previousLevel) {
+			const rewards = [];
+			for (let level = previousLevel + 1; level <= this.level; level++) {
+				rewards.push(this.levelUpReward(level, guildProfile.maxSimBounties, false));
+			}
+			levelText += `${congratulationBuilder()}, <@${userId}>! You have leveled up to level **${this.level}**!\n${rewards.join('\n')}`;
+		}
+
+		if (guildProfile.level > previousGuildLevel) {
+			levelText += `*${guild.name} is now level ${guildProfile.level}! Evergreen bounties are now worth more XP!*\n`;
+		}
+
+		return levelText;
+	}
 
 	// myModDetails(guild, member, { maxSimBounties, pinChannelId }, lastFiveBounties) {
 	// 	const { prefix, text, url } = tipBuilder(maxSimBounties, guild.channels.resolve(pinChannelId), true);

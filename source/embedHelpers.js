@@ -13,7 +13,8 @@ const discordTips = [
 	{ text: "Surround your message with || to mark it a spoiler (not shown until reader clicks on it).", iconURL: discordIconURL },
 	{ text: "Surround a part of your messag with ~~ to add strikethrough styling.", iconURL: discordIconURL },
 	{ text: "Don't forget to check slash commands for optional arguments.", iconURL: discordIconURL },
-	{ text: "Some slash commands can be used in DMs, others can't.", iconURL: discordIconURL }
+	{ text: "Some slash commands can be used in DMs, others can't.", iconURL: discordIconURL },
+	{ text: "Server subscriptions cost more on mobile because the mobile app stores take a cut.", iconURL: discordIconURL }
 ];
 /** @type {import("discord.js").EmbedFooterData[]} */
 const applicationSpecificTips = [];
@@ -27,16 +28,10 @@ exports.randomFooterTip = function () {
 }
 
 exports.buildGuildStatsEmbed = async function (guild) {
-	return database.models.Hunter.findAll({ where: { guildId: guild.id, seasonXP: { [Op.gt]: 0 } }, order: [["seasonXP", "DESC"]] }).then(async allHunters => {
-		const { level: guildLevel, seasonXP, lastSeasonXP, seasonBounties, bountiesLastSeason, seasonToasts, toastsLastSeason } = await database.models.Guild.findByPk(guild.id);
-		let seasonParticipants = [];
-		let hunterLevelsTotal = 0;
-		for (const hunter of allHunters) {
-			if (hunter.seasonXP > 0) {
-				seasonParticipants.push(hunter);
-			}
-			hunterLevelsTotal += hunter.level;
-		}
+	return database.models.Hunter.findAll({ where: { guildId: guild.id, seasonXP: { [Op.gt]: 0 } }, order: [["seasonXP", "DESC"]] }).then(async seasonParticipants => {
+		const { xp: guildXPPromise, level: guildLevel, seasonXP, lastSeasonXP, seasonBounties, bountiesLastSeason, seasonToasts, toastsLastSeason } = await database.models.Guild.findByPk(guild.id);
+		const guildXP = await guildXPPromise;
+
 		const currentLevelThreshold = Hunter.xpThreshold(guildLevel, GUILD_XP_COEFFICIENT);
 		const nextLevelThreshold = Hunter.xpThreshold(guildLevel + 1, GUILD_XP_COEFFICIENT);
 		const particpantPercentage = seasonParticipants.length / guild.memberCount * 100;
@@ -47,9 +42,9 @@ exports.buildGuildStatsEmbed = async function (guild) {
 			.setAuthor(exports.ihpAuthorPayload)
 			.setTitle(`${guild.name} is __Level ${guildLevel}__`)
 			.setThumbnail(guild.iconURL())
-			.setDescription(`${generateTextBar(hunterLevelsTotal - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - hunterLevelsTotal} Bounty Hunter Levels`)
+			.setDescription(`${generateTextBar(guildXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - guildXP} Bounty Hunter Levels`)
 			.addFields(
-				{ name: "Total Bounty Hunter Level", value: `${hunterLevelsTotal} levels`, inline: true },
+				{ name: "Total Bounty Hunter Level", value: `${guildXP} level${guildXP == 1 ? "" : "s"}`, inline: true },
 				{ name: "Participation", value: `${seasonParticipants.length} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
 				{ name: `${seasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${seasonBounties} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${seasonToasts} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
 			)
