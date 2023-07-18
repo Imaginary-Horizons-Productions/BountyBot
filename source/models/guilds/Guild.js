@@ -70,11 +70,7 @@ exports.initModel = function (sequelize) {
 		xp: {
 			type: VIRTUAL,
 			async get() {
-				const [hunterLevels] = await sequelize.query("SELECT SUM(level) FROM Hunter WHERE guildId = :guildId", {
-					replacements: { guildId: this.id },
-					type: QueryTypes.SELECT
-				});
-				return hunterLevels["SUM(level)"];
+				return await sequelize.models.Hunter.sum("level", { where: { guildId: this.id } });
 			}
 		},
 		level: {
