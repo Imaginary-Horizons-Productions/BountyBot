@@ -1,7 +1,5 @@
-const { Op } = require("sequelize");
 const { database } = require("../database");
 const { Guild } = require("discord.js");
-const { Hunter } = require("./models/users/Hunter");
 const { GuildRank } = require("./models/guilds/GuildRank");
 
 const CONGRATULATORY_PHRASES = [
@@ -59,7 +57,7 @@ exports.getNumberEmoji = function (number) {
 }
 
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
- * @param {Hunter[]} participants
+ * @param {database.models.Hunter[]} participants
  * @param {GuildRank[]} ranks
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
