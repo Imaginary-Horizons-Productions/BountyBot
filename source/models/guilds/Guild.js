@@ -1,4 +1,4 @@
-const { DataTypes: { STRING, BOOLEAN, INTEGER, BIGINT, VIRTUAL }, Model, QueryTypes } = require('sequelize');
+const { DataTypes: { STRING, BOOLEAN, INTEGER, BIGINT, VIRTUAL }, Model } = require('sequelize');
 
 /** Guild information and bot settings */
 exports.Guild = class Guild extends Model {
