@@ -192,7 +192,10 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		}).then(thread => {
 			getRankUpdates(interaction.guild).then(rankUpdates => {
 				const multiplierString = guildProfile.eventMultiplierString();
-				let text = `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
+				let text = "";
+				if (rankUpdates.length > 0) {
+					text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
+				}
 				text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + 1 XP${multiplierString}` : ""}`;
 				if (levelTexts.length > 0) {
 					text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
