@@ -2,7 +2,7 @@ const { DataTypes: { STRING, BOOLEAN, INTEGER, BIGINT, VIRTUAL }, Model } = requ
 
 /** Guild information and bot settings */
 exports.Guild = class Guild extends Model {
-	eventMultiplierString = () => {
+	eventMultiplierString() {
 		if (this.eventMultiplier != 1) {
 			return ` ***x${this.eventMultiplier}***`;
 		} else {

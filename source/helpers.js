@@ -96,6 +96,7 @@ exports.setRanks = async (participants, ranks) => {
 				hunter.rank = index;
 			}
 		});
+		//TODO fix crash if no GuildRanks
 		hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
 	}
 	let recentPlacement = participants.length - 1; // subtract 1 to adjust for array indexes starting from 0
