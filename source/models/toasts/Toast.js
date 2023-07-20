@@ -1,7 +1,7 @@
 const { DataTypes, Model } = require('sequelize');
 
 /** This model represents a toast raised for a group of bounty hunters */
-exports.Toast = class Toast extends Model { }
+exports.Toast = class extends Model { }
 
 exports.initModel = function (sequelize) {
 	exports.Toast.init({
@@ -9,14 +9,6 @@ exports.initModel = function (sequelize) {
 			primaryKey: true,
 			type: DataTypes.BIGINT,
 			autoIncrement: true
-		},
-		guildId: {
-			type: DataTypes.STRING,
-			allowNull: false
-		},
-		senderId: {
-			type: DataTypes.STRING,
-			allowNull: false
 		},
 		recipients: {
 			type: DataTypes.VIRTUAL,

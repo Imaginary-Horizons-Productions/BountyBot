@@ -6,18 +6,40 @@ exports.database = new Sequelize({
 });
 
 exports.database.authenticate().then(() => {
-	require("./source/models/guilds/Guild.js").initModel(exports.database);
-	require("./source/models/guilds/GuildRank.js").initModel(exports.database);
+	const { Guild, initModel: initGuild } = require("./source/models/guilds/Guild.js")
+	const { GuildRank, initModel: initGuildRank } = require("./source/models/guilds/GuildRank.js")
+	const { User, initModel: initUser } = require("./source/models/users/User.js");
+	const { Hunter, initModel: initHunter } = require("./source/models/users/Hunter.js");
+	const { Bounty, initModel: initBounty } = require("./source/models/bounties/Bounty.js")
+	const { Completion, initModel: initCompletion } = require("./source/models/bounties/Completion.js")
+	const { Toast, initModel: initToast } = require("./source/models/toasts/Toast.js")
+	const { ToastRecipient, initModel: initToastRecipient } = require("./source/models/toasts/ToastRecipient.js")
+	const { ToastSeconding, initModel: initToastSeconding } = require("./source/models/toasts/ToastSeconding.js")
 
-	require("./source/models/users/User.js").initModel(exports.database);
-	require("./source/models/users/Hunter.js").initModel(exports.database);
+	initGuild(exports.database);
+	initGuildRank(exports.database);
+	initUser(exports.database);
+	initHunter(exports.database);
+	initBounty(exports.database);
+	initCompletion(exports.database);
+	initToast(exports.database);
+	initToastRecipient(exports.database);
+	initToastSeconding(exports.database);
 
-	require("./source/models/bounties/Bounty.js").initModel(exports.database);
-	require("./source/models/bounties/Completion.js").initModel(exports.database);
-
-	require("./source/models/toasts/Toast.js").initModel(exports.database);
-	require("./source/models/toasts/ToastRecipient.js").initModel(exports.database);
-	require("./source/models/toasts/ToastSeconding.js").initModel(exports.database);
+	GuildRank.Guild = GuildRank.belongsTo(Guild);
+	Hunter.User = Hunter.belongsTo(User);
+	Hunter.Guild = Hunter.belongsTo(Guild);
+	Bounty.User = Bounty.belongsTo(User);
+	Bounty.Guild = Bounty.belongsTo(Guild);
+	Completion.Bounty = Completion.belongsTo(Bounty);
+	Completion.User = Completion.belongsTo(User);
+	Completion.Guild = Completion.belongsTo(Guild);
+	Toast.Guild = Toast.belongsTo(Guild);
+	Toast.User = Toast.belongsTo(User);
+	ToastRecipient.Toast = ToastRecipient.belongsTo(Toast);
+	ToastRecipient.User = ToastRecipient.belongsTo(User);
+	ToastSeconding.Toast = ToastSeconding.belongsTo(Toast);
+	ToastSeconding.User = ToastSeconding.belongsTo(User);
 
 	exports.database.sync();
 })

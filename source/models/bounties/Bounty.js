@@ -1,76 +1,12 @@
 ﻿const { EmbedBuilder, Guild } = require('discord.js');
-const { DataTypes: { BIGINT, STRING, INTEGER, BOOLEAN }, Model } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 const { ihpAuthorPayload } = require('../../embedHelpers');
 const { Hunter } = require('../users/Hunter');
 const { Guild: HunterGuild } = require('../guilds/Guild');
 const { database } = require('../../../database');
 
 /** Bounties are user created objectives for other server members to complete */
-const bountyModel = {
-	id: {
-		primaryKey: true,
-		type: BIGINT,
-		autoIncrement: true
-	},
-	userId: {
-		type: STRING,
-		references: {
-			model: 'User',
-			key: 'id'
-		}
-	},
-	guildId: {
-		type: STRING,
-		references: {
-			model: 'Guild',
-			key: 'id'
-		}
-	},
-	postingId: {
-		type: STRING,
-	},
-	slotNumber: {
-		type: INTEGER,
-		allowNull: false
-	},
-	isEvergreen: {
-		type: BOOLEAN,
-		devaultValue: false
-	},
-	title: {
-		type: STRING,
-		allowNull: false
-	},
-	description: {
-		type: STRING,
-		allowNull: false
-	},
-	attachmentURL: {
-		type: STRING,
-		defaultValue: null
-	},
-	scheduledEventId: {
-		type: INTEGER,
-		defaultValue: null
-	},
-	state: { // Allowed values: "open", "completed", "deleted"
-		type: STRING,
-		defaultValue: "open"
-	},
-	completedAt: {
-		type: INTEGER,
-		defaultValue: null
-	},
-	deletedAt: {
-		type: INTEGER,
-		defaultValue: null
-	},
-	editCount: {
-		type: INTEGER,
-		defaultValue: 0
-	}
-};
-exports.Bounty = class Bounty extends Model {
+exports.Bounty = class extends Model {
 	/** Generate an embed for the given bounty
 	 * @param {Guild} guild
 	 * @param {Hunter?} hunter
@@ -114,7 +50,56 @@ exports.Bounty = class Bounty extends Model {
 }
 
 exports.initModel = function (sequelize) {
-	exports.Bounty.init(bountyModel, {
+	exports.Bounty.init({
+		id: {
+			primaryKey: true,
+			type: DataTypes.BIGINT,
+			autoIncrement: true
+		},
+		postingId: {
+			type: DataTypes.STRING,
+		},
+		slotNumber: {
+			type: DataTypes.INTEGER,
+			allowNull: false
+		},
+		isEvergreen: {
+			type: DataTypes.BOOLEAN,
+			devaultValue: false
+		},
+		title: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
+		description: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
+		attachmentURL: {
+			type: DataTypes.STRING,
+			defaultValue: null
+		},
+		scheduledEventId: {
+			type: DataTypes.INTEGER,
+			defaultValue: null
+		},
+		state: { // Allowed values: "open", "completed", "deleted"
+			type: DataTypes.STRING,
+			defaultValue: "open"
+		},
+		completedAt: {
+			type: DataTypes.INTEGER,
+			defaultValue: null
+		},
+		deletedAt: {
+			type: DataTypes.INTEGER,
+			defaultValue: null
+		},
+		editCount: {
+			type: DataTypes.INTEGER,
+			defaultValue: 0
+		}
+	}, {
 		sequelize,
 		modelName: 'Bounty',
 		freezeTableName: true

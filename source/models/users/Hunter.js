@@ -1,100 +1,10 @@
-const { DataTypes: { STRING, BIGINT, INTEGER, BOOLEAN }, Model } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 const { database } = require('../../../database');
 const { congratulationBuilder } = require('../../helpers');
 const { Guild } = require('discord.js');
 
-/** This class stores information for bot users on a specific guild */
-const hunterModel = {
-	userId: {
-		primaryKey: true,
-		type: STRING,
-		allowNull: false,
-		references: {
-			model: 'User'
-		}
-	},
-	guildId: {
-		primaryKey: true,
-		type: STRING,
-		allowNull: false,
-		references: {
-			model: 'Guild'
-		}
-	},
-	level: {
-		type: BIGINT,
-		defaultValue: 1
-	},
-	xp: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	seasonXP: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	isRankEligible: {
-		type: BOOLEAN,
-		allowNull: false
-	},
-	rank: {
-		type: INTEGER,
-		defaultValue: null
-	},
-	lastRank: {
-		type: INTEGER,
-		defaultValue: null
-	},
-	seasonPlacement: {
-		type: INTEGER,
-		defaultValue: 0
-	},
-	mineFinished: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	othersFinished: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	toastsRaised: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	toastsReceived: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	tabooCount: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	isBanned: {
-		type: BOOLEAN,
-		defaultValue: false
-	},
-	hasBeenBanned: {
-		type: BOOLEAN,
-		defaultValue: false
-	},
-	isDQ: {
-		type: BOOLEAN,
-		defaultValue: false
-	},
-	seasonDQCount: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	penaltyCount: {
-		type: BIGINT,
-		defaultValue: 0
-	},
-	penaltyPointTotal: {
-		type: BIGINT,
-		defaultValue: 0
-	}
-};
-exports.Hunter = class Hunter extends Model {
+/** This class stores information for users on a specific guild */
+exports.Hunter = class extends Model {
 	static xpThreshold(level, xpCoefficient) {
 		// xp = xpCoefficient*(level - 1)^2
 		return xpCoefficient * (level - 1) ** 2;
@@ -199,7 +109,80 @@ exports.Hunter = class Hunter extends Model {
 }
 
 exports.initModel = function (sequelize) {
-	exports.Hunter.init(hunterModel, {
+	exports.Hunter.init({
+		level: {
+			type: DataTypes.BIGINT,
+			defaultValue: 1
+		},
+		xp: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		seasonXP: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		isRankEligible: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false
+		},
+		rank: {
+			type: DataTypes.INTEGER,
+			defaultValue: null
+		},
+		lastRank: {
+			type: DataTypes.INTEGER,
+			defaultValue: null
+		},
+		seasonPlacement: {
+			type: DataTypes.INTEGER,
+			defaultValue: 0
+		},
+		mineFinished: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		othersFinished: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		toastsRaised: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		toastsReceived: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		tabooCount: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		isBanned: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		},
+		hasBeenBanned: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		},
+		isDQ: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		},
+		seasonDQCount: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		penaltyCount: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		penaltyPointTotal: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		}
+	}, {
 		sequelize,
 		modelName: 'Hunter',
 		freezeTableName: true

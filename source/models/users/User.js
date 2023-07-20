@@ -1,21 +1,20 @@
-const { DataTypes: { STRING, BOOLEAN }, Model } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 
 /** This class stores global information for bot users */
-const userModel = {
-	id: {
-		primaryKey: true,
-		type: STRING,
-		allowNull: false
-	},
-	isPremium: {
-		type: BOOLEAN,
-		defaultValue: false
-	}
-};
-exports.User = class User extends Model { }
+exports.User = class extends Model { }
 
 exports.initModel = function (sequelize) {
-	exports.User.init(userModel, {
+	exports.User.init({
+		id: {
+			primaryKey: true,
+			type: DataTypes.STRING,
+			allowNull: false
+		},
+		isPremium: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		}
+	}, {
 		sequelize,
 		modelName: 'User',
 		freezeTableName: true
