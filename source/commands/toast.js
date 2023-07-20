@@ -102,7 +102,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			return list;
 		}, new Set());
 
-		const lastFiveToasts = await database.models.Toast.findAll({ order: [["createdAt", "DESC"]], limit: 5 });
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, userId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
 		//TODONOW prevent flushing rewarded staleToastees with trash toasts
 		const staleToastees = lastFiveToasts.reduce(async (list, toast) => {
 			return (await list).concat((await toast.recipients).map(recipient => recipient.userId));
