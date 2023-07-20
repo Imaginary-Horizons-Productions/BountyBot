@@ -22,12 +22,6 @@ exports.initModel = function (sequelize) {
 				return await sequelize.models.ToastRecipient.findAll({ where: { toastId: this.id, isRewarded: true } });
 			}
 		},
-		seconders: {
-			type: DataTypes.VIRTUAL,
-			async get() {
-				return await sequelize.models.ToastSeconding.findAll({ where: { toastId: this.id } });
-			}
-		},
 		text: {
 			type: DataTypes.STRING,
 			allowNull: false
