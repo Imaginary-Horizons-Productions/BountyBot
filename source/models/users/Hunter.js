@@ -158,6 +158,10 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
+		toastsSeconded: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
 		toastsReceived: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
