@@ -5,6 +5,14 @@ exports.ToastRecipient = class extends Model { }
 
 exports.initModel = function (sequelize) {
 	exports.ToastRecipient.init({
+		toastId: {
+			primaryKey: true,
+			type: DataTypes.BIGINT
+		},
+		recipientId: {
+			primaryKey: true,
+			type: DataTypes.STRING
+		},
 		isRewarded: {
 			type: DataTypes.BOOLEAN,
 			allowNull: false

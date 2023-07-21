@@ -56,8 +56,17 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			autoIncrement: true
 		},
+		userId: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
+		guildId: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
 		postingId: {
 			type: DataTypes.STRING,
+			allowNull: false
 		},
 		slotNumber: {
 			type: DataTypes.INTEGER,
@@ -91,7 +100,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},
-		deletedAt: {
+		deletedAt: { //TODO convert to paranoid
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},

@@ -81,7 +81,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
 
 		// Make database entities
-		const recentToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, userId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } } });
+		const recentToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } } });
 		let rewardsAvailable = 10;
 		let critToastsAvailable = 2;
 		for (const toast of recentToasts) {
@@ -95,29 +95,32 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - DAY_IN_MS));
 		const hunterIdsToastedInLastDay = await toastsInLastDay.reduce(async (list, toast) => {
 			(await toast.recipients).forEach(recipient => {
-				if (!list.has(recipient.userId)) {
-					list.add(recipient.userId);
+				if (!list.has(recipient.recipientId)) {
+					list.add(recipient.recipientId);
 				}
 			})
 			return list;
 		}, new Set());
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, userId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
 		//TODONOW prevent flushing rewarded staleToastees with trash toasts
 		const staleToastees = lastFiveToasts.reduce(async (list, toast) => {
-			return (await list).concat((await toast.recipients).map(recipient => recipient.userId));
+			return (await list).concat((await toast.recipients).map(reciept => reciept.recipientId));
 		}, []);
 
 		const recipientPayloads = []; //TODONOW look up technical term for object used to build entity
 		let rewardedRecipients = [];
 		let critValue = 0;
 		const [guildProfile] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
-		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: interaction.member.manageable }, include: [User] });
+		const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
+		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: interaction.member.manageable } });
 		sender.toastsRaised++;
-		const toast = await database.models.Toast.create({ guildId: interaction.guildId, userId: interaction.user.id, text: toastText, imageURL });
+		const toast = await database.models.Toast.create({ guildId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 		for (const id of toasteeIds) {
+			//TODO move to bulkCreate when create by association is working
+			const [user] = await database.models.User.findOrCreate({ where: { id } });
 			//TODONOW look up technical term for object used to build entity
-			const payload = { toastId: toast.id, userId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
+			const payload = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 			if (payload.isRewarded) {
 				rewardedRecipients.push(id);
 
@@ -153,7 +156,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		levelTexts.concat(await sender.addXP(interaction.guild, critValue, false));
 		for (const recipientId of rewardedRecipients) {
 			const member = await interaction.guild.members.fetch(recipientId);
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, guildId: interaction.guildId, isRankEligible: member.manageable }, include: [User] });
+			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, guildId: interaction.guildId, isRankEligible: member.manageable } });
 			levelTexts.concat(await hunter.addXP(interaction.guild, 1, false));
 		}
 

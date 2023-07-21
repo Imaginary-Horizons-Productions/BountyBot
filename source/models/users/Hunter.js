@@ -110,6 +110,14 @@ exports.Hunter = class extends Model {
 
 exports.initModel = function (sequelize) {
 	exports.Hunter.init({
+		userId: {
+			primaryKey: true,
+			type: DataTypes.STRING,
+		},
+		guildId: {
+			primaryKey: true,
+			type: DataTypes.STRING
+		},
 		level: {
 			type: DataTypes.BIGINT,
 			defaultValue: 1

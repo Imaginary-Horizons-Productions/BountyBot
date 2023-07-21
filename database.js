@@ -26,20 +26,103 @@ exports.database.authenticate().then(() => {
 	initToastRecipient(exports.database);
 	initToastSeconding(exports.database);
 
-	GuildRank.Guild = GuildRank.belongsTo(Guild);
-	Hunter.User = Hunter.belongsTo(User);
-	Hunter.Guild = Hunter.belongsTo(Guild);
-	Bounty.User = Bounty.belongsTo(User);
-	Bounty.Guild = Bounty.belongsTo(Guild);
-	Completion.Bounty = Completion.belongsTo(Bounty);
-	Completion.User = Completion.belongsTo(User);
-	Completion.Guild = Completion.belongsTo(Guild);
-	Toast.Guild = Toast.belongsTo(Guild);
-	Toast.User = Toast.belongsTo(User);
-	ToastRecipient.Toast = ToastRecipient.belongsTo(Toast);
-	ToastRecipient.User = ToastRecipient.belongsTo(User);
-	ToastSeconding.Toast = ToastSeconding.belongsTo(Toast);
-	ToastSeconding.User = ToastSeconding.belongsTo(User);
+	Guild.GuildRank = Guild.hasMany(GuildRank, {
+		foreignKey: "guildId"
+	});
+	GuildRank.Guild = GuildRank.belongsTo(Guild, {
+		foreignKey: "guildId"
+	});
+
+	Hunter.User = Hunter.belongsTo(User, {
+		foreignKey: "userId"
+	});
+	User.Hunter = User.hasMany(Hunter, {
+		foreignKey: "userId"
+	});
+
+	Hunter.Guild = Hunter.belongsTo(Guild, {
+		foreignKey: "guildId"
+	});
+	Guild.Hunter = Guild.hasMany(Hunter, {
+		foreignKey: "guildId"
+	});
+
+	Bounty.User = Bounty.belongsTo(User, {
+		foreignKey: "userId"
+	});
+	User.Bounty = User.hasMany(Bounty, {
+		foreignKey: "userId"
+	});
+
+	Bounty.Guild = Bounty.belongsTo(Guild, {
+		foreignKey: "guildId"
+	});
+	Guild.Bounty = Guild.hasMany(Bounty, {
+		foreignKey: "guildId"
+	});
+
+	Completion.Bounty = Completion.belongsTo(Bounty, {
+		foreignKey: "bountyId"
+	});
+	Bounty.Completion = Bounty.hasMany(Completion, {
+		foreignKey: "bountyId"
+	});
+
+	Completion.User = Completion.belongsTo(User, {
+		foreignKey: "userId"
+	});
+	User.Completion = User.hasMany(Completion, {
+		foreignKey: "userId"
+	});
+
+	Completion.Guild = Completion.belongsTo(Guild, {
+		foreignKey: "guildId"
+	});
+	Guild.Completion = Guild.hasMany(Completion, {
+		foreignKey: "guildId"
+	});
+
+	Toast.Guild = Toast.belongsTo(Guild, {
+		foreignKey: "guildId"
+	});
+	Guild.Toast = Guild.hasMany(Toast, {
+		foreignKey: "guildId"
+	});
+
+	Toast.User = Toast.belongsTo(User, {
+		foreignKey: "senderId"
+	});
+	User.Toast = User.hasMany(Toast, {
+		foreignKey: "senderId"
+	});
+
+	ToastRecipient.Toast = ToastRecipient.belongsTo(Toast, {
+		foreignKey: "toastId"
+	});
+	Toast.ToastRecipient = Toast.hasMany(ToastRecipient, {
+		foreignKey: "toastId"
+	});
+
+	ToastRecipient.User = ToastRecipient.belongsTo(User, {
+		foreignKey: "recipientId"
+	});
+	User.ToastRecipient = User.hasMany(ToastRecipient, {
+		foreignKey: "recipientId"
+	});
+
+	ToastSeconding.Toast = ToastSeconding.belongsTo(Toast, {
+		foreignKey: "toastId"
+	});
+	Toast.ToastSeconding = Toast.hasMany(ToastSeconding, {
+		foreignKey: "toastId"
+	});
+
+	ToastSeconding.User = ToastSeconding.belongsTo(User, {
+		foreignKey: "seconderId"
+	});
+	User.ToastSeconding = User.hasMany(ToastSeconding, {
+		foreignKey: "seconderId"
+	});
 
 	exports.database.sync();
 })

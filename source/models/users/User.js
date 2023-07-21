@@ -7,8 +7,7 @@ exports.initModel = function (sequelize) {
 	exports.User.init({
 		id: {
 			primaryKey: true,
-			type: DataTypes.STRING,
-			allowNull: false
+			type: DataTypes.STRING
 		},
 		isPremium: {
 			type: DataTypes.BOOLEAN,

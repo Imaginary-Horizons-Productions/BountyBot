@@ -10,6 +10,14 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			autoIncrement: true
 		},
+		guildId: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
+		senderId: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
 		recipients: {
 			type: DataTypes.VIRTUAL,
 			async get() {

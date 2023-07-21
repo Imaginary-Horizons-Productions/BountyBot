@@ -5,10 +5,13 @@ exports.GuildRank = class extends Model { }
 
 exports.initModel = function (sequelize) {
 	exports.GuildRank.init({
+		guildId: {
+			primaryKey: true,
+			type: DataTypes.STRING
+		},
 		varianceThreshold: {
 			primaryKey: true,
-			type: DataTypes.REAL,
-			allowNull: false
+			type: DataTypes.REAL
 		},
 		roleId: {
 			type: DataTypes.STRING
