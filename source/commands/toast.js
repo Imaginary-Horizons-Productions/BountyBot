@@ -1,12 +1,9 @@
 const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { SAFE_DELIMITER } = require('../constants');
+const { SAFE_DELIMITER, DAY_IN_MS } = require('../constants');
 const { getNumberEmoji, getRankUpdates } = require('../helpers');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
-const { User } = require('../models/users/User');
-
-const DAY_IN_MS = 86400000;
 
 const customId = "toast";
 const options = [
@@ -49,8 +46,20 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			}
 		}
 
-		if (toasteeIds.length < 1) { //TODONOW filter out bots
+		const nonBotToasteeIds = [];
+		if (toasteeIds.length < 1) {
 			errors.push("Could not parse any user mentions from `toastees`.");
+		} else {
+			const toasteeMembers = (await interaction.guild.members.fetch({ user: toasteeIds })).values();
+			for (const member of toasteeMembers) {
+				if (!member.user.bot) {
+					nonBotToasteeIds.push(member.id);
+				}
+			}
+
+			if (nonBotToasteeIds.length < 1) {
+				errors.push("Could not parse any user mentions from `toastees`.");
+			}
 		}
 
 		const embed = new EmbedBuilder();
@@ -77,7 +86,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		embed.setColor("e5b271")
 			.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
 			.setTitle(toastText)
-			.setDescription(`A toast to <@${toasteeIds.join(">, <@")}>!`)
+			.setDescription(`A toast to <@${nonBotToasteeIds.join(">, <@")}>!`)
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
 
 		// Make database entities
@@ -94,34 +103,34 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		}
 		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - DAY_IN_MS));
 		const hunterIdsToastedInLastDay = await toastsInLastDay.reduce(async (list, toast) => {
-			(await toast.recipients).forEach(recipient => {
-				if (!list.has(recipient.recipientId)) {
-					list.add(recipient.recipientId);
+			(await toast.recipients).forEach(reciept => {
+				if (!list.has(reciept.recipientId)) {
+					list.add(reciept.recipientId);
 				}
 			})
 			return list;
 		}, new Set());
 
 		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
-		//TODONOW prevent flushing rewarded staleToastees with trash toasts
 		const staleToastees = lastFiveToasts.reduce(async (list, toast) => {
-			return (await list).concat((await toast.recipients).map(reciept => reciept.recipientId));
+			return (await list).concat((await toast.rewardedRecipients).map(reciept => reciept.recipientId));
 		}, []);
 
-		const recipientPayloads = []; //TODONOW look up technical term for object used to build entity
+		const recipientRecords = [];
 		let rewardedRecipients = [];
 		let critValue = 0;
+		//TODO combine fetch and seasonToasts increment with upsert?
 		const [guildProfile] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
+		guildProfile.increment({ "seasonToasts": 1 });
 		const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: interaction.member.manageable } });
 		sender.toastsRaised++;
 		const toast = await database.models.Toast.create({ guildId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
-		for (const id of toasteeIds) {
+		for (const id of nonBotToasteeIds) {
 			//TODO move to bulkCreate when create by association is working
 			const [user] = await database.models.User.findOrCreate({ where: { id } });
-			//TODONOW look up technical term for object used to build entity
-			const payload = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
-			if (payload.isRewarded) {
+			const record = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
+			if (record.isRewarded) {
 				rewardedRecipients.push(id);
 
 				// Calculate crit
@@ -140,16 +149,17 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 
 					// f(x) = 150/(x+2)^(1/3)
 					if (critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel) {
-						payload.wasCrit = true;
+						record.wasCrit = true;
 						critValue += 1;
+						critToastsAvailable--;
 					}
 				}
 
 				rewardsAvailable--;
 			}
-			recipientPayloads.push(payload);
+			recipientRecords.push(record);
 		}
-		database.models.ToastRecipient.bulkCreate(recipientPayloads);
+		database.models.ToastRecipient.bulkCreate(recipientRecords);
 
 		// Add XP and update ranks
 		const levelTexts = [];
@@ -164,7 +174,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			embeds: [embed],
 			components: [
 				new ActionRowBuilder().addComponents(
-					new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${"toastId"}`)
+					new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toast.id}`)
 						.setLabel("I second this toast!")
 						.setEmoji(getNumberEmoji(2))
 						.setStyle(ButtonStyle.Primary)
@@ -180,7 +190,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 				if (rankUpdates.length > 0) {
 					text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
 				}
-				text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + 1 XP${multiplierString}` : ""}`;
+				text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}`;
 				if (levelTexts.length > 0) {
 					text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
 				}
