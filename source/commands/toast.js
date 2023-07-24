@@ -183,23 +183,25 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			],
 			fetchReply: true
 		}).then(message => {
-			return message.startThread({ name: "Rewards" });
-		}).then(thread => {
-			getRankUpdates(interaction.guild).then(rankUpdates => {
-				const multiplierString = guildProfile.eventMultiplierString();
-				let text = "";
-				if (rankUpdates.length > 0) {
-					text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
+			message.startThread({ name: "Rewards" }).then(thread => {
+				if (rewardedRecipients.length > 0) {
+					getRankUpdates(interaction.guild).then(rankUpdates => {
+						const multiplierString = guildProfile.eventMultiplierString();
+						let text = "";
+						if (rankUpdates.length > 0) {
+							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
+						}
+						text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}`;
+						if (levelTexts.length > 0) {
+							text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
+						}
+						if (text.length > 2000) {
+							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
+						}
+						thread.send(text);
+					})
 				}
-				text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}`;
-				if (levelTexts.length > 0) {
-					text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
-				}
-				if (text.length > 2000) {
-					text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
-				}
-				thread.send(text);
-			})
+			});
 		});
 	}
 );
