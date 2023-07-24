@@ -89,15 +89,16 @@ exports.setRanks = async (participants, ranks) => {
 
 	mean /= rankableHunters.length;
 	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => total + (hunter.seasonXP - mean) ** 2, 0) / rankableHunters.length);
-	for (const hunter of rankableHunters) {
-		let variance = (hunter.seasonXP - mean) / stdDev;
-		ranks.forEach((rank, index) => {
-			if (variance >= rank.varianceThreshold) {
-				hunter.rank = index;
-			}
-		});
-		//TODO fix crash if no GuildRanks
-		hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
+	if (ranks?.length > 0) {
+		for (const hunter of rankableHunters) {
+			let variance = (hunter.seasonXP - mean) / stdDev;
+			ranks.forEach((rank, index) => {
+				if (variance >= rank.varianceThreshold) {
+					hunter.rank = index;
+				}
+			});
+			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
+		}
 	}
 	let recentPlacement = participants.length - 1; // subtract 1 to adjust for array indexes starting from 0
 	let previousScore = 0;
