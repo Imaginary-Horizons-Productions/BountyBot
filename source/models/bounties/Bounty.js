@@ -65,8 +65,7 @@ exports.initModel = function (sequelize) {
 			allowNull: false
 		},
 		postingId: {
-			type: DataTypes.STRING,
-			allowNull: false
+			type: DataTypes.STRING
 		},
 		slotNumber: {
 			type: DataTypes.INTEGER,
