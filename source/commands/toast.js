@@ -102,14 +102,15 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			}
 		}
 		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - DAY_IN_MS));
-		const hunterIdsToastedInLastDay = await toastsInLastDay.reduce(async (list, toast) => {
+		const hunterIdsToastedInLastDay = await toastsInLastDay.reduce(async (listPromise, toast) => {
+			const list = await listPromise;
 			(await toast.recipients).forEach(reciept => {
 				if (!list.has(reciept.recipientId)) {
 					list.add(reciept.recipientId);
 				}
 			})
 			return list;
-		}, new Set());
+		}, new Promise((resolve) => { resolve(new Set()) }));
 
 		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
 		const staleToastees = await lastFiveToasts.reduce(async (list, toast) => {
