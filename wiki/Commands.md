@@ -42,6 +42,14 @@ Provide feedback on this bot to the developers
 > Choices: `bug report`, `feature request`
 
 the type of feedback you'd like to provide
+### /premium
+> Permission Level: ViewChannel
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+List perks for supporting IHP development
 ### /scoreboard
 
 > Usable in DMs: false
