@@ -62,6 +62,20 @@ The Season Scoreboard only includes hunters with XP this season
 Get the BountyBot stats for yourself or someone else
 #### bounty-hunter (optional)
 Whose stats to check; BountyBot for the server stats, empty for yourself
+### /toast
+> Permission Level: SendMessages
+
+> Usable in DMs: false
+
+> Cooldown: 30 second(s)
+
+Raise a toast to other bounty hunter(s), usually granting +1 XP
+#### toastees
+The mention(s) of the bounty hunter(s) to whom you are raising a toast
+#### message
+The text of the toast to raise
+#### image-url (optional)
+The URL to the image to add to the toast
 ### /version
 
 > Usable in DMs: true
