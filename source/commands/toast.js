@@ -130,8 +130,8 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		for (const id of nonBotToasteeIds) {
 			//TODO move to bulkCreate when create by association is working
 			const [user] = await database.models.User.findOrCreate({ where: { id } });
-			const record = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
-			if (record.isRewarded) {
+			const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
+			if (rawToast.isRewarded) {
 				rewardedRecipients.push(id);
 
 				// Calculate crit
@@ -150,7 +150,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 
 					// f(x) = 150/(x+2)^(1/3)
 					if (critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel) {
-						record.wasCrit = true;
+						rawToast.wasCrit = true;
 						critValue += 1;
 						critToastsAvailable--;
 					}
@@ -158,7 +158,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 
 				rewardsAvailable--;
 			}
-			recipientRecords.push(record);
+			recipientRecords.push(rawToast);
 		}
 		database.models.ToastRecipient.bulkCreate(recipientRecords);
 
@@ -189,9 +189,9 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 						const multiplierString = guildProfile.eventMultiplierString();
 						let text = "";
 						if (rankUpdates.length > 0) {
-							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
+							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
 						}
-						text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}`;
+						text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}\n`;
 						if (levelTexts.length > 0) {
 							text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
 						}
