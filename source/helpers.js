@@ -149,8 +149,8 @@ exports.getRankUpdates = async function (guild, force = false) {
 						}
 					}
 				}
-				if (hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
-					outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole ? destinationRole.name : `Rank ${hunter.rank + 1}`}!`);
+				if (destinationRole && hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
+					outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
 				}
 			}
 		}
