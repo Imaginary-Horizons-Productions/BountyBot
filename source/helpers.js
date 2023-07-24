@@ -138,19 +138,19 @@ exports.getRankUpdates = async function (guild, force = false) {
 		for (const hunter of allHunters) {
 			if (force || hunter.rank != hunter.lastRank) {
 				const member = await guild.members.fetch(hunter.userId);
-				let destinationRole;
 				if (member.manageable) {
 					await member.roles.remove(roleIds);
 					if (hunter.isRankEligible) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+						let destinationRole;
 						const rankRoleId = ranks[hunter.rank]?.roleId;
 						if (rankRoleId) {
 							await member.roles.add(rankRoleId);
 							destinationRole = await guild.roles.fetch(rankRoleId);
 						}
+						if (destinationRole && hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
+							outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
+						}
 					}
-				}
-				if (destinationRole && hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
-					outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
 				}
 			}
 		}
