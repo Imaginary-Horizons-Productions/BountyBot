@@ -1,7 +1,5 @@
-const { Op } = require("sequelize");
 const { database } = require("../database");
 const { Guild } = require("discord.js");
-const { Hunter } = require("./models/users/Hunter");
 const { GuildRank } = require("./models/guilds/GuildRank");
 
 const CONGRATULATORY_PHRASES = [
@@ -59,7 +57,7 @@ exports.getNumberEmoji = function (number) {
 }
 
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
- * @param {Hunter[]} participants
+ * @param {database.models.Hunter[]} participants
  * @param {GuildRank[]} ranks
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
@@ -91,14 +89,16 @@ exports.setRanks = async (participants, ranks) => {
 
 	mean /= rankableHunters.length;
 	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => total + (hunter.seasonXP - mean) ** 2, 0) / rankableHunters.length);
-	for (const hunter of rankableHunters) {
-		let variance = (hunter.seasonXP - mean) / stdDev;
-		ranks.forEach((rank, index) => {
-			if (variance >= rank.varianceThreshold) {
-				hunter.rank = index;
-			}
-		});
-		hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
+	if (ranks?.length > 0) {
+		for (const hunter of rankableHunters) {
+			let variance = (hunter.seasonXP - mean) / stdDev;
+			ranks.forEach((rank, index) => {
+				if (variance >= rank.varianceThreshold) {
+					hunter.rank = index;
+				}
+			});
+			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
+		}
 	}
 	let recentPlacement = participants.length - 1; // subtract 1 to adjust for array indexes starting from 0
 	let previousScore = 0;
@@ -138,19 +138,19 @@ exports.getRankUpdates = async function (guild, force = false) {
 		for (const hunter of allHunters) {
 			if (force || hunter.rank != hunter.lastRank) {
 				const member = await guild.members.fetch(hunter.userId);
-				let destinationRole;
 				if (member.manageable) {
 					await member.roles.remove(roleIds);
 					if (hunter.isRankEligible) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+						let destinationRole;
 						const rankRoleId = ranks[hunter.rank]?.roleId;
 						if (rankRoleId) {
 							await member.roles.add(rankRoleId);
 							destinationRole = await guild.roles.fetch(rankRoleId);
 						}
+						if (destinationRole && hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
+							outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
+						}
 					}
-				}
-				if (hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
-					outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole ? destinationRole.name : `Rank ${hunter.rank + 1}`}!`);
 				}
 			}
 		}

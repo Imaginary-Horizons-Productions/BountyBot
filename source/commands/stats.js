@@ -41,6 +41,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 
+					//TODO add "most seconded toast"
 					interaction.reply({
 						embeds: [
 							new EmbedBuilder().setColor(target.displayColor)
@@ -56,8 +57,8 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
 									{ name: "\u200B", value: "\u200B" },
 									{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised == 1 ? "" : "s"}`, inline: true },
+									{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded == 1 ? "" : "s"}`, inline: true },
 									{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived == 1 ? "" : "s"}`, inline: true },
-									{ name: "\u200B", value: "\u200B", inline: true }
 								)
 								.setFooter(randomFooterTip())
 								.setTimestamp()
@@ -79,6 +80,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
 
+				//TODO add "most seconded toast"
 				interaction.reply({
 					embeds: [
 						new EmbedBuilder().setColor(interaction.member.displayColor)
@@ -102,8 +104,8 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 								{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
 								{ name: "\u200B", value: "\u200B" },
 								{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised == 1 ? "" : "s"}`, inline: true },
+								{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded == 1 ? "" : "s"}`, inline: true },
 								{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived == 1 ? "" : "s"}`, inline: true },
-								{ name: "\u200B", value: "\u200B", inline: true }
 							)
 							.setFooter(randomFooterTip())
 							.setTimestamp()

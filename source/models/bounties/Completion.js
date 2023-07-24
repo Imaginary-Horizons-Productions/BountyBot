@@ -1,40 +1,26 @@
-﻿// Database Entity Class
-const { DataTypes: { BIGINT, STRING, INTEGER }, Model } = require('sequelize');
+﻿const { DataTypes, Model } = require('sequelize');
 
-// Store receipt information of a bounty completion and relevant stats of that bounty
-const completionModel = {
-	bountyId: {
-		primaryKey: true,
-		type: BIGINT,
-		references: {
-			model: 'Bounty',
-			key: 'id'
-		}
-	},
-	userId: {
-		primaryKey: true,
-		type: STRING,
-		references: {
-			model: 'User',
-			key: 'id'
-		}
-	},
-	guildId: {
-		primaryKey: true,
-		type: STRING,
-		references: {
-			model: 'Guild',
-			key: 'id'
-		}
-	},
-	xpAwarded: {
-		type: INTEGER
-	}
-};
-exports.Completion = class Completion extends Model { }
+/** Store receipt information of a bounty completion and relevant stats of that bounty */
+exports.Completion = class extends Model { }
 
 exports.initModel = function (sequelize) {
-	exports.Completion.init(completionModel, {
+	exports.Completion.init({
+		bountyId: {
+			primaryKey: true,
+			type: DataTypes.BIGINT
+		},
+		userId: {
+			primaryKey: true,
+			type: DataTypes.STRING
+		},
+		guildId: {
+			primaryKey: true,
+			type: DataTypes.STRING
+		},
+		xpAwarded: {
+			type: DataTypes.INTEGER
+		}
+	}, {
 		sequelize,
 		modelName: 'Completion',
 		freezeTableName: true

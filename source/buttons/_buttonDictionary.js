@@ -4,6 +4,7 @@ const { InteractionWrapper } = require("../classes");
 const buttonDictionary = {};
 
 for (const file of [
+	"secondtoast.js"
 ]) {
 	const button = require(`./${file}`);
 	buttonDictionary[button.customId] = button;

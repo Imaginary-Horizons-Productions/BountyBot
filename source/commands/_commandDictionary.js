@@ -9,6 +9,7 @@ exports.commandFiles = [
 	"feedback.js",
 	"scoreboard.js",
 	"stats.js",
+	"toast.js",
 	"version.js"
 ];
 /** @type {Record<string, CommandWrapper>} */

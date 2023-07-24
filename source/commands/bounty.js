@@ -2,6 +2,7 @@ const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = requi
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getNumberEmoji } = require('../helpers');
+const { User } = require('../models/users/User');
 
 const customId = "bounty";
 const options = [];
@@ -16,17 +17,9 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 	(interaction) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // Post
-				database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } }).then(async hunter => {
-					if (!hunter) { //TODO use findOrCreate after double-checking associations (may not cascade from hunter to user correctly)
-						const user = await database.models.User.findByPk(interaction.user.id);
-						if (!user) {
-							await database.models.User.create({ id: interaction.user.id });
-						}
-						hunter = await database.models.Hunter.create({ userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: !interaction.member.manageable });
-					}
-
-					const { maxSimBounties } = await database.models.Guild.findByPk(interaction.guildId);
-
+				database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
+					const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
+					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: interaction.member.manageable } });
 					const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } });
 					const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 					const bountySlots = hunter.maxSlots(maxSimBounties);
@@ -58,7 +51,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					} else {
 						interaction.reply({ content: "You don't seem to have any open bounty slots at the moment.", ephemeral: true });
 					}
-				})
+				});
 				break;
 		}
 	}

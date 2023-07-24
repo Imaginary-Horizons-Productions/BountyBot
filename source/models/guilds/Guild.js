@@ -1,8 +1,8 @@
-const { DataTypes: { STRING, BOOLEAN, INTEGER, BIGINT, VIRTUAL }, Model, QueryTypes } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 
 /** Guild information and bot settings */
-exports.Guild = class Guild extends Model {
-	eventMultiplierString = () => {
+exports.Guild = class extends Model {
+	eventMultiplierString() {
 		if (this.eventMultiplier != 1) {
 			return ` ***x${this.eventMultiplier}***`;
 		} else {
@@ -64,85 +64,80 @@ exports.initModel = function (sequelize) {
 	exports.Guild.init({
 		id: {
 			primaryKey: true,
-			type: STRING,
-			allowNull: false
+			type: DataTypes.STRING
 		},
 		xp: {
-			type: VIRTUAL,
+			type: DataTypes.VIRTUAL,
 			async get() {
-				const [hunterLevels] = await sequelize.query("SELECT SUM(level) FROM Hunter WHERE guildId = :guildId", {
-					replacements: { guildId: this.id },
-					type: QueryTypes.SELECT
-				});
-				return hunterLevels["SUM(level)"];
+				return await sequelize.models.Hunter.sum("level", { where: { guildId: this.id } });
 			}
 		},
 		level: {
-			type: INTEGER,
+			type: DataTypes.INTEGER,
 			defaultValue: 1
 		},
 		announcementPrefix: {
-			type: STRING,
+			type: DataTypes.STRING,
 			defaultValue: '@here'
 		},
 		disableBoostXP: {
-			type: BOOLEAN,
+			type: DataTypes.BOOLEAN,
 			defaultValue: true
 		},
 		maxSimBounties: {
-			type: INTEGER,
+			type: DataTypes.INTEGER,
 			defaultValue: 5
 		},
 		backupTimer: {
-			type: BIGINT,
+			type: DataTypes.BIGINT,
 			defaultValue: 3600000
 		},
 		bountyBoardId: {
-			type: STRING,
+			type: DataTypes.STRING,
 			defaultValue: ''
 		},
 		scoreId: {
-			type: STRING,
+			type: DataTypes.STRING,
 			defaultValue: ''
 		},
 		raffleDate: {
-			type: STRING,
+			type: DataTypes.STRING,
 			defaultValue: ''
 		},
 		eventMultiplier: {
-			type: INTEGER,
+			type: DataTypes.INTEGER,
 			defaultValue: 1
 		},
 		xpCoefficient: {
-			type: INTEGER,
+			type: DataTypes.INTEGER,
 			defaultValue: 3
 		},
 		seasonXP: {
-			type: BIGINT,
+			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
 		seasonBounties: {
-			type: BIGINT,
+			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
 		seasonToasts: {
-			type: BIGINT,
+			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
 		resetSchedulerId: {
-			type: STRING,
+			type: DataTypes.STRING,
 			defaultValue: ""
 		},
 		lastSeasonXP: {
-			type: BIGINT,
+			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
 		bountiesLastSeason: {
-			type: BIGINT,
+			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
 		toastsLastSeason: {
-			type: BIGINT,
+			type: DataTypes.BIGINT,
 			defaultValue: 0
 		}
 	}, {
