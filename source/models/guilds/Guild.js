@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js');
 const { DataTypes, Model } = require('sequelize');
 
 /** Guild information and bot settings */
@@ -8,6 +9,18 @@ exports.Guild = class extends Model {
 		} else {
 			return '';
 		}
+	}
+
+	/** Apply the guild's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
+	 * @param {import('discord.js').MessageCreateOptions} messageOptions
+	 */
+	sendAnnouncement(messageOptions) {
+		if (this.announcementPrefix == "@silent") {
+			messageOptions.flags = MessageFlags.SuppressNotifications;
+		} else if (this.announcementPrefix != "") {
+			messageOptions.content = `${this.announcementPrefix} ${messageOptions.content}`;
+		}
+		return messageOptions;
 	}
 
 	// eventInfoBuilder(channel, guild, useManagerTips = false) {
@@ -76,7 +89,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: 1
 		},
-		announcementPrefix: {
+		announcementPrefix: { // allowed values: "@here", "@everyone", "@silent", ""
 			type: DataTypes.STRING,
 			defaultValue: '@here'
 		},
