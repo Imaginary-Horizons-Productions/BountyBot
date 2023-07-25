@@ -95,6 +95,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			interaction.guild.scheduledEvents.delete(bounty.scheduledEventId);
 			bounty.scheduledEventId = null;
 		}
+		bounty.editCount++;
 		bounty.save();
 
 		// update bounty board
