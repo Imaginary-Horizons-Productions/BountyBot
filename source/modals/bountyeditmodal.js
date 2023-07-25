@@ -67,6 +67,8 @@ module.exports = new InteractionWrapper(customId, 3000,
 		}
 		if (imageURL) {
 			bounty.attachmentURL = imageURL;
+		} else if (bounty.attachmentURL) {
+			bounty.attachmentURL = null;
 		}
 
 
