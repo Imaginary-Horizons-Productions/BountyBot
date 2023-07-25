@@ -2,7 +2,6 @@ const { GuildScheduledEventEntityType } = require('discord.js');
 const { database } = require('../../database');
 const { InteractionWrapper } = require('../classes');
 const { YEAR_IN_MS } = require('../constants');
-const { addAnnouncementPrefix } = require('../helpers');
 
 const customId = "bountyeditmodal";
 module.exports = new InteractionWrapper(customId, 3000,
@@ -25,7 +24,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 		}
 
-		if (!isNaN(startTimestamp) || !isNaN(endTimestamp)) {
+		if (startTimestamp || endTimestamp) {
 			if (!startTimestamp) {
 				errors.push("Start timestamp must be an integer.");
 			} else if (!endTimestamp) {

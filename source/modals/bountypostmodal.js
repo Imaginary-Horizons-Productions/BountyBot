@@ -34,7 +34,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 		}
 
-		if (!isNaN(startTimestamp) || !isNaN(endTimestamp)) {
+		if (startTimestamp || endTimestamp) {
 			if (!startTimestamp) {
 				errors.push("Start timestamp must be an integer.");
 			} else if (!endTimestamp) {
