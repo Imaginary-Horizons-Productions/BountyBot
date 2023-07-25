@@ -15,6 +15,8 @@ Get BountyBot's description and contributors
 Bounties are user-created objectives for other server members to complete
 #### /bounty post
 Post your own bounty (+1 XP)
+#### /bounty edit
+Edit one of your bounties
 ### /commands
 
 > Usable in DMs: true
