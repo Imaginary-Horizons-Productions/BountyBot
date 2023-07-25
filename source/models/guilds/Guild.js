@@ -16,7 +16,11 @@ exports.Guild = class extends Model {
 	 */
 	sendAnnouncement(messageOptions) {
 		if (this.announcementPrefix == "@silent") {
-			messageOptions.flags = MessageFlags.SuppressNotifications;
+			if ("flags" in messageOptions) {
+				messageOptions.flags |= MessageFlags.SuppressNotifications;
+			} else {
+				messageOptions.flags = MessageFlags.SuppressNotifications;
+			}
 		} else if (this.announcementPrefix != "") {
 			messageOptions.content = `${this.announcementPrefix} ${messageOptions.content}`;
 		}
