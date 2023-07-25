@@ -124,7 +124,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		const [guildProfile] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
 		guildProfile.increment({ "seasonToasts": 1 });
 		const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: interaction.member.manageable } });
+		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId }, defaults: { isRankEligible: interaction.member.manageable } });
 		sender.toastsRaised++;
 		const toast = await database.models.Toast.create({ guildId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 		for (const id of nonBotToasteeIds) {
@@ -167,7 +167,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		levelTexts.concat(await sender.addXP(interaction.guild, critValue, false));
 		for (const recipientId of rewardedRecipients) {
 			const member = await interaction.guild.members.fetch(recipientId);
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, guildId: interaction.guildId, isRankEligible: member.manageable } });
+			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
 			levelTexts.concat(await hunter.addXP(interaction.guild, 1, false));
 		}
 

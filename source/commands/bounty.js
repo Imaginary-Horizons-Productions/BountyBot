@@ -19,7 +19,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 			case subcommands[0].name: // Post
 				database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
 					const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: interaction.member.manageable } });
+					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId }, defaults: { isRankEligible: interaction.member.manageable } });
 					const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } });
 					const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 					const bountySlots = hunter.maxSlots(maxSimBounties);
