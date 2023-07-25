@@ -108,6 +108,6 @@ module.exports = new InteractionWrapper(customId, 3000,
 			})
 		}
 
-		interaction.reply({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] });
+		interaction.reply({ content: `${hunterGuild.announcementPrefix ? `${hunterGuild.announcementPrefix} ` : ""}${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] });
 	}
 );
