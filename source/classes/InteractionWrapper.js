@@ -28,7 +28,7 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 	 * @param {boolean} allowInDMsInput
 	 * @param {number} cooldownInMS
 	 * @param {{type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, choices: { name: string, value }[]}[]} optionsInput
-	 * @param {{name: string, description: string, optionsInput: {type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, choices: { name: string, value }[]}}[]} subcommandsInput
+	 * @param {{name: string, description: string, optionsInput?: {type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, choices: { name: string, value }[]}}[]} subcommandsInput
 	 * @param {(interaction: CommandInteraction) => void} executeFunction
 	 */
 	constructor(customIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, optionsInput, subcommandsInput, executeFunction) {
@@ -56,7 +56,7 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 		subcommandsInput.forEach(subcommand => {
 			this.data.addSubcommand(built => {
 				built.setName(subcommand.name).setDescription(subcommand.description);
-				subcommand.optionsInput.forEach(option => {
+				subcommand.optionsInput?.forEach(option => {
 					built[`add${option.type}Option`](subBuilt => {
 						subBuilt.setName(option.name).setDescription(option.description).setRequired(option.required);
 						if (option.choices === null || option.choices === undefined) {

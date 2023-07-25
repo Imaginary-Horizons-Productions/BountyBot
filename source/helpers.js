@@ -48,6 +48,10 @@ const NUMBER_EMOJI = {
 	9: '9️⃣',
 	10: '🔟'
 };
+/**
+ * @param {number} number
+ * @returns {string}
+ */
 exports.getNumberEmoji = function (number) {
 	if (number in NUMBER_EMOJI) {
 		return NUMBER_EMOJI[number];

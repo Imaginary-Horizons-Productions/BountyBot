@@ -88,7 +88,7 @@ exports.initModel = function (sequelize) {
 			defaultValue: null
 		},
 		scheduledEventId: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.STRING,
 			defaultValue: null
 		},
 		state: { // Allowed values: "open", "completed", "deleted"

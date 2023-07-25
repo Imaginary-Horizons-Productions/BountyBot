@@ -2,15 +2,17 @@ const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = requi
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getNumberEmoji } = require('../helpers');
-const { User } = require('../models/users/User');
 
 const customId = "bounty";
 const options = [];
 const subcommands = [
 	{
 		name: "post",
-		description: "Post your own bounty (+1 XP)",
-		optionsInput: []
+		description: "Post your own bounty (+1 XP)"
+	},
+	{
+		name: "edit",
+		description: "Edit one of your bounties"
 	}
 ];
 module.exports = new CommandWrapper(customId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
@@ -19,7 +21,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 			case subcommands[0].name: // Post
 				database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
 					const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId, isRankEligible: interaction.member.manageable } });
+					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId }, defaults: { isRankEligible: interaction.member.manageable } });
 					const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } });
 					const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 					const bountySlots = hunter.maxSlots(maxSimBounties);
@@ -52,6 +54,36 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						interaction.reply({ content: "You don't seem to have any open bounty slots at the moment.", ephemeral: true });
 					}
 				});
+				break;
+			case subcommands[1].name:
+				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(openBounties => {
+					const slotOptions = openBounties.map(bounty => {
+						return {
+							emoji: getNumberEmoji(bounty.slotNumber),
+							label: bounty.title,
+							description: bounty.description,
+							value: bounty.slotNumber.toString()
+						};
+					});
+
+					if (slotOptions.length < 1) {
+						interaction.reply({ content: "You don't seem to have any open bounties at the moment." });
+						return;
+					}
+
+					interaction.reply({
+						content: "You can select one of your open bounties to edit below.\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
+						components: [
+							new ActionRowBuilder().addComponents(
+								new StringSelectMenuBuilder().setCustomId("bountyeditselect")
+									.setPlaceholder("Select a bounty to edit...")
+									.setMaxValues(1)
+									.setOptions(slotOptions)
+							)
+						],
+						ephemeral: true
+					});
+				})
 				break;
 		}
 	}

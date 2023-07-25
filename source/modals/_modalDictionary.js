@@ -4,6 +4,7 @@ const { InteractionWrapper } = require("../classes");
 const modalDictionary = {};
 
 for (const file of [
+	"bountyeditmodal.js",
 	"bountypostmodal.js",
 	"feedback-bugreport.js",
 	"feedback-featurerequest.js"

@@ -2,12 +2,11 @@ const { GuildScheduledEventEntityType } = require('discord.js');
 const { database } = require('../../database');
 const { InteractionWrapper } = require('../classes');
 const { YEAR_IN_MS } = require('../constants');
-const { getRankUpdates } = require('../helpers');
 
-const customId = "bountypostmodal";
+const customId = "bountyeditmodal";
 module.exports = new InteractionWrapper(customId, 3000,
 	/** Serialize data into a bounty, then announce with showcase embed */
-	async (interaction, [slotNumber, isEvergreen]) => {
+	async (interaction, [slotNumber]) => {
 		const title = interaction.fields.getTextInputValue("title");
 		const description = interaction.fields.getTextInputValue("description");
 		const imageURL = interaction.fields.getTextInputValue("imageURL");
@@ -15,20 +14,11 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const endTimestamp = parseInt(interaction.fields.getTextInputValue("endTimestamp"));
 		const shouldMakeEvent = startTimestamp && endTimestamp;
 
-		const rawBounty = {
-			userId: interaction.user.id,
-			guildId: interaction.guildId,
-			slotNumber: parseInt(slotNumber),
-			isEvergreen: isEvergreen === "true",
-			title,
-			description
-		};
 		const errors = [];
 
 		if (imageURL) {
 			try {
 				new URL(imageURL);
-				rawBounty.attachmentURL = imageURL;
 			} catch (error) {
 				errors.push(error.message);
 			}
@@ -68,10 +58,19 @@ module.exports = new InteractionWrapper(customId, 3000,
 			return;
 		}
 
-		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
-		poster.addXP(interaction.guild, 1, true).then(() => {
-			getRankUpdates(interaction.guild);
-		});
+		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } });
+		if (title) {
+			bounty.title = title;
+		}
+		if (description) {
+			bounty.description = description;
+		}
+		if (imageURL) {
+			bounty.attachmentURL = imageURL;
+		} else if (bounty.attachmentURL) {
+			bounty.attachmentURL = null;
+		}
+
 
 		if (shouldMakeEvent) {
 			const eventPayload = {
@@ -86,28 +85,33 @@ module.exports = new InteractionWrapper(customId, 3000,
 			if (imageURL) {
 				eventPayload.image = imageURL;
 			}
-			const event = await interaction.guild.scheduledEvents.create(eventPayload);
-			rawBounty.scheduledEventId = event.id;
+			if (bounty.scheduledEventId) {
+				interaction.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
+			} else {
+				const event = await interaction.guild.scheduledEvents.create(eventPayload);
+				bounty.scheduledEventId = event.id;
+			}
+		} else if (bounty.scheduledEventId) {
+			interaction.guild.scheduledEvents.delete(bounty.scheduledEventId);
+			bounty.scheduledEventId = null;
 		}
+		bounty.editCount++;
+		bounty.save();
 
-		const bounty = await database.models.Bounty.create(rawBounty);
-
-		// post in bounty board forum
+		// update bounty board
 		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
+		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
 		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
 		if (hunterGuild.bountyBoardId) {
 			//TODO figure out how to trip auto-mod or re-add taboos
 			interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
-				return bountyBoard.threads.create({
-					name: bounty.title,
-					message: { embeds: [bountyEmbed] }
-				})
+				bountyBoard.threads.fetch(bounty.postingId);
 			}).then(posting => {
-				bounty.postingId = posting.id;
-				bounty.save()
+				posting.edit({ embeds: [bountyEmbed] });
 			})
 		}
 
-		interaction.reply(hunterGuild.sendAnnouncement({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] }));
+		interaction.update({ content: "Bounty edited!", components: [] });
+		interaction.channel.send(hunterGuild.sendAnnouncement({ content: `${interaction.member} has edited one of their bounties:`, embeds: [bountyEmbed] }));
 	}
 );
