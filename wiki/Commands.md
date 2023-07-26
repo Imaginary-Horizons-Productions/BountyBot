@@ -19,6 +19,8 @@ Post your own bounty (+1 XP)
 Edit the title, description, image, or time of one of your bounties
 #### /bounty add-completers
 Add hunter(s) to a bounty's list of completers
+#### /bounty remove-completers
+Remove hunter(s) from a bounty's list of completers
 ### /commands
 
 > Usable in DMs: true
