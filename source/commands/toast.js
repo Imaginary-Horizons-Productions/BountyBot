@@ -75,7 +75,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 
 		// Build rest of embed
 		const toastText = interaction.options.getString(options[1].name);
-		embed.setColor("e5b271")
+		embed.setColor("e5b271") //TODO #42
 			.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
 			.setTitle(toastText)
 			.setDescription(`A toast to <@${nonBotToasteeIds.join(">, <@")}>!`)

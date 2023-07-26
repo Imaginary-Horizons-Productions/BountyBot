@@ -99,7 +99,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},
-		deletedAt: { //TODO convert to paranoid
+		deletedAt: { //TODO #8 convert to paranoid
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},
