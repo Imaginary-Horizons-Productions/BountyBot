@@ -62,14 +62,15 @@ exports.getNumberEmoji = function (number) {
 
 /** Extracting user ids from mentions in a string allows us to accept an arbitrary number of users from a single string input
  * @param {string} mentionsText
+ * @param {string[]} exlcuedIds
  */
-exports.extractUserIdsFromMentions = function (mentionsText) {
+exports.extractUserIdsFromMentions = function (mentionsText, exlcuedIds) {
 	const idRegExp = RegExp(/<@(\d+)>/, "g");
 	const ids = [];
 	let results;
 	while ((results = idRegExp.exec(mentionsText)) != null) {
 		const id = results[1];
-		if (id != interaction.user.id) {
+		if (!exlcuedIds.includes(id)) {
 			ids.push(id);
 		}
 	}

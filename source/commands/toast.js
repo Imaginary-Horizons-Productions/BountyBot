@@ -33,7 +33,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		const errors = [];
 
 		// Find valid toastees
-		const toasteeIds = extractUserIdsFromMentions(interaction.options.getString(options[0].name));
+		const toasteeIds = extractUserIdsFromMentions(interaction.options.getString(options[0].name), [interaction.user.id]);
 
 		const nonBotToasteeIds = [];
 		if (toasteeIds.length < 1) {
