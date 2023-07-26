@@ -11,22 +11,19 @@ const options = [
 		type: "String",
 		name: "toastees",
 		description: "The mention(s) of the bounty hunter(s) to whom you are raising a toast",
-		required: true,
-		choices: []
+		required: true
 	},
 	{
 		type: "String",
 		name: "message",
 		description: "The text of the toast to raise",
-		required: true,
-		choices: []
+		required: true
 	},
 	{
 		type: "String",
 		name: "image-url",
 		description: "The URL to the image to add to the toast",
-		required: false,
-		choices: []
+		required: false
 	}
 ];
 const subcommands = [];
