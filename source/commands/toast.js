@@ -1,7 +1,7 @@
 const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { SAFE_DELIMITER, DAY_IN_MS } = require('../constants');
-const { getNumberEmoji, getRankUpdates } = require('../helpers');
+const { getNumberEmoji, getRankUpdates, extractUserIdsFromMentions } = require('../helpers');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
 
@@ -36,15 +36,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		const errors = [];
 
 		// Find valid toastees
-		const idRegExp = RegExp(/<@(\d+)>/, "g");
-		const toasteeIds = [];
-		let results;
-		while ((results = idRegExp.exec(interaction.options.getString(options[0].name))) != null) {
-			const id = results[1];
-			if (id != interaction.user.id) {
-				toasteeIds.push(id);
-			}
-		}
+		const toasteeIds = extractUserIdsFromMentions(interaction.options.getString(options[0].name));
 
 		const nonBotToasteeIds = [];
 		if (toasteeIds.length < 1) {
@@ -117,7 +109,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			return (await list).concat((await toast.rewardedRecipients).map(reciept => reciept.recipientId));
 		}, new Promise((resolve) => { resolve([]) }));
 
-		const recipientRecords = [];
+		const rawRecipients = [];
 		let rewardedRecipients = [];
 		let critValue = 0;
 		//TODO combine fetch and seasonToasts increment with upsert?
@@ -158,9 +150,9 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 
 				rewardsAvailable--;
 			}
-			recipientRecords.push(rawToast);
+			rawRecipients.push(rawToast);
 		}
-		database.models.ToastRecipient.bulkCreate(recipientRecords);
+		database.models.ToastRecipient.bulkCreate(rawRecipients);
 
 		// Add XP and update ranks
 		const levelTexts = [];

@@ -60,6 +60,22 @@ exports.getNumberEmoji = function (number) {
 	}
 }
 
+/** Extracting user ids from mentions in a string allows us to accept an arbitrary number of users from a single string input
+ * @param {string} mentionsText
+ */
+exports.extractUserIdsFromMentions = function (mentionsText) {
+	const idRegExp = RegExp(/<@(\d+)>/, "g");
+	const ids = [];
+	let results;
+	while ((results = idRegExp.exec(mentionsText)) != null) {
+		const id = results[1];
+		if (id != interaction.user.id) {
+			ids.push(id);
+		}
+	}
+	return ids;
+}
+
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
  * @param {database.models.Hunter[]} participants
  * @param {GuildRank[]} ranks
