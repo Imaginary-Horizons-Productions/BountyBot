@@ -16,7 +16,9 @@ Bounties are user-created objectives for other server members to complete
 #### /bounty post
 Post your own bounty (+1 XP)
 #### /bounty edit
-Edit one of your bounties
+Edit the title, description, image, or time of one of your bounties
+#### /bounty add-completers
+Add hunter(s) to a bounty's list of completers
 ### /commands
 
 > Usable in DMs: true
