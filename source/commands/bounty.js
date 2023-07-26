@@ -2,6 +2,7 @@ const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = requi
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getNumberEmoji, extractUserIdsFromMentions } = require('../helpers');
+const { Op } = require('sequelize');
 
 const customId = "bounty";
 const options = [];
@@ -28,6 +29,24 @@ const subcommands = [
 				type: "String",
 				name: "hunters",
 				description: "The bounty hunter(s) to add as completer(s)",
+				required: true
+			}
+		]
+	},
+	{
+		name: "remove-completers",
+		description: "Remove hunter(s) from a bounty's list of completers",
+		optionsInput: [
+			{
+				type: "Integer",
+				name: "bounty-slot",
+				description: "The slot number of the bounty from which to remove completers",
+				required: true
+			},
+			{
+				type: "String",
+				name: "hunters",
+				description: "The bounty hunter(s) to remove",
 				required: true
 			}
 		]
@@ -155,6 +174,38 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 
 					interaction.reply({
 						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, ")}>\n\nThey will recieve the reward XP when you \`/bounty complete\`.`,
+						ephemeral: true
+					});
+				})
+				break;
+			case subcommands[3].name: // remove-completers
+				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(async openBounties => {
+					const slotsWithBounties = openBounties.map(bounty => bounty.slotNumber);
+
+					if (slotsWithBounties.length < 1) {
+						interaction.reply({ content: "You don't seem to have any open bounties at the moment." });
+						return;
+					}
+
+					const slotNumber = interaction.options.getInteger("bounty-slot");
+					if (!slotsWithBounties.includes(slotNumber)) {
+						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
+						return;
+					}
+
+					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
+					const bounty = openBounties.find(bounty => bounty.slotNumber == slotNumber);
+					if (mentionedIds.length < 1) {
+						interaction.reply({ content: "Could not find any user mentions in `hunters`.", ephemeral: true });
+						return;
+					}
+
+					database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: mentionedIds } } });
+					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
+					bounty.updatePosting(interaction.guild, guildProfile);
+
+					interaction.reply({ //TODO make sure acknowledging interactions is sharding safe
+						content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`,
 						ephemeral: true
 					});
 				})
