@@ -151,18 +151,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					}
 					database.models.Completion.bulkCreate(rawCompletions);
 					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-					if (guildProfile.bountyBoardId) {
-						const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
-						interaction.guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
-							return bountyBoard.threads.fetch(bounty.postingId);
-						}).then(thread => {
-							return thread.fetchStarterMessage();
-						}).then(posting => {
-							bounty.asEmbed(interaction.guild, poster, guildProfile).then(embed => {
-								posting.edit({ embeds: [embed] })
-							})
-						})
-					}
+					bounty.updatePosting(interaction.guild, guildProfile);
 
 					interaction.reply({
 						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, ")}>\n\nThey will recieve the reward XP when you \`/bounty complete\`.`,

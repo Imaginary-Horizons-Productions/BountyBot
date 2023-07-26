@@ -103,14 +103,8 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
 		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
 		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
-		if (hunterGuild.bountyBoardId) {
-			//TODO #42 figure out how to trip auto-mod or re-add taboos
-			interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
-				bountyBoard.threads.fetch(bounty.postingId);
-			}).then(posting => {
-				posting.edit({ embeds: [bountyEmbed] });
-			})
-		}
+		//TODO #42 figure out how to trip auto-mod or re-add taboos
+		bounty.updatePosting(interaction.guild, hunterGuild);
 
 		interaction.update({ content: "Bounty edited!", components: [] });
 		interaction.channel.send(hunterGuild.sendAnnouncement({ content: `${interaction.member} has edited one of their bounties:`, embeds: [bountyEmbed] }));

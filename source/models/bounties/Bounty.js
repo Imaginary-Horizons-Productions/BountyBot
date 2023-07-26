@@ -31,7 +31,10 @@ exports.Bounty = class extends Model {
 			if (this.attachmentURL) {
 				embed.setImage(this.attachmentURL);
 			}
-			//TODO add start/end timestamps
+			if (this.scheduledEventId) {
+				const event = await guild.scheduledEvents.fetch(this.scheduledEventId);
+				embed.addFields({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
+			}
 			const completions = await database.models.Completion.findAll({ where: { bountyId: this.id } });
 			if (completions.length > 0) {
 				embed.addFields({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
@@ -48,6 +51,26 @@ exports.Bounty = class extends Model {
 
 			return embed;
 		});
+	}
+
+	/** Update the bounty's embed in the bounty board
+	 * @param {Guild} guild
+	 * @param {HunterGuild} guildProfile
+	 */
+	async updatePosting(guild, guildProfile) {
+		if (guildProfile.bountyBoardId) {
+			const poster = await database.models.Hunter.findOne({ where: { userId: this.userId, guildId: this.guildId } });
+			guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
+				return bountyBoard.threads.fetch(this.postingId);
+			}).then(thread => {
+				thread.edit({name: this.title});
+				return thread.fetchStarterMessage();
+			}).then(posting => {
+				this.asEmbed(guild, poster, guildProfile).then(embed => {
+					posting.edit({ embeds: [embed] })
+				})
+			})
+		}
 	}
 }
 
