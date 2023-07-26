@@ -64,6 +64,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		}
 
 		if (errors.length > 0) {
+			interaction.message.edit({ components: [] });
 			interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
 			return;
 		}
