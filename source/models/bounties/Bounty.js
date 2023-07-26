@@ -9,13 +9,13 @@ const { database } = require('../../../database');
 exports.Bounty = class extends Model {
 	/** Generate an embed for the given bounty
 	 * @param {Guild} guild
-	 * @param {Hunter?} hunter
+	 * @param {Hunter?} poster
 	 * @param {HunterGuild?} hunterGuild
 	 */
-	asEmbed(guild, hunter, hunterGuild) {
+	asEmbed(guild, poster, hunterGuild) {
 		return guild.members.fetch(this.userId).then(async author => {
-			if (!hunter) {
-				hunter = await database.models.Hunter.findOne({ where: { userId: this.userId, guildId: this.guildId } });
+			if (!poster) {
+				poster = await database.models.Hunter.findOne({ where: { userId: this.userId, guildId: this.guildId } });
 			}
 			if (!hunterGuild) {
 				hunterGuild = await database.models.Guild.findByPk(this.guildId);
@@ -26,18 +26,20 @@ exports.Bounty = class extends Model {
 				.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png')
 				.setTitle(this.title)
 				.setDescription(this.description)
-				.addFields(
-					{ name: "Reward", value: `${hunter.slotWorth(this.slotNumber)} XP${hunterGuild.eventMultiplierString()}`, inline: true }
-				)
 				.setTimestamp();
 
 			if (this.attachmentURL) {
 				embed.setImage(this.attachmentURL);
 			}
-			if (this.state === "completed") {
-				const completions = await database.models.Completion.findAll({ where: { bountyId: this.id } });
-				embed.addField("Completed By", `<@${completions.map(reciept => reciept.userId).join(">, <@")}>`);
+			//TODO add start/end timestamps
+			const completions = await database.models.Completion.findAll({ where: { bountyId: this.id } });
+			if (completions.length > 0) {
+				embed.addFields({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
 			}
+			embed.addFields(
+				{ name: "Reward", value: `${poster.slotWorth(this.slotNumber)} XP${hunterGuild.eventMultiplierString()}`, inline: true }
+			)
+
 			if (this.isEvergreen) {
 				embed.setFooter({ text: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
 			} else {
@@ -99,7 +101,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},
-		deletedAt: { //TODO convert to paranoid
+		deletedAt: { //TODO #8 convert to paranoid
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},

@@ -3,7 +3,12 @@ const { buildVersionEmbed } = require('../embedHelpers');
 
 const customId = "version";
 const options = [
-	{ type: "Boolean", name: "get-recent-changes", description: "Otherwise get the full change log", required: true, choices: [] }
+	{
+		type: "Boolean",
+		name: "get-recent-changes",
+		description: "Otherwise get the full change log",
+		required: true
+	}
 ];
 const subcommands = [];
 module.exports = new CommandWrapper(customId, "Get the most recent changes or the full change log", null, false, true, 3000, options, subcommands,

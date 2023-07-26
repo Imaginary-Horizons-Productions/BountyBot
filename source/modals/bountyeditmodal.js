@@ -54,7 +54,8 @@ module.exports = new InteractionWrapper(customId, 3000,
 		}
 
 		if (errors.length > 0) {
-			interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
+			interaction.message.edit({ components: [] });
+			interaction.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
 			return;
 		}
 
@@ -103,7 +104,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
 		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
 		if (hunterGuild.bountyBoardId) {
-			//TODO figure out how to trip auto-mod or re-add taboos
+			//TODO #42 figure out how to trip auto-mod or re-add taboos
 			interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
 				bountyBoard.threads.fetch(bounty.postingId);
 			}).then(posting => {
