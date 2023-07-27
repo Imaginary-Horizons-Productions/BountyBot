@@ -54,6 +54,7 @@ const subcommands = [
 ];
 module.exports = new CommandWrapper(customId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
 	(interaction) => {
+		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
 				database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
@@ -123,17 +124,15 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				})
 				break;
 			case subcommands[2].name: // add-completers
-				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(async openBounties => {
-					const slotsWithBounties = openBounties.map(bounty => bounty.slotNumber);
-					const slotNumber = interaction.options.getInteger("bounty-slot");
-					if (!slotsWithBounties.includes(slotNumber)) {
+				slotNumber = interaction.options.getInteger("bounty-slot");
+				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+					if (!bounty) {
 						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
 						return;
 					}
 
 					const completerIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), [interaction.user.id]);
 					const validatedCompleterIds = [];
-					const bounty = openBounties.find(bounty => bounty.slotNumber == slotNumber);
 					if (completerIds.length < 1) {
 						interaction.reply({ content: "Could not find any user mentions in `hunters` (you can't add yourself).", ephemeral: true });
 						return;
@@ -183,16 +182,14 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				})
 				break;
 			case subcommands[3].name: // remove-completers
-				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(async openBounties => {
-					const slotsWithBounties = openBounties.map(bounty => bounty.slotNumber);
-					const slotNumber = interaction.options.getInteger("bounty-slot");
-					if (!slotsWithBounties.includes(slotNumber)) {
+				slotNumber = interaction.options.getInteger("bounty-slot");
+				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+					if (!bounty) {
 						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
 						return;
 					}
 
 					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
-					const bounty = openBounties.find(bounty => bounty.slotNumber == slotNumber);
 					if (mentionedIds.length < 1) {
 						interaction.reply({ content: "Could not find any user mentions in `hunters`.", ephemeral: true });
 						return;
