@@ -111,7 +111,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		let critValue = 0;
 		//TODO combine fetch and seasonToasts increment with upsert?
 		const [guildProfile] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
-		guildProfile.increment({ "seasonToasts": 1 });
+		guildProfile.increment("seasonToasts");
 		const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId }, defaults: { isRankEligible: interaction.member.manageable } });
 		sender.toastsRaised++;

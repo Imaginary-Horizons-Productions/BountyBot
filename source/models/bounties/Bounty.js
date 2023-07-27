@@ -21,10 +21,15 @@ exports.Bounty = class extends Model {
 				hunterGuild = await database.models.Guild.findByPk(this.guildId);
 			}
 
+			const thumbnails = {
+				open: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
+				complete: "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
+				deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+			};
 			const embed = new EmbedBuilder().setColor(author.displayColor)
 				.setAuthor(ihpAuthorPayload)
-				.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png')
-				.setTitle(this.title)
+				.setThumbnail(thumbnails[this.state])
+				.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
 				.setDescription(this.description)
 				.setTimestamp();
 
@@ -63,7 +68,7 @@ exports.Bounty = class extends Model {
 			guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(this.postingId);
 			}).then(thread => {
-				thread.edit({name: this.title});
+				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
 				this.asEmbed(guild, poster, guildProfile).then(embed => {
@@ -121,7 +126,7 @@ exports.initModel = function (sequelize) {
 			defaultValue: "open"
 		},
 		completedAt: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.DATE,
 			defaultValue: null
 		},
 		deletedAt: { //TODO #8 convert to paranoid

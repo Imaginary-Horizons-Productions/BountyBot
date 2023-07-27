@@ -87,7 +87,7 @@ exports.setRanks = async (participants, ranks) => {
 	let mean = 0;
 	const rankableHunters = [];
 	for (const hunter of participants) {
-		if (hunter.isRankEligible) {
+		if (hunter.isRankEligible && !hunter.isRankDisqualified) {
 			if (hunter.seasonPlacement == 1) {
 				previousFirstPlaceId = hunter.userId;
 			}
@@ -161,7 +161,7 @@ exports.getRankUpdates = async function (guild, force = false) {
 				const member = await guild.members.fetch(hunter.userId);
 				if (member.manageable) {
 					await member.roles.remove(roleIds);
-					if (hunter.isRankEligible) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+					if (hunter.isRankEligible && !hunter.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
 						let destinationRole;
 						const rankRoleId = ranks[hunter.rank]?.roleId;
 						if (rankRoleId) {
