@@ -1,7 +1,7 @@
 const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getNumberEmoji, extractUserIdsFromMentions } = require('../helpers');
+const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates } = require('../helpers');
 const { Op } = require('sequelize');
 
 const customId = "bounty";
@@ -48,6 +48,24 @@ const subcommands = [
 				name: "hunters",
 				description: "The bounty hunter(s) to remove",
 				required: true
+			}
+		]
+	},
+	{
+		name: "complete",
+		description: "Close one of your open bounties, awarding XP to completers",
+		optionsInput: [
+			{
+				type: "Integer",
+				name: "bounty-slot",
+				description: "The slot number of the bounty to complete",
+				required: true
+			},
+			{
+				type: "String",
+				name: "hunters",
+				description: "The bounty hunter(s) to credit with completion",
+				required: false
 			}
 		]
 	}
@@ -203,6 +221,106 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`,
 						ephemeral: true
 					});
+				})
+				break;
+			case subcommands[4].name: // complete
+				slotNumber = interaction.options.getInteger("bounty-slot");
+				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+					if (!bounty) {
+						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
+						return;
+					}
+
+					// poster guaranteed to exist, creating a bounty gives 1 XP
+					const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
+					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
+					const bountyValue = poster.slotWorth(slotNumber) * guildProfile.eventMultiplier;
+
+					const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
+					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
+					const completerIdsWithoutReciept = [];
+					for (const id of mentionedIds) {
+						if (!allCompleterIds.includes(id)) {
+							allCompleterIds.push(id);
+							completerIdsWithoutReciept.push(id);
+						}
+					}
+
+					const validatedCompleterIds = [];
+					const completerMembers = allCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: allCompleterIds })).values() : [];
+					const levelTexts = [];
+					for (const member of completerMembers) {
+						if (!member.user.bot) {
+							const memberId = member.id;
+							const [user] = await database.models.User.findOrCreate({ where: { id: memberId } });
+							const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
+							if (!hunter.isBanned) {
+								validatedCompleterIds.push(memberId);
+							}
+						}
+					}
+
+					if (validatedCompleterIds.length < 1) {
+						interaction.reply({ content: "There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use `/bounty take-down`.", ephemeral: true })
+						return;
+					}
+
+					guildProfile.increment("seasonBounties");
+
+					if (!bounty.isEvergreen) {
+						bounty.state = "completed";
+						bounty.completedAt = new Date();
+						bounty.save();
+					}
+
+					const rawCompletions = [];
+					for (const userId of completerIdsWithoutReciept) {
+						rawCompletions.push({
+							bountyId: bounty.id,
+							userId,
+							guildId: interaction.guildId
+						});
+					}
+					await database.models.Completion.bulkCreate(rawCompletions);
+					database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
+
+					for (const userId of validatedCompleterIds) {
+						const hunter = await database.models.Hunter.findOne({ where: { guildId: interaction.guildId, userId } });
+						levelTexts.concat(await hunter.addXP(interaction.guild, bountyValue, true));
+						hunter.othersFinished++;
+						hunter.save();
+					}
+
+					const posterXP = Math.ceil(validatedCompleterIds.length / 2) * guildProfile.eventMultiplier;
+					levelTexts.concat(await poster.addXP(interaction.guild, posterXP, true));
+					poster.mineFinished++;
+					poster.save();
+
+					bounty.asEmbed(interaction.guild, poster, guildProfile).then(embed => {
+						interaction.reply({ embeds: [embed] });
+					}).then(() => {
+						return bounty.updatePosting(interaction.guild, guildProfile);
+					}).then(() => {
+						getRankUpdates(interaction.guild).then(rankUpdates => {
+							interaction.guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
+								bountyBoard.threads.fetch(bounty.postingId).then(thread => {
+									const multiplierString = guildProfile.eventMultiplierString();
+									let text = "";
+									if (rankUpdates.length > 0) {
+										text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
+									}
+									text += `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}\n`;
+									if (levelTexts.length > 0) {
+										text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
+									}
+									if (text.length > 2000) {
+										text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
+									}
+									thread.send(text);
+								})
+							})
+						});
+					})
 				})
 				break;
 		}

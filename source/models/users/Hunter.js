@@ -56,7 +56,7 @@ exports.Hunter = class extends Model {
 			for (let level = previousLevel + 1; level <= this.level; level++) {
 				rewards.push(this.levelUpReward(level, guildProfile.maxSimBounties, false));
 			}
-			levelText += `${congratulationBuilder()}, <@${userId}>! You have leveled up to level **${this.level}**!\n${rewards.join('\n')}`;
+			levelText += `${congratulationBuilder()}, <@${this.userId}>! You have leveled up to level **${this.level}**!\n${rewards.join('\n')}`;
 		}
 
 		if (guildProfile.level > previousGuildLevel) {
