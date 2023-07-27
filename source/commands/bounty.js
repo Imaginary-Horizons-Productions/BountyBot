@@ -142,8 +142,10 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, guildId: interaction.guildId } });
 						const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 						for (const member of completerMembers) {
-							if (!existingCompleterIds.includes(member.id) && !member.user.bot) {
-								validatedCompleterIds.push(member.id);
+							const memberId = member.id;
+							if (!existingCompleterIds.includes(memberId) && !member.user.bot) {
+								existingCompleterIds.push(memberId);
+								validatedCompleterIds.push(memberId);
 							}
 						}
 
