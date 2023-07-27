@@ -178,7 +178,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
 		},
-		isDQ: {
+		isRankDisqualified: { // Expires at end of season
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
 		},
