@@ -125,12 +125,6 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 			case subcommands[2].name: // add-completers
 				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(async openBounties => {
 					const slotsWithBounties = openBounties.map(bounty => bounty.slotNumber);
-
-					if (slotsWithBounties.length < 1) {
-						interaction.reply({ content: "You don't seem to have any open bounties at the moment." });
-						return;
-					}
-
 					const slotNumber = interaction.options.getInteger("bounty-slot");
 					if (!slotsWithBounties.includes(slotNumber)) {
 						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
@@ -181,12 +175,6 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 			case subcommands[3].name: // remove-completers
 				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(async openBounties => {
 					const slotsWithBounties = openBounties.map(bounty => bounty.slotNumber);
-
-					if (slotsWithBounties.length < 1) {
-						interaction.reply({ content: "You don't seem to have any open bounties at the moment." });
-						return;
-					}
-
 					const slotNumber = interaction.options.getInteger("bounty-slot");
 					if (!slotsWithBounties.includes(slotNumber)) {
 						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
