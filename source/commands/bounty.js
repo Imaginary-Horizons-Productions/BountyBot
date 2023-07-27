@@ -137,27 +137,35 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					if (completerIds.length < 1) {
 						interaction.reply({ content: "Could not find any user mentions in `hunters` (you can't add yourself).", ephemeral: true });
 						return;
-					} else {
-						const completerMembers = (await interaction.guild.members.fetch({ user: completerIds })).values();
-						const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, guildId: interaction.guildId } });
-						const existingCompleterIds = existingCompletions.map(completion => completion.userId);
-						for (const member of completerMembers) {
-							const memberId = member.id;
-							if (!existingCompleterIds.includes(memberId) && !member.user.bot) {
+					}
+
+					const completerMembers = (await interaction.guild.members.fetch({ user: completerIds })).values();
+					const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, guildId: interaction.guildId } });
+					const existingCompleterIds = existingCompletions.map(completion => completion.userId);
+					const bannedIds = [];
+					for (const member of completerMembers) {
+						const memberId = member.id;
+						if (!existingCompleterIds.includes(memberId)) {
+							const [user] = await database.models.User.findOrCreate({ where: { id: memberId } });
+							const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
+							if (hunter.isBanned) {
+								bannedIds.push(memberId);
+								continue;
+							}
+							if (!member.user.bot) {
 								existingCompleterIds.push(memberId);
 								validatedCompleterIds.push(memberId);
 							}
 						}
+					}
 
-						if (validatedCompleterIds.length < 1) {
-							interaction.reply({ content: "Could not find any new non-bot mentions in `hunters`.", ephemeral: true });
-							return;
-						}
+					if (validatedCompleterIds.length < 1) {
+						interaction.reply({ content: "Could not find any new non-bot mentions in `hunters`.", ephemeral: true });
+						return;
 					}
 
 					const rawCompletions = [];
 					for (const userId of validatedCompleterIds) {
-						const [user] = await database.models.User.findOrCreate({ where: { id: userId } });
 						rawCompletions.push({
 							bountyId: bounty.id,
 							userId,
@@ -169,7 +177,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					bounty.updatePosting(interaction.guild, guildProfile);
 
 					interaction.reply({
-						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, ")}>\n\nThey will recieve the reward XP when you \`/bounty complete\`.`,
+						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, ")}>\n\nThey will recieve the reward XP when you \`/bounty complete\`.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
 						ephemeral: true
 					});
 				})
