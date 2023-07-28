@@ -13,9 +13,11 @@ module.exports = new InteractionWrapper(customId, 3000,
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		const guildProfile = await database.models.Guild.findOne({ where: { id: interaction.guildId } });
 		guildProfile.decrement("seasonXP");
-		const bountyBoard = await interaction.guild.channels.fetch(guildProfile.bountyBoardId);
-		const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
-		postingThread.delete("Bounty taken down by poster");
+		if (guildProfile.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(guildProfile.bountyBoardId);
+			const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
+			postingThread.delete("Bounty taken down by poster");
+		}
 		bounty.destroy();
 
 		database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } }).then(hunter => {
