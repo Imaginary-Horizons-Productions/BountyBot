@@ -129,10 +129,6 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.DATE,
 			defaultValue: null
 		},
-		deletedAt: { //TODO #8 convert to paranoid
-			type: DataTypes.INTEGER,
-			defaultValue: null
-		},
 		editCount: {
 			type: DataTypes.INTEGER,
 			defaultValue: 0
@@ -140,6 +136,7 @@ exports.initModel = function (sequelize) {
 	}, {
 		sequelize,
 		modelName: 'Bounty',
-		freezeTableName: true
+		freezeTableName: true,
+		paranoid: true
 	});
 }

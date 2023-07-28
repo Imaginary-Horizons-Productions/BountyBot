@@ -68,6 +68,10 @@ const subcommands = [
 				required: false
 			}
 		]
+	},
+	{
+		name: "take-down",
+		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
 	}
 ];
 module.exports = new CommandWrapper(customId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
@@ -321,6 +325,31 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 							})
 						});
 					})
+				})
+				break;
+			case subcommands[5].name: // take-down
+				database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.user.id, state: "open" } }).then(openBounties => {
+					const bountyOptions = openBounties.map(bounty => {
+						return {
+							emoji: getNumberEmoji(bounty.slotNumber),
+							label: bounty.title,
+							description: bounty.description,
+							value: bounty.slotNumber.toString()
+						};
+					});
+
+					interaction.reply({
+						content: "If you'd like to change the title, description, image, or time of your bounty, you can use `/bounty edit` instead.",
+						components: [
+							new ActionRowBuilder().addComponents(
+								new StringSelectMenuBuilder().setCustomId("bountytakedown")
+									.setPlaceholder("Select a bounty to take down...")
+									.setMaxValues(1)
+									.setOptions(bountyOptions)
+							)
+						],
+						ephemeral: true
+					});
 				})
 				break;
 		}
