@@ -22,7 +22,6 @@ const subcommands = [
 		description: "End the event, returning to normal XP",
 	}
 ];
-
 module.exports = new CommandWrapper(customId, "Manage a server-wide event that multiplies XP of bounty completions, toast reciepts, and crit toasts", PermissionFlagsBits.ManageGuild, true, false, 3000, options, subcommands,
 	/** Allow users to manage XP multiplier events */
 	(interaction) => {

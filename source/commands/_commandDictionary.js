@@ -8,6 +8,7 @@ exports.commandFiles = [
 	"create-bounty-board.js",
 	"event.js",
 	"feedback.js",
+	"moderation.js",
 	"premium.js",
 	"scoreboard.js",
 	"stats.js",
