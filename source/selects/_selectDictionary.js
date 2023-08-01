@@ -6,7 +6,8 @@ const selectDictionary = {};
 for (const file of [
 	"bountyeditselect.js",
 	"bountypostselect.js",
-	"bountytakedown.js"
+	"bountytakedown.js",
+	"modtakedown.js"
 ]) {
 	const select = require(`./${file}`);
 	selectDictionary[select.customId] = select;
