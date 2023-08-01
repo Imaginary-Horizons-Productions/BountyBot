@@ -235,6 +235,12 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						return;
 					}
 
+					// disallow completion within 5 minutes of creating bounty
+					if (bounty.createdAt < Date.now() + 300000) {
+						interaction.reply({ content: "Bounties cannot be completed within 5 minutes of their posting. You can `/bounty add-completers` so you won't forget instead.", ephemeral: true });
+						return;
+					}
+
 					// poster guaranteed to exist, creating a bounty gives 1 XP
 					const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
 					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
@@ -300,7 +306,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					poster.mineFinished++;
 					poster.save();
 
-					bounty.asEmbed(interaction.guild, poster, guildProfile).then(embed => {
+					bounty.asEmbed(interaction.guild, poster, guildProfile).then(embed => { //TODO #51 `/bounty complete` crashes on uncaught error if used without bounty board forum channel
 						interaction.reply({ embeds: [embed] });
 					}).then(() => {
 						return bounty.updatePosting(interaction.guild, guildProfile);
