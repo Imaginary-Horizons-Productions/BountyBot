@@ -127,7 +127,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					});
 
 					if (slotOptions.length < 1) {
-						interaction.reply({ content: "You don't seem to have any open bounties at the moment." });
+						interaction.reply({ content: "You don't seem to have any open bounties at the moment.", ephemeral: true });
 						return;
 					}
 
