@@ -112,12 +112,15 @@ exports.setRanks = async (participants, ranks) => {
 	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => total + (hunter.seasonXP - mean) ** 2, 0) / rankableHunters.length);
 	if (ranks?.length > 0) {
 		for (const hunter of rankableHunters) {
-			let variance = (hunter.seasonXP - mean) / stdDev;
-			ranks.forEach((rank, index) => {
+			let variance = (hunter.seasonXP - mean) / stdDev; //TODO actually store Hunter.xpVariance and make Hunter.rank a virtual field
+			let index = -1;
+			for (const rank of ranks) {
+				index++;
 				if (variance >= rank.varianceThreshold) {
-					hunter.rank = index;
+					break;
 				}
-			});
+			}
+			hunter.rank = index;
 			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
 		}
 	}
@@ -149,7 +152,7 @@ exports.setRanks = async (participants, ranks) => {
  */
 exports.getRankUpdates = async function (guild, force = false) {
 	const allHunters = await database.models.Hunter.findAll({ where: { guildId: guild.id }, order: [["seasonXP", "DESC"]] });
-	const ranks = await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "ASC"]] });
+	const ranks = await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	return exports.setRanks(allHunters, ranks).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 		const outMessages = [];
@@ -168,7 +171,7 @@ exports.getRankUpdates = async function (guild, force = false) {
 							await member.roles.add(rankRoleId);
 							destinationRole = await guild.roles.fetch(rankRoleId);
 						}
-						if (destinationRole && hunter.rank > hunter.lastRank) { // Feature: don't comment on rank downs
+						if (destinationRole && hunter.rank < hunter.lastRank) { // Note: higher ranks are lower value
 							outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
 						}
 					}
