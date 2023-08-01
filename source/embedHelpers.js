@@ -67,7 +67,7 @@ exports.generateScorelines = async function (guild, isSeasonScoreboard) {
 	}
 
 	const hunters = await database.models.Hunter.findAll(queryParams);
-	const hunterMembers = await guild.members.fetch(hunters.map(hunter => hunter.userId));
+	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 	const rankMojiArray = (await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankMoji);
 
 	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankMojiArray[hunter.rank]} ` : ""}#${hunter.seasonPlacement} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${isSeasonScoreboard ? `${hunter.seasonXP} season XP` : `${hunter.xp} XP`}*`).join("\n");
