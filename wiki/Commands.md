@@ -64,6 +64,16 @@ Provide feedback on this bot to the developers
 > Choices: `bug report`, `feature request`
 
 the type of feedback you'd like to provide
+### /moderation
+> Permission Level: ManageRoles
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+BountyBot moderation tools
+#### /moderation take-down
+Take down another user's bounty
 ### /premium
 > Permission Level: ViewChannel
 
