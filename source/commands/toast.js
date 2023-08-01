@@ -47,7 +47,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			}
 
 			if (nonBotToasteeIds.length < 1) {
-				errors.push("Could not parse any user mentions from `toastees`.");
+				errors.push("Could not parse any non-bot mentions from `toastees`.");
 			}
 		}
 
@@ -165,7 +165,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			components: [
 				new ActionRowBuilder().addComponents(
 					new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toast.id}`)
-						.setLabel("I second this toast!")
+						.setLabel("Seconded!")
 						.setEmoji(getNumberEmoji(2))
 						.setStyle(ButtonStyle.Primary)
 				)
