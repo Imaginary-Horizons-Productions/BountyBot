@@ -96,19 +96,25 @@ module.exports = new InteractionWrapper(customId, 3000,
 		// post in bounty board forum
 		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
 		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
-		if (hunterGuild.bountyBoardId) {
-			//TODO #42 figure out how to trip auto-mod or re-add taboos
-			interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
-				return bountyBoard.threads.create({
-					name: bounty.title,
-					message: { embeds: [bountyEmbed] }
+		interaction.reply(hunterGuild.sendAnnouncement({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
+			if (hunterGuild.bountyBoardId) {
+				//TODO #42 figure out how to trip auto-mod or re-add taboos
+				interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
+					return bountyBoard.threads.create({
+						name: bounty.title,
+						message: { embeds: [bountyEmbed] }
+					})
+				}).then(posting => {
+					bounty.postingId = posting.id;
+					bounty.save()
+				}).catch(error => {
+					if (error.code == 10003) {
+						interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-bounty-board`?", ephemeral: true });
+					} else {
+						throw error;
+					}
 				})
-			}).then(posting => {
-				bounty.postingId = posting.id;
-				bounty.save()
-			})
-		}
-
-		interaction.reply(hunterGuild.sendAnnouncement({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] }));
+			}
+		});
 	}
 );
