@@ -40,6 +40,18 @@ Get a link to BountyBot's commands page
 > Cooldown: 30 second(s)
 
 Create a new bounty board forum channel sibling to this channel
+### /event
+> Permission Level: ManageGuild
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Manage a server-wide event that multiplies XP of bounty completions, toast reciepts, and crit toasts
+#### /event start
+Start an XP multiplier event
+#### /event close
+End the event, returning to normal XP
 ### /feedback
 > Permission Level: SendMessages
 
