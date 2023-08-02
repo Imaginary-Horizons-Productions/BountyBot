@@ -4,7 +4,7 @@ const { database } = require('../../database');
 const { generateScorelines } = require('../embedHelpers');
 const { generateBountyBoardThread } = require('../helpers');
 
-const customId = "create-bounty-board"; //TODO convert to supercommand, add "create scoreboard-reference"
+const customId = "create-bounty-board"; //TODO #56 convert to supercommand, add "create scoreboard-reference"
 const options = [];
 const subcommands = [];
 module.exports = new CommandWrapper(customId, "Create a new bounty board forum channel sibling to this channel", PermissionFlagsBits.ManageChannels, false, false, 30000, options, subcommands,
