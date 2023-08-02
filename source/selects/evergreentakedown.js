@@ -9,6 +9,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.client.user.id, guildId: interaction.guildId, slotNumber, state: "open" } });
 		bounty.state = "deleted";
 		bounty.save();
+		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		const guildProfile = await database.models.Guild.findOne({ where: { id: interaction.guildId } });
 		const evergreenBounties = await database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
 		if (evergreenBounties.length > 1) {
