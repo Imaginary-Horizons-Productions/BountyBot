@@ -7,6 +7,7 @@ for (const file of [
 	"bountyeditselect.js",
 	"bountypostselect.js",
 	"bountytakedown.js",
+	"evergreeneditselect.js",
 	"modtakedown.js"
 ]) {
 	const select = require(`./${file}`);
