@@ -53,11 +53,11 @@ exports.buildGuildStatsEmbed = async function (guild) {
 	});
 }
 
-/** Returns the text of a guild's bounty hunters' scores in descending order
+/** Listing XP acquired allows bounty hunters to compare ranking within a server
  * @param {Guild} guild
  * @param {boolean} isSeasonScoreboard
  */
-exports.generateScorelines = async function (guild, isSeasonScoreboard) {
+exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
 	const queryParams = { where: { guildId: guild.id } };
 	if (isSeasonScoreboard) {
 		queryParams.where.seasonXP = { [Op.gt]: 0 };
@@ -71,19 +71,13 @@ exports.generateScorelines = async function (guild, isSeasonScoreboard) {
 	const rankMojiArray = (await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankMoji);
 
 	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankMojiArray[hunter.rank]} ` : ""}#${hunter.seasonPlacement} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${isSeasonScoreboard ? `${hunter.seasonXP} season XP` : `${hunter.xp} XP`}*`).join("\n");
-	return scorelines || "No Bounty Hunters yet..."; //TODO handle character overflow
-}
+	//TODO handle character overflow
 
-/** Listing XP acquired allows bounty hunters to compare ranking within a server
- * @param {Guild} guild
- * @param {boolean} isSeasonScoreboard
- */
-exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle(`The ${isSeasonScoreboard ? "Season " : ""}Scoreboard`)
-		.setDescription(await exports.generateScorelines(guild, isSeasonScoreboard))
+		.setDescription(scorelines || "No Bounty Hunters yet...")
 		.setFooter(exports.randomFooterTip())
 		.setTimestamp();
 }

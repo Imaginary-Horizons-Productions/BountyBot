@@ -328,6 +328,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 									thread.send(text);
 								})
 							})
+							//TODONOW update scoreboard
 						});
 					})
 				})

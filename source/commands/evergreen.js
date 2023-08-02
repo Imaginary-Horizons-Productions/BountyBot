@@ -194,6 +194,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 								}
 								thread.send(text);
 							})
+							//TODONOW update scoreboard
 						});
 					})
 				})

@@ -188,6 +188,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 						thread.send(text);
+						//TODONOW update scoreboard
 					})
 				}
 			});
