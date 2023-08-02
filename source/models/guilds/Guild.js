@@ -110,16 +110,16 @@ exports.initModel = function (sequelize) {
 			defaultValue: 3600000
 		},
 		bountyBoardId: {
+			type: DataTypes.STRING
+		},
+		evergreenThreadId: {
 			type: DataTypes.STRING,
-			defaultValue: ''
 		},
 		scoreId: {
-			type: DataTypes.STRING,
-			defaultValue: ''
+			type: DataTypes.STRING
 		},
 		raffleDate: {
-			type: DataTypes.STRING,
-			defaultValue: ''
+			type: DataTypes.DATE
 		},
 		eventMultiplier: {
 			type: DataTypes.INTEGER,
@@ -142,8 +142,7 @@ exports.initModel = function (sequelize) {
 			defaultValue: 0
 		},
 		resetSchedulerId: {
-			type: DataTypes.STRING,
-			defaultValue: ""
+			type: DataTypes.STRING
 		},
 		lastSeasonXP: {
 			type: DataTypes.BIGINT,

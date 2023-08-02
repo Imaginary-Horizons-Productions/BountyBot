@@ -23,10 +23,6 @@ exports.Hunter = class extends Model {
 		return Math.min(slots, maxSimBounties);
 	}
 
-	slotWorth(slotNum) {
-		return Math.floor(6 + 0.5 * this.level - 3 * slotNum + 0.5 * slotNum % 2);
-	}
-
 	/**
 	 * @param {Guild} guild
 	 * @param {number} points

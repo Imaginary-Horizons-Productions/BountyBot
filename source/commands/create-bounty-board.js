@@ -3,7 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { generateScorelines } = require('../embedHelpers');
 
-const customId = "create-bounty-board";
+const customId = "create-bounty-board"; //TODO convert to supercommand, add "create scoreboard-reference"
 const options = [];
 const subcommands = [];
 module.exports = new CommandWrapper(customId, "Create a new bounty board forum channel sibling to this channel", PermissionFlagsBits.ManageChannels, false, false, 30000, options, subcommands,
@@ -37,16 +37,23 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 
 			guildProfile.bountyBoardId = bountyBoard.id;
 
-			const scoreboardPost = await bountyBoard.threads.create({
-				name: "The Scoreboard",
-				message: { content: await generateScorelines(interaction.guild, true) }
-			});
-			scoreboardPost.pin();
-			guildProfile.scoreId = scoreboardPost.id;
+			// const scoreboardPost = await bountyBoard.threads.create({
+			// 	name: "The Scoreboard",
+			// 	message: { content: await generateScorelines(interaction.guild, true) }
+			// });
+			// scoreboardPost.pin();
+			// guildProfile.scoreId = scoreboardPost.id;
 
+			const evergreenBounties = [];
 			database.models.Bounty.findAll({ where: { guildId: interaction.guildId, state: "open" }, order: [["createdAt", "DESC"]] }).then(bounties => {
 				for (const bounty of bounties) {
-					bounty.asEmbed(interaction.guild, undefined, guildProfile).then(bountyEmbed => {
+					if (bounty.isEvergreen) {
+						evergreenBounties.push(bounty);
+						continue;
+					}
+					database.models.Hunter.findOne({ guildId: bounty.guildId, userId: bounty.userId }).then(poster => {
+						return bounty.asEmbed(interaction.guild, bounty.userId == interaction.client.user.id ? guildProfile.level : poster.level, guildProfile.eventMultiplierString());
+					}).then(bountyEmbed => {
 						return bountyBoard.threads.create({
 							name: bounty.title,
 							message: { embeds: [bountyEmbed] }
@@ -57,6 +64,8 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 					})
 				}
 			});
+
+			//TODONOW make Evergreen Bounty list
 
 			guildProfile.save();
 			interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, ephemeral: true });

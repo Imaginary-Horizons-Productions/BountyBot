@@ -1,7 +1,6 @@
 ﻿const { EmbedBuilder, Guild } = require('discord.js');
 const { DataTypes, Model } = require('sequelize');
 const { ihpAuthorPayload } = require('../../embedHelpers');
-const { Hunter } = require('../users/Hunter');
 const { Guild: HunterGuild } = require('../guilds/Guild');
 const { database } = require('../../../database');
 
@@ -9,18 +8,11 @@ const { database } = require('../../../database');
 exports.Bounty = class extends Model {
 	/** Generate an embed for the given bounty
 	 * @param {Guild} guild
-	 * @param {Hunter?} poster
-	 * @param {HunterGuild?} hunterGuild
+	 * @param {number} posterLevel
+	 * @param {string} eventMultiplierString
 	 */
-	asEmbed(guild, poster, hunterGuild) {
+	asEmbed(guild, posterLevel, eventMultiplierString) {
 		return guild.members.fetch(this.userId).then(async author => {
-			if (!poster) {
-				poster = await database.models.Hunter.findOne({ where: { userId: this.userId, guildId: this.guildId } });
-			}
-			if (!hunterGuild) {
-				hunterGuild = await database.models.Guild.findByPk(this.guildId);
-			}
-
 			const thumbnails = {
 				open: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
 				complete: "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
@@ -45,7 +37,7 @@ exports.Bounty = class extends Model {
 				embed.addFields({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
 			}
 			embed.addFields(
-				{ name: "Reward", value: `${poster.slotWorth(this.slotNumber)} XP${hunterGuild.eventMultiplierString()}`, inline: true }
+				{ name: "Reward", value: `${exports.Bounty.slotWorth(posterLevel, this.slotNumber)} XP${eventMultiplierString}`, inline: true }
 			)
 
 			if (this.isEvergreen) {
@@ -71,11 +63,15 @@ exports.Bounty = class extends Model {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
-				this.asEmbed(guild, poster, guildProfile).then(embed => {
+				this.asEmbed(guild, poster.level, guildProfile.eventMultiplierString()).then(embed => {
 					posting.edit({ embeds: [embed] })
 				})
 			})
 		}
+	}
+
+	static slotWorth(posterLevel, slotNumber) {
+		return Math.max(2, Math.floor(6 + 0.5 * posterLevel - 3 * slotNumber + 0.5 * slotNumber % 2));
 	}
 }
 

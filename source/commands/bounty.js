@@ -3,6 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates } = require('../helpers');
 const { Op } = require('sequelize');
+const { Bounty } = require('../models/bounties/Bounty');
 
 const customId = "bounty";
 const options = [];
@@ -91,7 +92,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 							slotOptions.push({
 								emoji: getNumberEmoji(slotNumber),
 								label: `Slot ${slotNumber}`,
-								description: `Reward: ${hunter.slotWorth(slotNumber)} XP`,
+								description: `Reward: ${Bounty.slotWorth(hunter.level, slotNumber)} XP`,
 								value: slotNumber.toString()
 							})
 						}
@@ -244,7 +245,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					// poster guaranteed to exist, creating a bounty gives 1 XP
 					const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
 					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-					const bountyValue = poster.slotWorth(slotNumber) * guildProfile.eventMultiplier;
+					const bountyValue = Bounty.slotWorth(poster.level, slotNumber) * guildProfile.eventMultiplier;
 
 					const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
 					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
@@ -306,7 +307,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					poster.mineFinished++;
 					poster.save();
 
-					bounty.asEmbed(interaction.guild, poster, guildProfile).then(embed => { //TODO #51 `/bounty complete` crashes on uncaught error if used without bounty board forum channel
+					bounty.asEmbed(interaction.guild, poster.level, guildProfile.eventMultiplierString()).then(embed => { //TODO #51 `/bounty complete` crashes on uncaught error if used without bounty board forum channel
 						interaction.reply({ embeds: [embed] });
 					}).then(() => {
 						return bounty.updatePosting(interaction.guild, guildProfile);
