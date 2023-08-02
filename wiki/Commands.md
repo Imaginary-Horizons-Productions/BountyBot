@@ -52,6 +52,22 @@ Manage a server-wide event that multiplies XP of bounty completions, toast recie
 Start an XP multiplier event
 #### /event close
 End the event, returning to normal XP
+### /evergreen
+> Permission Level: ManageChannels
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Evergreen Bounties are not closed after completion; ideal for server-wide objectives
+#### /evergreen post
+Post an evergreen bounty, limit 10
+#### /evergreen edit
+Change the name, description, or image of an evergreen bounty
+#### /evergreen complete
+Awarding XP to a hunter for completing an evergreen bounty
+#### /evergreen take-down
+Take down one of your bounties without awarding XP (forfeit posting XP)
 ### /feedback
 > Permission Level: SendMessages
 
