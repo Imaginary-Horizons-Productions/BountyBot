@@ -278,11 +278,9 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 
 					guildProfile.increment("seasonBounties");
 
-					if (!bounty.isEvergreen) {
-						bounty.state = "completed";
-						bounty.completedAt = new Date();
-						bounty.save();
-					}
+					bounty.state = "completed";
+					bounty.completedAt = new Date();
+					bounty.save();
 
 					const rawCompletions = [];
 					for (const userId of completerIdsWithoutReciept) {

@@ -11,13 +11,13 @@ module.exports = new InteractionWrapper(customId, 3000,
 			new ModalBuilder().setCustomId(`bountypostmodal${SAFE_DELIMITER}${slotNumber}`)
 				.setTitle(`New Bounty (Slot ${slotNumber})`)
 				.addComponents(
-					new ActionRowBuilder().addComponents(
+					new ActionRowBuilder().addComponents( //TODONOW match character limit to embed limit
 						new TextInputBuilder().setCustomId("title")
 							.setLabel("Title")
 							.setStyle(TextInputStyle.Short)
 							.setPlaceholder("Discord markdown allowed...")
 					),
-					new ActionRowBuilder().addComponents(
+					new ActionRowBuilder().addComponents( //TODONOW match character limit to embed limit
 						new TextInputBuilder().setCustomId("description")
 							.setLabel("Description")
 							.setStyle(TextInputStyle.Paragraph)

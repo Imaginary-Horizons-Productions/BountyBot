@@ -32,10 +32,6 @@ exports.Bounty = class extends Model {
 				const event = await guild.scheduledEvents.fetch(this.scheduledEventId);
 				embed.addFields({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 			}
-			const completions = await database.models.Completion.findAll({ where: { bountyId: this.id } });
-			if (completions.length > 0) {
-				embed.addFields({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
-			}
 			embed.addFields(
 				{ name: "Reward", value: `${exports.Bounty.slotWorth(posterLevel, this.slotNumber)} XP${eventMultiplierString}`, inline: true }
 			)
@@ -43,6 +39,10 @@ exports.Bounty = class extends Model {
 			if (this.isEvergreen) {
 				embed.setFooter({ text: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
 			} else {
+				const completions = await database.models.Completion.findAll({ where: { bountyId: this.id } });
+				if (completions.length > 0) {
+					embed.addFields({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
+				}
 				embed.setFooter({ text: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
 			}
 
