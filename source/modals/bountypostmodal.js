@@ -7,7 +7,7 @@ const { getRankUpdates } = require('../helpers');
 const customId = "bountypostmodal";
 module.exports = new InteractionWrapper(customId, 3000,
 	/** Serialize data into a bounty, then announce with showcase embed */
-	async (interaction, [slotNumber, isEvergreen]) => {
+	async (interaction, [slotNumber]) => {
 		const title = interaction.fields.getTextInputValue("title");
 		const description = interaction.fields.getTextInputValue("description");
 		const imageURL = interaction.fields.getTextInputValue("imageURL");
@@ -19,7 +19,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			userId: interaction.user.id,
 			guildId: interaction.guildId,
 			slotNumber: parseInt(slotNumber),
-			isEvergreen: isEvergreen === "true",
+			isEvergreen: false,
 			title,
 			description
 		};
@@ -95,7 +95,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 
 		// post in bounty board forum
 		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
-		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
+		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster.level, hunterGuild.eventMultiplierString());
 		interaction.reply(hunterGuild.sendAnnouncement({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 			if (hunterGuild.bountyBoardId) {
 				//TODO #42 figure out how to trip auto-mod or re-add taboos

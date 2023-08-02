@@ -5,16 +5,18 @@ exports.Completion = class extends Model { }
 
 exports.initModel = function (sequelize) {
 	exports.Completion.init({
-		bountyId: {
+		id: {
 			primaryKey: true,
+			type: DataTypes.BIGINT,
+			autoIncrement: true
+		},
+		bountyId: {
 			type: DataTypes.BIGINT
 		},
 		userId: {
-			primaryKey: true,
 			type: DataTypes.STRING
 		},
 		guildId: {
-			primaryKey: true,
 			type: DataTypes.STRING
 		},
 		xpAwarded: {

@@ -102,7 +102,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		// update bounty board
 		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
 		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
-		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster, hunterGuild);
+		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster.level, hunterGuild.eventMultiplierString());
 		//TODO #42 figure out how to trip auto-mod or re-add taboos
 		bounty.updatePosting(interaction.guild, hunterGuild);
 

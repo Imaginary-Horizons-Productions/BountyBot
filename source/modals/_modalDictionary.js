@@ -6,6 +6,8 @@ const modalDictionary = {};
 for (const file of [
 	"bountyeditmodal.js",
 	"bountypostmodal.js",
+	"evergreenpost.js",
+	"evergreeneditmodal.js",
 	"feedback-bugreport.js",
 	"feedback-featurerequest.js"
 ]) {

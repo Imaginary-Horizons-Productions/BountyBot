@@ -92,7 +92,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 								You have ${bountySlots} bounty slot${bountySlots == 1 ? '' : 's'}!`
 							)
 							.addFields(
-								//TODO previous season placements
+								//TODO #55 previous season placements
 								{ name: "Season Placements", value: `Currently: ${hunter.seasonPlacement == 0 ? "Unranked" : "#" + hunter.seasonPlacement}` },
 								{ name: `Level ${hunter.level + 1} Reward`, value: hunter.levelUpReward(hunter.level + 1, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 2} Reward`, value: hunter.levelUpReward(hunter.level + 2, maxSimBounties, true), inline: true },

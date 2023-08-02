@@ -181,3 +181,15 @@ exports.getRankUpdates = async function (guild, force = false) {
 		return outMessages;
 	});
 }
+
+exports.generateBountyBoardThread = function (threadManager, embeds, hunterGuild) {
+	return threadManager.create({
+		name: "Evergreen Bounties",
+		message: { embeds }
+	}).then(thread => {
+		hunterGuild.evergreenThreadId = thread.id;
+		hunterGuild.save();
+		thread.pin();
+		return thread;
+	})
+}

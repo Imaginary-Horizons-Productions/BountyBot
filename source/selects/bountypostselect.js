@@ -8,7 +8,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 	(interaction, args) => {
 		const slotNumber = interaction.values[0];
 		interaction.showModal(
-			new ModalBuilder().setCustomId(`bountypostmodal${SAFE_DELIMITER}${slotNumber}${SAFE_DELIMITER}false`)
+			new ModalBuilder().setCustomId(`bountypostmodal${SAFE_DELIMITER}${slotNumber}`)
 				.setTitle(`New Bounty (Slot ${slotNumber})`)
 				.addComponents(
 					new ActionRowBuilder().addComponents(
@@ -16,6 +16,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 							.setLabel("Title")
 							.setStyle(TextInputStyle.Short)
 							.setPlaceholder("Discord markdown allowed...")
+							.setMaxLength(256)
 					),
 					new ActionRowBuilder().addComponents(
 						new TextInputBuilder().setCustomId("description")

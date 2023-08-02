@@ -47,13 +47,6 @@ exports.database.authenticate().then(() => {
 		foreignKey: "guildId"
 	});
 
-	Bounty.User = Bounty.belongsTo(User, {
-		foreignKey: "userId"
-	});
-	User.Bounty = User.hasMany(Bounty, {
-		foreignKey: "userId"
-	});
-
 	Bounty.Guild = Bounty.belongsTo(Guild, {
 		foreignKey: "guildId"
 	});
