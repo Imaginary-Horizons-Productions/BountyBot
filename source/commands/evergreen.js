@@ -34,8 +34,11 @@ const subcommands = [
 			}
 		]
 	},
+	{
+		name: "take-down",
+		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
+	}
 ];
-//TODONOW remove
 //TODO swap
 //TODO showcase
 module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, false, 3000, options, subcommands,
@@ -193,6 +196,31 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 							})
 						});
 					})
+				})
+				break;
+			case subcommands[3].name: // take-down
+				database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" } }).then(openBounties => {
+					const bountyOptions = openBounties.map(bounty => {
+						return {
+							emoji: getNumberEmoji(bounty.slotNumber),
+							label: bounty.title,
+							description: bounty.description,
+							value: bounty.slotNumber.toString()
+						};
+					});
+
+					interaction.reply({
+						content: "If you'd like to change the title, description, or image of an evergreen bounty, you can use `/evergreen edit` instead.",
+						components: [
+							new ActionRowBuilder().addComponents(
+								new StringSelectMenuBuilder().setCustomId("evergreentakedown")
+									.setPlaceholder("Select a bounty to take down...")
+									.setMaxValues(1)
+									.setOptions(bountyOptions)
+							)
+						],
+						ephemeral: true
+					});
 				})
 				break;
 		}
