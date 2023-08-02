@@ -2,6 +2,7 @@ const { PermissionFlagsBits, ChannelType, SortOrderType, ForumLayoutType, Overwr
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { generateScorelines } = require('../embedHelpers');
+const { generateBountyBoardThread } = require('../helpers');
 
 const customId = "create-bounty-board"; //TODO convert to supercommand, add "create scoreboard-reference"
 const options = [];
@@ -48,7 +49,7 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 			database.models.Bounty.findAll({ where: { guildId: interaction.guildId, state: "open" }, order: [["createdAt", "DESC"]] }).then(bounties => {
 				for (const bounty of bounties) {
 					if (bounty.isEvergreen) {
-						evergreenBounties.push(bounty);
+						evergreenBounties.unshift(bounty);
 						continue;
 					}
 					database.models.Hunter.findOne({ guildId: bounty.guildId, userId: bounty.userId }).then(poster => {
@@ -63,9 +64,14 @@ module.exports = new CommandWrapper(customId, "Create a new bounty board forum c
 						bounty.save()
 					})
 				}
-			});
 
-			//TODONOW make Evergreen Bounty list
+				// make Evergreen Bounty list
+				if (evergreenBounties.length > 0) {
+					Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, guildProfile.level, guildProfile.eventMultiplierString()))).then(embeds => {
+						generateBountyBoardThread(bountyBoard.threads, embeds, guildProfile);
+					})
+				}
+			});
 
 			guildProfile.save();
 			interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, ephemeral: true });

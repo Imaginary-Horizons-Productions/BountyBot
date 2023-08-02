@@ -1,5 +1,6 @@
 const { database } = require('../../database');
 const { InteractionWrapper } = require('../classes');
+const { generateBountyBoardThread } = require('../helpers');
 
 const customId = "evergreenpost";
 module.exports = new InteractionWrapper(customId, 3000,
@@ -47,15 +48,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 							return thread;
 						});
 					} else {
-						return bountyBoard.threads.create({ //TODONOW make into function
-							name: "Evergreen Bounties",
-							message: { embeds }
-						}).then(thread => {
-							hunterGuild.evergreenThreadId = thread.id;
-							hunterGuild.save();
-							thread.pin();
-							return thread;
-						});
+						return generateBountyBoardThread(bountyBoard.threads, embeds, hunterGuild);
 					}
 				}).then(thread => {
 					bounty.postingId = thread.id;
