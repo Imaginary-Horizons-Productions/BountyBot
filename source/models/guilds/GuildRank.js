@@ -16,7 +16,7 @@ exports.initModel = function (sequelize) {
 		roleId: {
 			type: DataTypes.STRING
 		},
-		rankMoji: {
+		rankmoji: {
 			type: DataTypes.STRING
 		}
 	}, {

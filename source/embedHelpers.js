@@ -69,9 +69,9 @@ exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
 
 	const hunters = await database.models.Hunter.findAll(queryParams);
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-	const rankMojiArray = (await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankMoji);
+	const rankmojiArray = (await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankMojiArray[hunter.rank]} ` : ""}#${hunter.seasonPlacement} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${isSeasonScoreboard ? `${hunter.seasonXP} season XP` : `${hunter.xp} XP`}*`).join("\n");
+	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""}#${hunter.seasonPlacement} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${isSeasonScoreboard ? `${hunter.seasonXP} season XP` : `${hunter.xp} XP`}*`).join("\n");
 	//TODO handle character overflow
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
