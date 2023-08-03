@@ -11,6 +11,7 @@ exports.commandFiles = [
 	"feedback.js",
 	"moderation.js",
 	"premium.js",
+	"rank.js",
 	"scoreboard.js",
 	"stats.js",
 	"toast.js",
