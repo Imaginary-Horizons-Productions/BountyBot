@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
+const { getRankUpdates } = require('../helpers');
 
 const customId = "rank";
 const options = [];
@@ -39,6 +40,11 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 					const existingThresholds = guildRanks.map(rank => rank.varianceThreshold);
 					if (existingThresholds.includes(newThreshold)) {
 						interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use \`/rank edit\`.`, ephemeral: true });
+						return;
+					}
+
+					if (guildRanks.length > 24) {
+						interaction.reply({ content: "A server can only have 25 seasonal ranks at a time.", ephemeral: true });
 						return;
 					}
 
