@@ -102,6 +102,16 @@ Take down another user's bounty
 > Cooldown: 3 second(s)
 
 List perks for supporting IHP development
+### /rank
+> Permission Level: ManageRoles
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Seasonal Ranks distinguish bounty hunters who have above average season XP
+#### /rank add
+Add a seasonal rank for showing outstanding bounty hunters
 ### /scoreboard
 
 > Usable in DMs: false
