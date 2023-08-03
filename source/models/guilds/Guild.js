@@ -113,10 +113,16 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.STRING
 		},
 		evergreenThreadId: {
-			type: DataTypes.STRING,
-		},
-		scoreId: {
 			type: DataTypes.STRING
+		},
+		scoreboardChannelId: {
+			type: DataTypes.STRING
+		},
+		scoreboardMessageId: {
+			type: DataTypes.STRING
+		},
+		scoreboardIsSeasonal: {
+			type: DataTypes.BOOLEAN
 		},
 		raffleDate: {
 			type: DataTypes.DATE

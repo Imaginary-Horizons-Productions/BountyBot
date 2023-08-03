@@ -4,6 +4,7 @@ const { database } = require('../../database');
 const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates } = require('../helpers');
 const { Op } = require('sequelize');
 const { Bounty } = require('../models/bounties/Bounty');
+const { updateScoreboard } = require('../embedHelpers');
 
 const customId = "bounty";
 const options = [];
@@ -328,6 +329,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 									thread.send(text);
 								})
 							})
+							updateScoreboard(guildProfile, interaction.guild);
 						});
 					})
 				})

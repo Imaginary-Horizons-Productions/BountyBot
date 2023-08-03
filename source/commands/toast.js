@@ -4,6 +4,7 @@ const { SAFE_DELIMITER, DAY_IN_MS } = require('../constants');
 const { getNumberEmoji, getRankUpdates, extractUserIdsFromMentions } = require('../helpers');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
+const { updateScoreboard } = require('../embedHelpers');
 
 const customId = "toast";
 const options = [
@@ -188,6 +189,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 						thread.send(text);
+						updateScoreboard(guildProfile, interaction.guild);
 					})
 				}
 			});

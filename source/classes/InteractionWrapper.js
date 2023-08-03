@@ -68,7 +68,7 @@ class CommandWrapper extends module.exports.InteractionWrapper {
 								}
 								let choiceEntries = Object.entries(option.choices);
 								if (choiceEntries.length) {
-									subBuilt.addChoices(...Object.entries(option.choices));
+									subBuilt.addChoices(...option.choices);
 								}
 							}
 							return subBuilt;

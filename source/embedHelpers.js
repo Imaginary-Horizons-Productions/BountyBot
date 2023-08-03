@@ -3,6 +3,7 @@ const fs = require("fs");
 const { database } = require("../database");
 const { Op } = require("sequelize");
 const { Hunter } = require("./models/users/Hunter");
+const { Guild: HunterGuild } = require("./models/guilds/Guild");
 const { GUILD_XP_COEFFICIENT } = require("./constants");
 const { generateTextBar } = require("./helpers");
 
@@ -53,11 +54,11 @@ exports.buildGuildStatsEmbed = async function (guild) {
 	});
 }
 
-/** Returns the text of a guild's bounty hunters' scores in descending order
+/** Listing XP acquired allows bounty hunters to compare ranking within a server
  * @param {Guild} guild
  * @param {boolean} isSeasonScoreboard
  */
-exports.generateScorelines = async function (guild, isSeasonScoreboard) {
+exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
 	const queryParams = { where: { guildId: guild.id } };
 	if (isSeasonScoreboard) {
 		queryParams.where.seasonXP = { [Op.gt]: 0 };
@@ -71,19 +72,13 @@ exports.generateScorelines = async function (guild, isSeasonScoreboard) {
 	const rankMojiArray = (await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankMoji);
 
 	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankMojiArray[hunter.rank]} ` : ""}#${hunter.seasonPlacement} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${isSeasonScoreboard ? `${hunter.seasonXP} season XP` : `${hunter.xp} XP`}*`).join("\n");
-	return scorelines || "No Bounty Hunters yet..."; //TODO handle character overflow
-}
+	//TODO handle character overflow
 
-/** Listing XP acquired allows bounty hunters to compare ranking within a server
- * @param {Guild} guild
- * @param {boolean} isSeasonScoreboard
- */
-exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle(`The ${isSeasonScoreboard ? "Season " : ""}Scoreboard`)
-		.setDescription(await exports.generateScorelines(guild, isSeasonScoreboard))
+		.setDescription(scorelines || "No Bounty Hunters yet...")
 		.setFooter(exports.randomFooterTip())
 		.setTimestamp();
 }
@@ -123,4 +118,18 @@ exports.buildVersionEmbed = async function (avatarURL) {
 		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesEnd));
 	}
 	return embed.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [{bot} on GitHub]( url goes here )" });
+}
+
+/** If the guild has a scoreboard reference channel, update the embed in it
+ * @param {HunterGuild} guildProfile
+ * @param {Guild} guild
+ */
+exports.updateScoreboard = function (guildProfile, guild) {
+	if (guildProfile.scoreboardChannelId && guildProfile.scoreboardMessageId) {
+		guild.channels.fetch(guildProfile.scoreboardChannelId).then(scoreboard => {
+			return scoreboard.messages.fetch(guildProfile.scoreboardMessageId);
+		}).then(async scoreboardMessage => {
+			scoreboardMessage.edit({ embeds: [await exports.buildScoreboardEmbed(guild, guildProfile.scoreboardIsSeasonal)] });
+		});
+	}
 }
