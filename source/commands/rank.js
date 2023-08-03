@@ -59,6 +59,7 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 					database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(() => {
 						database.models.GuildRank.create(rawRank);
 					})
+					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, ephemeral: true });
 				})
 				break;
