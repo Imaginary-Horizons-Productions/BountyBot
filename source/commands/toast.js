@@ -42,9 +42,9 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		} else {
 			const toasteeMembers = (await interaction.guild.members.fetch({ user: toasteeIds })).values();
 			for (const member of toasteeMembers) {
-				// if (!member.user.bot) {
-				nonBotToasteeIds.push(member.id);
-				// }
+				if (!member.user.bot) {
+					nonBotToasteeIds.push(member.id);
+				}
 			}
 
 			if (nonBotToasteeIds.length < 1) {
