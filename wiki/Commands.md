@@ -116,6 +116,8 @@ Add a seasonal rank for showing outstanding bounty hunters
 Get the information about an existing seasonal rank
 #### /rank edit
 Change the role or rankmoji for a seasonal rank
+#### /rank remove
+Remove an existing seasonal rank
 ### /scoreboard
 
 > Usable in DMs: false
