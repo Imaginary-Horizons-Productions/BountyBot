@@ -3,6 +3,7 @@ const fs = require("fs");
 const { database } = require("../database");
 const { Op } = require("sequelize");
 const { Hunter } = require("./models/users/Hunter");
+const { Guild: HunterGuild } = require("./models/guilds/Guild");
 const { GUILD_XP_COEFFICIENT } = require("./constants");
 const { generateTextBar } = require("./helpers");
 
@@ -117,4 +118,18 @@ exports.buildVersionEmbed = async function (avatarURL) {
 		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesEnd));
 	}
 	return embed.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [{bot} on GitHub]( url goes here )" });
+}
+
+/** If the guild has a scoreboard reference channel, update the embed in it
+ * @param {HunterGuild} guildProfile
+ * @param {Guild} guild
+ */
+exports.updateScoreboard = function (guildProfile, guild) {
+	if (guildProfile.scoreboardChannelId && guildProfile.scoreboardMessageId) {
+		guild.channels.fetch(guildProfile.scoreboardChannelId).then(scoreboard => {
+			return scoreboard.messages.fetch(guildProfile.scoreboardMessageId);
+		}).then(async scoreboardMessage => {
+			scoreboardMessage.edit({ embeds: [await exports.buildScoreboardEmbed(guild, guildProfile.scoreboardIsSeasonal)] });
+		});
+	}
 }

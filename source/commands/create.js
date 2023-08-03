@@ -111,11 +111,16 @@ module.exports = new CommandWrapper(customId, "Create a Discord resource for use
 					reason: `/create scoreboard-reference by ${interaction.user}`
 				}).then(async scoreboard => {
 					const [guildProfile] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
+					const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 					scoreboard.send({
-						embeds: [await buildScoreboardEmbed(interaction.guild, interaction.options.getString("scoreboard-type") == "season")]
+						embeds: [await buildScoreboardEmbed(interaction.guild, isSeasonal)]
+					}).then(message => {
+						guildProfile.scoreboardChannelId = scoreboard.id;
+						guildProfile.scoreboardMessageId = message.id;
+						guildProfile.scoreboardIsSeasonal = isSeasonal;
+						guildProfile.save();
 					});
-					guildProfile.scoreId = scoreboard.id;
-					guildProfile.save();
+					interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, ephemeral: true });
 				})
 				break;
 		}

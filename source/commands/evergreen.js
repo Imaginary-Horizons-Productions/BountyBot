@@ -4,6 +4,7 @@ const { database } = require('../../database');
 const { SAFE_DELIMITER } = require('../constants');
 const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates } = require('../helpers');
 const { Bounty } = require('../models/bounties/Bounty');
+const { updateScoreboard } = require('../embedHelpers');
 
 const customId = "evergreen";
 const options = [];
@@ -194,7 +195,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 								}
 								thread.send(text);
 							})
-							//TODONOW update scoreboard
+							updateScoreboard(guildProfile, interaction.guild);
 						});
 					})
 				})
