@@ -112,6 +112,10 @@ List perks for supporting IHP development
 Seasonal Ranks distinguish bounty hunters who have above average season XP
 #### /rank add
 Add a seasonal rank for showing outstanding bounty hunters
+#### /rank info
+Get the information about an existing seasonal rank
+#### /rank edit
+Change the role or rankmoji for a seasonal rank
 ### /scoreboard
 
 > Usable in DMs: false
