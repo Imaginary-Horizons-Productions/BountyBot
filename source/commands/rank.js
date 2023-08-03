@@ -65,10 +65,23 @@ const subcommands = [
 				required: false
 			}
 		]
+	},
+	{
+		name: "remove",
+		description: "Remove an existing seasonal rank",
+		optionsInput: [
+			{
+				type: "Number",
+				name: "variance-threshold",
+				description: "The variance threshold of the rank to review",
+				required: true
+			}
+		]
 	}
 ];
 module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty hunters who have above average season XP", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
 	(interaction) => {
+		let varianceThreshold;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // add
 				database.models.GuildRank.findAll({ where: { guildId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(guildRanks => {
@@ -106,11 +119,12 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 				})
 				break;
 			case subcommands[1].name: // info
+				varianceThreshold = interaction.options.getNumber(subcommands[1].optionsInput[0].name);
 				database.models.GuildRank.findAll({ where: { guildId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(guildRanks => {
 					let index = 0;
 					const rank = guildRanks.find(rank => {
 						index++;
-						return rank.varianceThreshold == interaction.options.getNumber(subcommands[1].optionsInput[0].name)
+						return rank.varianceThreshold == varianceThreshold
 					});
 
 					if (!rank) {
@@ -123,7 +137,7 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 				});
 				break;
 			case subcommands[2].name: // edit
-				const varianceThreshold = interaction.options.getNumber(subcommands[2].optionsInput[0].name);
+				varianceThreshold = interaction.options.getNumber(subcommands[2].optionsInput[0].name);
 				database.models.GuildRank.findOne({ where: { guildId: interaction.guildId, varianceThreshold } }).then(rank => {
 					if (!rank) {
 						interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, ephemeral: true });
@@ -145,6 +159,18 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, ephemeral: true });
 				})
+				break;
+			case subcommands[3].name: // remove
+				varianceThreshold = interaction.options.getNumber(subcommands[3].optionsInput[0].name);
+				database.models.GuildRank.findOne({ where: { guildId: interaction.guildId, varianceThreshold } }).then(rank => {
+					if (!rank) {
+						interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, ephemeral: true });
+						return;
+					}
+
+					rank.destroy();
+					interaction.reply({ content: "The rank has been removed.", ephemeral: true });
+				});
 				break;
 		}
 	}
