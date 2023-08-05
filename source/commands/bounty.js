@@ -18,6 +18,10 @@ const subcommands = [
 		description: "Edit the title, description, image, or time of one of your bounties"
 	},
 	{
+		name: "swap",
+		description: "Move one of your bounties to another slot to change its reward"
+	},
+	{
 		name: "add-completers",
 		description: "Add hunter(s) to a bounty's list of completers",
 		optionsInput: [
@@ -119,16 +123,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				break;
 			case subcommands[1].name: // edit
 				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(openBounties => {
-					const slotOptions = openBounties.map(bounty => {
-						return {
-							emoji: getNumberEmoji(bounty.slotNumber),
-							label: bounty.title,
-							description: bounty.description,
-							value: bounty.slotNumber.toString()
-						};
-					});
-
-					if (slotOptions.length < 1) {
+					if (openBounties.length < 1) {
 						interaction.reply({ content: "You don't seem to have any open bounties at the moment.", ephemeral: true });
 						return;
 					}
@@ -140,14 +135,45 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 								new StringSelectMenuBuilder().setCustomId("bountyeditselect")
 									.setPlaceholder("Select a bounty to edit...")
 									.setMaxValues(1)
-									.setOptions(slotOptions)
+									.setOptions(openBounties.map(bounty => ({
+										emoji: getNumberEmoji(bounty.slotNumber),
+										label: bounty.title,
+										description: bounty.description,
+										value: bounty.slotNumber.toString()
+									})))
 							)
 						],
 						ephemeral: true
 					});
 				})
 				break;
-			case subcommands[2].name: // add-completers
+			case subcommands[2].name: // swap
+				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
+					if (openBounties.length < 1) {
+						interaction.reply({ content: "You don't seem to have any open bounties at the moment.", ephemeral: true });
+						return;
+					}
+
+					interaction.reply({
+						content: "Swapping a bounty to another slot will change the XP reward for that bounty.",
+						components: [
+							new ActionRowBuilder().addComponents(
+								new StringSelectMenuBuilder().setCustomId("bountyswapbounty")
+									.setPlaceholder("Select a bounty to swap...")
+									.setMaxValues(1)
+									.setOptions(openBounties.map(bounty => ({
+										emoji: getNumberEmoji(bounty.slotNumber),
+										label: bounty.title,
+										description: bounty.description,
+										value: bounty.slotNumber.toString()
+									})))
+							)
+						],
+						ephemeral: true
+					});
+				})
+				break;
+			case subcommands[3].name: // add-completers
 				slotNumber = interaction.options.getInteger("bounty-slot");
 				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
@@ -205,7 +231,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					});
 				})
 				break;
-			case subcommands[3].name: // remove-completers
+			case subcommands[4].name: // remove-completers
 				slotNumber = interaction.options.getInteger("bounty-slot");
 				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
@@ -229,7 +255,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					});
 				})
 				break;
-			case subcommands[4].name: // complete
+			case subcommands[5].name: // complete
 				slotNumber = interaction.options.getInteger("bounty-slot");
 				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
@@ -334,7 +360,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					})
 				})
 				break;
-			case subcommands[5].name: // take-down
+			case subcommands[6].name: // take-down
 				database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.user.id, state: "open" } }).then(openBounties => {
 					const bountyOptions = openBounties.map(bounty => {
 						return {
