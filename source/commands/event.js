@@ -32,7 +32,11 @@ module.exports = new CommandWrapper(customId, "Manage a server-wide event that m
 					const multiplier = interaction.options.getInteger(subcommands[0].optionsInput[0].name) || 2;
 					guildProfile.update({ "eventMultiplier": multiplier });
 					interaction.guild.members.fetchMe().then(bountyBot => {
-						bountyBot.setNickname(`${bountyBot.nickname ?? bountyBot.displayName} [XP x ${multiplier}]`);
+						const multiplierTag = ` [XP x ${multiplier}]`;
+						const bountyBotName = bountyBot.nickname ?? bountyBot.displayName;
+						if (bountyBotName.length + multiplierTag.length <= 32) {
+							bountyBot.setNickname(`${bountyBotName}${multiplierTag}`);
+						}
 					})
 					interaction.reply(guildProfile.sendAnnouncement({ content: `An XP multiplier event has started. Bounty and toast XP will be multiplied by ${multiplier}.` }));
 					break;
