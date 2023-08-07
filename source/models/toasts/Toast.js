@@ -7,8 +7,8 @@ exports.initModel = function (sequelize) {
 	exports.Toast.init({
 		id: {
 			primaryKey: true,
-			type: DataTypes.BIGINT,
-			autoIncrement: true
+			type: DataTypes.UUID,
+			defaultValue: DataTypes.UUIDV4
 		},
 		guildId: {
 			type: DataTypes.STRING,
