@@ -98,6 +98,8 @@ the type of feedback you'd like to provide
 BountyBot moderation tools
 #### /moderation take-down
 Take down another user's bounty
+#### /moderation season-disqualify
+Toggle disqualification from ranking for a bounty hunter in the current season
 ### /premium
 > Permission Level: ViewChannel
 
