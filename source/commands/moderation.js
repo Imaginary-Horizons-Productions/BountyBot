@@ -1,7 +1,7 @@
 const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getNumberEmoji } = require('../helpers');
+const { getNumberEmoji, getRankUpdates } = require('../helpers');
 const { SAFE_DELIMITER } = require('../constants');
 
 const customId = "moderation";
@@ -15,6 +15,24 @@ const subcommands = [
 				type: "User",
 				name: "poster",
 				description: "The mention of the poster of the bounty",
+				required: true
+			}
+		]
+	},
+	{
+		name: "season-disqualify",
+		description: "Toggle disqualification from ranking for a bounty hunter in the current season",
+		optionsInput: [
+			{
+				type: "User",
+				name: "bounty-hunter",
+				description: "The mention of the hunter to disqualify/requalify",
+				required: true
+			},
+			{
+				type: "String",
+				name: "reason",
+				description: "The reason for the disqualification",
 				required: true
 			}
 		]
@@ -53,6 +71,22 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 						ephemeral: true
 					});
 				});
+				break;
+			case subcommands[1].name: // disqualify
+				const hunterId = interaction.options.getUser("bounty-hunter").id;
+				interaction.guild.members.fetch(hunterId).then(member => {
+					database.models.Hunter.findOrCreate({ where: { userId: hunterId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } }).then(hunter => {
+						const reason = interaction.options.getString("reason");
+						hunter.isRankDisqualified = !hunter.isRankDisqualified;
+						if (hunter.isRankDisqualified) {
+							hunter.increment("seasonDQCount");
+						}
+						hunter.save();
+						getRankUpdates(interaction.guild);
+						interaction.reply({ content: `<@${hunterId}> has been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
+						member.send(`You have been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${reason}`);
+					})
+				})
 				break;
 		}
 	}
