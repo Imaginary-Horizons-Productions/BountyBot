@@ -10,6 +10,8 @@ for (const file of [
 	"bountyswapslot.js",
 	"bountytakedown.js",
 	"evergreeneditselect.js",
+	"evergreenswapbounty.js",
+	"evergreenswapslot.js",
 	"evergreentakedown.js",
 	"modtakedown.js"
 ]) {
