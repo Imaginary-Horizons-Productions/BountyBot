@@ -1,5 +1,4 @@
-const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
+const { REST, Routes } = require('discord.js');
 const { token, botId, testGuildId } = require('../../config/auth.json');
 const { slashData } = require('../commands/_commandDictionary');
 

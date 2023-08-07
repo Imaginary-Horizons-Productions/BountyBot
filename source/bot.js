@@ -1,8 +1,6 @@
 //#region Imports
-const { Client, ActivityType, IntentsBitField, Events } = require("discord.js");
+const { Client, ActivityType, IntentsBitField, Events, Routes, REST } = require("discord.js");
 const { readFile, writeFile } = require("fs").promises;
-const { REST } = require("@discordjs/rest");
-const { Routes } = require("discord-api-types/v9");
 
 const { InteractionWrapper } = require("./classes/InteractionWrapper.js");
 const { getCommand, slashData } = require("./commands/_commandDictionary.js");
