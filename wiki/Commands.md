@@ -108,6 +108,8 @@ BountyBot moderation tools
 Take down another user's bounty
 #### /moderation season-disqualify
 Toggle disqualification from ranking for a bounty hunter in the current season
+#### /moderation xp-penalty
+Reduce a bounty hunter's XP
 ### /premium
 > Permission Level: ViewChannel
 
