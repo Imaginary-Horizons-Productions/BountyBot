@@ -75,7 +75,7 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 			case subcommands[1].name: // disqualify
 				const hunterId = interaction.options.getUser("bounty-hunter").id;
 				interaction.guild.members.fetch(hunterId).then(member => {
-					database.models.Hunter.findOrCreate({ where: { userId: hunterId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } }).then(hunter => {
+					database.models.Hunter.findOrCreate({ where: { userId: hunterId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } }).then(([hunter]) => {
 						const reason = interaction.options.getString("reason");
 						hunter.isRankDisqualified = !hunter.isRankDisqualified;
 						if (hunter.isRankDisqualified) {
