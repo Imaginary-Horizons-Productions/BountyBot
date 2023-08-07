@@ -46,6 +46,14 @@ Create a Discord resource for use by BountyBot
 Create a new bounty board forum channel sibling to this channel
 #### /create scoreboard-reference
 Create a reference channel with the BountyBot Scoreboard
+### /data-policy
+> Permission Level: ViewChannel
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+Get a link to BountyBot's data policy page
 ### /event
 > Permission Level: ManageGuild
 
