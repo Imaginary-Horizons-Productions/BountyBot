@@ -70,6 +70,8 @@ Evergreen Bounties are not closed after completion; ideal for server-wide object
 Post an evergreen bounty, limit 10
 #### /evergreen edit
 Change the name, description, or image of an evergreen bounty
+#### /evergreen swap
+Swap the rewards of two evergreen bounties
 #### /evergreen complete
 Awarding XP to a hunter for completing an evergreen bounty
 #### /evergreen take-down
