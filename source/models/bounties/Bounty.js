@@ -79,8 +79,8 @@ exports.initModel = function (sequelize) {
 	exports.Bounty.init({
 		id: {
 			primaryKey: true,
-			type: DataTypes.BIGINT,
-			autoIncrement: true
+			type: DataTypes.UUID,
+			defaultValue: DataTypes.UUIDV4
 		},
 		userId: {
 			type: DataTypes.STRING,

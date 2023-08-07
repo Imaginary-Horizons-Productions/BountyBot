@@ -7,8 +7,8 @@ exports.initModel = function (sequelize) {
 	exports.Completion.init({
 		id: {
 			primaryKey: true,
-			type: DataTypes.BIGINT,
-			autoIncrement: true
+			type: DataTypes.UUID,
+			defaultValue: DataTypes.UUIDV4
 		},
 		bountyId: {
 			type: DataTypes.BIGINT
