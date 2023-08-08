@@ -15,6 +15,7 @@ exports.commandFiles = [
 	"raffle.js",
 	"rank.js",
 	"scoreboard.js",
+	"server-bonuses.js",
 	"stats.js",
 	"toast.js",
 	"version.js"
