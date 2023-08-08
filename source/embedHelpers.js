@@ -1,4 +1,4 @@
-const { EmbedBuilder, Guild, Colors } = require("discord.js");
+const { EmbedBuilder, Guild, Colors, TextChannel } = require("discord.js");
 const fs = require("fs");
 const { database } = require("../database");
 const { Op } = require("sequelize");
@@ -52,6 +52,31 @@ exports.buildGuildStatsEmbed = async function (guild) {
 			.setFooter(exports.randomFooterTip())
 			.setTimestamp()
 	});
+}
+
+/** Build an embed mentioning if an event is running, the next raffle date and the raffle rewards
+ * @param {TextChannel} channel
+ * @param {Guild} guild
+ * @param {HunterGuild} guildProfile
+ */
+exports.buildServerBonusesEmbed = async function (channel, guild, guildProfile) {
+	const { displayColor, displayName } = await guild.members.fetch(guild.client.user.id);
+	const embed = new EmbedBuilder().setColor(displayColor)
+		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setTitle(`${displayName} Server Bonuses`)
+		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
+		.setDescription(`There is ${guildProfile.eventMultiplier != 1 ? '' : 'not '}an XP multiplier event currently active${guildProfile.eventMultiplier == 1 ? '' : ` for ${guildProfile.eventMultiplierString()}`}.`)
+		.setFooter(exports.randomFooterTip())
+		.setTimestamp();
+	if (guildProfile.nextRaffleString) {
+		embed.addFields([{ name: "Next Raffle", value: Utils.cleanContent(`The next raffle will be on ${guildProfile.nextRaffleString}!`, channel) }]);
+	}
+	//TODO custom raffle rewards
+	// if (this.rewards.length > 0) {
+	// 	embed.addField("Raffle Rewards", Utils.cleanContent(this.rewardStringBuilder(), channel));
+	// }
+
+	return embed;
 }
 
 /** Listing XP acquired allows bounty hunters to compare ranking within a server
