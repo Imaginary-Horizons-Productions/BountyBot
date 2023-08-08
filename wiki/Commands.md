@@ -34,7 +34,7 @@ Take down one of your bounties without awarding XP (forfeit posting XP)
 > Cooldown: 3 second(s)
 
 Get a link to BountyBot's commands page
-### /create
+### /create-default
 > Permission Level: ManageChannels
 
 > Usable in DMs: false
@@ -42,9 +42,9 @@ Get a link to BountyBot's commands page
 > Cooldown: 30 second(s)
 
 Create a Discord resource for use by BountyBot
-#### /create bounty-board-forum
+#### /create-default bounty-board-forum
 Create a new bounty board forum channel sibling to this channel
-#### /create scoreboard-reference
+#### /create-default scoreboard-reference
 Create a reference channel with the BountyBot Scoreboard
 ### /data-policy
 > Permission Level: ViewChannel
