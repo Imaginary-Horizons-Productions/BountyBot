@@ -13,7 +13,8 @@ for (const file of [
 	"evergreenswapbounty.js",
 	"evergreenswapslot.js",
 	"evergreentakedown.js",
-	"modtakedown.js"
+	"modtakedown.js",
+	"rafflerank.js"
 ]) {
 	const select = require(`./${file}`);
 	selectDictionary[select.customId] = select;

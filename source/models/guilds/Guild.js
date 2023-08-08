@@ -124,8 +124,8 @@ exports.initModel = function (sequelize) {
 		scoreboardIsSeasonal: {
 			type: DataTypes.BOOLEAN
 		},
-		raffleDate: {
-			type: DataTypes.DATE
+		nextRaffleString: {
+			type: DataTypes.STRING
 		},
 		eventMultiplier: {
 			type: DataTypes.INTEGER,
