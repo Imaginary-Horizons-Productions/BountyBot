@@ -118,6 +118,20 @@ Reduce a bounty hunter's XP
 > Cooldown: 3 second(s)
 
 List perks for supporting IHP development
+### /raffle
+> Permission Level: ManageGuild
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+description
+#### /raffle by-ranks
+Select a user at or above a particular rank
+#### /raffle by-level
+Select a user at or above a particular level
+#### /raffle announce-upcoming
+Announce an upcoming raffle
 ### /rank
 > Permission Level: ManageRoles
 
