@@ -4,7 +4,7 @@ const { database } = require('../../database');
 const { buildScoreboardEmbed } = require('../embedHelpers');
 const { generateBountyBoardThread } = require('../helpers');
 
-const customId = "create";
+const customId = "create-default";
 const options = [];
 const subcommands = [
 	{
@@ -51,7 +51,7 @@ module.exports = new CommandWrapper(customId, "Create a Discord resource for use
 					//TODO use "availableTags" to allow tagging bounties ("completed", "event", "open" as default tags?)
 					defaultSortOrder: SortOrderType.CreationDate,
 					defaultForumLayout: ForumLayoutType.ListView,
-					reason: `/create-bounty-board by ${interaction.user}`
+					reason: `/create-default bounty-board-forum by ${interaction.user}`
 				}).then(async bountyBoard => {
 					let guildProfile = await database.models.Guild.findByPk(interaction.guildId);
 					if (!guildProfile) {
@@ -108,7 +108,7 @@ module.exports = new CommandWrapper(customId, "Create a Discord resource for use
 							deny: [PermissionFlagsBits.SendMessages]
 						}
 					],
-					reason: `/create scoreboard-reference by ${interaction.user}`
+					reason: `/create-default scoreboard-reference by ${interaction.user}`
 				}).then(async scoreboard => {
 					const [guildProfile] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
 					const isSeasonal = interaction.options.getString("scoreboard-type") == "season";

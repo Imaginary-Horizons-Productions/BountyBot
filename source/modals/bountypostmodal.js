@@ -109,7 +109,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 					bounty.save()
 				}).catch(error => {
 					if (error.code == 10003) {
-						interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-bounty-board`?", ephemeral: true });
+						interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
 					} else {
 						throw error;
 					}
