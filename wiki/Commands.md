@@ -159,6 +159,14 @@ View the XP scoreboard
 > Choices: `Season Scoreboard`, `Overall Scoreboard`
 
 The Season Scoreboard only includes hunters with XP this season
+### /server-bonuses
+> Permission Level: ViewChannel
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Get info about the currently running server bonuses
 ### /stats
 
 > Usable in DMs: false
