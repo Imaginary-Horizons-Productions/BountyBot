@@ -64,7 +64,7 @@ const subcommands = [
 ];
 module.exports = new CommandWrapper(customId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
 	(interaction) => {
-		let hunterId;
+		let member;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // take-down
 				const poster = interaction.options.getUser(subcommands[0].optionsInput[0].name);
@@ -98,38 +98,34 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 				});
 				break;
 			case subcommands[1].name: // disqualify
-				hunterId = interaction.options.getUser("bounty-hunter").id;
-				interaction.guild.members.fetch(hunterId).then(member => {
-					database.models.Hunter.findOrCreate({ where: { userId: hunterId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } }).then(([hunter]) => {
-						hunter.isRankDisqualified = !hunter.isRankDisqualified;
-						if (hunter.isRankDisqualified) {
-							hunter.increment("seasonDQCount");
-						}
-						hunter.save();
-						getRankUpdates(interaction.guild);
-						interaction.reply({ content: `<@${hunterId}> has been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
-						member.send(`You have been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
-					})
+				member = interaction.options.getMember("bounty-hunter");
+				database.models.Hunter.findOrCreate({ where: { userId: member.id, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } }).then(([hunter]) => {
+					hunter.isRankDisqualified = !hunter.isRankDisqualified;
+					if (hunter.isRankDisqualified) {
+						hunter.increment("seasonDQCount");
+					}
+					hunter.save();
+					getRankUpdates(interaction.guild);
+					interaction.reply({ content: `<@${member.id}> has been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
+					member.send(`You have been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				})
 				break;
 			case subcommands[2].name: // penalty
-				hunterId = interaction.options.getUser("bounty-hunter").id;
-				interaction.guild.members.fetch(hunterId).then(member => {
-					database.models.Hunter.findOne({ where: { userId: hunterId, guildId: interaction.guildId } }).then(async hunter => {
-						if (!hunter) {
-							interaction.reply({ content: `${member} hasn't interacted with BountyBot yet.`, ephemeral: true });
-							return;
-						}
-						const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
-						const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-						guildProfile.decrement({ seasonXP: penaltyValue });
-						guildProfile.save();
-						hunter.decrement(["xp", "seasonXP"], { by: penaltyValue });
-						hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
-						getRankUpdates(interaction.guild);
-						interaction.reply({ content: `<@${hunterId}> has been penalized ${penaltyValue} XP.`, ephemeral: true });
-						member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
-					})
+				member = interaction.options.getMember("bounty-hunter");
+				database.models.Hunter.findOne({ where: { userId: member.id, guildId: interaction.guildId } }).then(async hunter => {
+					if (!hunter) {
+						interaction.reply({ content: `${member} hasn't interacted with BountyBot yet.`, ephemeral: true });
+						return;
+					}
+					const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
+					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
+					guildProfile.decrement({ seasonXP: penaltyValue });
+					guildProfile.save();
+					hunter.decrement(["xp", "seasonXP"], { by: penaltyValue });
+					hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
+					getRankUpdates(interaction.guild);
+					interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, ephemeral: true });
+					member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				})
 				break;
 		}
