@@ -31,6 +31,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		}
 
 		interaction.update({ components: [] });
-		interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.slotWorth(guildProfile.level, destinationSlot)} XP and **${destinationBounty.title}** is now worth ${Bounty.slotWorth(guildProfile.level, sourceSlot)} XP.`);
+		// Evergreen bounties are not eligible for showcase bonuses
+		interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.calculateReward(guildProfile.level, destinationSlot, 0)} XP and **${destinationBounty.title}** is now worth ${Bounty.calculateReward(guildProfile.level, sourceSlot, 0)} XP.`);
 	}
 );

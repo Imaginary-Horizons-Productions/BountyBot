@@ -26,7 +26,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 						{
 							emoji: getNumberEmoji(i),
 							label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
-							description: `XP Reward: ${Bounty.slotWorth(hunter.level, i)}`,
+							description: `XP Reward: ${Bounty.calculateReward(hunter.level, i, existingBounties.showcaseCount)}`,
 							value: i.toString()
 						}
 					)

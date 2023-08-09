@@ -19,7 +19,8 @@ module.exports = new InteractionWrapper(customId, 3000,
 						{
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: `Slot ${bounty.slotNumber}: ${bounty.title}`,
-							description: `XP Reward: ${Bounty.slotWorth(hunter.level, bounty.slotNumber)}`,
+							// Evergreen bounties are not eligible for showcase bonuses
+							description: `XP Reward: ${Bounty.calculateReward(hunter.level, bounty.slotNumber, 0)}`,
 							value: bounty.slotNumber.toString()
 						}
 					);

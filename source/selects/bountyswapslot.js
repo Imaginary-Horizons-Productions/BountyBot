@@ -28,6 +28,6 @@ module.exports = new InteractionWrapper(customId, 3000,
 
 		const hunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
 		interaction.update({ components: [] });
-		interaction.channel.send(`${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.slotWorth(hunter.level, destinationSlot)} XP.`);
+		interaction.channel.send(`${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateReward(hunter.level, destinationSlot, sourceBounty.showcaseCount)} XP.`);
 	}
 );

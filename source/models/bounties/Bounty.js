@@ -33,7 +33,7 @@ exports.Bounty = class extends Model {
 				embed.addFields({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 			}
 			embed.addFields(
-				{ name: "Reward", value: `${exports.Bounty.slotWorth(posterLevel, this.slotNumber)} XP${eventMultiplierString}`, inline: true }
+				{ name: "Reward", value: `${exports.Bounty.calculateReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${eventMultiplierString}`, inline: true }
 			)
 
 			if (this.isEvergreen) {
@@ -70,8 +70,9 @@ exports.Bounty = class extends Model {
 		}
 	}
 
-	static slotWorth(posterLevel, slotNumber) {
-		return Math.max(2, Math.floor(6 + 0.5 * posterLevel - 3 * slotNumber + 0.5 * slotNumber % 2));
+	static calculateReward(posterLevel, slotNumber, showcaseCount) {
+		const showcaseMultiplier = 0.25 * showcaseCount + 1;
+		return Math.max(2, Math.floor((6 + 0.5 * posterLevel - 3 * slotNumber + 0.5 * slotNumber % 2) * showcaseMultiplier));
 	}
 }
 
@@ -120,6 +121,10 @@ exports.initModel = function (sequelize) {
 		state: { // Allowed values: "open", "completed", "deleted"
 			type: DataTypes.STRING,
 			defaultValue: "open"
+		},
+		showcaseCount: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
 		},
 		completedAt: {
 			type: DataTypes.DATE,
