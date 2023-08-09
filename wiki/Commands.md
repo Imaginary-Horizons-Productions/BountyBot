@@ -19,6 +19,8 @@ Post your own bounty (+1 XP)
 Edit the title, description, image, or time of one of your bounties
 #### /bounty swap
 Move one of your bounties to another slot to change its reward
+#### /bounty showcase
+Show the embed for one of your existing bounties and increase the reward
 #### /bounty add-completers
 Add hunter(s) to a bounty's list of completers
 #### /bounty remove-completers
@@ -80,6 +82,8 @@ Post an evergreen bounty, limit 10
 Change the name, description, or image of an evergreen bounty
 #### /evergreen swap
 Swap the rewards of two evergreen bounties
+#### /evergreen showcase
+Show the embed for an evergreen bounty
 #### /evergreen complete
 Awarding XP to a hunter for completing an evergreen bounty
 #### /evergreen take-down
