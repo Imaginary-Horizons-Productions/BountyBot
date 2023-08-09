@@ -6,7 +6,7 @@ const customId = "bountypostselect";
 module.exports = new InteractionWrapper(customId, 3000,
 	/** Recieve remaining bounty configurations from the user */
 	(interaction, args) => {
-		const slotNumber = interaction.values[0];
+		const [slotNumber] = interaction.values;
 		interaction.showModal(
 			new ModalBuilder().setCustomId(`bountypostmodal${SAFE_DELIMITER}${slotNumber}`)
 				.setTitle(`New Bounty (Slot ${slotNumber})`)

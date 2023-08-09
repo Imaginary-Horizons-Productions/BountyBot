@@ -5,7 +5,7 @@ const customId = "evergreentakedown";
 module.exports = new InteractionWrapper(customId, 3000,
 	/** Take down the given bounty and completions */
 	async (interaction, args) => {
-		const slotNumber = interaction.values[0];
+		const [slotNumber] = interaction.values;
 		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.client.user.id, guildId: interaction.guildId, slotNumber, state: "open" } });
 		bounty.state = "deleted";
 		bounty.save();
