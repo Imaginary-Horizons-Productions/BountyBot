@@ -22,6 +22,10 @@ const subcommands = [
 		description: "Swap the rewards of two evergreen bounties"
 	},
 	{
+		name: "showcase",
+		description: "Show the embed for an evergreen bounty"
+	},
+	{
 		name: "complete",
 		description: "Awarding XP to a hunter for completing an evergreen bounty",
 		optionsInput: [
@@ -44,7 +48,6 @@ const subcommands = [
 		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
 	}
 ];
-//TODO showcase
 module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, false, 3000, options, subcommands,
 	(interaction) => {
 		let slotNumber;
@@ -140,9 +143,35 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 					});
 				});
 				break;
-			case subcommands[3].name: //complete
+			case subcommands[3].name: // showcase
+				database.models.Bounty.findAll({ where: { isEvergreen: true, guildId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(existingBounties => {
+					if (existingBounties.length < 1) {
+						interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", ephemeral: true });
+						return;
+					}
+
+					interaction.reply({
+						content: "Unlike normal bounty showcases, an evergreen showcase does not increase the reward of the showcased bounty and is not rate-limited.",
+						components: [
+							new ActionRowBuilder().addComponents(
+								new StringSelectMenuBuilder().setCustomId("evergreenshowcase")
+									.setPlaceholder("Select a bounty to showcase...")
+									.setMaxValues(1)
+									.setOptions(existingBounties.map(bounty => ({
+										emoji: getNumberEmoji(bounty.slotNumber),
+										label: bounty.title,
+										description: bounty.description,
+										value: bounty.slotNumber.toString()
+									})))
+							)
+						],
+						ephemeral: true
+					});
+				});
+				break;
+			case subcommands[4].name: // complete
 				slotNumber = interaction.options.getInteger("bounty-slot");
-				database.models.Bounty.findOne({ where: { userId: interaction.client.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+				database.models.Bounty.findOne({ where: { isEvergreen: true, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
 						interaction.reply({ content: "There isn't an evergreen bounty in the `bounty-slot` provided.", ephemeral: true });
 						return;
@@ -195,7 +224,8 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 					}
 					await database.models.Completion.bulkCreate(rawCompletions);
 
-					const bountyValue = Bounty.slotWorth(guildProfile.level, slotNumber) * guildProfile.eventMultiplier;
+					// Evergreen bounties are not eligible for showcase bonuses
+					const bountyValue = Bounty.calculateReward(guildProfile.level, slotNumber, 0) * guildProfile.eventMultiplier;
 					database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 
 					for (const userId of validatedCompleterIds) {
@@ -229,7 +259,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 					})
 				})
 				break;
-			case subcommands[4].name: // take-down
+			case subcommands[5].name: // take-down
 				database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" } }).then(openBounties => {
 					const bountyOptions = openBounties.map(bounty => {
 						return {

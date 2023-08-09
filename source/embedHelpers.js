@@ -8,6 +8,7 @@ const { GUILD_XP_COEFFICIENT } = require("./constants");
 const { generateTextBar } = require("./helpers");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
+const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
 /** @type {import("discord.js").EmbedFooterData[]} */
 const discordTips = [
 	{ text: "Message starting with @silent don't send notifications; good for when everyone's asleep.", iconURL: discordIconURL },
@@ -17,8 +18,11 @@ const discordTips = [
 	{ text: "Some slash commands can be used in DMs, others can't.", iconURL: discordIconURL },
 	{ text: "Server subscriptions cost more on mobile because the mobile app stores take a cut.", iconURL: discordIconURL }
 ];
+//TODO #72 add BountyBot specific tips
 /** @type {import("discord.js").EmbedFooterData[]} */
-const applicationSpecificTips = [];
+const applicationSpecificTips = [
+	{ text: "You can showcase one of your bounties once a week to increase its rewards.", iconURL: bountyBotIcon }
+];
 const tipPool = applicationSpecificTips.concat(applicationSpecificTips, discordTips);
 
 exports.ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };

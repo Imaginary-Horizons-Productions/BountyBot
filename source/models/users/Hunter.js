@@ -142,6 +142,9 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: 0
 		},
+		lastShowcaseTimestamp: {
+			type: DataTypes.DATE
+		},
 		mineFinished: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
