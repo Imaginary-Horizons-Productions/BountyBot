@@ -1,5 +1,6 @@
 const { database } = require('../../database');
 const { InteractionWrapper } = require('../classes');
+const { checkTextsInAutoMod } = require('../helpers');
 
 const customId = "evergreeneditmodal";
 module.exports = new InteractionWrapper(customId, 3000,
@@ -7,8 +8,14 @@ module.exports = new InteractionWrapper(customId, 3000,
 	async (interaction, [slotNumber]) => {
 		const title = interaction.fields.getTextInputValue("title");
 		const description = interaction.fields.getTextInputValue("description");
-		const imageURL = interaction.fields.getTextInputValue("imageURL");
 
+		const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [title, description], "evergreen edit");
+		if (isBlockedByAutoMod) {
+			interaction.reply({ content: "Your edit could not be completed because it tripped AutoMod.", ephemeral: true });
+			return;
+		}
+
+		const imageURL = interaction.fields.getTextInputValue("imageURL");
 		if (imageURL) {
 			try {
 				new URL(imageURL);
@@ -36,7 +43,6 @@ module.exports = new InteractionWrapper(customId, 3000,
 		// update bounty board
 		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
 		const bountyEmbed = await bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString());
-		//TODO #42 figure out how to trip auto-mod or re-add taboos
 		const evergreenBounties = await database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
 		const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString())));
 		if (hunterGuild.bountyBoardId) {
