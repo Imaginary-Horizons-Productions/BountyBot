@@ -1,7 +1,7 @@
 const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { SAFE_DELIMITER, DAY_IN_MS } = require('../constants');
-const { getNumberEmoji, getRankUpdates, extractUserIdsFromMentions } = require('../helpers');
+const { getNumberEmoji, getRankUpdates, extractUserIdsFromMentions, checkTextsInAutoMod } = require('../helpers');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
 const { updateScoreboard } = require('../embedHelpers');
@@ -71,9 +71,15 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			return;
 		}
 
-		// Build rest of embed
 		const toastText = interaction.options.getString(options[1].name);
-		embed.setColor("e5b271") //TODO #42
+		const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [toastText], "toast");
+		if (isBlockedByAutoMod) {
+			interaction.reply({ content: "Your toast was blocked by AutoMod.", ephemeral: true });
+			return;
+		}
+
+		// Build rest of embed
+		embed.setColor("e5b271")
 			.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
 			.setTitle(toastText)
 			.setDescription(`A toast to <@${nonBotToasteeIds.join(">, <@")}>!`)

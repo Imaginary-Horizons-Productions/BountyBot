@@ -2,7 +2,7 @@ const { GuildScheduledEventEntityType } = require('discord.js');
 const { database } = require('../../database');
 const { InteractionWrapper } = require('../classes');
 const { YEAR_IN_MS } = require('../constants');
-const { getRankUpdates } = require('../helpers');
+const { getRankUpdates, checkTextsInAutoMod } = require('../helpers');
 
 const customId = "bountypostmodal";
 module.exports = new InteractionWrapper(customId, 3000,
@@ -10,10 +10,12 @@ module.exports = new InteractionWrapper(customId, 3000,
 	async (interaction, [slotNumber]) => {
 		const title = interaction.fields.getTextInputValue("title");
 		const description = interaction.fields.getTextInputValue("description");
-		const imageURL = interaction.fields.getTextInputValue("imageURL");
-		const startTimestamp = parseInt(interaction.fields.getTextInputValue("startTimestamp"));
-		const endTimestamp = parseInt(interaction.fields.getTextInputValue("endTimestamp"));
-		const shouldMakeEvent = startTimestamp && endTimestamp;
+
+		const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [title, description], "bounty post");
+		if (isBlockedByAutoMod) {
+			interaction.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", ephemeral: true });
+			return;
+		}
 
 		const rawBounty = {
 			userId: interaction.user.id,
@@ -25,6 +27,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		};
 		const errors = [];
 
+		const imageURL = interaction.fields.getTextInputValue("imageURL");
 		if (imageURL) {
 			try {
 				new URL(imageURL);
@@ -34,6 +37,9 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 		}
 
+		const startTimestamp = parseInt(interaction.fields.getTextInputValue("startTimestamp"));
+		const endTimestamp = parseInt(interaction.fields.getTextInputValue("endTimestamp"));
+		const shouldMakeEvent = startTimestamp && endTimestamp;
 		if (startTimestamp || endTimestamp) {
 			if (!startTimestamp) {
 				errors.push("Start timestamp must be an integer.");
@@ -98,7 +104,6 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster.level, hunterGuild.eventMultiplierString());
 		interaction.reply(hunterGuild.sendAnnouncement({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 			if (hunterGuild.bountyBoardId) {
-				//TODO #42 figure out how to trip auto-mod or re-add taboos
 				interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.create({
 						name: bounty.title,

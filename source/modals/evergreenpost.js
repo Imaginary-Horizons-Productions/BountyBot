@@ -1,6 +1,6 @@
 const { database } = require('../../database');
 const { InteractionWrapper } = require('../classes');
-const { generateBountyBoardThread } = require('../helpers');
+const { generateBountyBoardThread, checkTextsInAutoMod } = require('../helpers');
 
 const customId = "evergreenpost";
 module.exports = new InteractionWrapper(customId, 3000,
@@ -8,7 +8,12 @@ module.exports = new InteractionWrapper(customId, 3000,
 	async (interaction, [slotNumber]) => {
 		const title = interaction.fields.getTextInputValue("title");
 		const description = interaction.fields.getTextInputValue("description");
-		const imageURL = interaction.fields.getTextInputValue("imageURL");
+
+		const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [title, description], "evergreen post");
+		if (isBlockedByAutoMod) {
+			interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", ephemeral: true });
+			return;
+		}
 
 		const rawBounty = {
 			userId: interaction.client.user.id,
@@ -19,6 +24,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			description
 		};
 
+		const imageURL = interaction.fields.getTextInputValue("imageURL");
 		if (imageURL) {
 			try {
 				new URL(imageURL);
@@ -37,7 +43,6 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const bountyEmbed = await bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString());
 		interaction.reply(hunterGuild.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 			if (hunterGuild.bountyBoardId) {
-				//TODO #42 figure out how to trip auto-mod or re-add taboos
 				interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(async bountyBoard => {
 					const evergreenBounties = await database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
 					const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString())));
