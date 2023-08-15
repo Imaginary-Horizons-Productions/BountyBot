@@ -379,32 +379,39 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					poster.mineFinished++;
 					poster.save();
 
-					bounty.asEmbed(interaction.guild, poster.level, guildProfile.eventMultiplierString()).then(embed => { //TODO #51 `/bounty complete` crashes on uncaught error if used without bounty board forum channel
-						interaction.reply({ embeds: [embed] });
-					}).then(() => {
-						return bounty.updatePosting(interaction.guild, guildProfile);
-					}).then(() => {
-						getRankUpdates(interaction.guild).then(rankUpdates => {
-							interaction.guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
-								bountyBoard.threads.fetch(bounty.postingId).then(thread => {
-									const multiplierString = guildProfile.eventMultiplierString();
-									let text = "";
-									if (rankUpdates.length > 0) {
-										text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
-									}
-									text += `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}\n`;
-									if (levelTexts.length > 0) {
-										text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
-									}
-									if (text.length > 2000) {
-										text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
-									}
-									thread.send(text);
+					getRankUpdates(interaction.guild).then(rankUpdates => {
+						const multiplierString = guildProfile.eventMultiplierString();
+						let text = "";
+						if (rankUpdates.length > 0) {
+							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
+						}
+						text += `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}\n`;
+						if (levelTexts.length > 0) {
+							text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
+						}
+						if (text.length > 2000) {
+							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
+						}
+
+						bounty.asEmbed(interaction.guild, poster.level, guildProfile.eventMultiplierString()).then(embed => {
+							const replyPayload = { embeds: [embed] };
+
+							if (guildProfile.bountyBoardId) {
+								interaction.guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
+									bountyBoard.threads.fetch(bounty.postingId).then(thread => {
+										thread.send(text);
+									})
 								})
-							})
-							updateScoreboard(guildProfile, interaction.guild);
-						});
-					})
+							} else {
+								replyPayload.content = text;
+							}
+							interaction.reply(replyPayload);
+						}).then(() => {
+							return bounty.updatePosting(interaction.guild, guildProfile);
+						})
+
+						updateScoreboard(guildProfile, interaction.guild);
+					});
 				})
 				break;
 			case subcommands[7].name: // take-down

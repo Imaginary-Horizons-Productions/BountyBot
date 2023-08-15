@@ -238,7 +238,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 						hunter.save();
 					}
 
-					bounty.asEmbed(interaction.guild, guildProfile.level, guildProfile.eventMultiplierString()).then(embed => { //TODO #51 `/bounty complete` crashes on uncaught error if used without bounty board forum channel
+					bounty.asEmbed(interaction.guild, guildProfile.level, guildProfile.eventMultiplierString()).then(embed => {
 						return interaction.reply({ embeds: [embed], fetchReply: true });
 					}).then(replyMessage => {
 						getRankUpdates(interaction.guild).then(rankUpdates => {
