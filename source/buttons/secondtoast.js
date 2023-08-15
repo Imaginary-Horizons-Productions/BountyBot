@@ -21,8 +21,11 @@ module.exports = new InteractionWrapper(customId, 3000,
 			return;
 		}
 
-		const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-		const [seconder] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId }, defaults: { isRankEligible: interaction.member.manageable } });
+		const [seconder] = await database.models.Hunter.findOrCreate({
+			where: { userId: interaction.user.id, guildId: interaction.guildId },
+			defaults: { isRankEligible: interaction.member.manageable, User: { id: interaction.user.id } },
+			include: database.models.Hunter.User
+		});
 		seconder.toastSeconded++;
 
 		const recipientIds = (await originalToast.recipients).map(reciept => reciept.recipientId);

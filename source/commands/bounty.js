@@ -90,9 +90,13 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
 				database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
-					const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId }, defaults: { isRankEligible: interaction.member.manageable } });
-					const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } });
+					const userId = interaction.user.id;
+					const [hunter] = await database.models.Hunter.findOrCreate({
+						where: { userId, guildId: interaction.guildId },
+						defaults: { isRankEligible: interaction.member.manageable, User: { id: userId } },
+						include: database.models.Hunter.User
+					});
+					const existingBounties = await database.models.Bounty.findAll({ where: { userId, guildId: interaction.guildId, state: "open" } });
 					const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 					const bountySlots = hunter.maxSlots(maxSimBounties);
 					const slotOptions = [];
@@ -232,8 +236,11 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					for (const member of completerMembers) {
 						const memberId = member.id;
 						if (!existingCompleterIds.includes(memberId)) {
-							const [user] = await database.models.User.findOrCreate({ where: { id: memberId } });
-							const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
+							const [hunter] = await database.models.Hunter.findOrCreate({
+								where: { userId: memberId, guildId: interaction.guildId },
+								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
+								include: database.models.Hunter.User
+							});
 							if (hunter.isBanned) {
 								bannedIds.push(memberId);
 								continue;
@@ -327,8 +334,11 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					for (const member of completerMembers) {
 						if (!member.user.bot) {
 							const memberId = member.id;
-							const [user] = await database.models.User.findOrCreate({ where: { id: memberId } });
-							const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
+							const [hunter] = await database.models.Hunter.findOrCreate({
+								where: { userId: memberId, guildId: interaction.guildId },
+								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
+								include: database.models.Hunter.User
+							});
 							if (!hunter.isBanned) {
 								validatedCompleterIds.push(memberId);
 							}

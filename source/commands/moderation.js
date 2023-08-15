@@ -99,7 +99,7 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 				break;
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Hunter.findOrCreate({ where: { userId: member.id, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } }).then(([hunter]) => {
+				database.models.Hunter.findOrCreate({ where: { userId: member.id, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id }, Guild: { id: interaction.guildId } }, include: [database.models.Hunter.User, database.models.Hunter.Guild] }).then(([hunter]) => {
 					hunter.isRankDisqualified = !hunter.isRankDisqualified;
 					if (hunter.isRankDisqualified) {
 						hunter.increment("seasonDQCount");
