@@ -21,8 +21,11 @@ module.exports = new InteractionWrapper(customId, 3000,
 			return;
 		}
 
-		const [user] = await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-		const [seconder] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, guildId: interaction.guildId }, defaults: { isRankEligible: interaction.member.manageable } });
+		const [seconder] = await database.models.Hunter.findOrCreate({
+			where: { userId: interaction.user.id, guildId: interaction.guildId },
+			defaults: { isRankEligible: interaction.member.manageable, User: { id: interaction.user.id } },
+			include: database.models.Hunter.User
+		});
 		seconder.toastSeconded++;
 
 		const recipientIds = (await originalToast.recipients).map(reciept => reciept.recipientId);
@@ -44,9 +47,9 @@ module.exports = new InteractionWrapper(customId, 3000,
 		}
 
 		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
-		const staleToastees = lastFiveToasts.reduce(async (list, toast) => {
+		const staleToastees = await lastFiveToasts.reduce(async (list, toast) => {
 			return (await list).concat((await toast.rewardedRecipients).map(recipient => recipient.userId));
-		}, []);
+		}, new Promise((resolve) => resolve([])));
 
 		const wasCrit = false;
 		if (critSecondsAvailable > 0) {

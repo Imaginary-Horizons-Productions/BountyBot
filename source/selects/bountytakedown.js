@@ -13,6 +13,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		const guildProfile = await database.models.Guild.findOne({ where: { id: interaction.guildId } });
 		guildProfile.decrement("seasonXP");
+		guildProfile.save();
 		if (guildProfile.bountyBoardId) {
 			const bountyBoard = await interaction.guild.channels.fetch(guildProfile.bountyBoardId);
 			const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
