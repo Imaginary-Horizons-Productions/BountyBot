@@ -47,7 +47,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		}
 
 		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
-		const staleToastees = lastFiveToasts.reduce(async (list, toast) => {
+		const staleToastees = await lastFiveToasts.reduce(async (list, toast) => {
 			return (await list).concat((await toast.rewardedRecipients).map(recipient => recipient.userId));
 		}, []);
 
