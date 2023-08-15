@@ -1,8 +1,8 @@
 const { MessageFlags } = require('discord.js');
 const { DataTypes, Model } = require('sequelize');
 
-/** Guild information and bot settings */
-exports.Guild = class extends Model {
+/** A Company of bounty hunters contains a Discord Guild's information and settings */
+exports.Company = class extends Model {
 	eventMultiplierString() {
 		if (this.eventMultiplier != 1) {
 			return ` ***x${this.eventMultiplier}***`;
@@ -11,7 +11,7 @@ exports.Guild = class extends Model {
 		}
 	}
 
-	/** Apply the guild's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
+	/** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
 	 * @param {import('discord.js').MessageCreateOptions} messageOptions
 	 */
 	sendAnnouncement(messageOptions) {
@@ -55,7 +55,7 @@ exports.Guild = class extends Model {
 }
 
 exports.initModel = function (sequelize) {
-	exports.Guild.init({
+	exports.Company.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -63,7 +63,7 @@ exports.initModel = function (sequelize) {
 		xp: {
 			type: DataTypes.VIRTUAL,
 			async get() {
-				return await sequelize.models.Hunter.sum("level", { where: { guildId: this.id } });
+				return await sequelize.models.Hunter.sum("level", { where: { companyId: this.id } });
 			}
 		},
 		level: {
@@ -141,7 +141,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'Guild',
+		modelName: "Company",
 		freezeTableName: true
 	});
 }

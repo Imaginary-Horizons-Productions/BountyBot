@@ -40,12 +40,12 @@ module.exports = new CommandWrapper(customId, "description", PermissionFlagsBits
 	(interaction) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // by-rank
-				database.models.GuildRank.findAll({ where: { guildId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(async ranks => {
+				database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(async ranks => {
 					if (ranks.length < 1) {
 						interaction.reply({ content: "This server doesn't have any ranks configured.", ephemeral: true });
 						return;
 					}
-					const guildRanks = await interaction.guild.roles.fetch();
+					const guildRoles = await interaction.guild.roles.fetch();
 					interaction.reply({
 						content: "Select a rank to be the eligibility threshold for this raffle:",
 						components: [
@@ -54,7 +54,7 @@ module.exports = new CommandWrapper(customId, "description", PermissionFlagsBits
 									.setPlaceholder("Select a rank...")
 									.addOptions(ranks.map((rank, index) => {
 										const option = {
-											label: rank.roleId ? guildRanks.get(rank.roleId).name : `Rank ${index + 1}`,
+											label: rank.roleId ? guildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
 											description: `Variance Threshold: ${rank.varianceThreshold}`,
 											value: index.toString()
 										};
@@ -77,23 +77,23 @@ module.exports = new CommandWrapper(customId, "description", PermissionFlagsBits
 				break;
 			case subcommands[1].name: // by-level
 				const levelThreshold = interaction.options.getInteger("level");
-				database.models.Hunter.findAll({ where: { guildId: interaction.guildId, level: { [Op.gte]: levelThreshold } } }).then(eligibleHunters => {
+				database.models.Hunter.findAll({ where: { companyId: interaction.guildId, level: { [Op.gte]: levelThreshold } } }).then(eligibleHunters => {
 					if (eligibleHunters.length < 1) {
 						interaction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above level ${levelThreshold}).`, ephemeral: true });
 						return;
 					}
 					const winner = eligibleHunters[Math.floor(Math.random() * eligibleHunters.length)];
 					interaction.reply(`The winner of this raffle is: <@${winner.userId}>`);
-					database.models.Guild.findByPk(interaction.guildId).then(guildProfile => {
-						guildProfile.update("nextRaffleString", null);
+					database.models.Company.findByPk(interaction.guildId).then(company => {
+						company.update("nextRaffleString", null);
 					});
 				});
 				break;
 			case subcommands[2].name: // announce-upcoming
-				database.models.Guild.findByPk(interaction.guildId).then(guildProfile => {
+				database.models.Company.findByPk(interaction.guildId).then(company => {
 					const announcement = interaction.options.getString("announcement")
-					guildProfile.update("nextRaffleString", announcement);
-					interaction.reply(guildProfile.sendAnnouncement({ content: announcement }));
+					company.update("nextRaffleString", announcement);
+					interaction.reply(company.sendAnnouncement({ content: announcement }));
 				})
 				break;
 		}

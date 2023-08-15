@@ -17,7 +17,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 
 		const rawBounty = {
 			userId: interaction.client.user.id,
-			guildId: interaction.guildId,
+			companyId: interaction.guildId,
 			slotNumber: parseInt(slotNumber),
 			isEvergreen: true,
 			title,
@@ -36,24 +36,24 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 		}
 
-		const [hunterGuild] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
+		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum
-		const bountyEmbed = await bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString());
-		interaction.reply(hunterGuild.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
-			if (hunterGuild.bountyBoardId) {
-				interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(async bountyBoard => {
-					const evergreenBounties = await database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-					const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString())));
-					if (hunterGuild.evergreenThreadId) {
-						return bountyBoard.threads.fetch(hunterGuild.evergreenThreadId).then(async thread => {
+		const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString());
+		interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
+			if (company.bountyBoardId) {
+				interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
+					const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
+					const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString())));
+					if (company.evergreenThreadId) {
+						return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 							const message = await thread.fetchStarterMessage();
 							message.edit({ embeds });
 							return thread;
 						});
 					} else {
-						return generateBountyBoardThread(bountyBoard.threads, embeds, hunterGuild);
+						return generateBountyBoardThread(bountyBoard.threads, embeds, company);
 					}
 				}).then(thread => {
 					bounty.postingId = thread.id;

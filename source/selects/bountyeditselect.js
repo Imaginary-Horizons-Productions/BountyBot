@@ -8,7 +8,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 	/** Recieve bounty reconfigurations from the user */
 	(interaction, args) => {
 		const [slotNumber] = interaction.values;
-		database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+		database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 			const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
 				.setLabel("Event Start (Unix Timestamp)")
 				.setRequired(false)

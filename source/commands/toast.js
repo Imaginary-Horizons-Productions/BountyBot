@@ -86,7 +86,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
 
 		// Make database entities
-		const recentToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } } });
+		const recentToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } } });
 		let rewardsAvailable = 10;
 		let critToastsAvailable = 2;
 		for (const toast of recentToasts) {
@@ -108,7 +108,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			return list;
 		}, new Promise((resolve) => { resolve(new Set()) }));
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
 		const staleToastees = await lastFiveToasts.reduce(async (list, toast) => {
 			return (await list).concat((await toast.rewardedRecipients).map(reciept => reciept.recipientId));
 		}, new Promise((resolve) => { resolve([]) }));
@@ -117,16 +117,16 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		let rewardedRecipients = [];
 		let critValue = 0;
 		//TODO combine fetch and seasonToasts increment with upsert?
-		const [guildProfile] = await database.models.Guild.findOrCreate({ where: { id: interaction.guildId } });
-		guildProfile.increment("seasonToasts");
-		guildProfile.save();
+		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+		company.increment("seasonToasts");
+		company.save();
 		const [sender] = await database.models.Hunter.findOrCreate({
-			where: { userId: interaction.user.id, guildId: interaction.guildId },
+			where: { userId: interaction.user.id, companyId: interaction.guildId },
 			defaults: { isRankEligible: interaction.member.manageable, User: { id: interaction.user.id } },
 			include: database.models.Hunter.User
 		});
 		sender.toastsRaised++;
-		const toast = await database.models.Toast.create({ guildId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
+		const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 		for (const id of nonBotToasteeIds) {
 			//TODO move to bulkCreate after finding solution to create by association only if user doesn't already exist
 			const [user] = await database.models.User.findOrCreate({ where: { id } });
@@ -167,7 +167,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		levelTexts.concat(await sender.addXP(interaction.guild, critValue, false));
 		for (const recipientId of rewardedRecipients) {
 			const member = await interaction.guild.members.fetch(recipientId);
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
+			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
 			levelTexts.concat(await hunter.addXP(interaction.guild, 1, false));
 		}
 
@@ -186,7 +186,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 			message.startThread({ name: "Rewards" }).then(thread => {
 				if (rewardedRecipients.length > 0) {
 					getRankUpdates(interaction.guild).then(rankUpdates => {
-						const multiplierString = guildProfile.eventMultiplierString();
+						const multiplierString = company.eventMultiplierString();
 						let text = "";
 						if (rankUpdates.length > 0) {
 							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
@@ -199,7 +199,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 						thread.send(text);
-						updateScoreboard(guildProfile, interaction.guild);
+						updateScoreboard(company, interaction.guild);
 					})
 				}
 			});

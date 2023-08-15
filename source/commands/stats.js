@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { buildGuildStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../embedHelpers');
+const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../embedHelpers');
 const { database } = require('../../database');
 const { generateTextBar } = require('../helpers');
 const { Hunter } = require('../models/users/Hunter');
@@ -22,7 +22,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 		if (target && target.id !== interaction.user.id) {
 			if (target.id == interaction.client.user.id) {
 				// BountyBot
-				buildGuildStatsEmbed(interaction.guild).then(embed => {
+				buildCompanyStatsEmbed(interaction.guild).then(embed => {
 					interaction.reply({
 						embeds: [embed],
 						ephemeral: true
@@ -30,13 +30,13 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 				})
 			} else {
 				// Other Hunter
-				database.models.Hunter.findOne({ where: { userId: target.id, guildId: interaction.guildId } }).then(async hunter => {
+				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId } }).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", ephemeral: true });
 						return;
 					}
 
-					const { xpCoefficient } = await database.models.Guild.findByPk(interaction.guildId);
+					const { xpCoefficient } = await database.models.Company.findByPk(interaction.guildId);
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 
@@ -68,13 +68,13 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 			}
 		} else {
 			// Self
-			database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } }).then(async hunter => {
+			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
 				if (!hunter) {
 					interaction.reply("You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.");
 					return;
 				}
 
-				const { xpCoefficient, maxSimBounties } = await database.models.Guild.findByPk(interaction.guildId);
+				const { xpCoefficient, maxSimBounties } = await database.models.Company.findByPk(interaction.guildId);
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);

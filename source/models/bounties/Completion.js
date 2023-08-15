@@ -16,7 +16,7 @@ exports.initModel = function (sequelize) {
 		userId: {
 			type: DataTypes.STRING
 		},
-		guildId: {
+		companyId: {
 			type: DataTypes.STRING
 		},
 		xpAwarded: {

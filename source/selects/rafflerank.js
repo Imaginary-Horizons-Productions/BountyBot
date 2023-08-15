@@ -8,9 +8,9 @@ module.exports = new InteractionWrapper(customId, 3000,
 	/** Given selected rank for raffle, randomly select eligible hunter */
 	(interaction, args) => {
 		const rankIndex = Number(interaction.values[0]);
-		database.models.Hunter.findAll({ where: { guildId: interaction.guildId, isRankEligible: true, isRankDisqualified: false, rank: { [Op.gte]: rankIndex } } }).then(eligibleHunters => {
+		database.models.Hunter.findAll({ where: { companyId: interaction.guildId, isRankEligible: true, isRankDisqualified: false, rank: { [Op.gte]: rankIndex } } }).then(eligibleHunters => {
 			if (eligibleHunters.length < 1) {
-				database.models.GuildRank.findAll({ where: { guildId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
+				database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
 					const rank = ranks[rankIndex];
 					interaction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.rankId}>` : `Rank ${rankIndex + 1}`}).`, ephemeral: true });
 				});
@@ -18,8 +18,8 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 			const winner = eligibleHunters[Math.floor(Math.random() * eligibleHunters.length)];
 			interaction.reply(`The winner of this raffle is: <@${winner.userId}>`);
-			database.models.Guild.findByPk(interaction.guildId).then(guildProfile => {
-				guildProfile.update("nextRaffleString", null);
+			database.models.Company.findByPk(interaction.guildId).then(company => {
+				company.update("nextRaffleString", null);
 			});
 		})
 	}

@@ -1,11 +1,11 @@
 ﻿const { DataTypes, Model } = require('sequelize');
 
-/** Ranks, individual per guild, include a variance threshold (difficulty to achieve) and optionally a role to give hunters and emoji for the scoreboard */
-exports.GuildRank = class extends Model { }
+/** A company's Ranks include a variance threshold (difficulty to achieve) and optionally a role to give hunters and emoji for the scoreboard */
+exports.CompanyRank = class extends Model { }
 
 exports.initModel = function (sequelize) {
-	exports.GuildRank.init({
-		guildId: {
+	exports.CompanyRank.init({
+		companyId: {
 			primaryKey: true,
 			type: DataTypes.STRING
 		},
@@ -21,7 +21,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'GuildRank',
+		modelName: "CompanyRank",
 		freezeTableName: true
 	});
 }

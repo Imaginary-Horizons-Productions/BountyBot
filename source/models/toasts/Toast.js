@@ -10,7 +10,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4
 		},
-		guildId: {
+		companyId: {
 			type: DataTypes.STRING,
 			allowNull: false
 		},

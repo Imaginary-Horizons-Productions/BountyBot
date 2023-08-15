@@ -1,6 +1,6 @@
 const { database } = require("../database");
 const { Guild, AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
-const { GuildRank } = require("./models/guilds/GuildRank");
+const { CompanyRank } = require("./models/companies/CompanyRank");
 
 const CONGRATULATORY_PHRASES = [
 	"Congratulations",
@@ -130,7 +130,7 @@ exports.extractUserIdsFromMentions = function (mentionsText, exlcuedIds) {
 
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
  * @param {database.models.Hunter[]} participants
- * @param {GuildRank[]} ranks
+ * @param {CompanyRank[]} ranks
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
 exports.setRanks = async (participants, ranks) => {
@@ -202,8 +202,8 @@ exports.setRanks = async (participants, ranks) => {
  * @returns an array of rank and placement update strings
  */
 exports.getRankUpdates = async function (guild, force = false) {
-	const allHunters = await database.models.Hunter.findAll({ where: { guildId: guild.id }, order: [["seasonXP", "DESC"]] });
-	const ranks = await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] });
+	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["seasonXP", "DESC"]] });
+	const ranks = await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	return exports.setRanks(allHunters, ranks).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 		const outMessages = [];
@@ -233,13 +233,13 @@ exports.getRankUpdates = async function (guild, force = false) {
 	});
 }
 
-exports.generateBountyBoardThread = function (threadManager, embeds, hunterGuild) {
+exports.generateBountyBoardThread = function (threadManager, embeds, company) {
 	return threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds }
 	}).then(thread => {
-		hunterGuild.evergreenThreadId = thread.id;
-		hunterGuild.save();
+		company.evergreenThreadId = thread.id;
+		company.save();
 		thread.pin();
 		return thread;
 	})

@@ -68,7 +68,7 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // take-down
 				const poster = interaction.options.getUser(subcommands[0].optionsInput[0].name);
-				database.models.Bounty.findAll({ where: { userId: poster.id, guildId: interaction.guildId, state: "open" } }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } }).then(openBounties => {
 					const slotOptions = openBounties.map(bounty => {
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
@@ -99,7 +99,7 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 				break;
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Hunter.findOrCreate({ where: { userId: member.id, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id }, Guild: { id: interaction.guildId } }, include: [database.models.Hunter.User, database.models.Hunter.Guild] }).then(([hunter]) => {
+				database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id }, Company: { id: interaction.guildId } }, include: [database.models.Hunter.User, database.models.Hunter.Company] }).then(([hunter]) => {
 					hunter.isRankDisqualified = !hunter.isRankDisqualified;
 					if (hunter.isRankDisqualified) {
 						hunter.increment("seasonDQCount");
@@ -112,15 +112,15 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 				break;
 			case subcommands[2].name: // penalty
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Hunter.findOne({ where: { userId: member.id, guildId: interaction.guildId } }).then(async hunter => {
+				database.models.Hunter.findOne({ where: { userId: member.id, companyId: interaction.guildId } }).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: `${member} hasn't interacted with BountyBot yet.`, ephemeral: true });
 						return;
 					}
 					const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
-					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-					guildProfile.decrement({ seasonXP: penaltyValue });
-					guildProfile.save();
+					const company = await database.models.Company.findByPk(interaction.guildId);
+					company.decrement({ seasonXP: penaltyValue });
+					company.save();
 					hunter.decrement(["xp", "seasonXP"], { by: penaltyValue });
 					hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
 					getRankUpdates(interaction.guild);

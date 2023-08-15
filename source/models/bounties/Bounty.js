@@ -1,7 +1,7 @@
 ﻿const { EmbedBuilder, Guild } = require('discord.js');
 const { DataTypes, Model } = require('sequelize');
 const { ihpAuthorPayload } = require('../../embedHelpers');
-const { Guild: HunterGuild } = require('../guilds/Guild');
+const { Company } = require('../companies/Company');
 const { database } = require('../../../database');
 
 /** Bounties are user created objectives for other server members to complete */
@@ -52,18 +52,18 @@ exports.Bounty = class extends Model {
 
 	/** Update the bounty's embed in the bounty board
 	 * @param {Guild} guild
-	 * @param {HunterGuild} guildProfile
+	 * @param {Company} company
 	 */
-	async updatePosting(guild, guildProfile) {
-		if (guildProfile.bountyBoardId) {
-			const poster = await database.models.Hunter.findOne({ where: { userId: this.userId, guildId: this.guildId } });
-			guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
+	async updatePosting(guild, company) {
+		if (company.bountyBoardId) {
+			const poster = await database.models.Hunter.findOne({ where: { userId: this.userId, companyId: this.companyId } });
+			guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(this.postingId);
 			}).then(thread => {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
-				this.asEmbed(guild, poster.level, guildProfile.eventMultiplierString()).then(embed => {
+				this.asEmbed(guild, poster.level, company.eventMultiplierString()).then(embed => {
 					posting.edit({ embeds: [embed] })
 				})
 			})
@@ -87,7 +87,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		guildId: {
+		companyId: {
 			type: DataTypes.STRING,
 			allowNull: false
 		},

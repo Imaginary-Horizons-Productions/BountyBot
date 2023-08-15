@@ -89,14 +89,14 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
-				database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
+				database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
 					const userId = interaction.user.id;
 					const [hunter] = await database.models.Hunter.findOrCreate({
-						where: { userId, guildId: interaction.guildId },
+						where: { userId, companyId: interaction.guildId },
 						defaults: { isRankEligible: interaction.member.manageable, User: { id: userId } },
 						include: database.models.Hunter.User
 					});
-					const existingBounties = await database.models.Bounty.findAll({ where: { userId, guildId: interaction.guildId, state: "open" } });
+					const existingBounties = await database.models.Bounty.findAll({ where: { userId, companyId: interaction.guildId, state: "open" } });
 					const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 					const bountySlots = hunter.maxSlots(maxSimBounties);
 					const slotOptions = [];
@@ -130,7 +130,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				});
 				break;
 			case subcommands[1].name: // edit
-				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" } }).then(openBounties => {
 					if (openBounties.length < 1) {
 						interaction.reply({ content: "You don't seem to have any open bounties at the moment.", ephemeral: true });
 						return;
@@ -156,7 +156,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				})
 				break;
 			case subcommands[2].name: // swap
-				database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
 					if (openBounties.length < 1) {
 						interaction.reply({ content: "You don't seem to have any open bounties at the moment.", ephemeral: true });
 						return;
@@ -182,14 +182,14 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				})
 				break;
 			case subcommands[3].name: // showcase
-				database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } }).then(async hunter => {
+				database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
 					const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 					if (Date.now() < nextShowcaseInMS) {
 						interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, ephemeral: true });
 						return;
 					}
 
-					const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
+					const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 					if (existingBounties.length < 1) {
 						interaction.reply({ content: "You doesn't have any open bounties posted.", ephemeral: true });
 						return;
@@ -216,7 +216,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				break;
 			case subcommands[4].name: // add-completers
 				slotNumber = interaction.options.getInteger("bounty-slot");
-				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+				database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
 						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
 						return;
@@ -230,14 +230,14 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					}
 
 					const completerMembers = (await interaction.guild.members.fetch({ user: completerIds })).values();
-					const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, guildId: interaction.guildId } });
+					const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: interaction.guildId } });
 					const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 					const bannedIds = [];
 					for (const member of completerMembers) {
 						const memberId = member.id;
 						if (!existingCompleterIds.includes(memberId)) {
 							const [hunter] = await database.models.Hunter.findOrCreate({
-								where: { userId: memberId, guildId: interaction.guildId },
+								where: { userId: memberId, companyId: interaction.guildId },
 								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
 								include: database.models.Hunter.User
 							});
@@ -262,12 +262,12 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						rawCompletions.push({
 							bountyId: bounty.id,
 							userId,
-							guildId: interaction.guildId
+							companyId: interaction.guildId
 						})
 					}
 					database.models.Completion.bulkCreate(rawCompletions);
-					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-					bounty.updatePosting(interaction.guild, guildProfile);
+					const company = await database.models.Company.findByPk(interaction.guildId);
+					bounty.updatePosting(interaction.guild, company);
 
 					interaction.reply({
 						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, ")}>\n\nThey will recieve the reward XP when you \`/bounty complete\`.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
@@ -277,7 +277,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				break;
 			case subcommands[5].name: // remove-completers
 				slotNumber = interaction.options.getInteger("bounty-slot");
-				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+				database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
 						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
 						return;
@@ -290,8 +290,8 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					}
 
 					database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: mentionedIds } } });
-					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-					bounty.updatePosting(interaction.guild, guildProfile);
+					const company = await database.models.Company.findByPk(interaction.guildId);
+					bounty.updatePosting(interaction.guild, company);
 
 					interaction.reply({ //TODO make sure acknowledging interactions is sharding safe
 						content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`,
@@ -301,7 +301,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 				break;
 			case subcommands[6].name: // complete
 				slotNumber = interaction.options.getInteger("bounty-slot");
-				database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+				database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
 						interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
 						return;
@@ -314,9 +314,9 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					}
 
 					// poster guaranteed to exist, creating a bounty gives 1 XP
-					const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
-					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-					const bountyValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount) * guildProfile.eventMultiplier;
+					const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
+					const company = await database.models.Company.findByPk(interaction.guildId);
+					const bountyValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount) * company.eventMultiplier;
 
 					const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
 					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
@@ -335,7 +335,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						if (!member.user.bot) {
 							const memberId = member.id;
 							const [hunter] = await database.models.Hunter.findOrCreate({
-								where: { userId: memberId, guildId: interaction.guildId },
+								where: { userId: memberId, companyId: interaction.guildId },
 								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
 								include: database.models.Hunter.User
 							});
@@ -350,7 +350,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						return;
 					}
 
-					guildProfile.increment("seasonBounties");
+					company.increment("seasonBounties");
 
 					bounty.state = "completed";
 					bounty.completedAt = new Date();
@@ -361,26 +361,26 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						rawCompletions.push({
 							bountyId: bounty.id,
 							userId,
-							guildId: interaction.guildId
+							companyId: interaction.guildId
 						});
 					}
 					await database.models.Completion.bulkCreate(rawCompletions);
 					database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 
 					for (const userId of validatedCompleterIds) {
-						const hunter = await database.models.Hunter.findOne({ where: { guildId: interaction.guildId, userId } });
+						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
 						levelTexts.concat(await hunter.addXP(interaction.guild, bountyValue, true));
 						hunter.othersFinished++;
 						hunter.save();
 					}
 
-					const posterXP = Math.ceil(validatedCompleterIds.length / 2) * guildProfile.eventMultiplier;
+					const posterXP = Math.ceil(validatedCompleterIds.length / 2) * company.eventMultiplier;
 					levelTexts.concat(await poster.addXP(interaction.guild, posterXP, true));
 					poster.mineFinished++;
 					poster.save();
 
 					getRankUpdates(interaction.guild).then(rankUpdates => {
-						const multiplierString = guildProfile.eventMultiplierString();
+						const multiplierString = company.eventMultiplierString();
 						let text = "";
 						if (rankUpdates.length > 0) {
 							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
@@ -393,11 +393,11 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 
-						bounty.asEmbed(interaction.guild, poster.level, guildProfile.eventMultiplierString()).then(embed => {
+						bounty.asEmbed(interaction.guild, poster.level, company.eventMultiplierString()).then(embed => {
 							const replyPayload = { embeds: [embed] };
 
-							if (guildProfile.bountyBoardId) {
-								interaction.guild.channels.fetch(guildProfile.bountyBoardId).then(bountyBoard => {
+							if (company.bountyBoardId) {
+								interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 									bountyBoard.threads.fetch(bounty.postingId).then(thread => {
 										thread.send(text);
 									})
@@ -407,15 +407,15 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 							}
 							interaction.reply(replyPayload);
 						}).then(() => {
-							return bounty.updatePosting(interaction.guild, guildProfile);
+							return bounty.updatePosting(interaction.guild, company);
 						})
 
-						updateScoreboard(guildProfile, interaction.guild);
+						updateScoreboard(company, interaction.guild);
 					});
 				})
 				break;
 			case subcommands[7].name: // take-down
-				database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.user.id, state: "open" } }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.user.id, state: "open" } }).then(openBounties => {
 					const bountyOptions = openBounties.map(bounty => {
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),

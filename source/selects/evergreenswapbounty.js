@@ -9,8 +9,8 @@ const customId = "evergreenswapbounty";
 module.exports = new InteractionWrapper(customId, 3000,
 	/** Recieve the bounty to swap and solicit the slot to swap to */
 	(interaction, args) => {
-		database.models.Hunter.findOne({ where: { guildId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
-			const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, guildId: interaction.guildId, state: "open" } });
+		database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
+			const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
 			const previousBountySlot = parseInt(interaction.values[0]);
 			const slotOptions = [];
 			for (const bounty of existingBounties) {
