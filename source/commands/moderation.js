@@ -99,15 +99,31 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 				break;
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id }, Company: { id: interaction.guildId } }, include: [database.models.Hunter.User, database.models.Hunter.Company] }).then(([hunter]) => {
-					hunter.isRankDisqualified = !hunter.isRankDisqualified;
-					if (hunter.isRankDisqualified) {
+				database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(async ([company]) => {
+					const hunter = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id } }, include: database.models.Hunter.User });
+					let isDisqualification;
+					if (hunter.seasonParticipationId) {
+						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
+						seasonParticipation.isRankDisqualified = !seasonParticipation.isRankDisqualified;
+						isDisqualification = seasonParticipation.isRankDisqualified;
+						seasonParticipation.save();
+					} else {
+						const seasonParticpation = await database.models.SeasonParticipation.create({
+							userId: hunter.userId,
+							companyId: company.id,
+							seasonId: company.seasonId,
+							isRankDisqualified: true
+						});
+						hunter.seasonParticipationId = seasonParticpation.id;
+						hunter.save();
+					}
+					if (isDisqualification) {
 						hunter.increment("seasonDQCount");
 					}
 					hunter.save();
 					getRankUpdates(interaction.guild);
-					interaction.reply({ content: `<@${member.id}> has been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
-					member.send(`You have been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+					interaction.reply({ content: `<@${member.id}> has been ${isDisqualification ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
+					member.send(`You have been ${isDisqualification ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				})
 				break;
 			case subcommands[2].name: // penalty
