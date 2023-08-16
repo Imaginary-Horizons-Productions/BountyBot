@@ -157,7 +157,6 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 	if (rankableHunters.length < 2) {
 		for (const hunter of allHunters) {
 			hunter.rank = null;
-			hunter.seasonPlacement = 0;
 			hunter.save();
 		}
 		return null;

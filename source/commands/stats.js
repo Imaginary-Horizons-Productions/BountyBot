@@ -50,7 +50,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season.`)
 								.addFields(
 									//TODO previous season placements
-									{ name: "Season Placements", value: `Currently: ${hunter.seasonPlacement == 0 ? "Unranked" : "#" + hunter.seasonPlacement}` },
+									{ name: "Season Placements", value: `Currently: ${hunter.SeasonParticipation?.placement ?? 0 == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}` },
 									{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
@@ -93,7 +93,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 							)
 							.addFields(
 								//TODO #55 previous season placements
-								{ name: "Season Placements", value: `Currently: ${hunter.seasonPlacement == 0 ? "Unranked" : "#" + hunter.seasonPlacement}` },
+								{ name: "Season Placements", value: `Currently: ${hunter.SeasonParticipation?.placement ?? 0 == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}` },
 								{ name: `Level ${hunter.level + 1} Reward`, value: hunter.levelUpReward(hunter.level + 1, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 2} Reward`, value: hunter.levelUpReward(hunter.level + 2, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 3} Reward`, value: hunter.levelUpReward(hunter.level + 3, maxSimBounties, true), inline: true },
