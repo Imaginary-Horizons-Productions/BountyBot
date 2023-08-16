@@ -316,6 +316,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					// poster guaranteed to exist, creating a bounty gives 1 XP
 					const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 					const company = await database.models.Company.findByPk(interaction.guildId);
+					const season = await database.models.Season.findByPk(company.seasonId);
 					const bountyValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount) * company.eventMultiplier;
 
 					const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
@@ -350,7 +351,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 						return;
 					}
 
-					company.increment("seasonBounties");
+					season.increment("bountiesCompleted");
 
 					bounty.state = "completed";
 					bounty.completedAt = new Date();

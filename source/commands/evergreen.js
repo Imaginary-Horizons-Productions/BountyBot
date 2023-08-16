@@ -178,6 +178,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 					}
 
 					const company = await database.models.Company.findByPk(interaction.guildId);
+					const season = await database.models.Season.findByPk(company.seasonId);
 
 					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 
@@ -215,7 +216,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 						return;
 					}
 
-					company.increment("seasonBounties");
+					season.increment("bountiesCompleted");
 
 					const rawCompletions = [];
 					for (const userId of dedupedCompleterIds) {
