@@ -12,7 +12,6 @@ module.exports = new InteractionWrapper(customId, 3000,
 			bounty.state = "deleted";
 			bounty.save();
 			const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
-			company.decrement("seasonXP");
 			if (company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
@@ -20,8 +19,22 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 			bounty.destroy();
 
-			database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(poster => {
-				poster.decrement(["xp", "seasonXP"], { by: 1 })
+			database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async poster => {
+				poster.decrement("xp");
+				if (poster.seasonParticipationId) {
+					const seasonParticipation = await database.models.SeasonParticipation.findByPk(poster.seasonParticipationId)
+					seasonParticipation.decrement("xp");
+				} else {
+					const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
+					const seasonParticpation = await database.models.SeasonParticipation.create({
+						userId: poster.userId,
+						companyId: company.id,
+						seasonId: company.seasonId,
+						xp: -1
+					});
+					poster.seasonParticipationId = seasonParticpation.id;
+					poster.save();
+				}
 				getRankUpdates(interaction.guild);
 			})
 			interaction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });

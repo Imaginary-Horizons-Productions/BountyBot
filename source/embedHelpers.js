@@ -33,90 +33,81 @@ exports.randomFooterTip = function () {
 }
 
 exports.buildCompanyStatsEmbed = async function (guild) {
-	return database.models.Hunter.findAll({ where: { companyId: guild.id, seasonXP: { [Op.gt]: 0 } }, order: [["seasonXP", "DESC"]] }).then(async seasonParticipants => {
-		const { xp: companyXPPromise, level: companyLevel, seasonXP, lastSeasonXP, seasonBounties, bountiesLastSeason, seasonToasts, toastsLastSeason } = await database.models.Company.findByPk(guild.id);
-		const companyXP = await companyXPPromise;
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
+	const seasonParticipants = (await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] })).map(participation => participation.Hunter);
+	const [currentSeason, lastSeason] = await database.models.Season.findAll({ where: { id: { [Op.in]: [company.seasonId, company.lastSeasonId] } }, order: [["createdAt", "DESC"]] });
+	const companyXP = await company.xp;
+	const currentSeasonXP = await currentSeason.totalXP;
+	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
 
-		const currentLevelThreshold = Hunter.xpThreshold(companyLevel, COMPANY_XP_COEFFICIENT);
-		const nextLevelThreshold = Hunter.xpThreshold(companyLevel + 1, COMPANY_XP_COEFFICIENT);
-		const particpantPercentage = seasonParticipants.length / guild.memberCount * 100;
-		const seasonXPDifference = seasonXP - lastSeasonXP;
-		const seasonBountyDifference = seasonBounties - bountiesLastSeason;
-		const seasonToastDifference = seasonToasts - toastsLastSeason;
-		return new EmbedBuilder().setColor(Colors.Blurple)
-			.setAuthor(exports.ihpAuthorPayload)
-			.setTitle(`${guild.name} is __Level ${companyLevel}__`)
-			.setThumbnail(guild.iconURL())
-			.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
-			.addFields(
-				{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
-				{ name: "Participation", value: `${seasonParticipants.length} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
-				{ name: `${seasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${seasonBounties} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${seasonToasts} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
-			)
-			.setFooter(exports.randomFooterTip())
-			.setTimestamp()
-	});
-}
-
-/** Build an embed mentioning if an event is running, the next raffle date and the raffle rewards
- * @param {TextChannel} channel
- * @param {Guild} guild
- * @param {Company} company
- */
-exports.buildServerBonusesEmbed = async function (channel, guild, company) {
-	const { displayColor, displayName } = await guild.members.fetch(guild.client.user.id);
-	const embed = new EmbedBuilder().setColor(displayColor)
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
-		.setTitle(`${displayName} Server Bonuses`)
-		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
-		.setDescription(`There is ${company.eventMultiplier != 1 ? '' : 'not '}an XP multiplier event currently active${company.eventMultiplier == 1 ? '' : ` for ${company.eventMultiplierString()}`}.`)
+	const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
+	const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+	const particpantPercentage = seasonParticipants.length / guild.memberCount * 100;
+	const seasonXPDifference = currentSeasonXP - lastSeasonXP;
+	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
+	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
+	return new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(exports.ihpAuthorPayload)
+		.setTitle(`${guild.name} is __Level ${company.level}__`)
+		.setThumbnail(guild.iconURL())
+		.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
+		.addFields(
+			{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
+			{ name: "Participation", value: `${seasonParticipants.length} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
+			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
+		)
 		.setFooter(exports.randomFooterTip())
-		.setTimestamp();
-	if (company.nextRaffleString) {
-		embed.addFields([{ name: "Next Raffle", value: Utils.cleanContent(`The next raffle will be on ${company.nextRaffleString}!`, channel) }]);
-	}
-	//TODO custom raffle rewards
-	// if (this.rewards.length > 0) {
-	// 	embed.addField("Raffle Rewards", Utils.cleanContent(this.rewardStringBuilder(), channel));
-	// }
-
-	return embed;
+		.setTimestamp()
 }
 
-/** Listing XP acquired allows bounty hunters to compare ranking within a server
+/** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Guild} guild
- * @param {boolean} isSeasonScoreboard
  */
-exports.buildScoreboardEmbed = async function (guild, isSeasonScoreboard) {
-	const queryParams = { where: { companyId: guild.id } };
-	if (isSeasonScoreboard) {
-		queryParams.where.seasonXP = { [Op.gt]: 0 };
-		queryParams.order = [["seasonXP", "DESC"]];
-	} else {
-		queryParams.order = [["xp", "DESC"]];
-	}
+exports.buildSeasonalScoreboardEmbed = async function (guild) { //TODONOW test with participants
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
+	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] });
 
-	const hunters = await database.models.Hunter.findAll(queryParams);
-	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
+	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""}#${hunter.seasonPlacement} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${isSeasonScoreboard ? `${hunter.seasonXP} season XP` : `${hunter.xp} XP`}*`).join("\n");
 	//TODO handle character overflow
+	const scorelines = participations.map(participation => `${participation.Hunter.rank ? `${rankmojiArray[participation.Hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${participation.Hunter.level}__ *${participation.xp} season XP*`).join("\n");
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
-		.setTitle(`The ${isSeasonScoreboard ? "Season " : ""}Scoreboard`)
+		.setTitle("The Season Scoreboard")
+		.setDescription(scorelines || "No Bounty Hunters yet...")
+		.setFooter(exports.randomFooterTip())
+		.setTimestamp();
+}
+
+/** An overall scoreboard orders a company's hunters by total xp
+ * @param {Guild} guild
+ */
+exports.buildOverallScoreboardEmbed = async function (guild) { //TODONOW test with participants
+	//TODONOW consider dropping support?
+	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
+
+	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
+	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
+
+	//TODO handle character overflow
+	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`).join("\n");
+
+	return new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(exports.ihpAuthorPayload)
+		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+		.setTitle("The Scoreboard")
 		.setDescription(scorelines || "No Bounty Hunters yet...")
 		.setFooter(exports.randomFooterTip())
 		.setTimestamp();
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project
- * @param {string} avatarURL
  * @returns {MessageEmbed}
  */
-exports.buildVersionEmbed = async function (avatarURL) {
+exports.buildVersionEmbed = async function () {
 	const data = await fs.promises.readFile('./ChangeLog.md', { encoding: 'utf8' });
 	const dividerRegEx = /## .+ Version/g;
 	const changesStartRegEx = /\.\d+:/g;
@@ -158,7 +149,7 @@ exports.updateScoreboard = function (company, guild) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
 		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [await exports.buildScoreboardEmbed(guild, company.scoreboardIsSeasonal)] });
+			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await exports.buildSeasonalScoreboardEmbed(guild) : await exports.buildOverallScoreboardEmbed(guild)] });
 		});
 	}
 }

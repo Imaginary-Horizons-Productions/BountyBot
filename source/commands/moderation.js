@@ -118,11 +118,22 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 						return;
 					}
 					const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
-					const company = await database.models.Company.findByPk(interaction.guildId);
-					company.decrement({ seasonXP: penaltyValue });
-					company.save();
-					hunter.decrement(["xp", "seasonXP"], { by: penaltyValue });
+					hunter.decrement({ xp: penaltyValue });
 					hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
+					if (hunter.seasonParticipationId) {
+						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
+						seasonParticipation.decrement("xp");
+					} else {
+						const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
+						const seasonParticpation = await database.models.SeasonParticipation.create({
+							userId: hunter.userId,
+							companyId: company.id,
+							seasonId: company.seasonId,
+							xp: -1
+						});
+						hunter.seasonParticipationId = seasonParticpation.id;
+						hunter.save();
+					}
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, ephemeral: true });
 					member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);

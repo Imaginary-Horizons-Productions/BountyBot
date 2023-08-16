@@ -16,7 +16,7 @@ exports.database.authenticate().then(() => {
 	const { ToastRecipient, initModel: initToastRecipient } = require("./source/models/toasts/ToastRecipient.js");
 	const { ToastSeconding, initModel: initToastSeconding } = require("./source/models/toasts/ToastSeconding.js");
 	const { Season, initModel: initSeason } = require("./source/models/seasons/Season.js");
-	const { HunterSeason, initModel: initHunterSeason } = require("./source/models/seasons/HunterSeason.js");
+	const { SeasonParticpation, initModel: initSeasonParticipation } = require("./source/models/seasons/SeasonParticipation.js");
 
 	initCompany(exports.database);
 	initCompanyRank(exports.database);
@@ -28,8 +28,9 @@ exports.database.authenticate().then(() => {
 	initToastRecipient(exports.database);
 	initToastSeconding(exports.database);
 	initSeason(exports.database);
-	initHunterSeason(exports.database);
+	initSeasonParticipation(exports.database);
 
+	//TODONOW prune associations (not all references need to be associations)
 	Company.CompanyRanks = Company.hasMany(CompanyRank, {
 		foreignKey: "companyId"
 	});
@@ -134,17 +135,11 @@ exports.database.authenticate().then(() => {
 		foreignKey: "lastSeasonId"
 	})
 
-	Hunter.SeasonStats = Hunter.belongsTo(HunterSeason, {
-		foreignKey: "seasonStatsId"
+	Hunter.SeasonParticipation = Hunter.belongsTo(SeasonParticpation, {
+		foreignKey: "seasonParticipationId"
 	})
-	HunterSeason.Hunter = HunterSeason.hasOne(Hunter, {
-		foreignKey: "seasonStatsId"
-	})
-	Hunter.SeasonStats = Hunter.belongsTo(HunterSeason, {
-		foreignKey: "lastSeasonStatsId"
-	})
-	HunterSeason.Hunter = HunterSeason.hasOne(Hunter, {
-		foreignKey: "lastSeasonStatsId"
+	SeasonParticpation.Hunter = SeasonParticpation.hasOne(Hunter, {
+		foreignKey: "seasonParticipationId"
 	})
 
 	exports.database.sync();

@@ -63,7 +63,7 @@ exports.initModel = function (sequelize) {
 		xp: {
 			type: DataTypes.VIRTUAL,
 			async get() {
-				return await sequelize.models.Hunter.sum("level", { where: { companyId: this.id } });
+				return await sequelize.models.Hunter.sum("level", { where: { companyId: this.id } }) ?? 0;
 			}
 		},
 		level: {
@@ -112,32 +112,11 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: 3
 		},
-		seasonXP: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
+		seasonId: {
+			type: DataTypes.UUID
 		},
-		seasonBounties: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		seasonToasts: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		resetSchedulerId: {
-			type: DataTypes.STRING
-		},
-		lastSeasonXP: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		bountiesLastSeason: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		toastsLastSeason: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
+		lastSeasonId: {
+			type: DataTypes.UUID
 		}
 	}, {
 		sequelize,

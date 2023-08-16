@@ -37,8 +37,8 @@ exports.Hunter = class extends Model {
 		const previousCompanyLevel = company.level;
 
 		this.xp += totalPoints;
-		this.seasonXP += totalPoints;
-		company.seasonXP += totalPoints;
+		const seasonParticipation = await database.models.seasonParticipation.findByPk(this.seasonParticipationId);
+		seasonParticipation.increment({ xp: totalPoints });
 
 		this.level = Math.floor(Math.sqrt(this.xp / company.xpCoefficient) + 1);
 		this.save();
@@ -122,9 +122,8 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
-		seasonXP: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
+		seasonParticipationId: {
+			type: DataTypes.UUID
 		},
 		isRankEligible: {
 			type: DataTypes.BOOLEAN,
@@ -137,10 +136,6 @@ exports.initModel = function (sequelize) {
 		lastRank: {
 			type: DataTypes.INTEGER,
 			defaultValue: null
-		},
-		seasonPlacement: {
-			type: DataTypes.INTEGER,
-			defaultValue: 0
 		},
 		lastShowcaseTimestamp: {
 			type: DataTypes.DATE
@@ -174,10 +169,6 @@ exports.initModel = function (sequelize) {
 			defaultValue: false
 		},
 		hasBeenBanned: {
-			type: DataTypes.BOOLEAN,
-			defaultValue: false
-		},
-		isRankDisqualified: { // Expires at end of season
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
 		},

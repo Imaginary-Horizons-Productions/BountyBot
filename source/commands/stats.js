@@ -30,7 +30,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 				})
 			} else {
 				// Other Hunter
-				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId } }).then(async hunter => {
+				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId }, include: database.models.Hunter.SeasonParticipation }).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", ephemeral: true });
 						return;
@@ -47,7 +47,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 								.setAuthor(ihpAuthorPayload)
 								.setThumbnail(target.user.avatarURL())
 								.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
-								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.seasonXP} XP* this season.`)
+								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season.`)
 								.addFields(
 									//TODO previous season placements
 									{ name: "Season Placements", value: `Currently: ${hunter.seasonPlacement == 0 ? "Unranked" : "#" + hunter.seasonPlacement}` },
@@ -68,7 +68,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 			}
 		} else {
 			// Self
-			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
+			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId }, include: database.models.Hunter.SeasonParticipation }).then(async hunter => {
 				if (!hunter) {
 					interaction.reply("You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.");
 					return;
@@ -88,7 +88,7 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 							.setTitle(`You are __Level ${hunter.level}__ in ${interaction.guild.name}`)
 							.setDescription(
 								`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - hunter.xp} XP\n\
-								You have earned *${hunter.seasonXP} XP* this season${false /* TODO rankString */ ? ` which qualifies for the rank @${"" /* TODO rankString */}` : ""}.\n\n\
+								You have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season${false /* TODONOW rankString */ ? ` which qualifies for the rank @${"" /* TODONOW rankString */}` : ""}.\n\n\
 								You have ${bountySlots} bounty slot${bountySlots == 1 ? '' : 's'}!`
 							)
 							.addFields(
