@@ -210,7 +210,7 @@ exports.getRankUpdates = async function (guild) {
 	const ranks = await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
 
-	return calculateRanks(company.seasonId, allHunters, existingParticipationMap, ranks).then(async (firstPlaceMessage) => {
+	return calculateRanks(company.seasonId, allHunters, ranks).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 		const outMessages = [];
 		if (firstPlaceMessage) {
@@ -223,7 +223,7 @@ exports.getRankUpdates = async function (guild) {
 			}
 		}
 		const updatedMembers = await guild.members.fetch({ user: userIdsWithChangedRanks });
-		const updatedParticipationsMap = await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId, userId: { [Op.in]: userIdsWithChangedRanks } }, include: database.models.SeasonParticipation.Hunter })
+		const updatedParticipationsMap = (await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId, userId: { [Op.in]: userIdsWithChangedRanks } }, include: database.models.SeasonParticipation.Hunter }))
 			.reduce((map, participation) => {
 				map[participation.userId] = participation;
 				return map;
