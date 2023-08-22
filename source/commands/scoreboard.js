@@ -1,5 +1,5 @@
 const { CommandWrapper } = require('../classes');
-const { buildScoreboardEmbed } = require('../embedHelpers');
+const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../embedHelpers');
 
 const customId = "scoreboard";
 const options = [
@@ -18,11 +18,20 @@ const subcommands = [];
 module.exports = new CommandWrapper(customId, "View the XP scoreboard", null, false, false, 3000, options, subcommands,
 	/** View the XP scoreboard */
 	(interaction) => {
-		buildScoreboardEmbed(interaction.guild, interaction.options.getString(options[0].name) === "season").then(embed => {
-			interaction.reply({
-				embeds: [embed],
-				ephemeral: true
-			});
-		})
+		if (interaction.options.getString(options[0].name) === "season") {
+			buildSeasonalScoreboardEmbed(interaction.guild).then(embed => {
+				interaction.reply({
+					embeds: [embed],
+					ephemeral: true
+				});
+			})
+		} else {
+			buildOverallScoreboardEmbed(interaction.guild).then(embed => {
+				interaction.reply({
+					embeds: [embed],
+					ephemeral: true
+				});
+			})
+		}
 	}
 );
