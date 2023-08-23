@@ -308,7 +308,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					}
 
 					// disallow completion within 5 minutes of creating bounty
-					if (bounty.createdAt < Date.now() + timeConversion(5, "m", "ms")) {
+					if (new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
 						interaction.reply({ content: "Bounties cannot be completed within 5 minutes of their posting. You can `/bounty add-completers` so you won't forget instead.", ephemeral: true });
 						return;
 					}
