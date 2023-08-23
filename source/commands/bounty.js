@@ -89,7 +89,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
-				database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
+				database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(async ([{ maxSimBounties }]) => {
 					const userId = interaction.user.id;
 					const [hunter] = await database.models.Hunter.findOrCreate({
 						where: { userId, companyId: interaction.guildId },
