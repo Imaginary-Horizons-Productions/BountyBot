@@ -48,6 +48,8 @@ Create a Discord resource for use by BountyBot
 Create a new bounty board forum channel sibling to this channel
 #### /create-default scoreboard-reference
 Create a reference channel with the BountyBot Scoreboard
+#### /create-default rank-roles
+Create Discord roles and set them as this server's ranks at default variance thresholds
 ### /data-policy
 > Permission Level: ViewChannel
 
