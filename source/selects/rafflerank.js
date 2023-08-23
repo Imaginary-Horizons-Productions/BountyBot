@@ -8,7 +8,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 	/** Given selected rank for raffle, randomly select eligible hunter */
 	(interaction, args) => {
 		const rankIndex = Number(interaction.values[0]);
-		database.models.Hunter.findAll({ where: { companyId: interaction.guildId, isRankEligible: true, rank: { [Op.gte]: rankIndex } }, include: database.models.Hunter.SeasonParticipation }).then(unvalidatedHunters => {
+		database.models.Hunter.findAll({ where: { companyId: interaction.guildId, isRankEligible: true, rank: { [Op.gte]: rankIndex } } }).then(unvalidatedHunters => {
 			const eligibleHunters = unvalidatedHunters.filter(hunter => !hunter.isRankDisqualified);
 			if (eligibleHunters.length < 1) {
 				database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
