@@ -66,7 +66,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			return;
 		}
 
-		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId, slotNumber, state: "open" } });
+		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber, state: "open" } });
 		if (title) {
 			bounty.title = title;
 		}
@@ -107,13 +107,13 @@ module.exports = new InteractionWrapper(customId, 3000,
 		bounty.save();
 
 		// update bounty board
-		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
-		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
-		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster.level, hunterGuild.eventMultiplierString());
+		const company = await database.models.Company.findByPk(interaction.guildId);
+		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
+		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster.level, company.eventMultiplierString());
 
-		bounty.updatePosting(interaction.guild, hunterGuild);
+		bounty.updatePosting(interaction.guild, company);
 
 		interaction.update({ content: "Bounty edited!", components: [] });
-		interaction.channel.send(hunterGuild.sendAnnouncement({ content: `${interaction.member} has edited one of their bounties:`, embeds: [bountyEmbed] }));
+		interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member} has edited one of their bounties:`, embeds: [bountyEmbed] }));
 	}
 );

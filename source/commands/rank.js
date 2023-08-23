@@ -84,21 +84,21 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 		let varianceThreshold;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // add
-				database.models.GuildRank.findAll({ where: { guildId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(guildRanks => {
+				database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(companyRanks => {
 					const newThreshold = interaction.options.getNumber(subcommands[0].optionsInput[0].name);
-					const existingThresholds = guildRanks.map(rank => rank.varianceThreshold);
+					const existingThresholds = companyRanks.map(rank => rank.varianceThreshold);
 					if (existingThresholds.includes(newThreshold)) {
 						interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use \`/rank edit\`.`, ephemeral: true });
 						return;
 					}
 
-					if (guildRanks.length > 24) {
+					if (companyRanks.length > 24) {
 						interaction.reply({ content: "A server can only have 25 seasonal ranks at a time.", ephemeral: true });
 						return;
 					}
 
 					const rawRank = {
-						guildId: interaction.guildId,
+						companyId: interaction.guildId,
 						varianceThreshold: newThreshold
 					};
 
@@ -111,8 +111,8 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 					if (newRankmoji) {
 						rawRank.rankmoji = newRankmoji;
 					}
-					database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(() => {
-						database.models.GuildRank.create(rawRank);
+					database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(() => {
+						database.models.CompanyRank.create(rawRank);
 					})
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, ephemeral: true });
@@ -120,9 +120,9 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 				break;
 			case subcommands[1].name: // info
 				varianceThreshold = interaction.options.getNumber(subcommands[1].optionsInput[0].name);
-				database.models.GuildRank.findAll({ where: { guildId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(guildRanks => {
+				database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] }).then(companyRanks => {
 					let index = 0;
-					const rank = guildRanks.find(rank => {
+					const rank = companyRanks.find(rank => {
 						index++;
 						return rank.varianceThreshold == varianceThreshold
 					});
@@ -138,7 +138,7 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 				break;
 			case subcommands[2].name: // edit
 				varianceThreshold = interaction.options.getNumber(subcommands[2].optionsInput[0].name);
-				database.models.GuildRank.findOne({ where: { guildId: interaction.guildId, varianceThreshold } }).then(rank => {
+				database.models.CompanyRank.findOne({ where: { companyId: interaction.guildId, varianceThreshold } }).then(rank => {
 					if (!rank) {
 						interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, ephemeral: true });
 						return;
@@ -162,7 +162,7 @@ module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty
 				break;
 			case subcommands[3].name: // remove
 				varianceThreshold = interaction.options.getNumber(subcommands[3].optionsInput[0].name);
-				database.models.GuildRank.findOne({ where: { guildId: interaction.guildId, varianceThreshold } }).then(rank => {
+				database.models.CompanyRank.findOne({ where: { companyId: interaction.guildId, varianceThreshold } }).then(rank => {
 					if (!rank) {
 						interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, ephemeral: true });
 						return;

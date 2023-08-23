@@ -53,7 +53,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
-				database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, guildId: interaction.guildId, state: "open" } }).then(existingBounties => {
+				database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } }).then(existingBounties => {
 					if (existingBounties.length > 9) {
 						interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", ephemeral: true });
 						return;
@@ -88,7 +88,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 				});
 				break;
 			case subcommands[1].name: // edit
-				database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, guildId: interaction.guildId, state: "open" } }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } }).then(openBounties => {
 					const slotOptions = openBounties.map(bounty => {
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
@@ -118,7 +118,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 				})
 				break;
 			case subcommands[2].name: // swap
-				database.models.Bounty.findAll({ where: { isEvergreen: true, guildId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(existingBounties => {
+				database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(existingBounties => {
 					if (existingBounties.length < 2) {
 						interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", ephemeral: true });
 						return;
@@ -144,7 +144,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 				});
 				break;
 			case subcommands[3].name: // showcase
-				database.models.Bounty.findAll({ where: { isEvergreen: true, guildId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(existingBounties => {
+				database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(existingBounties => {
 					if (existingBounties.length < 1) {
 						interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", ephemeral: true });
 						return;
@@ -171,13 +171,14 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 				break;
 			case subcommands[4].name: // complete
 				slotNumber = interaction.options.getInteger("bounty-slot");
-				database.models.Bounty.findOne({ where: { isEvergreen: true, guildId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+				database.models.Bounty.findOne({ where: { isEvergreen: true, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 					if (!bounty) {
 						interaction.reply({ content: "There isn't an evergreen bounty in the `bounty-slot` provided.", ephemeral: true });
 						return;
 					}
 
-					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
+					const company = await database.models.Company.findByPk(interaction.guildId);
+					const season = await database.models.Season.findByPk(company.seasonId);
 
 					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 
@@ -200,7 +201,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 						if (!member.user.bot) {
 							const memberId = member.id;
 							const [hunter] = await database.models.Hunter.findOrCreate({
-								where: { userId: memberId, guildId: interaction.guildId },
+								where: { userId: memberId, companyId: interaction.guildId },
 								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
 								include: database.models.Hunter.User
 							});
@@ -215,35 +216,35 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 						return;
 					}
 
-					guildProfile.increment("seasonBounties");
+					season.increment("bountiesCompleted");
 
 					const rawCompletions = [];
 					for (const userId of dedupedCompleterIds) {
 						rawCompletions.push({
 							bountyId: bounty.id,
 							userId,
-							guildId: interaction.guildId
+							companyId: interaction.guildId
 						});
 					}
 					await database.models.Completion.bulkCreate(rawCompletions);
 
 					// Evergreen bounties are not eligible for showcase bonuses
-					const bountyValue = Bounty.calculateReward(guildProfile.level, slotNumber, 0) * guildProfile.eventMultiplier;
+					const bountyValue = Bounty.calculateReward(company.level, slotNumber, 0) * company.eventMultiplier;
 					database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 
 					for (const userId of validatedCompleterIds) {
-						const hunter = await database.models.Hunter.findOne({ where: { guildId: interaction.guildId, userId } });
+						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
 						levelTexts.concat(await hunter.addXP(interaction.guild, bountyValue, true));
 						hunter.othersFinished++;
 						hunter.save();
 					}
 
-					bounty.asEmbed(interaction.guild, guildProfile.level, guildProfile.eventMultiplierString()).then(embed => {
+					bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString()).then(embed => {
 						return interaction.reply({ embeds: [embed], fetchReply: true });
 					}).then(replyMessage => {
 						getRankUpdates(interaction.guild).then(rankUpdates => {
 							replyMessage.startThread({ name: "Rewards" }).then(thread => {
-								const multiplierString = guildProfile.eventMultiplierString();
+								const multiplierString = company.eventMultiplierString();
 								let text = "";
 								if (rankUpdates.length > 0) {
 									text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
@@ -257,13 +258,13 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 								}
 								thread.send(text);
 							})
-							updateScoreboard(guildProfile, interaction.guild);
+							updateScoreboard(company, interaction.guild);
 						});
 					})
 				})
 				break;
 			case subcommands[5].name: // take-down
-				database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" } }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" } }).then(openBounties => {
 					const bountyOptions = openBounties.map(bounty => {
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),

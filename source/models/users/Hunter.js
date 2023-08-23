@@ -3,7 +3,7 @@ const { database } = require('../../../database');
 const { congratulationBuilder } = require('../../helpers');
 const { Guild } = require('discord.js');
 
-/** This class stores information for users on a specific guild */
+/** This class stores a user's information related to a specific company */
 exports.Hunter = class extends Model {
 	static xpThreshold(level, xpCoefficient) {
 		// xp = xpCoefficient*(level - 1)^2
@@ -30,33 +30,39 @@ exports.Hunter = class extends Model {
 	 * @returns {string} level-up text
 	 */
 	async addXP(guild, points, ignoreMultiplier) {
-		const guildProfile = await database.models.Guild.findByPk(guild.id);
-		const totalPoints = points * (!ignoreMultiplier ? guildProfile.eventMultiplier : 1);
+		const company = await database.models.Company.findByPk(guild.id);
+		const totalPoints = points * (!ignoreMultiplier ? company.eventMultiplier : 1);
 
 		const previousLevel = this.level;
-		const previousGuildLevel = guildProfile.level;
+		const previousCompanyLevel = company.level;
 
 		this.xp += totalPoints;
-		this.seasonXP += totalPoints;
-		guildProfile.seasonXP += totalPoints;
+		let seasonParticipation;
+		if (this.seasonParticipationId) {
+			seasonParticipation = await database.models.SeasonParticipation.findByPk(this.seasonParticipationId);
+		} else {
+			seasonParticipation = await database.models.SeasonParticipation.create({ seasonId: company.seasonId, companyId: company.id, userId: this.userId });
+			this.seasonParticipationId = seasonParticipation.id;
+		}
+		seasonParticipation.increment({ xp: totalPoints });
 
-		this.level = Math.floor(Math.sqrt(this.xp / guildProfile.xpCoefficient) + 1);
+		this.level = Math.floor(Math.sqrt(this.xp / company.xpCoefficient) + 1);
 		this.save();
 
-		guildProfile.level = Math.floor(Math.sqrt(await guildProfile.xp / 3) + 1);
-		guildProfile.save();
+		company.level = Math.floor(Math.sqrt(await company.xp / 3) + 1);
+		company.save();
 
 		let levelText = "";
 		if (this.level > previousLevel) {
 			const rewards = [];
 			for (let level = previousLevel + 1; level <= this.level; level++) {
-				rewards.push(this.levelUpReward(level, guildProfile.maxSimBounties, false));
+				rewards.push(this.levelUpReward(level, company.maxSimBounties, false));
 			}
 			levelText += `${congratulationBuilder()}, <@${this.userId}>! You have leveled up to level **${this.level}**!\n${rewards.join('\n')}`;
 		}
 
-		if (guildProfile.level > previousGuildLevel) {
-			levelText += `*${guild.name} is now level ${guildProfile.level}! Evergreen bounties are now worth more XP!*\n`;
+		if (company.level > previousCompanyLevel) {
+			levelText += `*${guild.name} is now level ${company.level}! Evergreen bounties are now worth more XP!*\n`;
 		}
 
 		return levelText;
@@ -110,7 +116,7 @@ exports.initModel = function (sequelize) {
 			primaryKey: true,
 			type: DataTypes.STRING,
 		},
-		guildId: {
+		companyId: {
 			primaryKey: true,
 			type: DataTypes.STRING
 		},
@@ -122,9 +128,8 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
-		seasonXP: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
+		seasonParticipationId: {
+			type: DataTypes.UUID
 		},
 		isRankEligible: {
 			type: DataTypes.BOOLEAN,
@@ -138,9 +143,8 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},
-		seasonPlacement: {
-			type: DataTypes.INTEGER,
-			defaultValue: 0
+		nextRankXP: {
+			type: DataTypes.BIGINT,
 		},
 		lastShowcaseTimestamp: {
 			type: DataTypes.DATE
@@ -174,10 +178,6 @@ exports.initModel = function (sequelize) {
 			defaultValue: false
 		},
 		hasBeenBanned: {
-			type: DataTypes.BOOLEAN,
-			defaultValue: false
-		},
-		isRankDisqualified: { // Expires at end of season
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
 		},

@@ -6,18 +6,20 @@ exports.database = new Sequelize({
 });
 
 exports.database.authenticate().then(() => {
-	const { Guild, initModel: initGuild } = require("./source/models/guilds/Guild.js")
-	const { GuildRank, initModel: initGuildRank } = require("./source/models/guilds/GuildRank.js")
+	const { Company, initModel: initCompany } = require("./source/models/companies/Company.js");
+	const { CompanyRank, initModel: initCompanyRank } = require("./source/models/companies/CompanyRank.js");
 	const { User, initModel: initUser } = require("./source/models/users/User.js");
 	const { Hunter, initModel: initHunter } = require("./source/models/users/Hunter.js");
-	const { Bounty, initModel: initBounty } = require("./source/models/bounties/Bounty.js")
-	const { Completion, initModel: initCompletion } = require("./source/models/bounties/Completion.js")
-	const { Toast, initModel: initToast } = require("./source/models/toasts/Toast.js")
-	const { ToastRecipient, initModel: initToastRecipient } = require("./source/models/toasts/ToastRecipient.js")
-	const { ToastSeconding, initModel: initToastSeconding } = require("./source/models/toasts/ToastSeconding.js")
+	const { Bounty, initModel: initBounty } = require("./source/models/bounties/Bounty.js");
+	const { Completion, initModel: initCompletion } = require("./source/models/bounties/Completion.js");
+	const { Toast, initModel: initToast } = require("./source/models/toasts/Toast.js");
+	const { ToastRecipient, initModel: initToastRecipient } = require("./source/models/toasts/ToastRecipient.js");
+	const { ToastSeconding, initModel: initToastSeconding } = require("./source/models/toasts/ToastSeconding.js");
+	const { Season, initModel: initSeason } = require("./source/models/seasons/Season.js");
+	const { SeasonParticpation, initModel: initSeasonParticipation } = require("./source/models/seasons/SeasonParticipation.js");
 
-	initGuild(exports.database);
-	initGuildRank(exports.database);
+	initCompany(exports.database);
+	initCompanyRank(exports.database);
 	initUser(exports.database);
 	initHunter(exports.database);
 	initBounty(exports.database);
@@ -25,97 +27,120 @@ exports.database.authenticate().then(() => {
 	initToast(exports.database);
 	initToastRecipient(exports.database);
 	initToastSeconding(exports.database);
+	initSeason(exports.database);
+	initSeasonParticipation(exports.database);
 
-	Guild.GuildRank = Guild.hasMany(GuildRank, {
-		foreignKey: "guildId"
+	//TODONOW prune associations (not all references need to be associations)
+	Company.CompanyRanks = Company.hasMany(CompanyRank, {
+		foreignKey: "companyId"
 	});
-	GuildRank.Guild = GuildRank.belongsTo(Guild, {
-		foreignKey: "guildId"
+	CompanyRank.Company = CompanyRank.belongsTo(Company, {
+		foreignKey: "companyId"
 	});
 
 	Hunter.User = Hunter.belongsTo(User, {
 		foreignKey: "userId"
 	});
-	User.Hunter = User.hasMany(Hunter, {
+	User.Hunters = User.hasMany(Hunter, {
 		foreignKey: "userId"
 	});
 
-	Hunter.Guild = Hunter.belongsTo(Guild, {
-		foreignKey: "guildId"
+	Hunter.Company = Hunter.belongsTo(Company, {
+		foreignKey: "companyId"
 	});
-	Guild.Hunter = Guild.hasMany(Hunter, {
-		foreignKey: "guildId"
+	Company.Hunters = Company.hasMany(Hunter, {
+		foreignKey: "companyId"
 	});
 
-	Bounty.Guild = Bounty.belongsTo(Guild, {
-		foreignKey: "guildId"
+	Bounty.Company = Bounty.belongsTo(Company, {
+		foreignKey: "companyId"
 	});
-	Guild.Bounty = Guild.hasMany(Bounty, {
-		foreignKey: "guildId"
+	Company.Bounties = Company.hasMany(Bounty, {
+		foreignKey: "companyId"
 	});
 
 	Completion.Bounty = Completion.belongsTo(Bounty, {
 		foreignKey: "bountyId"
 	});
-	Bounty.Completion = Bounty.hasMany(Completion, {
+	Bounty.Completions = Bounty.hasMany(Completion, {
 		foreignKey: "bountyId"
 	});
 
 	Completion.User = Completion.belongsTo(User, {
 		foreignKey: "userId"
 	});
-	User.Completion = User.hasMany(Completion, {
+	User.Completions = User.hasMany(Completion, {
 		foreignKey: "userId"
 	});
 
-	Completion.Guild = Completion.belongsTo(Guild, {
-		foreignKey: "guildId"
+	Completion.Company = Completion.belongsTo(Company, {
+		foreignKey: "companyId"
 	});
-	Guild.Completion = Guild.hasMany(Completion, {
-		foreignKey: "guildId"
+	Company.Completions = Company.hasMany(Completion, {
+		foreignKey: "companyId"
 	});
 
-	Toast.Guild = Toast.belongsTo(Guild, {
-		foreignKey: "guildId"
+	Toast.Company = Toast.belongsTo(Company, {
+		foreignKey: "companyId"
 	});
-	Guild.Toast = Guild.hasMany(Toast, {
-		foreignKey: "guildId"
+	Company.Toasts = Company.hasMany(Toast, {
+		foreignKey: "companyId"
 	});
 
 	Toast.User = Toast.belongsTo(User, {
 		foreignKey: "senderId"
 	});
-	User.Toast = User.hasMany(Toast, {
+	User.Toasts = User.hasMany(Toast, {
 		foreignKey: "senderId"
 	});
 
 	ToastRecipient.Toast = ToastRecipient.belongsTo(Toast, {
 		foreignKey: "toastId"
 	});
-	Toast.ToastRecipient = Toast.hasMany(ToastRecipient, {
+	Toast.ToastRecipients = Toast.hasMany(ToastRecipient, {
 		foreignKey: "toastId"
 	});
 
 	ToastRecipient.User = ToastRecipient.belongsTo(User, {
 		foreignKey: "recipientId"
 	});
-	User.ToastRecipient = User.hasMany(ToastRecipient, {
+	User.ToastRecipients = User.hasMany(ToastRecipient, {
 		foreignKey: "recipientId"
 	});
 
 	ToastSeconding.Toast = ToastSeconding.belongsTo(Toast, {
 		foreignKey: "toastId"
 	});
-	Toast.ToastSeconding = Toast.hasMany(ToastSeconding, {
+	Toast.ToastSecondings = Toast.hasMany(ToastSeconding, {
 		foreignKey: "toastId"
 	});
 
 	ToastSeconding.User = ToastSeconding.belongsTo(User, {
 		foreignKey: "seconderId"
 	});
-	User.ToastSeconding = User.hasMany(ToastSeconding, {
+	User.ToastSecondings = User.hasMany(ToastSeconding, {
 		foreignKey: "seconderId"
 	});
+
+	Company.Season = Company.belongsTo(Season, {
+		foreignKey: "seasonId"
+	})
+	Season.Company = Season.hasOne(Company, {
+		foreignKey: "seasonId"
+	})
+	Company.LastSeason = Company.belongsTo(Season, {
+		foreignKey: "lastSeasonId"
+	})
+	Season.Company = Season.hasOne(Company, {
+		foreignKey: "lastSeasonId"
+	})
+
+	Hunter.SeasonParticipation = Hunter.belongsTo(SeasonParticpation, {
+		foreignKey: "seasonParticipationId"
+	})
+	SeasonParticpation.Hunter = SeasonParticpation.hasOne(Hunter, {
+		foreignKey: "seasonParticipationId"
+	})
 
 	exports.database.sync();
 })

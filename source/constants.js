@@ -14,4 +14,4 @@ exports.lastPostedVersion = lastPostedVersion;
 
 exports.MAX_EMBED_TITLE_LENGTH = 256;
 
-exports.GUILD_XP_COEFFICIENT = 3;
+exports.COMPANY_XP_COEFFICIENT = 3;

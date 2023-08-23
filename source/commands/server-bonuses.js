@@ -9,8 +9,8 @@ const subcommands = [];
 module.exports = new CommandWrapper(customId, "Get info about the currently running server bonuses", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
 	/** Send the user info about currently running server bonuses */
 	(interaction) => {
-		database.models.Guild.findOrCreate({ where: { id: interaction.guildId } }).then(([guildProfile]) => {
-			return buildServerBonusesEmbed(interaction.channel, interaction.guild, guildProfile);
+		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
+			return buildServerBonusesEmbed(interaction.channel, interaction.guild, company);
 		}).then(embed => {
 			interaction.reply({ embeds: [embed], ephemeral: true });
 		});

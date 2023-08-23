@@ -1,6 +1,7 @@
 const { database } = require("../database");
 const { Guild, AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
-const { GuildRank } = require("./models/guilds/GuildRank");
+const { CompanyRank } = require("./models/companies/CompanyRank");
+const { Op } = require("sequelize");
 
 const CONGRATULATORY_PHRASES = [
 	"Congratulations",
@@ -130,20 +131,25 @@ exports.extractUserIdsFromMentions = function (mentionsText, exlcuedIds) {
 
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
  * @param {database.models.Hunter[]} participants
- * @param {GuildRank[]} ranks
+ * @param {CompanyRank[]} ranks
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
-exports.setRanks = async (participants, ranks) => {
+async function calculateRanks(seasonId, allHunters, ranks) {
+	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId }, order: [["xp", "DESC"]] });
+	const particpationMap = participations.reduce((map, participation) => {
+		map[participation.userId] = participation;
+		return map;
+	}, {});
+
 	let previousFirstPlaceId;
-	let mean = 0;
 	const rankableHunters = [];
-	for (const hunter of participants) {
-		if (hunter.isRankEligible && !hunter.isRankDisqualified) {
-			if (hunter.seasonPlacement == 1) {
+	for (const hunter of allHunters) {
+		const participation = particpationMap[hunter.userId];
+		if (hunter.isRankEligible && !participation?.isRankDisqualified) {
+			if (participation?.placement == 1) {
 				previousFirstPlaceId = hunter.userId;
 			}
 			hunter.lastRank = hunter.rank;
-			mean += hunter.seasonXP;
 			rankableHunters.push(hunter);
 		} else {
 			hunter.nextRankXP = 0;
@@ -151,19 +157,20 @@ exports.setRanks = async (participants, ranks) => {
 	}
 
 	if (rankableHunters.length < 2) {
-		for (const hunter of participants) {
+		for (const hunter of allHunters) {
 			hunter.rank = null;
-			hunter.seasonPlacement = 0;
 			hunter.save();
 		}
 		return null;
 	}
 
-	mean /= rankableHunters.length;
-	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => total + (hunter.seasonXP - mean) ** 2, 0) / rankableHunters.length);
+	const mean = (await company.Season.totalXP) / allHunters.length;
+	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => {
+		return total + (particpationMap[hunter.userId].xp - mean) ** 2
+	}, 0) / rankableHunters.length);
 	if (ranks?.length > 0) {
 		for (const hunter of rankableHunters) {
-			let variance = (hunter.seasonXP - mean) / stdDev; //TODO actually store Hunter.xpVariance and make Hunter.rank a virtual field
+			let variance = (particpationMap[hunter.userId].xp - mean) / stdDev; //TODO actually store Hunter.xpVariance and make Hunter.rank a virtual field
 			let index = -1;
 			for (const rank of ranks) {
 				index++;
@@ -175,23 +182,23 @@ exports.setRanks = async (participants, ranks) => {
 			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
 		}
 	}
-	let recentPlacement = participants.length - 1; // subtract 1 to adjust for array indexes starting from 0
+	let recentPlacement = allHunters.length - 1; // subtract 1 to adjust for array indexes starting from 0
 	let previousScore = 0;
 	let firstPlaceId;
 	for (let i = recentPlacement; i >= 0; i -= 1) {
-		let hunter = participants[i];
-		if (hunter.seasonXP > previousScore) {
-			previousScore = hunter.seasonXP;
+		let participation = participations[i];
+		if (participation.xp > previousScore) {
+			previousScore = participation.xp;
 			recentPlacement = i + 1;
-			hunter.seasonPlacement = recentPlacement;
+			participation.placement = recentPlacement;
 		} else {
-			hunter.seasonPlacement = recentPlacement;
-			if (recentPlacement == 1 && hunter.id != previousFirstPlaceId) {
+			participation.placement = recentPlacement;
+			if (recentPlacement == 1 && participation.userId != previousFirstPlaceId) {
 				// Feature: No first place message on first season XP of season (no one to compete with)
-				firstPlaceId = hunter.id;
+				firstPlaceId = participation.userId;
 			}
 		}
-		hunter.save();
+		participation.save();
 	}
 	return firstPlaceId ? `*<@${firstPlaceId}> has reached the #1 spot for this season!*` : null;
 }
@@ -201,30 +208,42 @@ exports.setRanks = async (participants, ranks) => {
  * @param {boolean} force
  * @returns an array of rank and placement update strings
  */
-exports.getRankUpdates = async function (guild, force = false) {
-	const allHunters = await database.models.Hunter.findAll({ where: { guildId: guild.id }, order: [["seasonXP", "DESC"]] });
-	const ranks = await database.models.GuildRank.findAll({ where: { guildId: guild.id }, order: [["varianceThreshold", "DESC"]] });
-	return exports.setRanks(allHunters, ranks).then(async (firstPlaceMessage) => {
+exports.getRankUpdates = async function (guild) {
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
+	const ranks = await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
+	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
+
+	return calculateRanks(company.seasonId, allHunters, ranks).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 		const outMessages = [];
 		if (firstPlaceMessage) {
 			outMessages.push(firstPlaceMessage);
 		}
+		const userIdsWithChangedRanks = [];
 		for (const hunter of allHunters) {
-			if (force || hunter.rank != hunter.lastRank) {
-				const member = await guild.members.fetch(hunter.userId);
-				if (member.manageable) {
-					await member.roles.remove(roleIds);
-					if (hunter.isRankEligible && !hunter.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
-						let destinationRole;
-						const rankRoleId = ranks[hunter.rank]?.roleId;
-						if (rankRoleId) {
-							await member.roles.add(rankRoleId);
-							destinationRole = await guild.roles.fetch(rankRoleId);
-						}
-						if (destinationRole && hunter.rank < hunter.lastRank) { // Note: higher ranks are lower value
-							outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
-						}
+			if (hunter.rank != hunter.lastRank) {
+				userIdsWithChangedRanks.push(hunter.userId);
+			}
+		}
+		const updatedMembers = await guild.members.fetch({ user: userIdsWithChangedRanks });
+		const updatedParticipationsMap = (await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId, userId: { [Op.in]: userIdsWithChangedRanks } }, include: database.models.SeasonParticipation.Hunter }))
+			.reduce((map, participation) => {
+				map[participation.userId] = participation;
+				return map;
+			}, {});
+		for (const member of updatedMembers) {
+			if (member.manageable) {
+				await member.roles.remove(roleIds);
+				const participation = updatedParticipationsMap[member.id];
+				if (participation.Hunter.isRankEligible && !participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+					let destinationRole;
+					const rankRoleId = ranks[hunter.rank]?.roleId;
+					if (rankRoleId) {
+						await member.roles.add(rankRoleId);
+						destinationRole = await guild.roles.fetch(rankRoleId);
+					}
+					if (destinationRole && hunter.rank < hunter.lastRank) { // Note: higher ranks are lower value
+						outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
 					}
 				}
 			}
@@ -233,13 +252,13 @@ exports.getRankUpdates = async function (guild, force = false) {
 	});
 }
 
-exports.generateBountyBoardThread = function (threadManager, embeds, hunterGuild) {
+exports.generateBountyBoardThread = function (threadManager, embeds, company) {
 	return threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds }
 	}).then(thread => {
-		hunterGuild.evergreenThreadId = thread.id;
-		hunterGuild.save();
+		company.evergreenThreadId = thread.id;
+		company.save();
 		thread.pin();
 		return thread;
 	})

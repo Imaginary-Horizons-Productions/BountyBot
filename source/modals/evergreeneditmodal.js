@@ -24,7 +24,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 		}
 
-		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.client.user.id, guildId: interaction.guildId, slotNumber, state: "open" } });
+		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, slotNumber, state: "open" } });
 		if (title) {
 			bounty.title = title;
 		}
@@ -41,19 +41,19 @@ module.exports = new InteractionWrapper(customId, 3000,
 		bounty.save();
 
 		// update bounty board
-		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
-		const bountyEmbed = await bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString());
-		const evergreenBounties = await database.models.Bounty.findAll({ where: { guildId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-		const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, hunterGuild.level, hunterGuild.eventMultiplierString())));
-		if (hunterGuild.bountyBoardId) {
-			const bountyBoard = await interaction.guild.channels.fetch(hunterGuild.bountyBoardId);
-			bountyBoard.threads.fetch(hunterGuild.evergreenThreadId).then(async thread => {
+		const company = await database.models.Company.findByPk(interaction.guildId);
+		const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString());
+		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
+		const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString())));
+		if (company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+			bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 				const message = await thread.fetchStarterMessage();
 				message.edit({ embeds });
 			});
 		}
 
 		interaction.update({ content: "Bounty edited!", components: [] });
-		interaction.channel.send(hunterGuild.sendAnnouncement({ content: `${interaction.member} has edited an evergreen bounty:`, embeds: [bountyEmbed] }));
+		interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member} has edited an evergreen bounty:`, embeds: [bountyEmbed] }));
 	}
 );

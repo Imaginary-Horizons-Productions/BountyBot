@@ -19,7 +19,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 
 		const rawBounty = {
 			userId: interaction.user.id,
-			guildId: interaction.guildId,
+			companyId: interaction.guildId,
 			slotNumber: parseInt(slotNumber),
 			isEvergreen: false,
 			title,
@@ -75,7 +75,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			return;
 		}
 
-		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, guildId: interaction.guildId } });
+		const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 		poster.addXP(interaction.guild, 1, true).then(() => {
 			getRankUpdates(interaction.guild);
 		});
@@ -100,11 +100,11 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum
-		const hunterGuild = await database.models.Guild.findByPk(interaction.guildId);
-		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster.level, hunterGuild.eventMultiplierString());
-		interaction.reply(hunterGuild.sendAnnouncement({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
-			if (hunterGuild.bountyBoardId) {
-				interaction.guild.channels.fetch(hunterGuild.bountyBoardId).then(bountyBoard => {
+		const company = await database.models.Company.findByPk(interaction.guildId);
+		const bountyEmbed = await bounty.asEmbed(interaction.guild, poster.level, company.eventMultiplierString());
+		interaction.reply(company.sendAnnouncement({ content: `${interaction.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
+			if (company.bountyBoardId) {
+				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.create({
 						name: bounty.title,
 						message: { embeds: [bountyEmbed] }

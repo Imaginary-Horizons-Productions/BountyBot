@@ -22,7 +22,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		}
 
 		const [seconder] = await database.models.Hunter.findOrCreate({
-			where: { userId: interaction.user.id, guildId: interaction.guildId },
+			where: { userId: interaction.user.id, companyId: interaction.guildId },
 			defaults: { isRankEligible: interaction.member.manageable, User: { id: interaction.user.id } },
 			include: database.models.Hunter.User
 		});
@@ -31,7 +31,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		const recipientIds = (await originalToast.recipients).map(reciept => reciept.recipientId);
 		const levelTexts = [];
 		for (const userId of recipientIds) {
-			const hunter = await database.models.Hunter.findOne({ where: { userId, guildId: interaction.guildId } });
+			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
 			levelTexts.concat(await hunter.addXP(interaction.guild, 1, true));
 		}
 
@@ -46,7 +46,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 		}
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { guildId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
 		const staleToastees = await lastFiveToasts.reduce(async (list, toast) => {
 			return (await list).concat((await toast.rewardedRecipients).map(recipient => recipient.userId));
 		}, new Promise((resolve) => resolve([])));

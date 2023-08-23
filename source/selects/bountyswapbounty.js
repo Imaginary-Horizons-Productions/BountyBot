@@ -9,17 +9,17 @@ const customId = "bountyswapbounty";
 module.exports = new InteractionWrapper(customId, 3000,
 	/** Recieve the bounty to swap and solicit the slot to swap to */
 	(interaction, args) => {
-		database.models.Hunter.findOne({ where: { guildId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
+		database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
 			if (hunter.maxSlots() < 2) {
 				interaction.reply({ content: "You currently only have 1 bounty slot in this server.", ephemeral: true });
 				return;
 			}
 
-			const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, guildId: interaction.guildId, state: "open" } });
+			const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" } });
 			const previousBountySlot = parseInt(interaction.values[0]);
-			const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
+			const company = await database.models.Company.findByPk(interaction.guildId);
 			const slotOptions = [];
-			for (let i = 1; i <= hunter.maxSlots(guildProfile.maxSimBounties); i++) {
+			for (let i = 1; i <= hunter.maxSlots(company.maxSimBounties); i++) {
 				if (i != previousBountySlot) {
 					const existingBounty = existingBounties.find(bounty => bounty.slotNumber == i);
 					slotOptions.push(

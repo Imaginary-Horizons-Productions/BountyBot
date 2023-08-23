@@ -68,7 +68,7 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // take-down
 				const poster = interaction.options.getUser(subcommands[0].optionsInput[0].name);
-				database.models.Bounty.findAll({ where: { userId: poster.id, guildId: interaction.guildId, state: "open" } }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } }).then(openBounties => {
 					const slotOptions = openBounties.map(bounty => {
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
@@ -99,30 +99,58 @@ module.exports = new CommandWrapper(customId, "BountyBot moderation tools", Perm
 				break;
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Hunter.findOrCreate({ where: { userId: member.id, guildId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id }, Guild: { id: interaction.guildId } }, include: [database.models.Hunter.User, database.models.Hunter.Guild] }).then(([hunter]) => {
-					hunter.isRankDisqualified = !hunter.isRankDisqualified;
-					if (hunter.isRankDisqualified) {
+				database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(async ([company]) => {
+					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id } }, include: database.models.Hunter.User });
+					let isDisqualification;
+					if (hunter.seasonParticipationId) {
+						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
+						seasonParticipation.isRankDisqualified = !seasonParticipation.isRankDisqualified;
+						isDisqualification = seasonParticipation.isRankDisqualified;
+						seasonParticipation.save();
+					} else {
+						const seasonParticpation = await database.models.SeasonParticipation.create({
+							userId: hunter.userId,
+							companyId: company.id,
+							seasonId: company.seasonId,
+							isRankDisqualified: true
+						});
+						hunter.seasonParticipationId = seasonParticpation.id;
+						hunter.save();
+						isDisqualification = true;
+					}
+					if (isDisqualification) {
 						hunter.increment("seasonDQCount");
 					}
 					hunter.save();
 					getRankUpdates(interaction.guild);
-					interaction.reply({ content: `<@${member.id}> has been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
-					member.send(`You have been ${hunter.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+					interaction.reply({ content: `<@${member.id}> has been ${isDisqualification ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
+					member.send(`You have been ${isDisqualification ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				})
 				break;
 			case subcommands[2].name: // penalty
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Hunter.findOne({ where: { userId: member.id, guildId: interaction.guildId } }).then(async hunter => {
+				database.models.Hunter.findOne({ where: { userId: member.id, companyId: interaction.guildId } }).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: `${member} hasn't interacted with BountyBot yet.`, ephemeral: true });
 						return;
 					}
 					const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
-					const guildProfile = await database.models.Guild.findByPk(interaction.guildId);
-					guildProfile.decrement({ seasonXP: penaltyValue });
-					guildProfile.save();
-					hunter.decrement(["xp", "seasonXP"], { by: penaltyValue });
+					hunter.decrement({ xp: penaltyValue });
 					hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
+					if (hunter.seasonParticipationId) {
+						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
+						seasonParticipation.decrement("xp");
+					} else {
+						const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
+						const seasonParticpation = await database.models.SeasonParticipation.create({
+							userId: hunter.userId,
+							companyId: company.id,
+							seasonId: company.seasonId,
+							xp: -1
+						});
+						hunter.seasonParticipationId = seasonParticpation.id;
+						hunter.save();
+					}
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, ephemeral: true });
 					member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);

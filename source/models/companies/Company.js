@@ -1,8 +1,8 @@
 const { MessageFlags } = require('discord.js');
 const { DataTypes, Model } = require('sequelize');
 
-/** Guild information and bot settings */
-exports.Guild = class extends Model {
+/** A Company of bounty hunters contains a Discord Guild's information and settings */
+exports.Company = class extends Model {
 	eventMultiplierString() {
 		if (this.eventMultiplier != 1) {
 			return ` ***x${this.eventMultiplier}***`;
@@ -11,7 +11,7 @@ exports.Guild = class extends Model {
 		}
 	}
 
-	/** Apply the guild's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
+	/** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
 	 * @param {import('discord.js').MessageCreateOptions} messageOptions
 	 */
 	sendAnnouncement(messageOptions) {
@@ -55,7 +55,7 @@ exports.Guild = class extends Model {
 }
 
 exports.initModel = function (sequelize) {
-	exports.Guild.init({
+	exports.Company.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -63,7 +63,7 @@ exports.initModel = function (sequelize) {
 		xp: {
 			type: DataTypes.VIRTUAL,
 			async get() {
-				return await sequelize.models.Hunter.sum("level", { where: { guildId: this.id } });
+				return await sequelize.models.Hunter.sum("level", { where: { companyId: this.id } }) ?? 0;
 			}
 		},
 		level: {
@@ -112,36 +112,15 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: 3
 		},
-		seasonXP: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
+		seasonId: {
+			type: DataTypes.UUID
 		},
-		seasonBounties: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		seasonToasts: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		resetSchedulerId: {
-			type: DataTypes.STRING
-		},
-		lastSeasonXP: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		bountiesLastSeason: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		toastsLastSeason: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
+		lastSeasonId: {
+			type: DataTypes.UUID
 		}
 	}, {
 		sequelize,
-		modelName: 'Guild',
+		modelName: "Company",
 		freezeTableName: true
 	});
 }
