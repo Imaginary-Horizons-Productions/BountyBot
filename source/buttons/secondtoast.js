@@ -29,10 +29,13 @@ module.exports = new InteractionWrapper(customId, 3000,
 		seconder.toastSeconded++;
 
 		const recipientIds = (await originalToast.recipients).map(reciept => reciept.recipientId);
+		recipientIds.push(originalToast.userId);
 		const levelTexts = [];
 		for (const userId of recipientIds) {
-			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
-			levelTexts.concat(await hunter.addXP(interaction.guild, 1, true));
+			if (userId != interaction.user.id) {
+				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
+				levelTexts.concat(await hunter.addXP(interaction.guild, 1, true));
+			}
 		}
 
 		const recentToasts = await database.models.ToastSeconding.findAll({ where: { seconderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } } });
