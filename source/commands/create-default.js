@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ChannelType, SortOrderType, ForumLayoutType, OverwriteType } = require('discord.js');
+const { PermissionFlagsBits, ChannelType, SortOrderType, ForumLayoutType, OverwriteType, GuildPremiumTier } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { buildScoreboardEmbed } = require('../embedHelpers');
@@ -26,10 +26,14 @@ const subcommands = [
 				]
 			}
 		]
+	},
+	{
+		name: "rank-roles",
+		description: "Create Discord roles and set them as this server's ranks at default variance thresholds"
 	}
 ];
 module.exports = new CommandWrapper(customId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, false, 30000, options, subcommands,
-	async (interaction) => {
+	(interaction) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // bounty-board-forum
 				interaction.guild.channels.create({
@@ -53,7 +57,7 @@ module.exports = new CommandWrapper(customId, "Create a Discord resource for use
 					defaultForumLayout: ForumLayoutType.ListView,
 					reason: `/create-default bounty-board-forum by ${interaction.user}`
 				}).then(async bountyBoard => {
-					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
 
 					company.bountyBoardId = bountyBoard.id;
 
@@ -107,7 +111,7 @@ module.exports = new CommandWrapper(customId, "Create a Discord resource for use
 					],
 					reason: `/create-default scoreboard-reference by ${interaction.user}`
 				}).then(async scoreboard => {
-					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
 					const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 					scoreboard.send({
 						embeds: [await buildScoreboardEmbed(interaction.guild, isSeasonal)]
@@ -118,6 +122,57 @@ module.exports = new CommandWrapper(customId, "Create a Discord resource for use
 						company.save();
 					});
 					interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, ephemeral: true });
+				})
+				break;
+			case subcommands[2].name: // rank-roles
+				interaction.guild.roles.fetch().then(existingGuildRoles => {
+					return Promise.all(
+						[
+							{
+								name: "Platinum Rank",
+								color: "#669999",
+								icon: "./source/images/BountyBotIcon.jpg",
+								reason: "/create-default rank-roles"
+							},
+							{
+								name: "Gold Rank",
+								color: "#daa520",
+								icon: "./source/images/BountyBotIcon.jpg",
+								reason: "/create-default rank-roles"
+							},
+							{
+								name: "Silver Rank",
+								color: "#ccccff",
+								icon: "./source/images/BountyBotIcon.jpg",
+								reason: "/create-default rank-roles"
+							},
+							{
+								name: "Bronze Rank",
+								color: "#b9722d",
+								icon: "./source/images/BountyBotIcon.jpg",
+								reason: "/create-default rank-roles"
+							}
+						].map((roleCreateOptions, index) => {
+							if (interaction.guild.premiumTier < GuildPremiumTier.Tier2) {
+								delete roleCreateOptions.icon;
+							}
+							roleCreateOptions.position = existingGuildRoles.length + index;
+							return interaction.guild.roles.create(roleCreateOptions);
+						})
+					)
+				}).then((roles) => {
+					const varianceThresholds = [2.5, 1, 0, -3];
+					const rankmojis = ["🏆", "🥇", "🥈", "🥉"];
+
+					database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(() => {
+						database.models.CompanyRank.bulkCreate(roles.map((role, index) => ({
+							companyId: interaction.guildId,
+							varianceThreshold: varianceThresholds[index],
+							roleId: role.id,
+							rankmoji: rankmojis[index]
+						})));
+					});
+					interaction.reply({ content: `Created roles: ${roles.map((role, index) => `${rankmojis[index]} ${role} at ${varianceThresholds[index]} standard deviations`).join(", ")}`, ephemeral: true });
 				})
 				break;
 		}
