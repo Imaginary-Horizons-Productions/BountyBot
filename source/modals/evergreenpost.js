@@ -36,7 +36,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 			}
 		}
 
-		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum

@@ -53,7 +53,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
-				database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } }).then(existingBounties => {
+				database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } }).then(existingBounties => {
 					if (existingBounties.length > 9) {
 						interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", ephemeral: true });
 						return;
