@@ -143,6 +143,9 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: null
 		},
+		nextRankXP: {
+			type: DataTypes.BIGINT,
+		},
 		lastShowcaseTimestamp: {
 			type: DataTypes.DATE
 		},

@@ -63,7 +63,7 @@ exports.buildCompanyStatsEmbed = async function (guild) {
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Guild} guild
  */
-exports.buildSeasonalScoreboardEmbed = async function (guild) { //TODONOW test with participants
+exports.buildSeasonalScoreboardEmbed = async function (guild) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
 	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] });
 
@@ -85,8 +85,7 @@ exports.buildSeasonalScoreboardEmbed = async function (guild) { //TODONOW test w
 /** An overall scoreboard orders a company's hunters by total xp
  * @param {Guild} guild
  */
-exports.buildOverallScoreboardEmbed = async function (guild) { //TODONOW test with participants
-	//TODONOW consider dropping support?
+exports.buildOverallScoreboardEmbed = async function (guild) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });

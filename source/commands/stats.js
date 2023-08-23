@@ -4,6 +4,7 @@ const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('.
 const { database } = require('../../database');
 const { generateTextBar } = require('../helpers');
 const { Hunter } = require('../models/users/Hunter');
+const { Op } = require('sequelize');
 
 const customId = "stats";
 const options = [
@@ -39,18 +40,20 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 					const { xpCoefficient } = await database.models.Company.findByPk(interaction.guildId);
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
+					const previousSeasonParticipations = await database.models.SeasonParticipation.findAll({ where: { id: { [Op.not]: hunter.seasonParticipationId }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+					const ranks = await database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
+					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
-					//TODO add "most seconded toast"
+					//TODO #80 add "most seconded toast"
 					interaction.reply({
 						embeds: [
 							new EmbedBuilder().setColor(target.displayColor)
 								.setAuthor(ihpAuthorPayload)
 								.setThumbnail(target.user.avatarURL())
 								.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
-								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season.`)
+								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.`)
 								.addFields(
-									//TODO previous season placements
-									{ name: "Season Placements", value: `Currently: ${hunter.SeasonParticipation?.placement ?? 0 == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}` },
+									{ name: "Season Placements", value: `Currently: ${(hunter.SeasonParticipation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}\n${previousSeasonParticipations.length > 0 ? `Previous Placements: ${previousSeasonParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
 									{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
@@ -78,8 +81,11 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
+				const previousSeasonParticipations = await database.models.SeasonParticipation.findAll({ where: { id: { [Op.not]: hunter.seasonParticipationId }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+				const ranks = await database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
+				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
-				//TODO add "most seconded toast"
+				//TODO #80 add "most seconded toast"
 				interaction.reply({
 					embeds: [
 						new EmbedBuilder().setColor(interaction.member.displayColor)
@@ -88,12 +94,11 @@ module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yours
 							.setTitle(`You are __Level ${hunter.level}__ in ${interaction.guild.name}`)
 							.setDescription(
 								`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - hunter.xp} XP\n\
-								You have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season${false /* TODONOW rankString */ ? ` which qualifies for the rank @${"" /* TODONOW rankString */}` : ""}.\n\n\
+								You have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.${hunter.nextRankXP > 0 ? `You need ${hunter.nextRankXP} XP to reach the next rank.` : ""}\n\n\
 								You have ${bountySlots} bounty slot${bountySlots == 1 ? '' : 's'}!`
 							)
 							.addFields(
-								//TODO #55 previous season placements
-								{ name: "Season Placements", value: `Currently: ${hunter.SeasonParticipation?.placement ?? 0 == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}` },
+								{ name: "Season Placements", value: `Currently: ${(hunter.SeasonParticipation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}\n${previousSeasonParticipations.length > 0 ? `Previous Placements: ${previousSeasonParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
 								{ name: `Level ${hunter.level + 1} Reward`, value: hunter.levelUpReward(hunter.level + 1, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 2} Reward`, value: hunter.levelUpReward(hunter.level + 2, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 3} Reward`, value: hunter.levelUpReward(hunter.level + 3, maxSimBounties, true), inline: true },

@@ -151,6 +151,8 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 			}
 			hunter.lastRank = hunter.rank;
 			rankableHunters.push(hunter);
+		} else {
+			hunter.nextRankXP = 0;
 		}
 	}
 
@@ -177,6 +179,7 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 				}
 			}
 			hunter.rank = index;
+			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
 		}
 	}
 	let recentPlacement = allHunters.length - 1; // subtract 1 to adjust for array indexes starting from 0
