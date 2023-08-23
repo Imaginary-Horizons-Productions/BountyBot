@@ -12,7 +12,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 		bounty.save();
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		if (bounty.Company.bountyBoardId) {
-			const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+			const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
 			const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 			postingThread.delete("Bounty taken down by poster");
 		}
