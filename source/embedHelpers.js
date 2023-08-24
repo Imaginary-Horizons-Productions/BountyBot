@@ -1,4 +1,4 @@
-const { EmbedBuilder, Guild, Colors, TextChannel } = require("discord.js");
+const { EmbedBuilder, Guild, Colors } = require("discord.js");
 const fs = require("fs");
 const { database } = require("../database");
 const { Op } = require("sequelize");
@@ -18,10 +18,23 @@ const discordTips = [
 	{ text: "Some slash commands can be used in DMs, others can't.", iconURL: discordIconURL },
 	{ text: "Server subscriptions cost more on mobile because the mobile app stores take a cut.", iconURL: discordIconURL }
 ];
-//TODO #72 add BountyBot specific tips
 /** @type {import("discord.js").EmbedFooterData[]} */
 const applicationSpecificTips = [
-	{ text: "You can showcase one of your bounties once a week to increase its rewards.", iconURL: bountyBotIcon }
+	{ text: "You can showcase one of your bounties once a week to increase its rewards.", iconURL: bountyBotIcon },
+	{ text: "Send bug reports or feature requests with the \"/feedback\".", iconURL: bountyBotIcon },
+	{ text: "Bounties can't be completed until 5 minutes after they've been posted. Don't make them too easy!", iconURL: bountyBotIcon },
+	{ text: "You get XP for posting a bounty, but lose that XP if it's taken down before it's completed.", iconURL: bountyBotIcon },
+	{ text: "You get XP when your bounties are completed. Thanks for posting!", iconURL: bountyBotIcon },
+	{ text: "You get more XP when a bigger group completes your bounties. Thanks for organizing!", iconURL: bountyBotIcon },
+	{ text: "Sometimes when you raise a toast to someone, it'll crit and grant you XP too!", iconURL: bountyBotIcon },
+	{ text: "Your chance for Critical Toast is lower when repeatedly toasting the same bounty hunters. Spread the love!", iconURL: bountyBotIcon },
+	{ text: "Users who can manage BountyBot aren't included in seasonal rewards to avoid conflicts of interest.", iconURL: bountyBotIcon },
+	{ text: "Anyone can post a bounty, even you!", iconURL: bountyBotIcon },
+	{ text: "Anyone can raise a toast, even you!", iconURL: bountyBotIcon },
+	{ text: "The Overjustification Effect means a small reward can be less motivating than no reward.", iconURL: bountyBotIcon },
+	{ text: "Manage bounties from within games with the Discord Overlay (default: Shift + Tab)!", iconURL: bountyBotIcon },
+	{ text: "Server level is based on total bounty hunter level--higher server level means better evergreen bounty rewards.", iconURL: bountyBotIcon },
+	{ text: "A bounty poster cannot complete their own bounty.", iconURL: bountyBotIcon }
 ];
 const tipPool = applicationSpecificTips.concat(applicationSpecificTips, discordTips);
 
@@ -32,6 +45,9 @@ exports.randomFooterTip = function () {
 	return tipPool[Math.floor(Math.random() * tipPool.length)];
 }
 
+/**
+ * @param {Guild} guild
+ */
 exports.buildCompanyStatsEmbed = async function (guild) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
 	const seasonParticipants = (await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] })).map(participation => participation.Hunter);
