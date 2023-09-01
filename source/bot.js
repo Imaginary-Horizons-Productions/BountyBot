@@ -5,7 +5,6 @@ const { readFile, writeFile } = require("fs").promises;
 const { InteractionWrapper } = require("./classes/InteractionWrapper.js");
 const { getCommand, slashData } = require("./commands/_commandDictionary.js");
 const { getButton } = require("./buttons/_buttonDictionary.js");
-const { getModal } = require("./modals/_modalDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion } = require("./constants.js");
 const { buildVersionEmbed } = require("./embedHelpers.js");
@@ -102,7 +101,10 @@ function getInteractionCooldownTimestamp({ customId, cooldown }, userId) {
 }
 
 client.on(Events.InteractionCreate, interaction => {
-	if (interaction.isCommand()) {
+	if (interaction.isModalSubmit()) {
+		// Modal Submissions should be handled in the interactions that show them via awaitModalSubmission
+		return;
+	} else if (interaction.isCommand()) {
 		const command = getCommand(interaction.commandName);
 		const cooldownTimestamp = getInteractionCooldownTimestamp(command, interaction.user.id);
 		if (cooldownTimestamp) {
@@ -118,8 +120,6 @@ client.on(Events.InteractionCreate, interaction => {
 			getter = getButton;
 		} else if (interaction.isAnySelectMenu()) {
 			getter = getSelect;
-		} else if (interaction.isModalSubmit()) {
-			getter = getModal;
 		}
 		const interactionWrapper = getter(mainId);
 		const cooldownTimestamp = getInteractionCooldownTimestamp(interactionWrapper, interaction.user.id);
