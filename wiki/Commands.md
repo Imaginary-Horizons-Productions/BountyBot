@@ -165,6 +165,14 @@ View the XP scoreboard
 > Choices: `Season Scoreboard`, `Overall Scoreboard`
 
 The Season Scoreboard only includes hunters with XP this season
+### /season-end
+> Permission Level: ManageGuild
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Start a new season for this server, resetting ranks and placements
 ### /server-bonuses
 > Permission Level: ViewChannel
 
