@@ -1,7 +1,7 @@
-const { ModalBuilder, TextInputStyle, PermissionFlagsBits } = require('discord.js');
+const { ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { ActionRowBuilder, TextInputBuilder } = require('@discordjs/builders');
-const { MAX_EMBED_TITLE_LENGTH } = require('../constants');
+const { MAX_EMBED_TITLE_LENGTH, testGuildId, feedbackChannelId } = require('../constants');
 
 const customId = "feedback";
 const options = [
@@ -17,11 +17,15 @@ const subcommands = [];
 module.exports = new CommandWrapper(customId, "Provide feedback on this bot to the developers", PermissionFlagsBits.SendMessages, false, true, 3000, options, subcommands,
 	/** Open the modal associated with the feedback type to prompt more specific information */
 	(interaction) => {
-		const feedbackType = interaction.options.getString(options[0].name);
-		let modal = new ModalBuilder();
+		if (!testGuildId || !feedbackChannelId) {
+			interaction.reply({ content: "The test server is not yet configured to receive feedback, thanks for your patience.", ephemeral: true });
+			return;
+		}
+
+		const feedbackType = interaction.options.getString("feedback-type");
 		switch (feedbackType) {
 			case "bug":
-				modal.setCustomId("bugreport")
+				interaction.showModal(new ModalBuilder().setCustomId(feedbackType)
 					.setTitle("Bug Report")
 					.addComponents(
 						new ActionRowBuilder().addComponents(
@@ -51,10 +55,45 @@ module.exports = new CommandWrapper(customId, "Provide feedback on this bot to t
 								.setRequired(false)
 								.setStyle(TextInputStyle.Short)
 						)
-					);
+					)
+				);
+				interaction.awaitModalSubmit({ filter: (interaction) => interaction.customId === feedbackType, time: 300000 }).then(modalSubmission => {
+					const errors = [];
+					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
+						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue("title")}`)
+						.addFields(
+							{ name: "Reporter", value: `<@${modalSubmission.user.id}>` },
+							{ name: "Steps to Reproduce", value: modalSubmission.fields.getTextInputValue("steps") },
+							{ name: "Actual Behavior", value: modalSubmission.fields.getTextInputValue("actual") },
+							{ name: "Expected Behavior", value: modalSubmission.fields.getTextInputValue("expected") }
+						);
+
+					if (modalSubmission.user.hexAccentColor) {
+						embed.setColor(modalSubmission.user.hexAccentColor);
+					}
+
+					const unvalidatedImageURL = modalSubmission.fields.getTextInputValue("image");
+					try {
+						if (unvalidatedImageURL) {
+							new URL(unvalidatedImageURL);
+							embed.setImage(unvalidatedImageURL);
+						}
+					} catch (error) {
+						errors.push(error.message);
+					}
+
+					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
+						return testGuild.channels.fetch(feedbackChannelId);
+					}).then(feedbackChannel => {
+						feedbackChannel.createInvite({ maxAge: 0 }).then(invite => {
+							feedbackChannel.send({ embeds: [embed] });
+							modalSubmission.reply({ content: `Your bug report has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}.You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, ephemeral: true })
+						})
+					})
+				})
 				break;
 			case "feature":
-				modal.setCustomId("featurerequest")
+				interaction.showModal(new ModalBuilder().setCustomId(feedbackType)
 					.setTitle("Feature Request")
 					.addComponents(
 						new ActionRowBuilder().addComponents(
@@ -87,9 +126,43 @@ module.exports = new CommandWrapper(customId, "Provide feedback on this bot to t
 								.setRequired(false)
 								.setStyle(TextInputStyle.Short)
 						)
-					);
+					)
+				);
+				interaction.awaitModalSubmit({ filter: (interaction) => interaction.customId === feedbackType, time: 300000 }).then(modalSubmission => {
+					const errors = [];
+					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
+						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue("title")}`)
+						.addFields(
+							{ name: "Reporter", value: `<@${modalSubmission.user.id}>` },
+							{ name: "User Demographic", value: modalSubmission.fields.getTextInputValue("user") },
+							{ name: "Functionality", value: modalSubmission.fields.getTextInputValue("functionality") },
+							{ name: "Benefit", value: modalSubmission.fields.getTextInputValue("benefit") }
+						);
+
+					if (modalSubmission.user.hexAccentColor) {
+						embed.setColor(modalSubmission.user.hexAccentColor);
+					}
+
+					const unvalidatedImageURL = modalSubmission.fields.getTextInputValue("image");
+					try {
+						if (unvalidatedImageURL) {
+							new URL(unvalidatedImageURL);
+							embed.setImage(unvalidatedImageURL);
+						}
+					} catch (error) {
+						errors.push(error.message);
+					}
+
+					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
+						return testGuild.channels.fetch(feedbackChannelId);
+					}).then(feedbackChannel => {
+						feedbackChannel.createInvite({ maxAge: 0 }).then(invite => {
+							feedbackChannel.send({ embeds: [embed] });
+							modalSubmission.reply({ content: `Your feature request has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}. You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, ephemeral: true })
+						})
+					})
+				})
 				break;
 		}
-		interaction.showModal(modal);
 	}
 );

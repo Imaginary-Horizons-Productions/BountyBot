@@ -1,8 +1,7 @@
 const { PermissionFlagsBits, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { SAFE_DELIMITER } = require('../constants');
-const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates } = require('../helpers');
+const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates, timeConversion, checkTextsInAutoMod, generateBountyBoardThread } = require('../helpers');
 const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../embedHelpers');
 
@@ -61,7 +60,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 
 					const slotNumber = existingBounties.length + 1;
 					interaction.showModal(
-						new ModalBuilder().setCustomId(`evergreenpost${SAFE_DELIMITER}${slotNumber}`)
+						new ModalBuilder().setCustomId("evergreenpost")
 							.setTitle("New Evergreen Bounty")
 							.addComponents(
 								new ActionRowBuilder().addComponents(
@@ -85,6 +84,70 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 								)
 							)
 					);
+
+					interaction.awaitModalSubmit({ filter: interaction => interaction.customId === "evergreenpost", time: timeConversion(5, "m", "ms") }).then(async interaction => {
+						const title = interaction.fields.getTextInputValue("title");
+						const description = interaction.fields.getTextInputValue("description");
+
+						const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [title, description], "evergreen post");
+						if (isBlockedByAutoMod) {
+							interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", ephemeral: true });
+							return;
+						}
+
+						const rawBounty = {
+							userId: interaction.client.user.id,
+							companyId: interaction.guildId,
+							slotNumber: parseInt(slotNumber),
+							isEvergreen: true,
+							title,
+							description
+						};
+
+						const imageURL = interaction.fields.getTextInputValue("imageURL");
+						if (imageURL) {
+							try {
+								new URL(imageURL);
+								rawBounty.attachmentURL = imageURL;
+							} catch (error) {
+								interaction.message.edit({ components: [] });
+								interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${error.message}`, ephemeral: true });
+								return;
+							}
+						}
+
+						const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
+						const bounty = await database.models.Bounty.create(rawBounty);
+
+						// post in bounty board forum
+						const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString());
+						interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
+							if (company.bountyBoardId) {
+								interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
+									const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
+									const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString())));
+									if (company.evergreenThreadId) {
+										return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
+											const message = await thread.fetchStarterMessage();
+											message.edit({ embeds });
+											return thread;
+										});
+									} else {
+										return generateBountyBoardThread(bountyBoard.threads, embeds, company);
+									}
+								}).then(thread => {
+									bounty.postingId = thread.id;
+									bounty.save()
+								}).catch(error => {
+									if (error.code == 10003) {
+										interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
+									} else {
+										throw error;
+									}
+								})
+							}
+						});
+					})
 				});
 				break;
 			case subcommands[1].name: // edit
@@ -107,7 +170,7 @@ module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed
 						content: "Editing an evergreen bounty will not change previous completions.",
 						components: [
 							new ActionRowBuilder().addComponents(
-								new StringSelectMenuBuilder().setCustomId("evergreeneditselect")
+								new StringSelectMenuBuilder().setCustomId("evergreenedit")
 									.setPlaceholder("Select a bounty to edit...")
 									.setMaxValues(1)
 									.setOptions(slotOptions)
