@@ -86,7 +86,7 @@ exports.buildSeasonalScoreboardEmbed = async function (guild) {
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	//TODO handle character overflow
+	//TODO #92 handle character overflow
 	const scorelines = participations.map(participation => `${participation.Hunter.rank ? `${rankmojiArray[participation.Hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${participation.Hunter.level}__ *${participation.xp} season XP*`).join("\n");
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
@@ -107,7 +107,7 @@ exports.buildOverallScoreboardEmbed = async function (guild) {
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	//TODO handle character overflow
+	//TODO #92 handle character overflow
 	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`).join("\n");
 
 	return new EmbedBuilder().setColor(Colors.Blurple)

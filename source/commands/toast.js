@@ -116,7 +116,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		const rawRecipients = [];
 		let rewardedRecipients = [];
 		let critValue = 0;
-		//TODO combine fetch and toastsRaised increment with upsert?
+		//TODO #96 combine fetch and toastsRaised increment with upsert?
 		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
 		const season = await database.models.Season.findByPk(company.seasonId);
 		season.increment("toastsRaised");
@@ -128,7 +128,7 @@ module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hun
 		sender.toastsRaised++;
 		const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 		for (const id of nonBotToasteeIds) {
-			//TODO move to bulkCreate after finding solution to create by association only if user doesn't already exist
+			//TODO #97 move to bulkCreate after finding solution to create by association only if user doesn't already exist
 			const [user] = await database.models.User.findOrCreate({ where: { id } });
 			const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 			if (rawToast.isRewarded) {

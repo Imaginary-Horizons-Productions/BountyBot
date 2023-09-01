@@ -293,7 +293,7 @@ module.exports = new CommandWrapper(customId, "Bounties are user-created objecti
 					const company = await database.models.Company.findByPk(interaction.guildId);
 					bounty.updatePosting(interaction.guild, company);
 
-					interaction.reply({ //TODO make sure acknowledging interactions is sharding safe
+					interaction.reply({ //TODO #95 make sure acknowledging interactions is sharding safe
 						content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`,
 						ephemeral: true
 					});

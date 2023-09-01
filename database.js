@@ -30,7 +30,7 @@ exports.database.authenticate().then(() => {
 	initSeason(exports.database);
 	initSeasonParticipation(exports.database);
 
-	//TODONOW prune associations (not all references need to be associations)
+	//TODO #91 prune associations (not all references need to be associations)
 	Company.CompanyRanks = Company.hasMany(CompanyRank, {
 		foreignKey: "companyId"
 	});

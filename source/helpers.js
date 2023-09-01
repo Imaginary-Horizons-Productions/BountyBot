@@ -282,10 +282,10 @@ exports.checkTextsInAutoMod = async function (channel, member, texts, context) {
 			continue;
 		}
 
-		//TODO use rule.triggerMetaData.allowList
+		//TODO #93 use rule.triggerMetaData.allowList
 		const hasRegexTrigger = texts.some(text => rule.triggerMetadata.regexPatterns.some(regex => new RegExp(regex).test(text)));
 		const hasKeywordFilter = texts.some(text => rule.triggerMetadata.keywordFilter.some(regex => new RegExp(regex).test(text)));
-		//TODO fetch Discord presets from enum
+		//TODO #94 fetch Discord presets from enum
 		const exceedsMentionLimit = texts.some(text => {
 			text.match(/<@[\d&]+>/)?.length > rule.triggerMetadata.mentionTotalLimit
 		});
