@@ -116,7 +116,7 @@ client.on(Events.InteractionCreate, interaction => {
 		let getter;
 		if (interaction.isButton()) {
 			getter = getButton;
-		} else if (interaction.isStringSelectMenu()) {
+		} else if (interaction.isAnySelectMenu()) {
 			getter = getSelect;
 		} else if (interaction.isModalSubmit()) {
 			getter = getModal;
