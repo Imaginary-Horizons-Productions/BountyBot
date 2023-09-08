@@ -86,14 +86,24 @@ exports.buildSeasonalScoreboardEmbed = async function (guild) {
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	//TODO #92 handle character overflow
-	const scorelines = participations.map(participation => `${participation.Hunter.rank ? `${rankmojiArray[participation.Hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${participation.Hunter.level}__ *${participation.xp} season XP*`).join("\n");
+	const scorelines = participations.map(participation => `${participation.Hunter.rank ? `${rankmojiArray[participation.Hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${participation.Hunter.level}__ *${participation.xp} season XP*`);
+	let description = "";
+	const andMore = "…and more";
+	const maxDescriptionLength = 2048 - andMore.length;
+	for (const scoreline of scorelines) {
+		if (description.length + scoreline.length <= maxDescriptionLength) {
+			description += `${scoreline}\n`;
+		} else {
+			description += andMore;
+			break;
+		}
+	}
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Season Scoreboard")
-		.setDescription(scorelines || "No Bounty Hunters yet...")
+		.setDescription(description || "No Bounty Hunters yet…")
 		.setFooter(exports.randomFooterTip())
 		.setTimestamp();
 }
@@ -107,14 +117,24 @@ exports.buildOverallScoreboardEmbed = async function (guild) {
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	//TODO #92 handle character overflow
-	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`).join("\n");
+	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
+	let description = "";
+	const andMore = "…and more";
+	const maxDescriptionLength = 2048 - andMore.length;
+	for (const scoreline of scorelines) {
+		if (description.length + scoreline.length <= maxDescriptionLength) {
+			description += `${scoreline}\n`;
+		} else {
+			description += andMore;
+			break;
+		}
+	}
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Scoreboard")
-		.setDescription(scorelines || "No Bounty Hunters yet...")
+		.setDescription(description || "No Bounty Hunters yet...")
 		.setFooter(exports.randomFooterTip())
 		.setTimestamp();
 }
