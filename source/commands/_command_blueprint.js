@@ -8,7 +8,8 @@ const options = [
 		name: "",
 		description: "",
 		required: false,
-		choices: [{ name: "", value: "" }]
+		autocomplete: [{ name: "", value: "" }], // optional
+		choices: [{ name: "", value: "" }] // optional
 	}
 ];
 const subcommands = [
@@ -21,7 +22,8 @@ const subcommands = [
 				name: "",
 				description: "",
 				required: false,
-				choices: [{ name: "", value: "" }]
+				autocomplete: [{ name: "", value: "" }], // optional
+				choices: [{ name: "", value: "" }]  // optional
 			}
 		]
 	}

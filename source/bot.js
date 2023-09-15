@@ -113,6 +113,16 @@ client.on(Events.InteractionCreate, interaction => {
 		}
 
 		command.execute(interaction);
+	} else if (interaction.isAutocomplete()) {
+		const command = getCommand(interaction.commandName);
+		const focusedOption = interaction.options.getFocused(true);
+		const unfilteredChoices = command.autocomplete?.[focusedOption.name] ?? [];
+		if (unfilteredChoices.length < 1) {
+			console.error(`Attempted autocomplete on misconfigured command ${interaction.commandName} ${focusedOption.name}`);
+		}
+		const choices = unfilteredChoices.filter(choice => choice.value.includes(focusedOption.value.toLowerCase()))
+			.slice(0, 25);
+		interaction.respond(choices);
 	} else {
 		const [mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
 		let getter;
