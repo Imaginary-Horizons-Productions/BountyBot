@@ -1,9 +1,9 @@
 const { database } = require('../../database');
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 const { getRankUpdates } = require('../helpers');
 
-const customId = "modtakedown";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "modtakedown";
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Take down specified bounty */
 	(interaction, [posterId]) => {
 		const slotNumber = interaction.values[0];

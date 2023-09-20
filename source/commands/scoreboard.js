@@ -1,7 +1,7 @@
 const { CommandWrapper } = require('../classes');
 const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../embedHelpers');
 
-const customId = "scoreboard";
+const mainId = "scoreboard";
 const options = [
 	{
 		type: "String",
@@ -15,7 +15,7 @@ const options = [
 	}
 ];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "View the XP scoreboard", null, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, false, false, 3000, options, subcommands,
 	/** View the XP scoreboard */
 	(interaction) => {
 		if (interaction.options.getString(options[0].name) === "season") {

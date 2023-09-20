@@ -1,12 +1,12 @@
 const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { database } = require('../../database');
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 const { SAFE_DELIMITER } = require('../constants');
 const { getNumberEmoji } = require('../helpers');
 
-const customId = "bountyswapbounty";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "bountyswapbounty";
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve the bounty to swap and solicit the slot to swap to */
 	(interaction, args) => {
 		database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {

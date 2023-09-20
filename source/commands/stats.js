@@ -6,7 +6,7 @@ const { generateTextBar } = require('../helpers');
 const { Hunter } = require('../models/users/Hunter');
 const { Op } = require('sequelize');
 
-const customId = "stats";
+const mainId = "stats";
 const options = [
 	{
 		type: "User",
@@ -16,7 +16,7 @@ const options = [
 	}
 ];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000, options, subcommands,
 	/** Get the BountyBot stats for yourself or someone else */
 	(interaction) => {
 		const target = interaction.options.getMember("bounty-hunter");

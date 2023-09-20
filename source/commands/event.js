@@ -2,7 +2,7 @@ const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 
-const customId = "event";
+const mainId = "event";
 const options = [];
 const subcommands = [
 	{
@@ -22,7 +22,7 @@ const subcommands = [
 		description: "End the event, returning to normal XP",
 	}
 ];
-module.exports = new CommandWrapper(customId, "Manage a server-wide event that multiplies XP of bounty completions, toast reciepts, and crit toasts", PermissionFlagsBits.ManageGuild, true, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Manage a server-wide event that multiplies XP of bounty completions, toast reciepts, and crit toasts", PermissionFlagsBits.ManageGuild, true, false, 3000, options, subcommands,
 	/** Allow users to manage XP multiplier events */
 	(interaction) => {
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {

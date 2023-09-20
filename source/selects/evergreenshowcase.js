@@ -1,8 +1,8 @@
 const { database } = require('../../database');
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 
-const customId = "evergreenshowcase";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "evergreenshowcase";
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Show the evergreen bounty's embed again */
 	(interaction, args) => {
 		const [slotNumber] = interaction.values;

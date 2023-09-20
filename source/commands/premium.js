@@ -1,11 +1,11 @@
-const { PermissionFlagsBits, EmbedBuilder, Colors } = require('discord.js');
+const { EmbedBuilder, Colors } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { randomFooterTip, ihpAuthorPayload } = require('../embedHelpers');
 
-const customId = "premium";
+const mainId = "premium";
 const options = [];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "List perks for supporting IHP development", PermissionFlagsBits.ViewChannel, false, true, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, true, 3000, options, subcommands,
 	/** List the premium features available for patrons */
 	async (interaction) => {
 		interaction.reply({

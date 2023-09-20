@@ -23,17 +23,17 @@ exports.commandFiles = [
 ];
 /** @type {Record<string, CommandWrapper>} */
 const commandDictionary = {};
+/** @type {import('discord.js').RESTPostAPIChatInputApplicationCommandsJSONBody[]} */
 exports.slashData = [];
 
 for (const file of exports.commandFiles) {
+	/** @type {CommandWrapper} */
 	const command = require(`./${file}`);
-	commandDictionary[command.customId] = command;
-	exports.slashData.push(command.data.toJSON());
+	commandDictionary[command.mainId] = command;
+	exports.slashData.push(command.builder.toJSON());
 }
 
-/**
- * @param {string} commandName
- */
+/** @param {string} commandName */
 exports.getCommand = function (commandName) {
 	return commandDictionary[commandName];
 }

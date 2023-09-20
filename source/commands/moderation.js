@@ -4,7 +4,7 @@ const { database } = require('../../database');
 const { getNumberEmoji, getRankUpdates } = require('../helpers');
 const { SAFE_DELIMITER } = require('../constants');
 
-const customId = "moderation";
+const mainId = "moderation";
 const options = [];
 const subcommands = [
 	{
@@ -62,7 +62,7 @@ const subcommands = [
 		]
 	}
 ];
-module.exports = new CommandWrapper(customId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
 	(interaction) => {
 		let member;
 		switch (interaction.options.getSubcommand()) {

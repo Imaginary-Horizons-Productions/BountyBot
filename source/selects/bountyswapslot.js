@@ -1,10 +1,10 @@
 const { Op } = require('sequelize');
 const { database } = require('../../database');
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 
-const customId = "bountyswapslot";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "bountyswapslot";
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Complete the swaps */
 	async (interaction, [unparsedSourceSlot]) => {
 		const sourceSlot = parseInt(unparsedSourceSlot);

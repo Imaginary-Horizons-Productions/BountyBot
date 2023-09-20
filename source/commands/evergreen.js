@@ -5,7 +5,7 @@ const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates, timeConversi
 const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../embedHelpers');
 
-const customId = "evergreen";
+const mainId = "evergreen";
 const options = [];
 const subcommands = [
 	{
@@ -47,7 +47,7 @@ const subcommands = [
 		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
 	}
 ];
-module.exports = new CommandWrapper(customId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, false, 3000, options, subcommands,
 	(interaction) => {
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {

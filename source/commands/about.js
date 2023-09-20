@@ -1,10 +1,10 @@
 const { EmbedBuilder, Colors } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 
-const customId = "about";
+const mainId = "about";
 const options = [];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "Get BountyBot's description and contributors", null, false, true, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, true, 3000, options, subcommands,
 	/** Get BountyBot's description and contributors */
 	(interaction) => {
 		const avatarURL = interaction.client.user.avatarURL();

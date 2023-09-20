@@ -6,7 +6,7 @@ const { database } = require('../../database');
 const { Op } = require('sequelize');
 const { updateScoreboard } = require('../embedHelpers');
 
-const customId = "toast";
+const mainId = "toast";
 const options = [
 	{
 		type: "String",
@@ -28,7 +28,7 @@ const options = [
 	}
 ];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000, options, subcommands,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction) => {
 		const errors = [];

@@ -1,8 +1,9 @@
 const { BuildError } = require("./BuildError");
-const { InteractionWrapper, CommandWrapper } = require("./InteractionWrapper");
+const { ButtonWrapper, CommandWrapper, SelectWrapper } = require("./InteractionWrapper");
 
 module.exports = {
 	BuildError,
+	ButtonWrapper,
 	CommandWrapper,
-	InteractionWrapper
+	SelectWrapper
 };

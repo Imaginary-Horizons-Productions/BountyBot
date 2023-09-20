@@ -1,9 +1,9 @@
 const { database } = require('../../database');
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 
-const customId = "evergreenswapslot";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "evergreenswapslot";
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Complete the swaps */
 	async (interaction, [unparsedSourceSlot]) => {
 		const sourceSlot = parseInt(unparsedSourceSlot);

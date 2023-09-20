@@ -6,7 +6,7 @@ const { Op } = require('sequelize');
 const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../embedHelpers');
 
-const customId = "bounty";
+const mainId = "bounty";
 const options = [];
 const subcommands = [
 	{
@@ -84,7 +84,7 @@ const subcommands = [
 		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
 	}
 ];
-module.exports = new CommandWrapper(customId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, false, 3000, options, subcommands,
 	(interaction) => {
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {

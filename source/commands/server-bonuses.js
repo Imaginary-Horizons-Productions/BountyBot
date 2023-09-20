@@ -1,12 +1,11 @@
-const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { buildServerBonusesEmbed } = require('../embedHelpers');
 
-const customId = "server-bonuses";
+const mainId = "server-bonuses";
 const options = [];
 const subcommands = [];
-module.exports = new CommandWrapper(customId, "Get info about the currently running server bonuses", PermissionFlagsBits.ViewChannel, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Get info about the currently running server bonuses", null, false, false, 3000, options, subcommands,
 	/** Send the user info about currently running server bonuses */
 	(interaction) => {
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {

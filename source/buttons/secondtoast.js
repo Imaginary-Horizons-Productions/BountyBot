@@ -1,12 +1,12 @@
-const { EmbedBuilder } = require('@discordjs/builders');
-const { InteractionWrapper } = require('../classes');
+const { EmbedBuilder } = require('discord.js');
+const { ButtonWrapper } = require('../classes');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
 const { DAY_IN_MS } = require('../constants');
 const { getRankUpdates } = require('../helpers');
 
-const customId = "secondtoast";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "secondtoast";
+module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, [toastId]) => {
 		const originalToast = await database.models.Toast.findByPk(toastId);

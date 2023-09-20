@@ -1,10 +1,10 @@
 const { Op } = require('sequelize');
 const { database } = require('../../database');
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 
-const customId = "rafflerank";
+const mainId = "rafflerank";
 
-module.exports = new InteractionWrapper(customId, 3000,
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Given selected rank for raffle, randomly select eligible hunter */
 	(interaction, args) => {
 		const rankIndex = Number(interaction.values[0]);

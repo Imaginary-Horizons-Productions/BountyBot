@@ -1,6 +1,6 @@
-const { InteractionWrapper } = require("../classes");
+const { SelectWrapper } = require("../classes");
 
-/** @type {Record<string, InteractionWrapper>} */
+/** @type {Record<string, SelectWrapper>} */
 const selectDictionary = {};
 
 for (const file of [
@@ -18,13 +18,12 @@ for (const file of [
 	"modtakedown.js",
 	"rafflerank.js"
 ]) {
+	/** @type {SelectWrapper} */
 	const select = require(`./${file}`);
-	selectDictionary[select.customId] = select;
+	selectDictionary[select.mainId] = select;
 }
 
-/**
- * @param {string} mainId
- */
+/** @param {string} mainId */
 exports.getSelect = function (mainId) {
 	return selectDictionary[mainId];
 }

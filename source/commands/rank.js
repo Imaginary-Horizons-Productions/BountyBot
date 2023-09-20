@@ -3,7 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getRankUpdates } = require('../helpers');
 
-const customId = "rank";
+const mainId = "rank";
 const options = [];
 const subcommands = [
 	{
@@ -79,7 +79,7 @@ const subcommands = [
 		]
 	}
 ];
-module.exports = new CommandWrapper(customId, "Seasonal Ranks distinguish bounty hunters who have above average season XP", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty hunters who have above average season XP", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
 	(interaction) => {
 		let varianceThreshold;
 		switch (interaction.options.getSubcommand()) {

@@ -1,9 +1,9 @@
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getRankUpdates } = require('../helpers');
 
-const customId = "bountytakedown";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "bountytakedown";
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Take down the given bounty and completions */
 	async (interaction, args) => {
 		const [slotNumber] = interaction.values;

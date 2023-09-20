@@ -3,7 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
 
-const customId = "raffle";
+const mainId = "raffle";
 const options = [];
 const subcommands = [
 	{
@@ -35,7 +35,7 @@ const subcommands = [
 		]
 	}
 ];
-module.exports = new CommandWrapper(customId, "description", PermissionFlagsBits.ManageGuild, false, true, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.ManageGuild, false, true, 3000, options, subcommands,
 	/** Randomly select a hunter from the pool determined by the subcommand configurations */
 	(interaction) => {
 		switch (interaction.options.getSubcommand()) {

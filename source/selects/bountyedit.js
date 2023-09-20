@@ -1,11 +1,11 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildScheduledEventEntityType } = require('discord.js');
-const { InteractionWrapper } = require('../classes');
+const { SelectWrapper } = require('../classes');
 const { YEAR_IN_MS } = require('../constants');
 const { database } = require('../../database');
 const { timeConversion, checkTextsInAutoMod } = require('../helpers');
 
-const customId = "bountyedit";
-module.exports = new InteractionWrapper(customId, 3000,
+const mainId = "bountyedit";
+module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve bounty reconfigurations from the user */
 	(interaction, args) => {
 		const [slotNumber] = interaction.values;
@@ -27,7 +27,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 				eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
 			}
 			interaction.showModal(
-				new ModalBuilder().setCustomId(customId)
+				new ModalBuilder().setCustomId(mainId)
 					.setTitle(`Editing Bounty (${bounty.title})`)
 					.addComponents(
 						new ActionRowBuilder().addComponents(
@@ -61,7 +61,7 @@ module.exports = new InteractionWrapper(customId, 3000,
 						)
 					)
 			);
-			interaction.awaitModalSubmit({ filter: interaction => interaction.customId === customId, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			interaction.awaitModalSubmit({ filter: interaction => interaction.customId === mainId, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 

@@ -4,7 +4,7 @@ const { database } = require('../../database');
 const { buildScoreboardEmbed } = require('../embedHelpers');
 const { generateBountyBoardThread } = require('../helpers');
 
-const customId = "create-default";
+const mainId = "create-default";
 const options = [];
 const subcommands = [
 	{
@@ -32,7 +32,7 @@ const subcommands = [
 		description: "Create Discord roles and set them as this server's ranks at default variance thresholds"
 	}
 ];
-module.exports = new CommandWrapper(customId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, false, 30000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, false, 30000, options, subcommands,
 	(interaction) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // bounty-board-forum
