@@ -6,7 +6,7 @@
 
 Get BountyBot's description and contributors
 ### /bounty
-> Permission Level: ViewChannel
+> Permission Level: SendMessages
 
 > Usable in DMs: false
 
@@ -51,7 +51,6 @@ Create a reference channel with the BountyBot Scoreboard
 #### /create-default rank-roles
 Create Discord roles and set them as this server's ranks at default variance thresholds
 ### /data-policy
-> Permission Level: ViewChannel
 
 > Usable in DMs: true
 
@@ -117,7 +116,6 @@ Toggle disqualification from ranking for a bounty hunter in the current season
 #### /moderation xp-penalty
 Reduce a bounty hunter's XP
 ### /premium
-> Permission Level: ViewChannel
 
 > Usable in DMs: true
 
@@ -174,7 +172,6 @@ The Season Scoreboard only includes hunters with XP this season
 
 Start a new season for this server, resetting ranks and placements
 ### /server-bonuses
-> Permission Level: ViewChannel
 
 > Usable in DMs: false
 
