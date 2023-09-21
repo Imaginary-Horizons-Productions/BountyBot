@@ -20,6 +20,7 @@ exports.commandFiles = [
 	"server-bonuses.js",
 	"stats.js",
 	"toast.js",
+	"tutorial.js",
 	"version.js"
 ];
 /** @type {Record<string, CommandWrapper>} */
