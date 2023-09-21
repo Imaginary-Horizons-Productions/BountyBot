@@ -82,6 +82,18 @@ const subcommands = [
 	{
 		name: "take-down",
 		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
+	},
+	{
+		name: "list",
+		description: "List all of a hunter's open bounties",
+		optionsInput: [
+			{
+				type: "User",
+				name: "bounty-hunter",
+				description: "The bounty hunter to show open bounties for",
+				required: true
+			}
+		]
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, false, 3000, options, subcommands,
@@ -439,6 +451,18 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 						ephemeral: true
 					});
 				})
+				break;
+			case subcommands[8].name: // list
+				const listUserId = interaction.options.getUser(subcommands[8].optionsInput[0].name).id;
+				database.models.Bounty.findAll({ where: { userId: listUserId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(async existingBounties => {
+					if (existingBounties.length < 1) {
+						interaction.reply({ content: `<@${listUserId}> doesn't have any open bounties posted.`, ephemeral: true });
+						return;
+					}
+					const hunter = await database.models.Hunter.findOne({ where: { userId: listUserId, companyId: interaction.guildId } });
+					const company = await database.models.Company.findByPk(interaction.guildId);
+					interaction.reply({ embeds: await Promise.all(existingBounties.map(bounty => bounty.asEmbed(interaction.guild, hunter.level, company.eventMultiplierString()))), ephemeral: true });
+				});
 				break;
 		}
 	}
