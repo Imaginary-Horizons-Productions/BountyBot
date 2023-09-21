@@ -5,6 +5,7 @@ exports.commandFiles = [
 	"about.js",
 	"bounty.js",
 	"commands.js",
+	"config-server.js",
 	"create-default.js",
 	"data-policy.js",
 	"event.js",
