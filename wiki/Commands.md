@@ -29,6 +29,8 @@ Remove hunter(s) from a bounty's list of completers
 Close one of your open bounties, awarding XP to completers
 #### /bounty take-down
 Take down one of your bounties without awarding XP (forfeit posting XP)
+#### /bounty list
+List all of a hunter's open bounties
 ### /commands
 
 > Usable in DMs: true
