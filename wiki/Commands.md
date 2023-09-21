@@ -215,6 +215,17 @@ The mention(s) of the bounty hunter(s) to whom you are raising a toast
 The text of the toast to raise
 #### image-url (optional)
 The URL to the image to add to the toast
+### /tutorial
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+Get tips for starting with BountyBot
+#### tutorial-type
+> Choices: `Starting Bounty Hunter Tips`, `Server Setup Tips`
+
+Get starting bounty hunter tips or server setup tips
 ### /version
 
 > Usable in DMs: true
