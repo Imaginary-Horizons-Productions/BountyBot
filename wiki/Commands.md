@@ -36,6 +36,18 @@ Take down one of your bounties without awarding XP (forfeit posting XP)
 > Cooldown: 3 second(s)
 
 Get a link to BountyBot's commands page
+### /config-premium
+> Permission Level: ManageGuild
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Configure premium BountyBot settings for this server
+#### level-threshold-multiplier (optional)
+Configure the XP coefficient for bounty hunter levels (default 3)
+#### bounty-slots (optional)
+Configure the max number (between 1 and 10) of bounty slots hunters can have (default 5)
 ### /config-server
 > Permission Level: ManageGuild
 
@@ -47,9 +59,9 @@ Configure BountyBot settings for this server
 #### notification (optional)
 > Choices: `Notify online members (@here)`, `Notify all members (@everyone)`, `No prefix`, `Suppress notifications (@silent)`
 
-Configure who to send notifications to
+Configure who to send notifications to (default @here)
 #### server-boost-xp (optional)
-Configure whether boosting the server awards XP
+Configure whether boosting the server awards XP (default true)
 ### /create-default
 > Permission Level: ManageChannels
 
