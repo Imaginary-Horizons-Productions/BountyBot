@@ -41,7 +41,7 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 						{ name: "/create-default", value: "The `/create-default` command can create a bounty board forum channel, a reference channel for the scoreboard, or roles for showing off seasonal ranks." },
 						{ name: "/raffle announce-upcoming", value: "You can have BountyBot randomly select a user by seasonal rank or by level. Bounty hunters will likely appreciate if you announce the timing or eligibility for upcoming raffles ahead of time." },
 						{ name: "/config-server", value: "You can set the notification type for BountyBot announcement messages (eg \"Should bounty posts start with @everyone, @here, etc?\") and enable or disable granting XP for boosting the server." },
-						{ name: "/config-premium", value: "You can change the XP coefficient for bounty hunter level-ups or the max number of slots a bounty hunter can earn." }
+						{ name: "/config-premium", value: "You can change the XP coefficient for bounty hunter level-ups or the max number of slots a bounty hunter can have." }
 					)
 				break;
 		}

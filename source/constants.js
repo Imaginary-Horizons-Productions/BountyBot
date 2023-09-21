@@ -15,3 +15,4 @@ exports.lastPostedVersion = lastPostedVersion;
 exports.MAX_EMBED_TITLE_LENGTH = 256;
 
 exports.COMPANY_XP_COEFFICIENT = 3;
+exports.GLOBAL_MAX_BOUNTY_SLOTS = 10;

@@ -7,7 +7,7 @@ const options = [
 	{
 		type: "String",
 		name: "notification",
-		description: "Configure who to send notifications to",
+		description: "Configure who to send notifications to (default @here)",
 		required: false,
 		choices: [
 			{ name: "Notify online members (@here)", value: "@here" },
@@ -19,15 +19,14 @@ const options = [
 	{
 		type: "Boolean",
 		name: "server-boost-xp",
-		description: "Configure whether boosting the server awards XP",
+		description: "Configure whether boosting the server awards XP (default true)",
 		required: false
 	}
 ];
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, false, 3000, options, subcommands,
 	(interaction) => {
-		const company = database.models.Company.findByPk(interaction.guildId).then(company => {
-
+		database.models.Company.findByPk(interaction.guildId).then(company => {
 			const updatePayload = {};
 			let content = "The following server settings have been configured:";
 
