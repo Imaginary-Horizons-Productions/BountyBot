@@ -35,8 +35,7 @@ const subcommands = [
 		]
 	}
 ];
-module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.ManageGuild, false, true, 3000, options, subcommands,
-	/** Randomly select a hunter from the pool determined by the subcommand configurations */
+module.exports = new CommandWrapper(mainId, "Randomly select a bounty hunter from a variety of pools", PermissionFlagsBits.ManageGuild, false, true, 3000, options, subcommands,
 	(interaction) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // by-rank
