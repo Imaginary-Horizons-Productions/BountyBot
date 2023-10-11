@@ -88,7 +88,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 				modalSubmission.update({ content: "Bounty edited!", components: [] });
 				modalSubmission.channel.send(company.sendAnnouncement({ content: `${modalSubmission.member} has edited an evergreen bounty:`, embeds: [bountyEmbed] }));
-			})
+			}).catch(console.error);
 		})
 	}
 );

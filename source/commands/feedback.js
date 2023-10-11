@@ -89,7 +89,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 							modalSubmission.reply({ content: `Your bug report has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}.You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, ephemeral: true })
 						})
 					})
-				})
+				}).catch(console.error);
 				break;
 			case "feature":
 				interaction.showModal(new ModalBuilder().setCustomId(feedbackType)
@@ -160,7 +160,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 							modalSubmission.reply({ content: `Your feature request has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}. You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, ephemeral: true })
 						})
 					})
-				})
+				}).catch(console.error);
 				break;
 		}
 	}

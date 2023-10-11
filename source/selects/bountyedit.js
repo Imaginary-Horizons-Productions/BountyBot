@@ -169,7 +169,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 				modalSubmission.update({ content: "Bounty edited!", components: [] });
 				modalSubmission.channel.send(company.sendAnnouncement({ content: `${modalSubmission.member} has edited one of their bounties:`, embeds: [bountyEmbed] }));
-			})
+			}).catch(console.error);
 		})
 	}
 );

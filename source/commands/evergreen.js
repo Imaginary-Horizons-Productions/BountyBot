@@ -147,7 +147,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 								})
 							}
 						});
-					})
+					}).catch(console.error)
 				});
 				break;
 			case subcommands[1].name: // edit
