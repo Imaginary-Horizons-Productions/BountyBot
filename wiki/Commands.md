@@ -157,7 +157,7 @@ List perks for supporting IHP development
 
 > Cooldown: 3 second(s)
 
-description
+Randomly select a bounty hunter from a variety of pools
 #### /raffle by-ranks
 Select a user at or above a particular rank
 #### /raffle by-level
