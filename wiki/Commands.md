@@ -180,6 +180,18 @@ Get the information about an existing seasonal rank
 Change the role or rankmoji for a seasonal rank
 #### /rank remove
 Remove an existing seasonal rank
+### /reset
+> Permission Level: ManageGuild
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Reset all bounty hunter stats, bounties, or server configs
+#### /reset all-hunter-stats
+IRREVERSIBLY reset all bounty hunter stats on this server
+#### /reset server-settings
+IRREVERSIBLY return all server configs to default
 ### /scoreboard
 
 > Usable in DMs: false
