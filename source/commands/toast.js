@@ -123,7 +123,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const [sender] = await database.models.Hunter.findOrCreate({
 			where: { userId: interaction.user.id, companyId: interaction.guildId },
 			defaults: { isRankEligible: interaction.member.manageable, User: { id: interaction.user.id } },
-			include: database.models.Hunter.User
+			include: database.models.Hunter.User //TODO #110 crashes if user already exists, but hunter doesn't
 		});
 		sender.toastsRaised++;
 		const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
