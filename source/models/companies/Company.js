@@ -26,32 +26,6 @@ exports.Company = class extends Model {
 		}
 		return messageOptions;
 	}
-
-	// /** Build the list of rewards
-	// * @param {string} guildId
-	// * @param {number} characterLimit
-	// * @returns {string}
-	// */
-	// rewardStringBuilder(characterLimit = 1024) {
-	// 	let overflowText = "...and more";
-	// 	characterLimit -= overflowText.length;
-	// 	let rewardString = "";
-	// 	if (rewards.length == 0) {
-	// 		rewardString += "There are no rewards posted (yet).";
-	// 	} else {
-	// 		for (let i = 0; i < this.rewards.length; i += 1) {
-	// 			let singleReward = `__${i + 1}__: ${this.rewards[i]}\n`;
-	// 			if (characterLimit - singleReward.length > 0) {
-	// 				rewardString += singleReward;
-	// 				characterLimit -= singleReward.length;
-	// 			} else {
-	// 				rewardString += overflowText;
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// 	return rewardString;
-	// }
 }
 
 exports.initModel = function (sequelize) {
@@ -86,6 +60,14 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 3600000
 		},
+		eventMultiplier: {
+			type: DataTypes.INTEGER,
+			defaultValue: 1
+		},
+		xpCoefficient: {
+			type: DataTypes.INTEGER,
+			defaultValue: 3
+		},
 		bountyBoardId: {
 			type: DataTypes.STRING
 		},
@@ -103,14 +85,6 @@ exports.initModel = function (sequelize) {
 		},
 		nextRaffleString: {
 			type: DataTypes.STRING
-		},
-		eventMultiplier: {
-			type: DataTypes.INTEGER,
-			defaultValue: 1
-		},
-		xpCoefficient: {
-			type: DataTypes.INTEGER,
-			defaultValue: 3
 		},
 		seasonId: {
 			type: DataTypes.UUID

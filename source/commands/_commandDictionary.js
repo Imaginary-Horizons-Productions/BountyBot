@@ -16,6 +16,7 @@ exports.commandFiles = [
 	"premium.js",
 	"raffle.js",
 	"rank.js",
+	"reset.js",
 	"scoreboard.js",
 	"season-end.js",
 	"server-bonuses.js",
