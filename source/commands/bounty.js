@@ -251,7 +251,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							const [hunter] = await database.models.Hunter.findOrCreate({
 								where: { userId: memberId, companyId: interaction.guildId },
 								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
-								include: database.models.Hunter.User  //TODONOW crashes if user already exists, but hunter doesn't
+								include: database.models.Hunter.User  //TODO #110 crashes if user already exists, but hunter doesn't
 							});
 							if (hunter.isBanned) {
 								bannedIds.push(memberId);
@@ -350,7 +350,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							const [hunter] = await database.models.Hunter.findOrCreate({
 								where: { userId: memberId, companyId: interaction.guildId },
 								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
-								include: database.models.Hunter.User //TODONOW crashes if user already exists, but hunter doesn't
+								include: database.models.Hunter.User //TODO #110 crashes if user already exists, but hunter doesn't
 							});
 							if (!hunter.isBanned) {
 								validatedCompleterIds.push(memberId);

@@ -95,6 +95,7 @@ exports.initModel = function (sequelize) {
 	}, {
 		sequelize,
 		modelName: "Company",
-		freezeTableName: true
+		freezeTableName: true,
+		paranoid: true
 	});
 }

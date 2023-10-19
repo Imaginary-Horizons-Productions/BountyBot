@@ -30,6 +30,7 @@ exports.initModel = function (sequelize) {
 	}, {
 		sequelize,
 		modelName: "Season",
-		freezeTableName: true
+		freezeTableName: true,
+		paranoid: true
 	})
 }
