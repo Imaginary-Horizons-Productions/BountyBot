@@ -1,18 +1,26 @@
-exports.SAFE_DELIMITER = "→";
-exports.MAX_SET_TIMEOUT = 2 ** 31 - 1;
-exports.DAY_IN_MS = 86400000;
-exports.YEAR_IN_MS = 31556926000;
-
 exports.authPath = "../config/auth.json";
 const { testGuildId, feedbackChannelId } = require(exports.authPath);
-exports.testGuildId = testGuildId;
-exports.feedbackChannelId = feedbackChannelId;
-
 const { announcementsChannelId, lastPostedVersion } = require("../config/versionData.json");
-exports.announcementsChannelId = announcementsChannelId;
-exports.lastPostedVersion = lastPostedVersion;
 
-exports.MAX_EMBED_TITLE_LENGTH = 256;
+module.exports = {
+	// Conversion Factors
+	DAY_IN_MS: 86400000,
+	YEAR_IN_MS: 31556926000,
 
-exports.COMPANY_XP_COEFFICIENT = 3;
-exports.GLOBAL_MAX_BOUNTY_SLOTS = 10;
+	// JS Constants
+	MAX_SET_TIMEOUT: 2 ** 31 - 1,
+
+	// Discord Constants
+	MAX_EMBED_TITLE_LENGTH: 256,
+
+	// Config
+	testGuildId,
+	feedbackChannelId,
+	announcementsChannelId,
+	lastPostedVersion,
+
+	// Internal Constants
+	SAFE_DELIMITER: "→",
+	COMPANY_XP_COEFFICIENT: 3,
+	GLOBAL_MAX_BOUNTY_SLOTS: 10
+};
