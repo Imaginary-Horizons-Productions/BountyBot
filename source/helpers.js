@@ -1,5 +1,6 @@
 const { database } = require("../database");
-const { Guild, AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
+const { Guild, AutoModerationActionType, GuildMember, TextChannel, EmbedBuilder, GuildTextThreadManager } = require("discord.js");
+const { Company } = require("./models/companies/Company");
 const { CompanyRank } = require("./models/companies/CompanyRank");
 const { Op } = require("sequelize");
 
@@ -14,7 +15,7 @@ const CONGRATULATORY_PHRASES = [
 /** Return a random congragulatory phrase
  * @returns {string}
  */
-exports.congratulationBuilder = function () {
+function congratulationBuilder() {
 	return CONGRATULATORY_PHRASES[Math.floor(CONGRATULATORY_PHRASES.length * Math.random())];
 }
 
@@ -23,7 +24,7 @@ exports.congratulationBuilder = function () {
  * @param {number} denominator
  * @param {number} barLength
  */
-exports.generateTextBar = function (numerator, denominator, barLength) {
+function generateTextBar(numerator, denominator, barLength) {
 	const filledBlocks = Math.floor(barLength * numerator / denominator);
 	let bar = "";
 	for (let i = 0; i < barLength; i++) {
@@ -53,7 +54,7 @@ const NUMBER_EMOJI = {
  * @param {number} number
  * @returns {string}
  */
-exports.getNumberEmoji = function (number) {
+function getNumberEmoji(number) {
 	if (number in NUMBER_EMOJI) {
 		return NUMBER_EMOJI[number];
 	} else {
@@ -66,7 +67,7 @@ exports.getNumberEmoji = function (number) {
  * @param {"w" | "d" | "h" | "m" | "s" | "ms"} startingUnit
  * @param {"w" | "d" | "h" | "m" | "s" | "ms"} resultUnit
  */
-exports.timeConversion = function (value, startingUnit, resultUnit) {
+function timeConversion(value, startingUnit, resultUnit) {
 	const unknownUnits = [];
 	let msPerStartUnit = 1;
 	switch (startingUnit.toLowerCase()) {
@@ -116,7 +117,7 @@ exports.timeConversion = function (value, startingUnit, resultUnit) {
  * @param {string} mentionsText
  * @param {string[]} exlcuedIds
  */
-exports.extractUserIdsFromMentions = function (mentionsText, exlcuedIds) {
+function extractUserIdsFromMentions(mentionsText, exlcuedIds) {
 	const idRegExp = RegExp(/<@(\d+)>/, "g");
 	const ids = [];
 	let results;
@@ -208,7 +209,7 @@ async function calculateRanks(seasonId, allHunters, ranks) {
  * @param {boolean} force
  * @returns an array of rank and placement update strings
  */
-exports.getRankUpdates = async function (guild) {
+async function getRankUpdates(guild) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
 	const ranks = await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
@@ -252,7 +253,12 @@ exports.getRankUpdates = async function (guild) {
 	});
 }
 
-exports.generateBountyBoardThread = function (threadManager, embeds, company) {
+/**
+ * @param {GuildTextThreadManager} threadManager
+ * @param {EmbedBuilder[]} embeds
+ * @param {Company} company
+ */
+function generateBountyBoardThread(threadManager, embeds, company) {
 	return threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds }
@@ -271,7 +277,7 @@ exports.generateBountyBoardThread = function (threadManager, embeds, company) {
  * @param {string} context
  * @returns whether or not any of the texts included something the auto mod blocks as a message
  */
-exports.checkTextsInAutoMod = async function (channel, member, texts, context) {
+async function checkTextsInAutoMod(channel, member, texts, context) {
 	const autoModRules = await channel.guild.autoModerationRules.fetch();
 	let shouldBlockMessage = false;
 	for (const rule of autoModRules.values()) {
@@ -315,3 +321,14 @@ exports.checkTextsInAutoMod = async function (channel, member, texts, context) {
 	}
 	return shouldBlockMessage;
 }
+
+module.exports = {
+	congratulationBuilder,
+	generateTextBar,
+	getNumberEmoji,
+	timeConversion,
+	extractUserIdsFromMentions,
+	getRankUpdates,
+	generateBountyBoardThread,
+	checkTextsInAutoMod
+};

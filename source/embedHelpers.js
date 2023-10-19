@@ -38,17 +38,15 @@ const applicationSpecificTips = [
 ];
 const tipPool = applicationSpecificTips.concat(applicationSpecificTips, discordTips);
 
-exports.ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };
-
 /** twice as likely to roll an application specific tip as a discord tip */
-exports.randomFooterTip = function () {
+function randomFooterTip() {
 	return tipPool[Math.floor(Math.random() * tipPool.length)];
 }
 
 /**
  * @param {Guild} guild
  */
-exports.buildCompanyStatsEmbed = async function (guild) {
+async function buildCompanyStatsEmbed(guild) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
 	const seasonParticipants = (await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] })).map(participation => participation.Hunter);
 	const [currentSeason, lastSeason] = await database.models.Season.findAll({ where: { id: { [Op.in]: [company.seasonId, company.lastSeasonId] } }, order: [["createdAt", "DESC"]] });
@@ -63,7 +61,7 @@ exports.buildCompanyStatsEmbed = async function (guild) {
 	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
 	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(exports.ihpAuthorPayload)
+		.setAuthor(module.exports.ihpAuthorPayload)
 		.setTitle(`${guild.name} is __Level ${company.level}__`)
 		.setThumbnail(guild.iconURL())
 		.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
@@ -72,14 +70,14 @@ exports.buildCompanyStatsEmbed = async function (guild) {
 			{ name: "Participation", value: `${seasonParticipants.length} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
 			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
 		)
-		.setFooter(exports.randomFooterTip())
+		.setFooter(randomFooterTip())
 		.setTimestamp()
 }
 
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Guild} guild
  */
-exports.buildSeasonalScoreboardEmbed = async function (guild) {
+async function buildSeasonalScoreboardEmbed(guild) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
 	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] });
 
@@ -100,18 +98,18 @@ exports.buildSeasonalScoreboardEmbed = async function (guild) {
 	}
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(exports.ihpAuthorPayload)
+		.setAuthor(module.exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Season Scoreboard")
 		.setDescription(description || "No Bounty Hunters yet…")
-		.setFooter(exports.randomFooterTip())
+		.setFooter(randomFooterTip())
 		.setTimestamp();
 }
 
 /** An overall scoreboard orders a company's hunters by total xp
  * @param {Guild} guild
  */
-exports.buildOverallScoreboardEmbed = async function (guild) {
+async function buildOverallScoreboardEmbed(guild) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
@@ -131,18 +129,18 @@ exports.buildOverallScoreboardEmbed = async function (guild) {
 	}
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(exports.ihpAuthorPayload)
+		.setAuthor(module.exports.ihpAuthorPayload)
 		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Scoreboard")
 		.setDescription(description || "No Bounty Hunters yet...")
-		.setFooter(exports.randomFooterTip())
+		.setFooter(randomFooterTip())
 		.setTimestamp();
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project
  * @returns {MessageEmbed}
  */
-exports.buildVersionEmbed = async function () {
+async function buildVersionEmbed() {
 	const data = await fs.promises.readFile('./ChangeLog.md', { encoding: 'utf8' });
 	const dividerRegEx = /## .+ Version/g;
 	const changesStartRegEx = /\.\d+:/g;
@@ -157,7 +155,7 @@ exports.buildVersionEmbed = async function () {
 	let knownIssuesEnd = dividerRegEx.exec(data).index;
 
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(exports.ihpAuthorPayload)
+		.setAuthor(module.exports.ihpAuthorPayload)
 		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
 		.setURL('https://discord.gg/JxqE9EpKt9')
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')
@@ -179,12 +177,22 @@ exports.buildVersionEmbed = async function () {
  * @param {Company} company
  * @param {Guild} guild
  */
-exports.updateScoreboard = function (company, guild) {
+function updateScoreboard(company, guild) {
 	if (company.scoreboardChannelId && company.scoreboardMessageId) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
 		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await exports.buildSeasonalScoreboardEmbed(guild) : await exports.buildOverallScoreboardEmbed(guild)] });
+			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild) : await buildOverallScoreboardEmbed(guild)] });
 		});
 	}
 }
+
+module.exports = {
+	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
+	randomFooterTip,
+	buildCompanyStatsEmbed,
+	buildSeasonalScoreboardEmbed,
+	buildOverallScoreboardEmbed,
+	buildVersionEmbed,
+	updateScoreboard
+};
