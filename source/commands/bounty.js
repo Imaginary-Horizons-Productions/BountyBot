@@ -106,7 +106,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					const [hunter] = await database.models.Hunter.findOrCreate({
 						where: { userId, companyId: interaction.guildId },
 						defaults: { isRankEligible: interaction.member.manageable, User: { id: userId } },
-						include: database.models.Hunter.User
+						include: database.models.Hunter.User //TODO #110 crashes if user already exists, but hunter doesn't
 					});
 					const existingBounties = await database.models.Bounty.findAll({ where: { userId, companyId: interaction.guildId, state: "open" } });
 					const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
@@ -251,7 +251,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							const [hunter] = await database.models.Hunter.findOrCreate({
 								where: { userId: memberId, companyId: interaction.guildId },
 								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
-								include: database.models.Hunter.User
+								include: database.models.Hunter.User  //TODO #110 crashes if user already exists, but hunter doesn't
 							});
 							if (hunter.isBanned) {
 								bannedIds.push(memberId);
@@ -350,7 +350,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							const [hunter] = await database.models.Hunter.findOrCreate({
 								where: { userId: memberId, companyId: interaction.guildId },
 								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
-								include: database.models.Hunter.User
+								include: database.models.Hunter.User //TODO #110 crashes if user already exists, but hunter doesn't
 							});
 							if (!hunter.isBanned) {
 								validatedCompleterIds.push(memberId);

@@ -7,6 +7,7 @@ const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion } = require("./constants.js");
 const { buildVersionEmbed } = require("./embedHelpers.js");
+const { database } = require("../database.js");
 //#endregion
 
 //#region Executing Code
@@ -71,7 +72,7 @@ client.on(Events.ClientReady, () => {
 			}).catch(console.error);
 		});
 	}
-})
+});
 
 client.on(Events.InteractionCreate, interaction => {
 	if (interaction.isModalSubmit()) {
@@ -114,5 +115,25 @@ client.on(Events.InteractionCreate, interaction => {
 
 		interactionWrapper.execute(interaction, args);
 	}
-})
+});
+
+client.on(Events.GuildDelete, guild => {
+	database.models.Hunter.destroy({ where: { companyId: guild.id } });
+	database.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
+		toasts.forEach(toast => {
+			database.models.ToastRecipient.destroy({ where: { toastId: toast.id } });
+			database.models.ToastSeconding.destroy({ where: { toastId: toast.id } });
+			toast.destroy();
+		})
+	});
+
+	database.models.Bounty.destroy({ where: { companyId: guild.id } });
+	database.models.Completion.destroy({ where: { companyId: guild.id } });
+
+	database.models.SeasonParticipation.destroy({ where: { companyId: guild.id } });
+	database.models.Season.destroy({ where: { companyId: guild.id } });
+
+	database.models.CompanyRank.destroy({ where: { companyId: guild.id } });
+	database.models.Company.destroy({ where: { id: guild.id } });
+});
 //#endregion

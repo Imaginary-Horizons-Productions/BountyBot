@@ -100,7 +100,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
 				database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(async ([company]) => {
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id } }, include: database.models.Hunter.User });
+					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id } }, include: database.models.Hunter.User }); //TODO #110 crashes if user already exists, but hunter doesn't
 					let isDisqualification;
 					if (hunter.seasonParticipationId) {
 						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
