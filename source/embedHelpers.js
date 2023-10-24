@@ -45,9 +45,10 @@ function randomFooterTip() {
 
 /** @param {Guild} guild */
 async function buildCompanyStatsEmbed(guild) {
-	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
-	const seasonParticipants = (await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] })).map(participation => participation.Hunter);
-	const [currentSeason, lastSeason] = await database.models.Season.findAll({ where: { id: { [Op.in]: [company.seasonId, company.lastSeasonId] } }, order: [["createdAt", "DESC"]] });
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
+	const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
+	const lastSeason = await database.models.Season.findOne({ where: { companyId: guild.id, isPreviousSeason: true } });
+	const seasonParticipants = (await database.models.SeasonParticipation.findAll({ where: { seasonId: currentSeason.id }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] })).map(participation => participation.Hunter);
 	const companyXP = await company.xp;
 	const currentSeasonXP = await currentSeason.totalXP;
 	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
@@ -76,8 +77,9 @@ async function buildCompanyStatsEmbed(guild) {
  * @param {Guild} guild
  */
 async function buildSeasonalScoreboardEmbed(guild) {
-	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
-	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] });
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
+	const [season] = await database.models.Season.findOrCreate({ where: { companyId: company.id, isCurrentSeason: true } });
+	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id }, include: database.models.SeasonParticipation.Hunter, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);

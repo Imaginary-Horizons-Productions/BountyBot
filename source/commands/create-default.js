@@ -57,7 +57,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 					defaultForumLayout: ForumLayoutType.ListView,
 					reason: `/create-default bounty-board-forum by ${interaction.user}`
 				}).then(async bountyBoard => {
-					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
+					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 
 					company.bountyBoardId = bountyBoard.id;
 
@@ -111,7 +111,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 					],
 					reason: `/create-default scoreboard-reference by ${interaction.user}`
 				}).then(async scoreboard => {
-					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
+					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 					const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 					scoreboard.send({
 						embeds: [await buildScoreboardEmbed(interaction.guild, isSeasonal)]
@@ -164,7 +164,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 					const varianceThresholds = [2.5, 1, 0, -3];
 					const rankmojis = ["🏆", "🥇", "🥈", "🥉"];
 
-					database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(() => {
+					database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(() => {
 						database.models.CompanyRank.bulkCreate(roles.map((role, index) => ({
 							companyId: interaction.guildId,
 							varianceThreshold: varianceThresholds[index],

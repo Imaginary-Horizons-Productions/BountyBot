@@ -99,7 +99,8 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 				break;
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(async ([company]) => {
+				database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(async ([company]) => {
+					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id } }, include: database.models.Hunter.User }); //TODO #110 crashes if user already exists, but hunter doesn't
 					let isDisqualification;
 					if (hunter.seasonParticipationId) {
@@ -111,7 +112,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 						const seasonParticpation = await database.models.SeasonParticipation.create({
 							userId: hunter.userId,
 							companyId: company.id,
-							seasonId: company.seasonId,
+							seasonId: season.id,
 							isRankDisqualified: true
 						});
 						hunter.seasonParticipationId = seasonParticpation.id;
@@ -139,14 +140,14 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 					hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
 					if (hunter.seasonParticipationId) {
 						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
-						seasonParticipation.decrement("xp");
+						seasonParticipation.decrement("xp", { by: penaltyValue });
 					} else {
-						const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
+						const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 						const seasonParticpation = await database.models.SeasonParticipation.create({
 							userId: hunter.userId,
-							companyId: company.id,
-							seasonId: company.seasonId,
-							xp: -1
+							companyId: interaction.guildId,
+							seasonId: season.id,
+							xp: -1 * penaltyValue
 						});
 						hunter.seasonParticipationId = seasonParticpation.id;
 						hunter.save();

@@ -25,11 +25,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const seasonParticipation = await database.models.SeasonParticipation.findByPk(poster.seasonParticipationId)
 					seasonParticipation.decrement("xp");
 				} else {
-					const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
+					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 					const seasonParticpation = await database.models.SeasonParticipation.create({
 						userId: poster.userId,
-						companyId: company.id,
-						seasonId: company.seasonId,
+						companyId: interaction.guildId,
+						seasonId: season.id,
 						xp: -1
 					});
 					poster.seasonParticipationId = seasonParticpation.id;

@@ -117,8 +117,8 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		let rewardedRecipients = [];
 		let critValue = 0;
 		//TODO #96 combine fetch and toastsRaised increment with upsert?
-		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
-		const season = await database.models.Season.findByPk(company.seasonId);
+		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		season.increment("toastsRaised");
 		const [sender] = await database.models.Hunter.findOrCreate({
 			where: { userId: interaction.user.id, companyId: interaction.guildId },

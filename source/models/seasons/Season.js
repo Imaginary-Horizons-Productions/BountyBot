@@ -13,6 +13,14 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
+		isCurrentSeason: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: true,
+		},
+		isPreviousSeason: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false,
+		},
 		totalXP: {
 			type: DataTypes.VIRTUAL,
 			async get() {

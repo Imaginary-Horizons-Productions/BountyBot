@@ -41,7 +41,8 @@ exports.Hunter = class extends Model {
 		if (this.seasonParticipationId) {
 			seasonParticipation = await database.models.SeasonParticipation.findByPk(this.seasonParticipationId);
 		} else {
-			seasonParticipation = await database.models.SeasonParticipation.create({ seasonId: company.seasonId, companyId: company.id, userId: this.userId });
+			const [season] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
+			seasonParticipation = await database.models.SeasonParticipation.create({ seasonId: season.id, companyId: guild.id, userId: this.userId });
 			this.seasonParticipationId = seasonParticipation.id;
 		}
 		seasonParticipation.increment({ xp: totalPoints });

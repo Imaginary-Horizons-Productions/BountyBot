@@ -22,7 +22,10 @@ module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, boun
 				database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });
 				interaction.reply({ content: "Resetting bounty hunter stats has begun.", ephemeral: true });
 				database.models.Company.findByPk(interaction.guildId).then(async company => {
-					await database.models.SeasonParticipation.destroy({ where: { seasonId: company.seasonId } });
+					const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+					if (season) {
+						await database.models.SeasonParticipation.destroy({ where: { seasonId: season.id } });
+					}
 					updateScoreboard(company, interaction.guild);
 					interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);
 				});

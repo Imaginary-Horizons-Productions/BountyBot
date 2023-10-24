@@ -122,17 +122,11 @@ exports.database.authenticate().then(() => {
 		foreignKey: "seconderId"
 	});
 
-	Company.Season = Company.belongsTo(Season, {
-		foreignKey: "seasonId"
+	Season.Company = Season.belongsTo(Company, {
+		foreignKey: "companyId"
 	})
-	Season.Company = Season.hasOne(Company, {
-		foreignKey: "seasonId"
-	})
-	Company.LastSeason = Company.belongsTo(Season, {
-		foreignKey: "lastSeasonId"
-	})
-	Season.Company = Season.hasOne(Company, {
-		foreignKey: "lastSeasonId"
+	Company.Seasons = Company.hasMany(Season, {
+		foreignKey: "companyId"
 	})
 
 	Hunter.SeasonParticipation = Hunter.belongsTo(SeasonParticpation, {

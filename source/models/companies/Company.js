@@ -85,12 +85,6 @@ exports.initModel = function (sequelize) {
 		},
 		nextRaffleString: {
 			type: DataTypes.STRING
-		},
-		seasonId: {
-			type: DataTypes.UUID
-		},
-		lastSeasonId: {
-			type: DataTypes.UUID
 		}
 	}, {
 		sequelize,

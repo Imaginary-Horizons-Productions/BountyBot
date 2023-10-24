@@ -116,7 +116,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 							}
 						}
 
-						const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
+						const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 						const bounty = await database.models.Bounty.create(rawBounty);
 
 						// post in bounty board forum

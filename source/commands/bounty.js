@@ -101,7 +101,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
-				database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season }).then(async ([{ maxSimBounties }]) => {
+				database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(async ([{ maxSimBounties }]) => {
 					const userId = interaction.user.id;
 					const [hunter] = await database.models.Hunter.findOrCreate({
 						where: { userId, companyId: interaction.guildId },
@@ -328,7 +328,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					// poster guaranteed to exist, creating a bounty gives 1 XP
 					const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 					const company = await database.models.Company.findByPk(interaction.guildId);
-					const season = await database.models.Season.findByPk(company.seasonId);
+					const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 					const bountyValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount) * company.eventMultiplier;
 
 					const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
