@@ -1,5 +1,5 @@
-exports.authPath = "../config/auth.json";
-const { testGuildId, feedbackChannelId } = require(exports.authPath);
+const authPath = "../config/auth.json";
+const { testGuildId, feedbackChannelId } = require(authPath);
 const { announcementsChannelId, lastPostedVersion } = require("../config/versionData.json");
 
 module.exports = {
@@ -14,6 +14,7 @@ module.exports = {
 	MAX_EMBED_TITLE_LENGTH: 256,
 
 	// Config
+	authPath,
 	testGuildId,
 	feedbackChannelId,
 	announcementsChannelId,
