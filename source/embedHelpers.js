@@ -84,10 +84,10 @@ async function buildSeasonalScoreboardEmbed(guild) {
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	const scorelines = participations.map(async participation => {
+	const scorelines = await Promise.all(participations.map(async participation => {
 		const hunter = await participation.hunter;
 		return `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`;
-	});
+	}));
 	let description = "";
 	const andMore = "…and more";
 	const maxDescriptionLength = 2048 - andMore.length;
