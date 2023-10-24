@@ -241,7 +241,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 					}
 
 					const company = await database.models.Company.findByPk(interaction.guildId);
-					const season = await database.models.Season.findByPk(company.seasonId);
+					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 
 					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 
