@@ -4,20 +4,18 @@ exports.SeasonParticpation = class extends Model { }
 
 exports.initModel = function (sequelize) {
 	exports.SeasonParticpation.init({
-		id: {
-			primaryKey: true,
-			type: DataTypes.UUID,
-			defaultValue: DataTypes.UUIDV4
-		},
 		userId: {
+			primaryKey: true,
 			type: DataTypes.STRING,
 			allowNull: false
 		},
 		companyId: {
+			primaryKey: true,
 			type: DataTypes.STRING,
 			allowNull: false
 		},
 		seasonId: {
+			primaryKey: true,
 			type: DataTypes.UUID,
 			allowNull: false
 		},

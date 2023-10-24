@@ -99,34 +99,20 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 				break;
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
-				database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(async ([company]) => {
-					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } }).then(async ([season]) => {
 					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id } }, include: database.models.Hunter.User }); //TODO #110 crashes if user already exists, but hunter doesn't
-					let isDisqualification;
-					if (hunter.seasonParticipationId) {
-						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
+					const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { isRankDisqualified: true } });
+					if (!participationCreated) {
 						seasonParticipation.isRankDisqualified = !seasonParticipation.isRankDisqualified;
-						isDisqualification = seasonParticipation.isRankDisqualified;
 						seasonParticipation.save();
-					} else {
-						const seasonParticpation = await database.models.SeasonParticipation.create({
-							userId: hunter.userId,
-							companyId: company.id,
-							seasonId: season.id,
-							isRankDisqualified: true
-						});
-						hunter.seasonParticipationId = seasonParticpation.id;
-						hunter.save();
-						isDisqualification = true;
 					}
-					if (isDisqualification) {
+					if (participationCreated || seasonParticipation.isRankDisqualified) {
 						hunter.increment("seasonDQCount");
 					}
-					hunter.save();
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `<@${member.id}> has been ${isDisqualification ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
 					member.send(`You have been ${isDisqualification ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
-				})
+				});
 				break;
 			case subcommands[2].name: // penalty
 				member = interaction.options.getMember("bounty-hunter");
@@ -138,19 +124,10 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 					const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
 					hunter.decrement({ xp: penaltyValue });
 					hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
-					if (hunter.seasonParticipationId) {
-						const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId);
+					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+					const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 * penaltyValue } });
+					if (!participationCreated) {
 						seasonParticipation.decrement("xp", { by: penaltyValue });
-					} else {
-						const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-						const seasonParticpation = await database.models.SeasonParticipation.create({
-							userId: hunter.userId,
-							companyId: interaction.guildId,
-							seasonId: season.id,
-							xp: -1 * penaltyValue
-						});
-						hunter.seasonParticipationId = seasonParticpation.id;
-						hunter.save();
 					}
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, ephemeral: true });

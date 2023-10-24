@@ -29,7 +29,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				endingSeason.save();
 			}
 			await database.models.Season.create({ companyId: interaction.guildId });
-			await database.models.Hunter.update({ seasonParticipationId: null, rank: null, lastRank: null, nextRankXP: null }, { where: { companyId: company.id } });
+			await database.models.Hunter.update({ rank: null, lastRank: null, nextRankXP: null }, { where: { companyId: company.id } });
 			getRankUpdates(interaction.guild);
 			interaction.reply(company.sendAnnouncement({ content: "A new season has started, ranks and placements have been reset!", embeds: [embed] }));
 		})

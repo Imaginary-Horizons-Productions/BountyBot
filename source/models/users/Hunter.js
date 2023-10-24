@@ -29,23 +29,19 @@ exports.Hunter = class extends Model {
 	 * @param {boolean} ignoreMultiplier
 	 * @returns {string} level-up text
 	 */
-	async addXP(guild, points, ignoreMultiplier) {
-		const company = await database.models.Company.findByPk(guild.id);
+	async addXP(guild, points, ignoreMultiplier) { //TODONOW switch guild to guildName
+		const company = await database.models.Company.findByPk(this.companyId);
 		const totalPoints = points * (!ignoreMultiplier ? company.eventMultiplier : 1);
 
 		const previousLevel = this.level;
 		const previousCompanyLevel = company.level;
 
 		this.xp += totalPoints;
-		let seasonParticipation;
-		if (this.seasonParticipationId) {
-			seasonParticipation = await database.models.SeasonParticipation.findByPk(this.seasonParticipationId);
-		} else {
-			const [season] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
-			seasonParticipation = await database.models.SeasonParticipation.create({ seasonId: season.id, companyId: guild.id, userId: this.userId });
-			this.seasonParticipationId = seasonParticipation.id;
+		const [season] = await database.models.Season.findOrCreate({ where: { companyId: this.companyId, isCurrentSeason: true } });
+		const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { companyId: this.companyId, userId: this.userId, seasonId: season.id }, defaults: { xp: totalPoints } });
+		if (!participationCreated) {
+			seasonParticipation.increment({ xp: totalPoints });
 		}
-		seasonParticipation.increment({ xp: totalPoints });
 
 		this.level = Math.floor(Math.sqrt(this.xp / company.xpCoefficient) + 1);
 		this.save();
@@ -128,9 +124,6 @@ exports.initModel = function (sequelize) {
 		xp: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
-		},
-		seasonParticipationId: {
-			type: DataTypes.UUID
 		},
 		isRankEligible: {
 			type: DataTypes.BOOLEAN,
