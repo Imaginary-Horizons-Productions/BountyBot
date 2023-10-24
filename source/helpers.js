@@ -227,7 +227,7 @@ async function getRankUpdates(guild) {
 			}
 		}
 		const updatedMembers = await guild.members.fetch({ user: userIdsWithChangedRanks });
-		const updatedParticipationsMap = (await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: userIdsWithChangedRanks } }, include: database.models.SeasonParticipation.Hunter }))
+		const updatedParticipationsMap = (await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: userIdsWithChangedRanks } } }))
 			.reduce((map, participation) => {
 				map[participation.userId] = participation;
 				return map;
@@ -236,7 +236,7 @@ async function getRankUpdates(guild) {
 			if (member.manageable) {
 				await member.roles.remove(roleIds);
 				const participation = updatedParticipationsMap[member.id];
-				if (participation.Hunter.isRankEligible && !participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+				if ((await participation.hunter).isRankEligible && !participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
 					let destinationRole;
 					const rankRoleId = ranks[hunter.rank]?.roleId;
 					if (rankRoleId) {

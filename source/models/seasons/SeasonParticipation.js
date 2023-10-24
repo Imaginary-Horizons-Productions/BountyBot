@@ -19,6 +19,12 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.UUID,
 			allowNull: false
 		},
+		hunter: {
+			type: DataTypes.VIRTUAL,
+			async get() {
+				return await sequelize.models.Hunter.findOne({ where: { userId: this.userId, companyId: this.companyId } });
+			}
+		},
 		isRankDisqualified: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
