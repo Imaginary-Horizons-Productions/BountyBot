@@ -244,7 +244,7 @@ async function getRankUpdates(guild) {
 						destinationRole = await guild.roles.fetch(rankRoleId);
 					}
 					if (destinationRole && hunter.rank < hunter.lastRank) { // Note: higher ranks are lower value
-						outMessages.push(`${exports.congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
+						outMessages.push(`${congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
 					}
 				}
 			}
