@@ -29,7 +29,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		seconder.toastSeconded++;
 
 		const recipientIds = (await originalToast.recipients).map(reciept => reciept.recipientId);
-		recipientIds.push(originalToast.userId);
+		recipientIds.push(originalToast.senderId);
 		const levelTexts = [];
 		for (const userId of recipientIds) {
 			if (userId != interaction.user.id) {
