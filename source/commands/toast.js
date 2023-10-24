@@ -100,17 +100,16 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			}
 		}
 		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - DAY_IN_MS));
-		const hunterIdsToastedInLastDay = await toastsInLastDay.reduce(async (listPromise, toast) => {
-			const list = await listPromise;
+		const hunterIdsToastedInLastDay = toastsInLastDay.reduce((idSet, toast) => {
 			toast.ToastRecipients.forEach(reciept => {
-				if (!list.has(reciept.recipientId)) {
-					list.add(reciept.recipientId);
+				if (!idSet.has(reciept.recipientId)) {
+					idSet.add(reciept.recipientId);
 				}
 			})
-			return list;
-		}, new Promise((resolve) => { resolve(new Set()) }));
+			return idSet;
+		}, new Set());
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, include: database.models.Toast.ToastRecipients, order: [["createdAt", "DESC"]], limit: 5 });
 		const staleToastees = lastFiveToasts.reduce((list, toast) => {
 			return list.concat(toast.ToastRecipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
 		}, []);
