@@ -210,7 +210,7 @@ async function calculateRanks(seasonId, allHunters, ranks) {
  * @returns an array of rank and placement update strings
  */
 async function getRankUpdates(guild) {
-	const season = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
+	const [season] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
 	const ranks = await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
 
