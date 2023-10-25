@@ -36,6 +36,10 @@ exports.initModel = function (sequelize) {
 		placement: {
 			type: DataTypes.INTEGER,
 			defaultValue: 0
+		},
+		dqCount: {
+			type: DataTypes.INTEGER,
+			defaultValue: 0
 		}
 	}, {
 		sequelize,

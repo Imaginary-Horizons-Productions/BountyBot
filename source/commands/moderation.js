@@ -100,14 +100,13 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 			case subcommands[1].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
 				database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } }).then(async ([season]) => {
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable, User: { id: member.id } }, include: database.models.Hunter.User }); //TODO #110 crashes if user already exists, but hunter doesn't
 					const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { isRankDisqualified: true } });
 					if (!participationCreated) {
 						seasonParticipation.isRankDisqualified = !seasonParticipation.isRankDisqualified;
 						seasonParticipation.save();
 					}
 					if (participationCreated || seasonParticipation.isRankDisqualified) {
-						hunter.increment("seasonDQCount");
+						seasonParticipation.increment("dqCount");
 					}
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `<@${member.id}> has been ${isDisqualification ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });

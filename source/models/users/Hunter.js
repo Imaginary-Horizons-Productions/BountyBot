@@ -175,10 +175,6 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
 		},
-		seasonDQCount: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
 		penaltyCount: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
