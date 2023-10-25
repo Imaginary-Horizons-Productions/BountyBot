@@ -138,13 +138,9 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 								}).then(thread => {
 									bounty.postingId = thread.id;
 									bounty.save()
-								}).catch(error => {
-									if (error.code == 10003) {
-										interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
-									} else {
-										throw error;
-									}
-								})
+								});
+							} else {
+								interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
 							}
 						});
 					}).catch(console.error)

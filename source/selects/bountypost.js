@@ -154,13 +154,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 					}).then(posting => {
 						bounty.postingId = posting.id;
 						bounty.save()
-					}).catch(error => {
-						if (error.code == 10003) {
-							modalSubmission.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
-						} else {
-							throw error;
-						}
-					})
+					});
+				} else {
+					interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
 				}
 			});
 		}).catch(console.error);
