@@ -137,6 +137,8 @@ the type of feedback you'd like to provide
 > Cooldown: 3 second(s)
 
 BountyBot moderation tools
+#### /moderation user-report
+Get the BountyBot moderation stats for a user
 #### /moderation take-down
 Take down another user's bounty
 #### /moderation season-disqualify
