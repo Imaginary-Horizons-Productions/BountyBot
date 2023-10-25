@@ -109,8 +109,8 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 						seasonParticipation.increment("dqCount");
 					}
 					getRankUpdates(interaction.guild);
-					interaction.reply({ content: `<@${member.id}> has been ${isDisqualification ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
-					member.send(`You have been ${isDisqualification ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+					interaction.reply({ content: `<@${member.id}> has been ${seasonParticipation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
+					member.send(`You have been ${seasonParticipation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				});
 				break;
 			case subcommands[2].name: // penalty
