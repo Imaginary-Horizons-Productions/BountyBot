@@ -65,31 +65,6 @@ exports.Hunter = class extends Model {
 		return levelText;
 	}
 
-	// myModDetails(guild, member, { maxSimBounties, pinChannelId }, lastFiveBounties) {
-	// 	const { prefix, text, url } = tipBuilder(maxSimBounties, guild.channels.resolve(pinChannelId), true);
-	// 	let embed = new MessageEmbed().setColor(member.displayColor)
-	// 		.setAuthor({ name: prefix + text, iconURL: guild.client.user.displayAvatarURL(), url })
-	// 		.setTitle(`Moderation Stats: ${member.user.tag}`)
-	// 		.setThumbnail(member.user.avatarURL())
-	// 		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
-	// 		.addField(`Bans`, `Currently Banned: ${this.isBanned ? "Yes" : "No"}\nHas Been Banned: ${this.hasBeenBanned ? "Yes" : "No"}`, true)
-	// 		.addField(`Disqualifications`, `${this.seasonDQCount} season DQs`, true)
-	// 		.addField(`Penalties`, `${this.penaltyCount} penalties (${this.penaltyPointCount} points total)`, true)
-	// 		.addField(`Taboo Filter`, `${this.tabooCount} infractions`, true)
-	// 		.setFooter({ text: guild.name, iconURL: guild.iconURL() })
-	// 		.setTimestamp();
-
-	// 	let bountyHistory = "";
-	// 	lastFiveBounties.forEach(bounty => {
-	// 		bountyHistory += `__${bounty.title}__ ${bounty.description}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${bounty.completers.join('>, <@')}>\n\n`;
-	// 	})
-
-	// 	if (bountyHistory === "") {
-	// 		bountyHistory = "No recent bounties";
-	// 	}
-	// 	return embed.addField("Last 5 Completed Bounties Created by this User", bountyHistory);
-	// }
-
 	levelUpReward(level, maxSlots, futureReward = true) {
 		let text = "";
 		if (level % 2) {
@@ -160,10 +135,6 @@ exports.initModel = function (sequelize) {
 			defaultValue: 0
 		},
 		toastsReceived: {
-			type: DataTypes.BIGINT,
-			defaultValue: 0
-		},
-		tabooCount: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},

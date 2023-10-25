@@ -1,7 +1,6 @@
 const { EmbedBuilder, Guild, Colors } = require("discord.js");
 const fs = require("fs");
 const { database } = require("../database");
-const { Op } = require("sequelize");
 const { Hunter } = require("./models/users/Hunter");
 const { Company } = require("./models/companies/Company");
 const { COMPANY_XP_COEFFICIENT } = require("./constants");
@@ -176,6 +175,39 @@ async function buildVersionEmbed() {
 	return embed.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [{bot} on GitHub]( url goes here )" });
 }
 
+/**
+ * @param {Guild} guild
+ * @param {GuildMember} member
+ * @param {Hunter} hunter
+ */
+async function buildModStatsEmbed(guild, member, hunter) {
+	const embed = new EmbedBuilder().setColor(member.displayColor)
+		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setTitle(`Moderation Stats: ${member.user.tag}`)
+		.setThumbnail(member.user.avatarURL())
+		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
+		.addFields(
+			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
+			{ name: "Disqualifications", value: `${await database.models.SeasonParticipation.sum("dqCount", { where: { companyId: guild.id, userId: member.id } })} season DQs`, inline: true },
+			{ name: "Penalties", value: `${hunter.penaltyCount} penalties (${hunter.penaltyPointTotal} points total)`, inline: true }
+		)
+		.setFooter(randomFooterTip())
+		.setTimestamp();
+
+	let bountyHistory = "";
+	const lastFiveBounties = await database.models.Bounty.findAll({ where: { userId: member.id, companyId: guild.id, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5 });
+	lastFiveBounties.forEach(async bounty => {
+		const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+		bountyHistory += `__${bounty.title}__ ${bounty.description}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${completions.map(completion => completion.userId).join('>, <@')
+			}>\n\n`;
+	})
+
+	if (bountyHistory === "") {
+		bountyHistory = "No recent bounties";
+	}
+	return embed.addFields({ name: "Last 5 Completed Bounties Created by this User", value: bountyHistory });
+}
+
 /** If the guild has a scoreboard reference channel, update the embed in it
  * @param {Company} company
  * @param {Guild} guild
@@ -197,5 +229,6 @@ module.exports = {
 	buildSeasonalScoreboardEmbed,
 	buildOverallScoreboardEmbed,
 	buildVersionEmbed,
+	buildModStatsEmbed,
 	updateScoreboard
 };

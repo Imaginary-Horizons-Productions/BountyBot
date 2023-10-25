@@ -3,10 +3,23 @@ const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getNumberEmoji, getRankUpdates } = require('../helpers');
 const { SAFE_DELIMITER } = require('../constants');
+const { buildModStatsEmbed } = require('../embedHelpers');
 
 const mainId = "moderation";
 const options = [];
 const subcommands = [
+	{
+		name: "user-report",
+		description: "Get the BountyBot moderation stats for a user",
+		optionsInput: [
+			{
+				type: "User",
+				name: "user",
+				description: "The mention of the user",
+				required: true
+			}
+		]
+	},
 	{
 		name: "take-down",
 		description: "Take down another user's bounty",
@@ -66,8 +79,20 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 	(interaction) => {
 		let member;
 		switch (interaction.options.getSubcommand()) {
-			case subcommands[0].name: // take-down
-				const poster = interaction.options.getUser(subcommands[0].optionsInput[0].name);
+			case subcommands[0].name: // user-report
+				const member = interaction.options.getMember(subcommands[0].optionsInput[0].name);
+				database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: member.id } }).then((hunter) => {
+					if (!hunter) {
+						interaction.reply({ content: `${member} has not interacted with BountyBot on this server.`, ephemeral: true });
+						return;
+					}
+					buildModStatsEmbed(interaction.guild, member, hunter).then(embed => {
+						interaction.reply({ embeds: [embed], ephemeral: true });
+					})
+				});
+				break;
+			case subcommands[1].name: // take-down
+				const poster = interaction.options.getUser(subcommands[1].optionsInput[0].name);
 				database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } }).then(openBounties => {
 					const slotOptions = openBounties.map(bounty => {
 						return {
@@ -97,7 +122,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 					});
 				});
 				break;
-			case subcommands[1].name: // disqualify
+			case subcommands[2].name: // disqualify
 				member = interaction.options.getMember("bounty-hunter");
 				database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(async () => {
 					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
@@ -115,7 +140,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 					member.send(`You have been ${seasonParticipation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				});
 				break;
-			case subcommands[2].name: // penalty
+			case subcommands[3].name: // penalty
 				member = interaction.options.getMember("bounty-hunter");
 				database.models.Hunter.findOne({ where: { userId: member.id, companyId: interaction.guildId } }).then(async hunter => {
 					if (!hunter) {
