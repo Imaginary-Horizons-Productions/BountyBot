@@ -116,7 +116,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 							}
 						}
 
-						const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
+						const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 						const bounty = await database.models.Bounty.create(rawBounty);
 
 						// post in bounty board forum
@@ -138,13 +138,9 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 								}).then(thread => {
 									bounty.postingId = thread.id;
 									bounty.save()
-								}).catch(error => {
-									if (error.code == 10003) {
-										interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
-									} else {
-										throw error;
-									}
-								})
+								});
+							} else {
+								interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
 							}
 						});
 					}).catch(console.error)
@@ -241,7 +237,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 					}
 
 					const company = await database.models.Company.findByPk(interaction.guildId);
-					const season = await database.models.Season.findByPk(company.seasonId);
+					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 
 					const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 

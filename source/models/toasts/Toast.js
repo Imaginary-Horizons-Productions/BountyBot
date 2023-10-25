@@ -18,18 +18,6 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		recipients: {
-			type: DataTypes.VIRTUAL,
-			async get() {
-				return await sequelize.models.ToastRecipient.findAll({ where: { toastId: this.id } });
-			}
-		},
-		rewardedRecipients: {
-			type: DataTypes.VIRTUAL,
-			async get() {
-				return await sequelize.models.ToastRecipient.findAll({ where: { toastId: this.id, isRewarded: true } });
-			}
-		},
 		text: {
 			type: DataTypes.STRING,
 			allowNull: false

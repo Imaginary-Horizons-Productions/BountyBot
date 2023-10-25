@@ -210,11 +210,11 @@ async function calculateRanks(seasonId, allHunters, ranks) {
  * @returns an array of rank and placement update strings
  */
 async function getRankUpdates(guild) {
-	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id }, defaults: { Season: { companyId: guild.id } }, include: database.models.Company.Season });
+	const [season] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
 	const ranks = await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
 
-	return calculateRanks(company.seasonId, allHunters, ranks).then(async (firstPlaceMessage) => {
+	return calculateRanks(season.id, allHunters, ranks).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 		const outMessages = [];
 		if (firstPlaceMessage) {
@@ -227,7 +227,7 @@ async function getRankUpdates(guild) {
 			}
 		}
 		const updatedMembers = await guild.members.fetch({ user: userIdsWithChangedRanks });
-		const updatedParticipationsMap = (await database.models.SeasonParticipation.findAll({ where: { seasonId: company.seasonId, userId: { [Op.in]: userIdsWithChangedRanks } }, include: database.models.SeasonParticipation.Hunter }))
+		const updatedParticipationsMap = (await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: userIdsWithChangedRanks } } }))
 			.reduce((map, participation) => {
 				map[participation.userId] = participation;
 				return map;
@@ -236,7 +236,7 @@ async function getRankUpdates(guild) {
 			if (member.manageable) {
 				await member.roles.remove(roleIds);
 				const participation = updatedParticipationsMap[member.id];
-				if (participation.Hunter.isRankEligible && !participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+				if ((await participation.hunter).isRankEligible && !participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
 					let destinationRole;
 					const rankRoleId = ranks[hunter.rank]?.roleId;
 					if (rankRoleId) {

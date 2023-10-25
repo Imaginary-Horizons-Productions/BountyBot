@@ -20,19 +20,10 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 		database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
 			hunter.decrement("xp");
-			if (hunter.seasonParticipationId) {
-				const seasonParticipation = await database.models.SeasonParticipation.findByPk(hunter.seasonParticipationId)
+			const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+			const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
+			if (!participationCreated) {
 				seasonParticipation.decrement("xp");
-			} else {
-				const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
-				const seasonParticpation = await database.models.SeasonParticipation.create({
-					userId: hunter.userId,
-					companyId: company.id,
-					seasonId: company.seasonId,
-					xp: -1
-				});
-				hunter.seasonParticipationId = seasonParticpation.id;
-				hunter.save();
 			}
 			getRankUpdates(interaction.guild);
 		})

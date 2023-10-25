@@ -86,39 +86,40 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
 
 		// Make database entities
-		const recentToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } } });
+		const recentToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } }, include: database.models.Toast.ToastRecipients });
 		let rewardsAvailable = 10;
 		let critToastsAvailable = 2;
 		for (const toast of recentToasts) {
-			rewardsAvailable -= (await toast.rewardedRecipients).length;
-			for (const reciept of await toast.recipients) {
+			for (const reciept of toast.ToastRecipients) {
+				if (reciept.isRewarded) {
+					rewardsAvailable--;
+				}
 				if (reciept.wasCrit) {
 					critToastsAvailable--;
 				}
 			}
 		}
 		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - DAY_IN_MS));
-		const hunterIdsToastedInLastDay = await toastsInLastDay.reduce(async (listPromise, toast) => {
-			const list = await listPromise;
-			(await toast.recipients).forEach(reciept => {
-				if (!list.has(reciept.recipientId)) {
-					list.add(reciept.recipientId);
+		const hunterIdsToastedInLastDay = toastsInLastDay.reduce((idSet, toast) => {
+			toast.ToastRecipients.forEach(reciept => {
+				if (!idSet.has(reciept.recipientId)) {
+					idSet.add(reciept.recipientId);
 				}
 			})
-			return list;
-		}, new Promise((resolve) => { resolve(new Set()) }));
+			return idSet;
+		}, new Set());
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
-		const staleToastees = await lastFiveToasts.reduce(async (list, toast) => {
-			return (await list).concat((await toast.rewardedRecipients).map(reciept => reciept.recipientId));
-		}, new Promise((resolve) => { resolve([]) }));
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, include: database.models.Toast.ToastRecipients, order: [["createdAt", "DESC"]], limit: 5 });
+		const staleToastees = lastFiveToasts.reduce((list, toast) => {
+			return list.concat(toast.ToastRecipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
+		}, []);
 
 		const rawRecipients = [];
-		let rewardedRecipients = [];
+		const rewardedRecipients = [];
 		let critValue = 0;
 		//TODO #96 combine fetch and toastsRaised increment with upsert?
-		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId }, defaults: { Season: { companyId: interaction.guildId } }, include: database.models.Company.Season });
-		const season = await database.models.Season.findByPk(company.seasonId);
+		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		season.increment("toastsRaised");
 		const [sender] = await database.models.Hunter.findOrCreate({
 			where: { userId: interaction.user.id, companyId: interaction.guildId },

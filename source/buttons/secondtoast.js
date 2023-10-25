@@ -9,7 +9,7 @@ const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, [toastId]) => {
-		const originalToast = await database.models.Toast.findByPk(toastId);
+		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.ToastRecipients });
 		if (originalToast.userId == interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", ephemeral: true });
 			return;
@@ -28,7 +28,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		});
 		seconder.toastSeconded++;
 
-		const recipientIds = (await originalToast.recipients).map(reciept => reciept.recipientId);
+		const recipientIds = originalToast.ToastRecipients.map(reciept => reciept.recipientId);
 		recipientIds.push(originalToast.senderId);
 		const levelTexts = [];
 		for (const userId of recipientIds) {
@@ -49,10 +49,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, order: [["createdAt", "DESC"]], limit: 5 });
-		const staleToastees = await lastFiveToasts.reduce(async (list, toast) => {
-			return (await list).concat((await toast.rewardedRecipients).map(recipient => recipient.userId));
-		}, new Promise((resolve) => resolve([])));
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, include: database.models.Toast.ToastRecipients, order: [["createdAt", "DESC"]], limit: 5 });
+		const staleToastees = lastFiveToasts.reduce((list, toast) => {
+			return list.concat(toast.ToastRecipients.filter(reciept => reciept.isRewarded).map(recipient => recipient.userId));
+		}, []);
 
 		const wasCrit = false;
 		if (critSecondsAvailable > 0) {

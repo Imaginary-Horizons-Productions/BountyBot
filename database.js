@@ -30,7 +30,6 @@ exports.database.authenticate().then(() => {
 	initSeason(exports.database);
 	initSeasonParticipation(exports.database);
 
-	//TODO #91 prune associations (not all references need to be associations)
 	Company.CompanyRanks = Company.hasMany(CompanyRank, {
 		foreignKey: "companyId"
 	});
@@ -122,24 +121,32 @@ exports.database.authenticate().then(() => {
 		foreignKey: "seconderId"
 	});
 
-	Company.Season = Company.belongsTo(Season, {
-		foreignKey: "seasonId"
+	Season.Company = Season.belongsTo(Company, {
+		foreignKey: "companyId"
 	})
-	Season.Company = Season.hasOne(Company, {
-		foreignKey: "seasonId"
-	})
-	Company.LastSeason = Company.belongsTo(Season, {
-		foreignKey: "lastSeasonId"
-	})
-	Season.Company = Season.hasOne(Company, {
-		foreignKey: "lastSeasonId"
+	Company.Seasons = Company.hasMany(Season, {
+		foreignKey: "companyId"
 	})
 
-	Hunter.SeasonParticipation = Hunter.belongsTo(SeasonParticpation, {
-		foreignKey: "seasonParticipationId"
+	User.SeasonParticipations = User.hasMany(SeasonParticpation, {
+		foreignKey: "userId"
 	})
-	SeasonParticpation.Hunter = SeasonParticpation.hasOne(Hunter, {
-		foreignKey: "seasonParticipationId"
+	SeasonParticpation.User = SeasonParticpation.belongsTo(User, {
+		foreignKey: "userId"
+	})
+
+	Company.SeasonParticipations = Company.hasMany(SeasonParticpation, {
+		foreignKey: "companyId"
+	})
+	SeasonParticpation.Company = SeasonParticpation.belongsTo(Company, {
+		foreignKey: "companyId"
+	})
+
+	Season.SeasonParticipations = Season.hasMany(SeasonParticpation, {
+		foreignKey: "seasonId"
+	})
+	SeasonParticpation.Season = SeasonParticpation.belongsTo(Season, {
+		foreignKey: "seasonId"
 	})
 
 	exports.database.sync();
