@@ -21,10 +21,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
+		await database.models.User.findOrCreate({ id: interaction.user.id });
 		const [seconder] = await database.models.Hunter.findOrCreate({
 			where: { userId: interaction.user.id, companyId: interaction.guildId },
-			defaults: { isRankEligible: interaction.member.manageable, User: { id: interaction.user.id } },
-			include: database.models.Hunter.User //TODO #110 crashes if user already exists, but hunter doesn't
+			defaults: { isRankEligible: interaction.member.manageable }
 		});
 		seconder.toastSeconded++;
 

@@ -259,10 +259,10 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 					for (const member of completerMembers) {
 						if (!member.user.bot) {
 							const memberId = member.id;
+							await database.models.User.findOrCreate({ where: { id: memberId } });
 							const [hunter] = await database.models.Hunter.findOrCreate({
 								where: { userId: memberId, companyId: interaction.guildId },
-								defaults: { isRankEligible: member.manageable, User: { id: memberId } },
-								include: database.models.Hunter.User //TODO #110 crashes if user already exists, but hunter doesn't
+								defaults: { isRankEligible: member.manageable }
 							});
 							if (!hunter.isBanned) {
 								validatedCompleterIds.push(memberId);
