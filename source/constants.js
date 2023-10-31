@@ -19,6 +19,7 @@ module.exports = {
 	feedbackChannelId,
 	announcementsChannelId,
 	lastPostedVersion,
+	premium: require("../config/premium.json"),
 
 	// Internal Constants
 	SAFE_DELIMITER: "→",

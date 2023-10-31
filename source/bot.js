@@ -5,7 +5,7 @@ const { readFile, writeFile } = require("fs").promises;
 const { getCommand, slashData } = require("./commands/_commandDictionary.js");
 const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
-const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion } = require("./constants.js");
+const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium } = require("./constants.js");
 const { buildVersionEmbed } = require("./embedHelpers.js");
 const { database } = require("../database.js");
 //#endregion
@@ -80,6 +80,11 @@ client.on(Events.InteractionCreate, interaction => {
 		return;
 	} else if (interaction.isCommand()) {
 		const command = getCommand(interaction.commandName);
+		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+			interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with \`/premium\`.`, ephemeral: true });
+			return;
+		}
+
 		const cooldownTimestamp = command.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 		if (cooldownTimestamp) {
 			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, ephemeral: true });
