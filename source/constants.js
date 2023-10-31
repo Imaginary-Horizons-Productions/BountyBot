@@ -6,6 +6,7 @@ module.exports = {
 	// Conversion Factors
 	DAY_IN_MS: 86400000,
 	YEAR_IN_MS: 31556926000,
+	ZERO_WIDTH_WHITE_SPACE: "\u200B",
 
 	// JS Constants
 	MAX_SET_TIMEOUT: 2 ** 31 - 1,

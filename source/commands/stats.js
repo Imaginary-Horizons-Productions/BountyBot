@@ -5,6 +5,7 @@ const { database } = require('../../database');
 const { generateTextBar } = require('../helpers');
 const { Hunter } = require('../models/users/Hunter');
 const { Op } = require('sequelize');
+const { ZERO_WIDTH_WHITE_SPACE } = require('../constants');
 
 const mainId = "stats";
 const options = [
@@ -58,7 +59,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 									{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
-									{ name: "\u200B", value: "\u200B" },
+									{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
 									{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised == 1 ? "" : "s"}`, inline: true },
 									{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded == 1 ? "" : "s"}`, inline: true },
 									{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived == 1 ? "" : "s"}`, inline: true },
@@ -104,11 +105,11 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								{ name: `Level ${hunter.level + 1} Reward`, value: hunter.levelUpReward(hunter.level + 1, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 2} Reward`, value: hunter.levelUpReward(hunter.level + 2, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 3} Reward`, value: hunter.levelUpReward(hunter.level + 3, maxSimBounties, true), inline: true },
-								{ name: "\u200B", value: "\u200B" },
+								{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
 								{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished == 1 ? 'y' : 'ies'}`, inline: true },
 								{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished == 1 ? 'y' : 'ies'}`, inline: true },
 								{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
-								{ name: "\u200B", value: "\u200B" },
+								{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
 								{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised == 1 ? "" : "s"}`, inline: true },
 								{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded == 1 ? "" : "s"}`, inline: true },
 								{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived == 1 ? "" : "s"}`, inline: true },
