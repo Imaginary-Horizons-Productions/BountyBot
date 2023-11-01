@@ -77,12 +77,15 @@ module.exports = new CommandWrapper(mainId, "Randomly select a bounty hunter fro
 			case subcommands[1].name: // by-level
 				const levelThreshold = interaction.options.getInteger("level");
 				database.models.Hunter.findAll({ where: { companyId: interaction.guildId, level: { [Op.gte]: levelThreshold } } }).then(eligibleHunters => {
-					if (eligibleHunters.length < 1) {
+					return interaction.guild.members.fetch({ user: eligibleHunters.map(hunter => hunter.userId) });
+				}).then((eligibleMembers) => {
+					const eligibleIds = eligibleMembers.filter(member => member.manageable).map(member => member.id);
+					if (eligibleIds.size < 1) {
 						interaction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above level ${levelThreshold}).`, ephemeral: true });
 						return;
 					}
-					const winner = eligibleHunters[Math.floor(Math.random() * eligibleHunters.length)];
-					interaction.reply(`The winner of this raffle is: <@${winner.userId}>`);
+					const winnerId = eligibleIds.at(Math.floor(Math.random() * eligibleIds.size));
+					interaction.reply(`The winner of this raffle is: <@${winnerId}>`);
 					database.models.Company.findByPk(interaction.guildId).then(company => {
 						company.update("nextRaffleString", null);
 					});

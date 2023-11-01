@@ -146,7 +146,7 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 	const rankableHunters = [];
 	for (const hunter of allHunters) {
 		const participation = particpationMap[hunter.userId];
-		if (hunter.isRankEligible && !participation?.isRankDisqualified) {
+		if (!participation?.isRankDisqualified) {
 			if (participation?.placement == 1) {
 				previousFirstPlaceId = hunter.userId;
 			}
@@ -165,7 +165,8 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 		return null;
 	}
 
-	const mean = (await company.Season.totalXP) / allHunters.length;
+	const [season] = await database.models.Season.findOrCreate({ where: { companyId: participations[0].companyId, isCurrentSeason: true } });
+	const mean = (await season.totalXP) / allHunters.length;
 	const stdDev = Math.sqrt(rankableHunters.reduce((total, hunter) => {
 		return total + (particpationMap[hunter.userId].xp - mean) ** 2
 	}, 0) / rankableHunters.length);
@@ -183,18 +184,19 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
 		}
 	}
-	let recentPlacement = allHunters.length - 1; // subtract 1 to adjust for array indexes starting from 0
+	let recentPlacement = allHunters.length;
 	let previousScore = 0;
 	let firstPlaceId;
-	for (let i = recentPlacement; i >= 0; i -= 1) {
-		let participation = participations[i];
+	// subtract 1 to adjust for array indexes starting from 0
+	for (let i = recentPlacement - 1; i >= 0; i -= 1) {
+		const participation = participations[i];
 		if (participation.xp > previousScore) {
 			previousScore = participation.xp;
 			recentPlacement = i + 1;
 			participation.placement = recentPlacement;
 		} else {
 			participation.placement = recentPlacement;
-			if (recentPlacement == 1 && participation.userId != previousFirstPlaceId) {
+			if (recentPlacement === 1 && participation.userId !== previousFirstPlaceId) {
 				// Feature: No first place message on first season XP of season (no one to compete with)
 				firstPlaceId = participation.userId;
 			}
@@ -236,7 +238,7 @@ async function getRankUpdates(guild) {
 			if (member.manageable) {
 				await member.roles.remove(roleIds);
 				const participation = updatedParticipationsMap[member.id];
-				if ((await participation.hunter).isRankEligible && !participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+				if (!participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
 					let destinationRole;
 					const rankRoleId = ranks[hunter.rank]?.roleId;
 					if (rankRoleId) {

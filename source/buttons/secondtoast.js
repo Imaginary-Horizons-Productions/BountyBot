@@ -23,8 +23,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [seconder] = await database.models.Hunter.findOrCreate({
-			where: { userId: interaction.user.id, companyId: interaction.guildId },
-			defaults: { isRankEligible: interaction.member.manageable }
+			where: { userId: interaction.user.id, companyId: interaction.guildId }
 		});
 		seconder.toastSeconded++;
 

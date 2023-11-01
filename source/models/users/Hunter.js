@@ -100,10 +100,6 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
-		isRankEligible: {
-			type: DataTypes.BOOLEAN,
-			allowNull: false
-		},
 		rank: {
 			type: DataTypes.INTEGER,
 			defaultValue: null

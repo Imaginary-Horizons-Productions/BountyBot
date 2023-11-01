@@ -261,8 +261,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 							const memberId = member.id;
 							await database.models.User.findOrCreate({ where: { id: memberId } });
 							const [hunter] = await database.models.Hunter.findOrCreate({
-								where: { userId: memberId, companyId: interaction.guildId },
-								defaults: { isRankEligible: member.manageable }
+								where: { userId: memberId, companyId: interaction.guildId }
 							});
 							if (!hunter.isBanned) {
 								validatedCompleterIds.push(memberId);

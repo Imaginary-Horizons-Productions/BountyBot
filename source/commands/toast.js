@@ -123,8 +123,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		season.increment("toastsRaised");
 		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [sender] = await database.models.Hunter.findOrCreate({
-			where: { userId: interaction.user.id, companyId: interaction.guildId },
-			defaults: { isRankEligible: interaction.member.manageable }
+			where: { userId: interaction.user.id, companyId: interaction.guildId }
 		});
 		sender.toastsRaised++;
 		const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
@@ -167,8 +166,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const levelTexts = [];
 		levelTexts.concat(await sender.addXP(interaction.guild, critValue, false));
 		for (const recipientId of rewardedRecipients) {
-			const member = await interaction.guild.members.fetch(recipientId);
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId }, defaults: { isRankEligible: member.manageable } });
+			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
 			levelTexts.concat(await hunter.addXP(interaction.guild, 1, false));
 		}
 
