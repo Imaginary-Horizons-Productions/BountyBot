@@ -182,6 +182,7 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 			}
 			hunter.rank = index;
 			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
+			hunter.save();
 		}
 	}
 	let recentPlacement = allHunters.length;
@@ -224,7 +225,7 @@ async function getRankUpdates(guild) {
 		}
 		const userIdsWithChangedRanks = [];
 		for (const hunter of allHunters) {
-			if (hunter.rank != hunter.lastRank) {
+			if (hunter.rank !== hunter.lastRank) {
 				userIdsWithChangedRanks.push(hunter.userId);
 			}
 		}
@@ -234,18 +235,20 @@ async function getRankUpdates(guild) {
 				map[participation.userId] = participation;
 				return map;
 			}, {});
-		for (const member of updatedMembers) {
+		for (const member of updatedMembers.values()) {
 			if (member.manageable) {
 				await member.roles.remove(roleIds);
 				const participation = updatedParticipationsMap[member.id];
 				if (!participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
 					let destinationRole;
+					const hunter = allHunters.find(hunter => member.id === hunter.userId);
 					const rankRoleId = ranks[hunter.rank]?.roleId;
 					if (rankRoleId) {
 						await member.roles.add(rankRoleId);
 						destinationRole = await guild.roles.fetch(rankRoleId);
 					}
-					if (destinationRole && hunter.rank < hunter.lastRank) { // Note: higher ranks are lower value
+					// Note: higher ranks are lower value
+					if (destinationRole && (hunter.lastRank === null || hunter.rank < hunter.lastRank)) {
 						outMessages.push(`${congratulationBuilder()}, ${member.toString()}! You've risen to ${destinationRole.name}!`);
 					}
 				}
