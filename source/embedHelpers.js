@@ -87,7 +87,7 @@ async function buildSeasonalScoreboardEmbed(guild) {
 	for (const participation of participations) {
 		if (participation.xp > 0) {
 			const hunter = await participation.hunter;
-			scorelines.push(`${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
+			scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
 		}
 	}
 	let description = "";
@@ -123,7 +123,7 @@ async function buildOverallScoreboardEmbed(guild) {
 	const scorelines = [];
 	for (const hunter of hunters) {
 		if (hunter.xp > 0) {
-			scorelines.push(`${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
+			scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
 		}
 	}
 	let description = "";
