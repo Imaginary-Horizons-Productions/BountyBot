@@ -301,7 +301,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 						return interaction.reply({ embeds: [embed], fetchReply: true });
 					}).then(replyMessage => {
 						getRankUpdates(interaction.guild).then(rankUpdates => {
-							replyMessage.startThread({ name: "Rewards" }).then(thread => {
+							replyMessage.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 								const multiplierString = company.eventMultiplierString();
 								let text = "";
 								if (rankUpdates.length > 0) {
