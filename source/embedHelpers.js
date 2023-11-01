@@ -83,10 +83,13 @@ async function buildSeasonalScoreboardEmbed(guild) {
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	const scorelines = await Promise.all(participations.map(async participation => {
-		const hunter = await participation.hunter;
-		return `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`;
-	}));
+	const scorelines = [];
+	for (const participation of participations) {
+		if (participation.xp > 0) {
+			const hunter = await participation.hunter;
+			scorelines.push(`${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
+		}
+	}
 	let description = "";
 	const andMore = "…and more";
 	const maxDescriptionLength = 2048 - andMore.length;
@@ -117,7 +120,12 @@ async function buildOverallScoreboardEmbed(guild) {
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
-	const scorelines = hunters.map(hunter => `${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
+	const scorelines = [];
+	for (const hunter of hunters) {
+		if (hunter.xp > 0) {
+			scorelines.push(`${hunter.rank ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
+		}
+	}
 	let description = "";
 	const andMore = "…and more";
 	const maxDescriptionLength = 2048 - andMore.length;
