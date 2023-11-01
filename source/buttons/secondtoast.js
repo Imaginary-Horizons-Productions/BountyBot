@@ -10,7 +10,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, [toastId]) => {
 		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.ToastRecipients });
-		if (originalToast.userId == interaction.user.id) {
+		if (originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", ephemeral: true });
 			return;
 		}
@@ -21,7 +21,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		await database.models.User.findOrCreate({ id: interaction.user.id });
+		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [seconder] = await database.models.Hunter.findOrCreate({
 			where: { userId: interaction.user.id, companyId: interaction.guildId },
 			defaults: { isRankEligible: interaction.member.manageable }
@@ -32,7 +32,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		recipientIds.push(originalToast.senderId);
 		const levelTexts = [];
 		for (const userId of recipientIds) {
-			if (userId != interaction.user.id) {
+			if (userId !== interaction.user.id) {
 				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
 				levelTexts.concat(await hunter.addXP(interaction.guild, 1, true));
 			}
