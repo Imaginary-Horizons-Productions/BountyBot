@@ -185,7 +185,7 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 			hunter.save();
 		}
 	}
-	let recentPlacement = allHunters.length;
+	let recentPlacement = participations.length;
 	let previousScore = 0;
 	let firstPlaceId;
 	// subtract 1 to adjust for array indexes starting from 0
