@@ -146,7 +146,7 @@ async function calculateRanks(seasonId, allHunters, ranks) {
 	const rankableHunters = [];
 	for (const hunter of allHunters) {
 		const participation = particpationMap[hunter.userId];
-		if (!participation?.isRankDisqualified) {
+		if (participation && !participation.isRankDisqualified) {
 			if (participation?.placement == 1) {
 				previousFirstPlaceId = hunter.userId;
 			}
