@@ -2,7 +2,7 @@ const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildS
 const { SelectWrapper } = require('../classes');
 const { YEAR_IN_MS } = require('../constants');
 const { database } = require('../../database');
-const { timeConversion, checkTextsInAutoMod } = require('../helpers');
+const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 
 const mainId = "bountyedit";
 module.exports = new SelectWrapper(mainId, 3000,

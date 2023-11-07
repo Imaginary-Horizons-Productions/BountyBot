@@ -1,8 +1,9 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildScheduledEventEntityType } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { YEAR_IN_MS } = require('../constants');
-const { timeConversion, checkTextsInAutoMod, getRankUpdates } = require('../helpers');
 const { database } = require('../../database');
+const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
+const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "bountypost";
 module.exports = new SelectWrapper(mainId, 3000,

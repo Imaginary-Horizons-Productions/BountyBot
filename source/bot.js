@@ -6,7 +6,7 @@ const { getCommand, slashData } = require("./commands/_commandDictionary.js");
 const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium } = require("./constants.js");
-const { buildVersionEmbed } = require("./embedHelpers.js");
+const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { database } = require("../database.js");
 //#endregion
 

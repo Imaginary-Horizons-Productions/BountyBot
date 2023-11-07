@@ -1,7 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { updateScoreboard } = require('../embedHelpers');
+const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "reset";
 const options = [];

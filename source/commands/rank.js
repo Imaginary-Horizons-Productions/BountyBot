@@ -1,7 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getRankUpdates } = require('../helpers');
+const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "rank";
 const options = [];

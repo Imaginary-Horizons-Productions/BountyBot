@@ -1,7 +1,7 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { database } = require('../../database');
-const { timeConversion, checkTextsInAutoMod } = require('../helpers');
+const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 
 const mainId = "evergreenedit";
 module.exports = new SelectWrapper(mainId, 3000,

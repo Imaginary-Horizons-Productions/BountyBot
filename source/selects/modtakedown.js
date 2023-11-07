@@ -1,6 +1,6 @@
 const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
-const { getRankUpdates } = require('../helpers');
+const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "modtakedown";
 module.exports = new SelectWrapper(mainId, 3000,

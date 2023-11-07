@@ -1,7 +1,7 @@
 const { DataTypes, Model } = require('sequelize');
 const { database } = require('../../../database');
-const { congratulationBuilder } = require('../../helpers');
 const { Guild } = require('discord.js');
+const { congratulationBuilder } = require('../../util/textUtil');
 
 /** This class stores a user's information related to a specific company */
 exports.Hunter = class extends Model {
@@ -99,10 +99,6 @@ exports.initModel = function (sequelize) {
 		xp: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
-		},
-		isRankEligible: {
-			type: DataTypes.BOOLEAN,
-			allowNull: false
 		},
 		rank: {
 			type: DataTypes.INTEGER,

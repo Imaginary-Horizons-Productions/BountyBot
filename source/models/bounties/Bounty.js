@@ -1,6 +1,6 @@
 ﻿const { EmbedBuilder, Guild } = require('discord.js');
 const { DataTypes, Model } = require('sequelize');
-const { ihpAuthorPayload } = require('../../embedHelpers');
+const { ihpAuthorPayload } = require('../../util/embedUtil');
 const { Company } = require('../companies/Company');
 const { database } = require('../../../database');
 

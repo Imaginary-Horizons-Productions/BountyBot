@@ -28,8 +28,11 @@ module.exports = new CommandWrapper(mainId, "Manage a server-wide event that mul
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
 			switch (interaction.options.getSubcommand()) {
 				case subcommands[0].name: // open-event
-					// Default null and 0 to 2
-					const multiplier = interaction.options.getInteger(subcommands[0].optionsInput[0].name) || 2;
+					const multiplier = interaction.options.getInteger(subcommands[0].optionsInput[0].name);
+					if (multiplier < 2) {
+						interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, ephemeral: true })
+						return;
+					}
 					company.update({ "eventMultiplier": multiplier });
 					interaction.guild.members.fetchMe().then(bountyBot => {
 						const multiplierTag = ` [XP x ${multiplier}]`;

@@ -1,10 +1,11 @@
 const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates, timeConversion } = require('../helpers');
+const { updateScoreboard } = require('../util/embedUtil');
+const { getRankUpdates } = require('../util/scoreUtil');
+const { getNumberEmoji, extractUserIdsFromMentions, timeConversion } = require('../util/textUtil');
 const { Op } = require('sequelize');
 const { Bounty } = require('../models/bounties/Bounty');
-const { updateScoreboard } = require('../embedHelpers');
 
 const mainId = "bounty";
 const options = [];
@@ -105,8 +106,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					const userId = interaction.user.id;
 					await database.models.User.findOrCreate({ where: { id: userId } });
 					const [hunter] = await database.models.Hunter.findOrCreate({
-						where: { userId, companyId: interaction.guildId },
-						defaults: { isRankEligible: interaction.member.manageable }
+						where: { userId, companyId: interaction.guildId }
 					});
 					const existingBounties = await database.models.Bounty.findAll({ where: { userId, companyId: interaction.guildId, state: "open" } });
 					const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
@@ -250,8 +250,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 						if (!existingCompleterIds.includes(memberId)) {
 							await database.models.User.findOrCreate({ where: { id: memberId } });
 							const [hunter] = await database.models.Hunter.findOrCreate({
-								where: { userId: memberId, companyId: interaction.guildId },
-								defaults: { isRankEligible: member.manageable }
+								where: { userId: memberId, companyId: interaction.guildId }
 							});
 							if (hunter.isBanned) {
 								bannedIds.push(memberId);
@@ -349,8 +348,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							const memberId = member.id;
 							await database.models.User.findOrCreate({ where: { id: memberId } });
 							const [hunter] = await database.models.Hunter.findOrCreate({
-								where: { userId: memberId, companyId: interaction.guildId },
-								defaults: { isRankEligible: member.manageable }
+								where: { userId: memberId, companyId: interaction.guildId }
 							});
 							if (!hunter.isBanned) {
 								validatedCompleterIds.push(memberId);

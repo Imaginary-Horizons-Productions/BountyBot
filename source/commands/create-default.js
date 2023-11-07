@@ -1,8 +1,8 @@
 const { PermissionFlagsBits, ChannelType, SortOrderType, ForumLayoutType, OverwriteType, GuildPremiumTier } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { buildScoreboardEmbed } = require('../embedHelpers');
-const { generateBountyBoardThread } = require('../helpers');
+const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../util/embedUtil');
+const { generateBountyBoardThread } = require('../util/scoreUtil');
 
 const mainId = "create-default";
 const options = [];
@@ -114,7 +114,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 					const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 					scoreboard.send({
-						embeds: [await buildScoreboardEmbed(interaction.guild, isSeasonal)]
+						embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild) : await buildOverallScoreboardEmbed(interaction.guild)]
 					}).then(message => {
 						company.scoreboardChannelId = scoreboard.id;
 						company.scoreboardMessageId = message.id;

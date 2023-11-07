@@ -1,5 +1,5 @@
 const { CommandWrapper } = require('../classes');
-const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../embedHelpers');
+const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../util/embedUtil');
 
 const mainId = "scoreboard";
 const options = [
