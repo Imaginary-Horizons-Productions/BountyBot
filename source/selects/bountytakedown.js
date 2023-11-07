@@ -1,6 +1,6 @@
 const { SelectWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getRankUpdates } = require('../helpers');
+const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "bountytakedown";
 module.exports = new SelectWrapper(mainId, 3000,

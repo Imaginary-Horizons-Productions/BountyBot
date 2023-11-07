@@ -1,9 +1,10 @@
 const { PermissionFlagsBits, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates, timeConversion, checkTextsInAutoMod, generateBountyBoardThread } = require('../helpers');
 const { Bounty } = require('../models/bounties/Bounty');
-const { updateScoreboard } = require('../embedHelpers');
+const { updateScoreboard } = require('../util/embedUtil');
+const { getRankUpdates, generateBountyBoardThread } = require('../util/scoreUtil');
+const { getNumberEmoji, extractUserIdsFromMentions, timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 
 const mainId = "evergreen";
 const options = [];

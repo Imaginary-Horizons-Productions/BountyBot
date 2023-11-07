@@ -1,10 +1,10 @@
-const { EmbedBuilder, Guild, Colors } = require("discord.js");
+const { EmbedBuilder, Guild, Colors, TextChannel, Utils } = require("discord.js");
 const fs = require("fs");
-const { database } = require("../database");
-const { Hunter } = require("./models/users/Hunter");
-const { Company } = require("./models/companies/Company");
-const { COMPANY_XP_COEFFICIENT } = require("./constants");
-const { generateTextBar } = require("./helpers");
+const { database } = require("../../database");
+const { Hunter } = require("../models/users/Hunter");
+const { Company } = require("../models/companies/Company");
+const { COMPANY_XP_COEFFICIENT } = require("../constants");
+const { generateTextBar } = require("./scoreUtil");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
@@ -147,6 +147,60 @@ async function buildOverallScoreboardEmbed(guild) {
 		.setTimestamp();
 }
 
+/** Build an embed mentioning if an event is running, the next raffle date and the raffle rewards
+ * @param {TextChannel} channel
+ * @param {Guild} guild
+ * @param {Company} company
+ */
+async function buildServerBonusesEmbed(channel, guild, company) {
+	const { displayColor, displayName } = await guild.members.fetch(guild.client.user.id);
+	const embed = new EmbedBuilder().setColor(displayColor)
+		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setTitle(`${displayName} Server Bonuses`)
+		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
+		.setDescription(`There is ${company.eventMultiplier != 1 ? '' : 'not '}an XP multiplier event currently active${company.eventMultiplier == 1 ? '' : ` for ${company.eventMultiplierString()}`}.`)
+		.setFooter(randomFooterTip())
+		.setTimestamp();
+	if (company.nextRaffleString) {
+		embed.addFields([{ name: "Next Raffle", value: Utils.cleanContent(`The next raffle will be on ${company.nextRaffleString}!`, channel) }]);
+	}
+
+	return embed;
+}
+
+/**
+ * @param {Guild} guild
+ * @param {GuildMember} member
+ * @param {Hunter} hunter
+ */
+async function buildModStatsEmbed(guild, member, hunter) {
+	const embed = new EmbedBuilder().setColor(member.displayColor)
+		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setTitle(`Moderation Stats: ${member.user.tag}`)
+		.setThumbnail(member.user.avatarURL())
+		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
+		.addFields(
+			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
+			{ name: "Disqualifications", value: `${await database.models.SeasonParticipation.sum("dqCount", { where: { companyId: guild.id, userId: member.id } })} season DQs`, inline: true },
+			{ name: "Penalties", value: `${hunter.penaltyCount} penalties (${hunter.penaltyPointTotal} points total)`, inline: true }
+		)
+		.setFooter(randomFooterTip())
+		.setTimestamp();
+
+	let bountyHistory = "";
+	const lastFiveBounties = await database.models.Bounty.findAll({ where: { userId: member.id, companyId: guild.id, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5 });
+	lastFiveBounties.forEach(async bounty => {
+		const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+		bountyHistory += `__${bounty.title}__ ${bounty.description}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${completions.map(completion => completion.userId).join('>, <@')
+			}>\n\n`;
+	})
+
+	if (bountyHistory === "") {
+		bountyHistory = "No recent bounties";
+	}
+	return embed.addFields({ name: "Last 5 Completed Bounties Created by this User", value: bountyHistory });
+}
+
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project
  * @returns {MessageEmbed}
  */
@@ -183,39 +237,6 @@ async function buildVersionEmbed() {
 	return embed.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [{bot} on GitHub]( url goes here )" });
 }
 
-/**
- * @param {Guild} guild
- * @param {GuildMember} member
- * @param {Hunter} hunter
- */
-async function buildModStatsEmbed(guild, member, hunter) {
-	const embed = new EmbedBuilder().setColor(member.displayColor)
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
-		.setTitle(`Moderation Stats: ${member.user.tag}`)
-		.setThumbnail(member.user.avatarURL())
-		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
-		.addFields(
-			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
-			{ name: "Disqualifications", value: `${await database.models.SeasonParticipation.sum("dqCount", { where: { companyId: guild.id, userId: member.id } })} season DQs`, inline: true },
-			{ name: "Penalties", value: `${hunter.penaltyCount} penalties (${hunter.penaltyPointTotal} points total)`, inline: true }
-		)
-		.setFooter(randomFooterTip())
-		.setTimestamp();
-
-	let bountyHistory = "";
-	const lastFiveBounties = await database.models.Bounty.findAll({ where: { userId: member.id, companyId: guild.id, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5 });
-	lastFiveBounties.forEach(async bounty => {
-		const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
-		bountyHistory += `__${bounty.title}__ ${bounty.description}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${completions.map(completion => completion.userId).join('>, <@')
-			}>\n\n`;
-	})
-
-	if (bountyHistory === "") {
-		bountyHistory = "No recent bounties";
-	}
-	return embed.addFields({ name: "Last 5 Completed Bounties Created by this User", value: bountyHistory });
-}
-
 /** If the guild has a scoreboard reference channel, update the embed in it
  * @param {Company} company
  * @param {Guild} guild
@@ -236,7 +257,8 @@ module.exports = {
 	buildCompanyStatsEmbed,
 	buildSeasonalScoreboardEmbed,
 	buildOverallScoreboardEmbed,
-	buildVersionEmbed,
+	buildServerBonusesEmbed,
 	buildModStatsEmbed,
+	buildVersionEmbed,
 	updateScoreboard
 };

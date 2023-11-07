@@ -3,7 +3,7 @@ const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 const { SAFE_DELIMITER } = require('../constants');
-const { getNumberEmoji } = require('../helpers');
+const { getNumberEmoji } = require('../util/textUtil');
 
 const mainId = "bountyswapbounty";
 module.exports = new SelectWrapper(mainId, 3000,

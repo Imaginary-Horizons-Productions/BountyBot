@@ -1,10 +1,11 @@
 const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { SAFE_DELIMITER, DAY_IN_MS } = require('../constants');
-const { getNumberEmoji, getRankUpdates, extractUserIdsFromMentions, checkTextsInAutoMod } = require('../helpers');
-const { database } = require('../../database');
 const { Op } = require('sequelize');
-const { updateScoreboard } = require('../embedHelpers');
+const { SAFE_DELIMITER, DAY_IN_MS } = require('../constants');
+const { CommandWrapper } = require('../classes');
+const { database } = require('../../database');
+const { getNumberEmoji, extractUserIdsFromMentions, checkTextsInAutoMod } = require('../util/textUtil');
+const { getRankUpdates } = require('../util/scoreUtil');
+const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "toast";
 const options = [

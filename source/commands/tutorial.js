@@ -1,6 +1,6 @@
 const { EmbedBuilder, Colors } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { ihpAuthorPayload, randomFooterTip } = require('../embedHelpers');
+const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil');
 
 const mainId = "tutorial";
 const options = [

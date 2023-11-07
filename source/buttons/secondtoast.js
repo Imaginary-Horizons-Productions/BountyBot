@@ -3,7 +3,7 @@ const { ButtonWrapper } = require('../classes');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
 const { DAY_IN_MS } = require('../constants');
-const { getRankUpdates } = require('../helpers');
+const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,

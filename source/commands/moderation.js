@@ -1,9 +1,10 @@
 const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
-const { getNumberEmoji, getRankUpdates } = require('../helpers');
 const { SAFE_DELIMITER } = require('../constants');
-const { buildModStatsEmbed } = require('../embedHelpers');
+const { database } = require('../../database');
+const { buildModStatsEmbed } = require('../util/embedUtil');
+const { getRankUpdates } = require('../util/scoreUtil');
+const { getNumberEmoji } = require('../util/textUtil');
 
 const mainId = "moderation";
 const options = [];

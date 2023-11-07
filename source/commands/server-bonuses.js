@@ -1,6 +1,6 @@
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { buildServerBonusesEmbed } = require('../embedHelpers');
+const { buildServerBonusesEmbed } = require('../util/embedUtil');
 
 const mainId = "server-bonuses";
 const options = [];

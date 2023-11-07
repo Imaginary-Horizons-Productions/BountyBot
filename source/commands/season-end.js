@@ -1,8 +1,8 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getRankUpdates } = require('../helpers');
-const { buildCompanyStatsEmbed } = require('../embedHelpers');
+const { getRankUpdates } = require('../util/scoreUtil');
+const { buildCompanyStatsEmbed } = require('../util/embedUtil');
 
 const mainId = "season-end";
 const options = [];

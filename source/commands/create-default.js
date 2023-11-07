@@ -1,8 +1,8 @@
 const { PermissionFlagsBits, ChannelType, SortOrderType, ForumLayoutType, OverwriteType, GuildPremiumTier } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../embedHelpers');
-const { generateBountyBoardThread } = require('../helpers');
+const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../util/embedUtil');
+const { generateBountyBoardThread } = require('../util/scoreUtil');
 
 const mainId = "create-default";
 const options = [];

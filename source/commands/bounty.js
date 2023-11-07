@@ -1,10 +1,11 @@
 const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getNumberEmoji, extractUserIdsFromMentions, getRankUpdates, timeConversion } = require('../helpers');
+const { updateScoreboard } = require('../util/embedUtil');
+const { getRankUpdates } = require('../util/scoreUtil');
+const { getNumberEmoji, extractUserIdsFromMentions, timeConversion } = require('../util/textUtil');
 const { Op } = require('sequelize');
 const { Bounty } = require('../models/bounties/Bounty');
-const { updateScoreboard } = require('../embedHelpers');
 
 const mainId = "bounty";
 const options = [];

@@ -1,5 +1,5 @@
 const { CommandWrapper } = require('../classes');
-const { buildVersionEmbed } = require('../embedHelpers');
+const { buildVersionEmbed } = require('../util/embedUtil');
 
 const mainId = "version";
 const options = [

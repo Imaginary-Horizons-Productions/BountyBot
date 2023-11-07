@@ -1,11 +1,11 @@
 const { EmbedBuilder } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../embedHelpers');
-const { database } = require('../../database');
-const { generateTextBar } = require('../helpers');
-const { Hunter } = require('../models/users/Hunter');
 const { Op } = require('sequelize');
 const { ZERO_WIDTH_WHITE_SPACE } = require('../constants');
+const { CommandWrapper } = require('../classes');
+const { Hunter } = require('../models/users/Hunter');
+const { database } = require('../../database');
+const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
+const { generateTextBar } = require('../util/textUtil');
 
 const mainId = "stats";
 const options = [
