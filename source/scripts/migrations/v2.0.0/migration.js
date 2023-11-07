@@ -148,10 +148,10 @@ database.authenticate().then(() => {
 
 	return database.sync();
 }).then(() => {
-	return database.models.Company.create({ id: ihcId })
+	return database.models.Company.findOrCreate({ where: { id: ihcId } })
 }).then(async () => {
 	for (const id in hunters) {
-		await database.models.User.create({ id, isPremium: ["112785244733628416", "106122478715150336"].includes(id) });
-		await database.models.Hunter.create({ userId: id, companyId: ihcId, xp: hunters[id].xp, isRankEligible: id !== "106122478715150336" });
+		await database.models.User.findOrCreate({ where: { id }, defaults: { isPremium: ["112785244733628416", "106122478715150336"].includes(id) } });
+		await database.models.Hunter.findOrCreate({ where: { userId: id, companyId: ihcId }, default: { xp: hunters[id].xp, isRankEligible: id !== "106122478715150336" } });
 	}
-})
+});
