@@ -293,7 +293,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 
 					for (const userId of validatedCompleterIds) {
 						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-						levelTexts.concat(await hunter.addXP(interaction.guild, bountyValue, true));
+						levelTexts.concat(await hunter.addXP(interaction.guild.name, bountyValue, true));
 						hunter.othersFinished++;
 						hunter.save();
 					}

@@ -24,12 +24,12 @@ exports.Hunter = class extends Model {
 	}
 
 	/**
-	 * @param {Guild} guild
+	 * @param {string} guildName
 	 * @param {number} points
 	 * @param {boolean} ignoreMultiplier
 	 * @returns {string} level-up text
 	 */
-	async addXP(guild, points, ignoreMultiplier) { //TODONOW switch guild to guildName
+	async addXP(guildName, points, ignoreMultiplier) {
 		const company = await database.models.Company.findByPk(this.companyId);
 		const totalPoints = points * (!ignoreMultiplier ? company.eventMultiplier : 1);
 
@@ -59,7 +59,7 @@ exports.Hunter = class extends Model {
 		}
 
 		if (company.level > previousCompanyLevel) {
-			levelText += `*${guild.name} is now level ${company.level}! Evergreen bounties are now worth more XP!*\n`;
+			levelText += `*${guildName} is now level ${company.level}! Evergreen bounties are now worth more XP!*\n`;
 		}
 
 		return levelText;

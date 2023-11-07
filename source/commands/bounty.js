@@ -380,13 +380,13 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 
 					for (const userId of validatedCompleterIds) {
 						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-						levelTexts.concat(await hunter.addXP(interaction.guild, bountyValue, true));
+						levelTexts.concat(await hunter.addXP(interaction.guild.name, bountyValue, true));
 						hunter.othersFinished++;
 						hunter.save();
 					}
 
 					const posterXP = Math.ceil(validatedCompleterIds.length / 2) * company.eventMultiplier;
-					levelTexts.concat(await poster.addXP(interaction.guild, posterXP, true));
+					levelTexts.concat(await poster.addXP(interaction.guild.name, posterXP, true));
 					poster.mineFinished++;
 					poster.save();
 

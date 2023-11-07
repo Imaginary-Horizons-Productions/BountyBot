@@ -33,7 +33,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		for (const userId of recipientIds) {
 			if (userId !== interaction.user.id) {
 				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
-				levelTexts.concat(await hunter.addXP(interaction.guild, 1, true));
+				levelTexts.concat(await hunter.addXP(interaction.guild.name, 1, true));
 			}
 		}
 
@@ -76,7 +76,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			const critRoll = Math.random() * 100;
 			if (critRoll * critRoll * critRoll > 3375000 / lowestEffectiveToastLevel) {
 				wasCrit = true;
-				levelTexts.concat(seconder.addXP(interaction.guild, 1, true));
+				levelTexts.concat(seconder.addXP(interaction.guild.name, 1, true));
 			}
 		}
 

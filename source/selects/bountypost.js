@@ -119,7 +119,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			}
 
 			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-			poster.addXP(modalSubmission.guild, 1, true).then(() => {
+			poster.addXP(modalSubmission.guild.name, 1, true).then(() => {
 				getRankUpdates(modalSubmission.guild);
 			});
 
