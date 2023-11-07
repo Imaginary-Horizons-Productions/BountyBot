@@ -7,33 +7,33 @@ exports.database = new Sequelize({
 
 exports.database.authenticate().then(() => {
 	const { Company, initModel: initCompany } = require("./source/models/companies/Company.js");
-	const { CompanyRank, initModel: initCompanyRank } = require("./source/models/companies/CompanyRank.js");
+	const { Rank, initModel: initRank } = require("./source/models/companies/Rank.js");
 	const { User, initModel: initUser } = require("./source/models/users/User.js");
 	const { Hunter, initModel: initHunter } = require("./source/models/users/Hunter.js");
 	const { Bounty, initModel: initBounty } = require("./source/models/bounties/Bounty.js");
 	const { Completion, initModel: initCompletion } = require("./source/models/bounties/Completion.js");
 	const { Toast, initModel: initToast } = require("./source/models/toasts/Toast.js");
-	const { ToastRecipient, initModel: initToastRecipient } = require("./source/models/toasts/ToastRecipient.js");
-	const { ToastSeconding, initModel: initToastSeconding } = require("./source/models/toasts/ToastSeconding.js");
+	const { Recipient, initModel: initRecipient } = require("./source/models/toasts/Recipient.js");
+	const { Seconding, initModel: initSeconding } = require("./source/models/toasts/Seconding.js");
 	const { Season, initModel: initSeason } = require("./source/models/seasons/Season.js");
-	const { SeasonParticpation, initModel: initSeasonParticipation } = require("./source/models/seasons/SeasonParticipation.js");
+	const { Participation, initModel: initParticipation } = require("./source/models/seasons/Participation.js");
 
 	initCompany(exports.database);
-	initCompanyRank(exports.database);
+	initRank(exports.database);
 	initUser(exports.database);
 	initHunter(exports.database);
 	initBounty(exports.database);
 	initCompletion(exports.database);
 	initToast(exports.database);
-	initToastRecipient(exports.database);
-	initToastSeconding(exports.database);
+	initRecipient(exports.database);
+	initSeconding(exports.database);
 	initSeason(exports.database);
-	initSeasonParticipation(exports.database);
+	initParticipation(exports.database);
 
-	Company.CompanyRanks = Company.hasMany(CompanyRank, {
+	Company.Ranks = Company.hasMany(Rank, {
 		foreignKey: "companyId"
 	});
-	CompanyRank.Company = CompanyRank.belongsTo(Company, {
+	Rank.Company = Rank.belongsTo(Company, {
 		foreignKey: "companyId"
 	});
 
@@ -93,31 +93,31 @@ exports.database.authenticate().then(() => {
 		foreignKey: "senderId"
 	});
 
-	ToastRecipient.Toast = ToastRecipient.belongsTo(Toast, {
+	Recipient.Toast = Recipient.belongsTo(Toast, {
 		foreignKey: "toastId"
 	});
-	Toast.ToastRecipients = Toast.hasMany(ToastRecipient, {
+	Toast.Recipients = Toast.hasMany(Recipient, {
 		foreignKey: "toastId"
 	});
 
-	ToastRecipient.User = ToastRecipient.belongsTo(User, {
+	Recipient.User = Recipient.belongsTo(User, {
 		foreignKey: "recipientId"
 	});
-	User.ToastRecipients = User.hasMany(ToastRecipient, {
+	User.Recipients = User.hasMany(Recipient, {
 		foreignKey: "recipientId"
 	});
 
-	ToastSeconding.Toast = ToastSeconding.belongsTo(Toast, {
+	Seconding.Toast = Seconding.belongsTo(Toast, {
 		foreignKey: "toastId"
 	});
-	Toast.ToastSecondings = Toast.hasMany(ToastSeconding, {
+	Toast.Secondings = Toast.hasMany(Seconding, {
 		foreignKey: "toastId"
 	});
 
-	ToastSeconding.User = ToastSeconding.belongsTo(User, {
+	Seconding.User = Seconding.belongsTo(User, {
 		foreignKey: "seconderId"
 	});
-	User.ToastSecondings = User.hasMany(ToastSeconding, {
+	User.Secondings = User.hasMany(Seconding, {
 		foreignKey: "seconderId"
 	});
 
@@ -128,24 +128,24 @@ exports.database.authenticate().then(() => {
 		foreignKey: "companyId"
 	})
 
-	User.SeasonParticipations = User.hasMany(SeasonParticpation, {
+	User.SeasonParticipations = User.hasMany(Participation, {
 		foreignKey: "userId"
 	})
-	SeasonParticpation.User = SeasonParticpation.belongsTo(User, {
+	Participation.User = Participation.belongsTo(User, {
 		foreignKey: "userId"
 	})
 
-	Company.SeasonParticipations = Company.hasMany(SeasonParticpation, {
+	Company.SeasonParticipations = Company.hasMany(Participation, {
 		foreignKey: "companyId"
 	})
-	SeasonParticpation.Company = SeasonParticpation.belongsTo(Company, {
+	Participation.Company = Participation.belongsTo(Company, {
 		foreignKey: "companyId"
 	})
 
-	Season.SeasonParticipations = Season.hasMany(SeasonParticpation, {
+	Season.SeasonParticipations = Season.hasMany(Participation, {
 		foreignKey: "seasonId"
 	})
-	SeasonParticpation.Season = SeasonParticpation.belongsTo(Season, {
+	Participation.Season = Participation.belongsTo(Season, {
 		foreignKey: "seasonId"
 	})
 

@@ -1,8 +1,9 @@
-﻿const { DataTypes, Model } = require('sequelize');
+﻿const { DataTypes, Model, Sequelize } = require('sequelize');
 
 /** Store receipt information of a bounty completion and relevant stats of that bounty */
 exports.Completion = class extends Model { }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
 	exports.Completion.init({
 		id: {
@@ -24,7 +25,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'Completion',
+		modelName: "Completion",
 		freezeTableName: true
 	});
 }

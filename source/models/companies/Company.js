@@ -1,5 +1,5 @@
 const { MessageFlags } = require('discord.js');
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes, Model, Sequelize } = require('sequelize');
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
 exports.Company = class extends Model {
@@ -28,6 +28,7 @@ exports.Company = class extends Model {
 	}
 }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
 	exports.Company.init({
 		id: {

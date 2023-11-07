@@ -1,4 +1,4 @@
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes, Model, Sequelize } = require('sequelize');
 const { database } = require('../../../database');
 const { congratulationBuilder } = require('../../util/textUtil');
 
@@ -81,6 +81,7 @@ exports.Hunter = class extends Model {
 	}
 }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
 	exports.Hunter.init({
 		userId: {
@@ -151,7 +152,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'Hunter',
+		modelName: "Hunter",
 		freezeTableName: true
 	});
 }

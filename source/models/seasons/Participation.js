@@ -1,9 +1,10 @@
-const { Model, DataTypes } = require("sequelize");
+const { Model, DataTypes, Sequelize } = require("sequelize");
 
-exports.SeasonParticpation = class extends Model { }
+exports.Participation = class extends Model { }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
-	exports.SeasonParticpation.init({
+	exports.Participation.init({
 		userId: {
 			primaryKey: true,
 			type: DataTypes.STRING,
@@ -43,7 +44,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: "SeasonParticipation",
+		modelName: "Participation",
 		freezeTableName: true
 	})
 }

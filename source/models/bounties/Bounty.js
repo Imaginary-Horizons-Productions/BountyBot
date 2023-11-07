@@ -1,5 +1,5 @@
 ﻿const { EmbedBuilder, Guild } = require('discord.js');
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes, Model, Sequelize } = require('sequelize');
 const { ihpAuthorPayload } = require('../../util/embedUtil');
 const { Company } = require('../companies/Company');
 const { database } = require('../../../database');
@@ -76,6 +76,7 @@ exports.Bounty = class extends Model {
 	}
 }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
 	exports.Bounty.init({
 		id: {
@@ -136,7 +137,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'Bounty',
+		modelName: "Bounty",
 		freezeTableName: true,
 		paranoid: true
 	});

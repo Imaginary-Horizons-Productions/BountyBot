@@ -1,10 +1,11 @@
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes, Model, Sequelize } = require('sequelize');
 
 /** This class stores receipts of a toast seconding */
-exports.ToastSeconding = class extends Model { }
+exports.Seconding = class extends Model { }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
-	exports.ToastSeconding.init({
+	exports.Seconding.init({
 		toastId: {
 			primaryKey: true,
 			type: DataTypes.BIGINT
@@ -19,7 +20,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'ToastSeconding',
+		modelName: "Seconding",
 		freezeTableName: true
 	});
 }

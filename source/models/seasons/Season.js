@@ -1,7 +1,8 @@
-const { Model, DataTypes } = require("sequelize");
+const { Model, DataTypes, Sequelize } = require("sequelize");
 
 exports.Season = class extends Model { }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
 	exports.Season.init({
 		id: {

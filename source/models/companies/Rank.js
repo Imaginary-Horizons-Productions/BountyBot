@@ -1,10 +1,11 @@
-﻿const { DataTypes, Model } = require('sequelize');
+﻿const { DataTypes, Model, Sequelize } = require('sequelize');
 
 /** A company's Ranks include a variance threshold (difficulty to achieve) and optionally a role to give hunters and emoji for the scoreboard */
-exports.CompanyRank = class extends Model { }
+exports.Rank = class extends Model { }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
-	exports.CompanyRank.init({
+	exports.Rank.init({
 		companyId: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -21,7 +22,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: "CompanyRank",
+		modelName: "Rank",
 		freezeTableName: true
 	});
 }

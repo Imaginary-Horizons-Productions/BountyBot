@@ -1,8 +1,9 @@
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes, Model, Sequelize } = require('sequelize');
 
 /** This class stores global information for bot users */
 exports.User = class extends Model { }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
 	exports.User.init({
 		id: {
@@ -15,7 +16,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'User',
+		modelName: "User",
 		freezeTableName: true
 	});
 }

@@ -1,8 +1,9 @@
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes, Model, Sequelize } = require('sequelize');
 
 /** This model represents a toast raised for a group of bounty hunters */
 exports.Toast = class extends Model { }
 
+/** @param {Sequelize} sequelize */
 exports.initModel = function (sequelize) {
 	exports.Toast.init({
 		id: {
@@ -27,7 +28,7 @@ exports.initModel = function (sequelize) {
 		}
 	}, {
 		sequelize,
-		modelName: 'Toast',
+		modelName: "Toast",
 		freezeTableName: true
 	});
 }

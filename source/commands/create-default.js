@@ -165,7 +165,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 					const rankmojis = ["🏆", "🥇", "🥈", "🥉"];
 
 					database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(() => {
-						database.models.CompanyRank.bulkCreate(roles.map((role, index) => ({
+						database.models.Rank.bulkCreate(roles.map((role, index) => ({
 							companyId: interaction.guildId,
 							varianceThreshold: varianceThresholds[index],
 							roleId: role.id,

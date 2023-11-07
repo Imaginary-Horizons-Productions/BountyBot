@@ -87,11 +87,11 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
 
 		// Make database entities
-		const recentToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } }, include: database.models.Toast.ToastRecipients });
+		const recentToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } }, include: database.models.Toast.Recipients });
 		let rewardsAvailable = 10;
 		let critToastsAvailable = 2;
 		for (const toast of recentToasts) {
-			for (const reciept of toast.ToastRecipients) {
+			for (const reciept of toast.Recipients) {
 				if (reciept.isRewarded) {
 					rewardsAvailable--;
 				}
@@ -102,7 +102,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}
 		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - DAY_IN_MS));
 		const hunterIdsToastedInLastDay = toastsInLastDay.reduce((idSet, toast) => {
-			toast.ToastRecipients.forEach(reciept => {
+			toast.Recipients.forEach(reciept => {
 				if (!idSet.has(reciept.recipientId)) {
 					idSet.add(reciept.recipientId);
 				}
@@ -110,9 +110,9 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return idSet;
 		}, new Set());
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, include: database.models.Toast.ToastRecipients, order: [["createdAt", "DESC"]], limit: 5 });
+		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, include: database.models.Toast.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
 		const staleToastees = lastFiveToasts.reduce((list, toast) => {
-			return list.concat(toast.ToastRecipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
+			return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
 		}, []);
 
 		const rawRecipients = [];
@@ -161,7 +161,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			}
 			rawRecipients.push(rawToast);
 		}
-		database.models.ToastRecipient.bulkCreate(rawRecipients);
+		database.models.Recipient.bulkCreate(rawRecipients);
 
 		// Add XP and update ranks
 		const levelTexts = [];

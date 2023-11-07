@@ -126,8 +126,8 @@ client.on(Events.GuildDelete, guild => {
 	database.models.Hunter.destroy({ where: { companyId: guild.id } });
 	database.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
 		toasts.forEach(toast => {
-			database.models.ToastRecipient.destroy({ where: { toastId: toast.id } });
-			database.models.ToastSeconding.destroy({ where: { toastId: toast.id } });
+			database.models.Recipient.destroy({ where: { toastId: toast.id } });
+			database.models.Seconding.destroy({ where: { toastId: toast.id } });
 			toast.destroy();
 		})
 	});
@@ -138,7 +138,7 @@ client.on(Events.GuildDelete, guild => {
 	database.models.SeasonParticipation.destroy({ where: { companyId: guild.id } });
 	database.models.Season.destroy({ where: { companyId: guild.id } });
 
-	database.models.CompanyRank.destroy({ where: { companyId: guild.id } });
+	database.models.Rank.destroy({ where: { companyId: guild.id } });
 	database.models.Company.destroy({ where: { id: guild.id } });
 });
 //#endregion

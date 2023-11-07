@@ -43,7 +43,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 					const currentSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 					const previousSeasonParticipations = await database.models.SeasonParticipation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-					const ranks = await database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
+					const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
 					//TODO #80 add "most seconded toast"
@@ -85,7 +85,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const bountySlots = hunter.maxSlots(maxSimBounties);
 				const currentSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 				const previousSeasonParticipations = await database.models.SeasonParticipation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-				const ranks = await database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
+				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
 				//TODO #80 add "most seconded toast"

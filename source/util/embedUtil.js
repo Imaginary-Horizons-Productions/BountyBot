@@ -81,7 +81,7 @@ async function buildSeasonalScoreboardEmbed(guild) {
 	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
-	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
+	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const participation of participations) {
@@ -118,7 +118,7 @@ async function buildOverallScoreboardEmbed(guild) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-	const rankmojiArray = (await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
+	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const hunter of hunters) {

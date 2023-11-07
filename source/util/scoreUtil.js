@@ -2,7 +2,7 @@ const { database } = require("../../database");
 const { Guild, EmbedBuilder, GuildTextThreadManager } = require("discord.js");
 const { Op } = require("sequelize");
 const { Company } = require("../models/companies/Company");
-const { CompanyRank } = require("../models/companies/CompanyRank");
+const { Rank } = require("../models/companies/Rank");
 const { Season } = require("../models/seasons/Season");
 const { Hunter } = require("../models/users/Hunter");
 const { congratulationBuilder } = require("./textUtil");
@@ -10,7 +10,7 @@ const { congratulationBuilder } = require("./textUtil");
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
  * @param {Season} season
  * @param {Hunter[]} allHunters
- * @param {CompanyRank[]} ranks
+ * @param {Rank[]} ranks
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
 async function calculateRanks(season, allHunters, ranks) {
@@ -91,7 +91,7 @@ async function calculateRanks(season, allHunters, ranks) {
  */
 async function getRankUpdates(guild) {
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
-	const ranks = await database.models.CompanyRank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
+	const ranks = await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
 
 	return calculateRanks(season, allHunters, ranks).then(async (firstPlaceMessage) => {

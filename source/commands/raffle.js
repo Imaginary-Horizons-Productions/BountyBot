@@ -39,7 +39,7 @@ module.exports = new CommandWrapper(mainId, "Randomly select a bounty hunter fro
 	(interaction) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // by-rank
-				database.models.CompanyRank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(async ranks => {
+				database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(async ranks => {
 					if (ranks.length < 1) {
 						interaction.reply({ content: "This server doesn't have any ranks configured.", ephemeral: true });
 						return;
