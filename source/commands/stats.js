@@ -1,5 +1,4 @@
 const { EmbedBuilder } = require('discord.js');
-const { Op } = require('sequelize');
 const { ZERO_WIDTH_WHITE_SPACE } = require('../constants');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
