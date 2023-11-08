@@ -38,6 +38,7 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 				embed.setTitle("Server Setup Tips")
 					.setDescription("Here are some suggestions for setting up BountyBot on your server:")
 					.addFields(
+						{ name: "Join Link", value: "Add BountyBot to your server with [this link](https://discord.com/api/oauth2/authorize?client_id=536330483852771348&permissions=18135835404304&scope=bot)." },
 						{ name: "/create-default", value: "The `/create-default` command can create a bounty board forum channel, a reference channel for the scoreboard, or roles for showing off seasonal ranks." },
 						{ name: "/raffle announce-upcoming", value: "You can have BountyBot randomly select a user by seasonal rank or by level. Bounty hunters will likely appreciate if you announce the timing or eligibility for upcoming raffles ahead of time." },
 						{ name: "/config-server", value: "You can set the notification type for BountyBot announcement messages (eg \"Should bounty posts start with @everyone, @here, etc?\") and enable or disable granting XP for boosting the server." },
