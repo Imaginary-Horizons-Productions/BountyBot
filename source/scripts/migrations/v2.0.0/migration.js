@@ -125,21 +125,21 @@ database.authenticate().then(() => {
 		foreignKey: "companyId"
 	})
 
-	User.SeasonParticipations = User.hasMany(Particpation, {
+	User.Participations = User.hasMany(Particpation, {
 		foreignKey: "userId"
 	})
 	Particpation.User = Particpation.belongsTo(User, {
 		foreignKey: "userId"
 	})
 
-	Company.SeasonParticipations = Company.hasMany(Particpation, {
+	Company.Participations = Company.hasMany(Particpation, {
 		foreignKey: "companyId"
 	})
 	Particpation.Company = Particpation.belongsTo(Company, {
 		foreignKey: "companyId"
 	})
 
-	Season.SeasonParticipations = Season.hasMany(Particpation, {
+	Season.Participations = Season.hasMany(Particpation, {
 		foreignKey: "seasonId"
 	})
 	Particpation.Season = Particpation.belongsTo(Season, {

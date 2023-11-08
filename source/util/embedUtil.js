@@ -47,7 +47,7 @@ async function buildCompanyStatsEmbed(guild) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
 	const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
 	const lastSeason = await database.models.Season.findOne({ where: { companyId: guild.id, isPreviousSeason: true } });
-	const participantCount = await database.models.SeasonParticipation.count({ where: { seasonId: currentSeason.id } });
+	const participantCount = await database.models.Participation.count({ where: { seasonId: currentSeason.id } });
 	const companyXP = await company.xp;
 	const currentSeasonXP = await currentSeason.totalXP;
 	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
@@ -78,7 +78,7 @@ async function buildCompanyStatsEmbed(guild) {
 async function buildSeasonalScoreboardEmbed(guild) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: company.id, isCurrentSeason: true } });
-	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
+	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
@@ -181,7 +181,7 @@ async function buildModStatsEmbed(guild, member, hunter) {
 		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
 		.addFields(
 			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
-			{ name: "Disqualifications", value: `${await database.models.SeasonParticipation.sum("dqCount", { where: { companyId: guild.id, userId: member.id } })} season DQs`, inline: true },
+			{ name: "Disqualifications", value: `${await database.models.Participation.sum("dqCount", { where: { companyId: guild.id, userId: member.id } })} season DQs`, inline: true },
 			{ name: "Penalties", value: `${hunter.penaltyCount} penalties (${hunter.penaltyPointTotal} points total)`, inline: true }
 		)
 		.setFooter(randomFooterTip())

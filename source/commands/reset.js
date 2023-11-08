@@ -24,7 +24,7 @@ module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, boun
 				database.models.Company.findByPk(interaction.guildId).then(async company => {
 					const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 					if (season) {
-						await database.models.SeasonParticipation.destroy({ where: { seasonId: season.id } });
+						await database.models.Participation.destroy({ where: { seasonId: season.id } });
 					}
 					updateScoreboard(company, interaction.guild);
 					interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);

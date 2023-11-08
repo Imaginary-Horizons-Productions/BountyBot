@@ -128,21 +128,21 @@ exports.database.authenticate().then(() => {
 		foreignKey: "companyId"
 	})
 
-	User.SeasonParticipations = User.hasMany(Participation, {
+	User.Participations = User.hasMany(Participation, {
 		foreignKey: "userId"
 	})
 	Participation.User = Participation.belongsTo(User, {
 		foreignKey: "userId"
 	})
 
-	Company.SeasonParticipations = Company.hasMany(Participation, {
+	Company.Participations = Company.hasMany(Participation, {
 		foreignKey: "companyId"
 	})
 	Participation.Company = Participation.belongsTo(Company, {
 		foreignKey: "companyId"
 	})
 
-	Season.SeasonParticipations = Season.hasMany(Participation, {
+	Season.Participations = Season.hasMany(Participation, {
 		foreignKey: "seasonId"
 	})
 	Participation.Season = Participation.belongsTo(Season, {

@@ -32,7 +32,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				})
 			} else {
 				// Other Hunter
-				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId }, include: database.models.Hunter.SeasonParticipation }).then(async hunter => {
+				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId }, include: database.models.Hunter.Participation }).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", ephemeral: true });
 						return;
@@ -42,7 +42,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 					const currentSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-					const previousSeasonParticipations = await database.models.SeasonParticipation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+					const previousParticipations = await database.models.Participation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
 					const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
@@ -53,9 +53,9 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								.setAuthor(ihpAuthorPayload)
 								.setThumbnail(target.user.avatarURL())
 								.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
-								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.`)
+								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.Participation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.`)
 								.addFields(
-									{ name: "Season Placements", value: `Currently: ${(hunter.SeasonParticipation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}\n${previousSeasonParticipations.length > 0 ? `Previous Placements: ${previousSeasonParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
+									{ name: "Season Placements", value: `Currently: ${(hunter.Participation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.Participation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
 									{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished == 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
@@ -73,7 +73,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			}
 		} else {
 			// Self
-			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId }, include: database.models.Hunter.SeasonParticipation }).then(async hunter => {
+			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId }, include: database.models.Hunter.Participation }).then(async hunter => {
 				if (!hunter) {
 					interaction.reply("You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.");
 					return;
@@ -84,7 +84,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
 				const currentSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-				const previousSeasonParticipations = await database.models.SeasonParticipation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+				const previousParticipations = await database.models.Participation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
 				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
@@ -97,11 +97,11 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							.setTitle(`You are __Level ${hunter.level}__ in ${interaction.guild.name}`)
 							.setDescription(
 								`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - hunter.xp} XP\n\
-								You have earned *${hunter.SeasonParticipation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.${hunter.nextRankXP > 0 ? `You need ${hunter.nextRankXP} XP to reach the next rank.` : ""}\n\n\
+								You have earned *${hunter.Participation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.${hunter.nextRankXP > 0 ? `You need ${hunter.nextRankXP} XP to reach the next rank.` : ""}\n\n\
 								You have ${bountySlots} bounty slot${bountySlots == 1 ? '' : 's'}!`
 							)
 							.addFields(
-								{ name: "Season Placements", value: `Currently: ${(hunter.SeasonParticipation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.SeasonParticipation.placement}\n${previousSeasonParticipations.length > 0 ? `Previous Placements: ${previousSeasonParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
+								{ name: "Season Placements", value: `Currently: ${(hunter.Participation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.Participation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
 								{ name: `Level ${hunter.level + 1} Reward`, value: hunter.levelUpReward(hunter.level + 1, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 2} Reward`, value: hunter.levelUpReward(hunter.level + 2, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 3} Reward`, value: hunter.levelUpReward(hunter.level + 3, maxSimBounties, true), inline: true },

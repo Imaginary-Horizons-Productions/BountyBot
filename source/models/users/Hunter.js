@@ -37,9 +37,9 @@ exports.Hunter = class extends Model {
 
 		this.xp += totalPoints;
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId: this.companyId, isCurrentSeason: true } });
-		const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { companyId: this.companyId, userId: this.userId, seasonId: season.id }, defaults: { xp: totalPoints } });
+		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: this.companyId, userId: this.userId, seasonId: season.id }, defaults: { xp: totalPoints } });
 		if (!participationCreated) {
-			seasonParticipation.increment({ xp: totalPoints });
+			participation.increment({ xp: totalPoints });
 		}
 
 		this.level = Math.floor(Math.sqrt(this.xp / company.xpCoefficient) + 1);

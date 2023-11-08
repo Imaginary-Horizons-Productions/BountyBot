@@ -14,7 +14,7 @@ const { congratulationBuilder } = require("./textUtil");
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
 async function calculateRanks(season, allHunters, ranks) {
-	const participations = await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
+	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 	const particpationMap = participations.reduce((map, participation) => {
 		map[participation.userId] = participation;
 		return map;
@@ -107,7 +107,7 @@ async function getRankUpdates(guild) {
 			}
 		}
 		const updatedMembers = await guild.members.fetch({ user: userIdsWithChangedRanks });
-		const updatedParticipationsMap = (await database.models.SeasonParticipation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: userIdsWithChangedRanks } } }))
+		const updatedParticipationsMap = (await database.models.Participation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: userIdsWithChangedRanks } } }))
 			.reduce((map, participation) => {
 				map[participation.userId] = participation;
 				return map;

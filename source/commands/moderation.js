@@ -128,17 +128,17 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 				database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(async () => {
 					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 					await database.models.User.findOrCreate({ where: { id: member.id } });
-					const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { isRankDisqualified: true } });
+					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { isRankDisqualified: true } });
 					if (!participationCreated) {
-						seasonParticipation.isRankDisqualified = !seasonParticipation.isRankDisqualified;
-						seasonParticipation.save();
+						participation.isRankDisqualified = !participation.isRankDisqualified;
+						participation.save();
 					}
-					if (participationCreated || seasonParticipation.isRankDisqualified) {
-						seasonParticipation.increment("dqCount");
+					if (participationCreated || participation.isRankDisqualified) {
+						participation.increment("dqCount");
 					}
 					getRankUpdates(interaction.guild);
-					interaction.reply({ content: `<@${member.id}> has been ${seasonParticipation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
-					member.send(`You have been ${seasonParticipation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+					interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
+					member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				});
 				break;
 			case subcommands[3].name: // penalty
@@ -152,9 +152,9 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 					hunter.decrement({ xp: penaltyValue });
 					hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
 					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-					const [seasonParticipation, participationCreated] = await database.models.SeasonParticipation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 * penaltyValue } });
+					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 * penaltyValue } });
 					if (!participationCreated) {
-						seasonParticipation.decrement("xp", { by: penaltyValue });
+						participation.decrement("xp", { by: penaltyValue });
 					}
 					getRankUpdates(interaction.guild);
 					interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, ephemeral: true });

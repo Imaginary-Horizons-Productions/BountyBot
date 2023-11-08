@@ -25,7 +25,7 @@ exports.initModel = function (sequelize) {
 		totalXP: {
 			type: DataTypes.VIRTUAL,
 			async get() {
-				return await sequelize.models.SeasonParticipation.sum("xp", { where: { seasonId: this.id } }) ?? 0;
+				return await sequelize.models.Participation.sum("xp", { where: { seasonId: this.id } }) ?? 0;
 			}
 		},
 		bountiesCompleted: {

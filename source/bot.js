@@ -135,7 +135,7 @@ client.on(Events.GuildDelete, guild => {
 	database.models.Bounty.destroy({ where: { companyId: guild.id } });
 	database.models.Completion.destroy({ where: { companyId: guild.id } });
 
-	database.models.SeasonParticipation.destroy({ where: { companyId: guild.id } });
+	database.models.Participation.destroy({ where: { companyId: guild.id } });
 	database.models.Season.destroy({ where: { companyId: guild.id } });
 
 	database.models.Rank.destroy({ where: { companyId: guild.id } });
