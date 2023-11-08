@@ -15,8 +15,8 @@ const client = new Client({
 	retryLimit: 5,
 	presence: {
 		activities: [{
-			type: ActivityType.Listening,
-			name: "/commands"
+			type: ActivityType.Custom,
+			name: "🔰 Get started with /tutorial"
 		}]
 	},
 	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers]
