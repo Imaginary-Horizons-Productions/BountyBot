@@ -1,6 +1,7 @@
 # BountyBot Change Log
 ## BountyBot Version 2.0.0:
-- inital deploy
+- Slash command support! **ALL FEATURES** have been redone to use slash commands and message components (ie buttons and selects)
+- Toasts can now be Seconded, letting other users toast the toastees and toaster in the same thread
 
 ## Example Version 0.0.0:
 - Unordered item 1
