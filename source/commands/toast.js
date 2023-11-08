@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Op } = require('sequelize');
-const { SAFE_DELIMITER, DAY_IN_MS } = require('../constants');
+const { SAFE_DELIMITER, DAY_IN_MS, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getNumberEmoji, extractUserIdsFromMentions, checkTextsInAutoMod } = require('../util/textUtil');
@@ -195,7 +195,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 						if (levelTexts.length > 0) {
 							text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
 						}
-						if (text.length > 2000) {
+						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 						thread.send(text);

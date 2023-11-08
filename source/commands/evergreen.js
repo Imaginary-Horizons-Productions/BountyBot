@@ -5,6 +5,7 @@ const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates, generateBountyBoardThread } = require('../util/scoreUtil');
 const { getNumberEmoji, extractUserIdsFromMentions, timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
+const { MAX_MESSAGE_CONTENT_LENGTH, MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH } = require('../constants');
 
 const mainId = "evergreen";
 const options = [];
@@ -54,7 +55,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
 				database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } }).then(existingBounties => {
-					if (existingBounties.length > 9) {
+					if (existingBounties.length >= MAX_EMBEDS_PER_MESSAGE) {
 						interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", ephemeral: true });
 						return;
 					}
@@ -69,7 +70,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 										.setLabel("Title")
 										.setStyle(TextInputStyle.Short)
 										.setPlaceholder("Discord markdown allowed...")
-										.setMaxLength(256)
+										.setMaxLength(MAX_EMBED_TITLE_LENGTH)
 								),
 								new ActionRowBuilder().addComponents(
 									new TextInputBuilder().setCustomId("description")
@@ -312,7 +313,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 								if (levelTexts.length > 0) {
 									text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
 								}
-								if (text.length > 2000) {
+								if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 									text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 								}
 								thread.send(text);

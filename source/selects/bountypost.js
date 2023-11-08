@@ -1,6 +1,6 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildScheduledEventEntityType } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { YEAR_IN_MS } = require('../constants');
+const { YEAR_IN_MS, MAX_EMBED_TITLE_LENGTH } = require('../constants');
 const { database } = require('../../database');
 const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
@@ -19,7 +19,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 							.setLabel("Title")
 							.setStyle(TextInputStyle.Short)
 							.setPlaceholder("Discord markdown allowed...")
-							.setMaxLength(256)
+							.setMaxLength(MAX_EMBED_TITLE_LENGTH)
 					),
 					new ActionRowBuilder().addComponents(
 						new TextInputBuilder().setCustomId("description")

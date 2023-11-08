@@ -2,6 +2,7 @@ const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
 const { getRankUpdates } = require('../util/scoreUtil');
+const { MAX_EMBED_FIELD_COUNT } = require('../constants');
 
 const mainId = "rank";
 const options = [];
@@ -92,7 +93,7 @@ module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty h
 						return;
 					}
 
-					if (ranks.length > 24) {
+					if (ranks.length >= MAX_EMBED_FIELD_COUNT) {
 						interaction.reply({ content: "A server can only have 25 seasonal ranks at a time.", ephemeral: true });
 						return;
 					}

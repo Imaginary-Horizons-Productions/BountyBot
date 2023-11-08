@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
-const { DAY_IN_MS } = require('../constants');
+const { DAY_IN_MS, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "secondtoast";
@@ -99,7 +99,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (levelTexts.length > 0) {
 				text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
 			}
-			if (text.length > 2000) {
+			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 				text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 			}
 			interaction.message.thread.send(text);

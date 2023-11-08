@@ -6,6 +6,7 @@ const { getRankUpdates } = require('../util/scoreUtil');
 const { getNumberEmoji, extractUserIdsFromMentions, timeConversion } = require('../util/textUtil');
 const { Op } = require('sequelize');
 const { Bounty } = require('../models/bounties/Bounty');
+const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 
 const mainId = "bounty";
 const options = [];
@@ -400,7 +401,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 						if (levelTexts.length > 0) {
 							text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
 						}
-						if (text.length > 2000) {
+						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 

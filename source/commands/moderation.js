@@ -81,7 +81,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 		let member;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // user-report
-				const member = interaction.options.getMember(subcommands[0].optionsInput[0].name);
+				member = interaction.options.getMember(subcommands[0].optionsInput[0].name);
 				database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: member.id } }).then((hunter) => {
 					if (!hunter) {
 						interaction.reply({ content: `${member} has not interacted with BountyBot on this server.`, ephemeral: true });
