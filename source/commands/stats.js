@@ -76,7 +76,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			// Self
 			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
 				if (!hunter) {
-					interaction.reply("You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.");
+					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", ephemeral: true });
 					return;
 				}
 
