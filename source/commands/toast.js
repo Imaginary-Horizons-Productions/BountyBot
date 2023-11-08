@@ -1,9 +1,9 @@
 const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Op } = require('sequelize');
-const { SAFE_DELIMITER, DAY_IN_MS, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
+const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
 const { database } = require('../../database');
-const { getNumberEmoji, extractUserIdsFromMentions, checkTextsInAutoMod } = require('../util/textUtil');
+const { getNumberEmoji, extractUserIdsFromMentions, checkTextsInAutoMod, timeConversion } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 
@@ -87,7 +87,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
 
 		// Make database entities
-		const recentToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } }, include: database.models.Toast.Recipients });
+		const recentToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } }, include: database.models.Toast.Recipients });
 		let rewardsAvailable = 10;
 		let critToastsAvailable = 2;
 		for (const toast of recentToasts) {
@@ -100,7 +100,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				}
 			}
 		}
-		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - DAY_IN_MS));
+		const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - timeConversion(1, "d", "ms")));
 		const hunterIdsToastedInLastDay = toastsInLastDay.reduce((idSet, toast) => {
 			toast.Recipients.forEach(reciept => {
 				if (!idSet.has(reciept.recipientId)) {

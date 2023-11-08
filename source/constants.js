@@ -4,7 +4,6 @@ const { announcementsChannelId, lastPostedVersion } = require("../config/version
 
 module.exports = {
 	// Conversion Factors
-	DAY_IN_MS: 86400000,
 	YEAR_IN_MS: 31556926000,
 	ZERO_WIDTH_WHITE_SPACE: "\u200B",
 

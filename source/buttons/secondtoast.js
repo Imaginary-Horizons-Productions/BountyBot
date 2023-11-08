@@ -2,8 +2,9 @@ const { EmbedBuilder } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { database } = require('../../database');
 const { Op } = require('sequelize');
-const { DAY_IN_MS, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
+const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
+const { timeConversion } = require('../util/textUtil');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -37,7 +38,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 
-		const recentToasts = await database.models.Seconding.findAll({ where: { seconderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * DAY_IN_MS) } } });
+		const recentToasts = await database.models.Seconding.findAll({ where: { seconderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } } });
 		let critSecondsAvailable = 2;
 		for (const seconding of recentToasts) {
 			if (seconding.wasCrit) {
