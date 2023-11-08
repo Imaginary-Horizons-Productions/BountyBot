@@ -32,7 +32,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				})
 			} else {
 				// Other Hunter
-				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId }, include: database.models.Hunter.Participation }).then(async hunter => {
+				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId } }).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", ephemeral: true });
 						return;
@@ -41,8 +41,10 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const { xpCoefficient } = await database.models.Company.findByPk(interaction.guildId);
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
+					const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
 					const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-					const previousParticipations = await database.models.Participation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
+					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 					const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
@@ -53,16 +55,16 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								.setAuthor(ihpAuthorPayload)
 								.setThumbnail(target.user.avatarURL())
 								.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
-								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${hunter.Participation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.`)
+								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${hunter.rank !== null ? ` which qualifies for ${rankName}` : ""}.`)
 								.addFields(
-									{ name: "Season Placements", value: `Currently: ${(hunter.Participation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.Participation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
-									{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished == 1 ? 'y' : 'ies'}`, inline: true },
-									{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished == 1 ? 'y' : 'ies'}`, inline: true },
+									{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
+									{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished === 1 ? 'y' : 'ies'}`, inline: true },
+									{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
 									{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
-									{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised == 1 ? "" : "s"}`, inline: true },
-									{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded == 1 ? "" : "s"}`, inline: true },
-									{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived == 1 ? "" : "s"}`, inline: true },
+									{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised === 1 ? "" : "s"}`, inline: true },
+									{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded === 1 ? "" : "s"}`, inline: true },
+									{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
 								)
 								.setFooter(randomFooterTip())
 								.setTimestamp()
@@ -73,7 +75,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			}
 		} else {
 			// Self
-			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId }, include: database.models.Hunter.Participation }).then(async hunter => {
+			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
 				if (!hunter) {
 					interaction.reply("You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.");
 					return;
@@ -83,8 +85,10 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
+				const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
 				const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-				const previousParticipations = await database.models.Participation.findAll({ where: { seasonId: { [Op.not]: currentSeason.id }, userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
+				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 
@@ -97,22 +101,22 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							.setTitle(`You are __Level ${hunter.level}__ in ${interaction.guild.name}`)
 							.setDescription(
 								`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - hunter.xp} XP\n\
-								You have earned *${hunter.Participation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.${hunter.nextRankXP > 0 ? `You need ${hunter.nextRankXP} XP to reach the next rank.` : ""}\n\n\
-								You have ${bountySlots} bounty slot${bountySlots == 1 ? '' : 's'}!`
+								You have earned *${currentParticipation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.${hunter.nextRankXP > 0 ? `You need ${hunter.nextRankXP} XP to reach the next rank.` : ""}\n\n\
+								You have ${bountySlots} bounty slot${bountySlots === 1 ? '' : 's'}!`
 							)
 							.addFields(
-								{ name: "Season Placements", value: `Currently: ${(hunter.Participation?.placement ?? 0) == 0 ? "Unranked" : "#" + hunter.Participation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
+								{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
 								{ name: `Level ${hunter.level + 1} Reward`, value: hunter.levelUpReward(hunter.level + 1, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 2} Reward`, value: hunter.levelUpReward(hunter.level + 2, maxSimBounties, true), inline: true },
 								{ name: `Level ${hunter.level + 3} Reward`, value: hunter.levelUpReward(hunter.level + 3, maxSimBounties, true), inline: true },
 								{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
-								{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished == 1 ? 'y' : 'ies'}`, inline: true },
-								{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished == 1 ? 'y' : 'ies'}`, inline: true },
+								{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished === 1 ? 'y' : 'ies'}`, inline: true },
+								{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
 								{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
 								{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
-								{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised == 1 ? "" : "s"}`, inline: true },
-								{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded == 1 ? "" : "s"}`, inline: true },
-								{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived == 1 ? "" : "s"}`, inline: true },
+								{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised === 1 ? "" : "s"}`, inline: true },
+								{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded === 1 ? "" : "s"}`, inline: true },
+								{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
 							)
 							.setFooter(randomFooterTip())
 							.setTimestamp()
