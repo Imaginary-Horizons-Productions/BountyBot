@@ -84,6 +84,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 			const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue("endTimestamp"));
 			const shouldMakeEvent = startTimestamp && endTimestamp;
 			if (startTimestamp || endTimestamp) {
+				if (!shouldMakeEvent) {
+					errors.push("Cannot make event with only start or only end timestamp.")
+				}
 				if (!startTimestamp) {
 					errors.push("Start timestamp must be an integer.");
 				} else if (!endTimestamp) {
