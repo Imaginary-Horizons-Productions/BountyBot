@@ -13,7 +13,7 @@ database.authenticate().then(() => {
 	const { Recipient, initModel: initRecipient } = require("../../../models/toasts/Recipient.js");
 	const { Seconding, initModel: initSeconding } = require("../../../models/toasts/Seconding.js");
 	const { Season, initModel: initSeason } = require("../../../models/seasons/Season.js");
-	const { Particpation, initModel: initParticipation } = require("../../../models/seasons/Participation.js");
+	const { Participation, initModel: initParticipation } = require("../../../models/seasons/Participation.js");
 
 	initCompany(database);
 	initRank(database);
@@ -125,24 +125,24 @@ database.authenticate().then(() => {
 		foreignKey: "companyId"
 	})
 
-	User.Participations = User.hasMany(Particpation, {
+	User.Participations = User.hasMany(Participation, {
 		foreignKey: "userId"
 	})
-	Particpation.User = Particpation.belongsTo(User, {
+	Participation.User = Participation.belongsTo(User, {
 		foreignKey: "userId"
 	})
 
-	Company.Participations = Company.hasMany(Particpation, {
+	Company.Participations = Company.hasMany(Participation, {
 		foreignKey: "companyId"
 	})
-	Particpation.Company = Particpation.belongsTo(Company, {
+	Participation.Company = Participation.belongsTo(Company, {
 		foreignKey: "companyId"
 	})
 
-	Season.Participations = Season.hasMany(Particpation, {
+	Season.Participations = Season.hasMany(Participation, {
 		foreignKey: "seasonId"
 	})
-	Particpation.Season = Particpation.belongsTo(Season, {
+	Participation.Season = Participation.belongsTo(Season, {
 		foreignKey: "seasonId"
 	})
 
@@ -151,7 +151,13 @@ database.authenticate().then(() => {
 	return database.models.Company.findOrCreate({ where: { id: ihcId } })
 }).then(async () => {
 	for (const id in hunters) {
-		await database.models.User.findOrCreate({ where: { id }, defaults: { isPremium: ["112785244733628416", "106122478715150336"].includes(id) } });
-		await database.models.Hunter.findOrCreate({ where: { userId: id, companyId: ihcId }, default: { xp: hunters[id].xp, isRankEligible: id !== "106122478715150336" } });
+		const user = await database.models.User.findByPk(id);
+		if (!user) {
+			await database.models.User.create({ id, isPremium: ["112785244733628416", "106122478715150336"].includes(id) });
+		}
+		const hunter = await database.models.Hunter.findOne({ where: { userId: id, companyId: ihcId } });
+		if (!hunter) {
+			await database.models.Hunter.create({ userId: id, companyId: ihcId, xp: hunters[id].xp, isRankEligible: id !== "106122478715150336" });
+		}
 	}
 });
