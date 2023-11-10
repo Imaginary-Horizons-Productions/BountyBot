@@ -26,7 +26,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						{
 							emoji: getNumberEmoji(i),
 							label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
-							description: `XP Reward: ${Bounty.calculateReward(hunter.level, i, existingBounties.showcaseCount)}`,
+							description: `XP Reward: ${Bounty.calculateReward(hunter.level, i, existingBounty?.showcaseCount ?? 0)}`,
 							value: i.toString()
 						}
 					)
