@@ -55,12 +55,19 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
 				database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } }).then(existingBounties => {
-					if (existingBounties.length >= MAX_EMBEDS_PER_MESSAGE) {
+					let slotNumber = null;
+					for (let slotCandidate = 1; slotCandidate <= MAX_EMBEDS_PER_MESSAGE; slotCandidate++) {
+						if (!existingBounties.some(bounty => bounty.slotNumber === slotCandidate)) {
+							slotNumber = slotCandidate;
+							break;
+						}
+					}
+
+					if (slotNumber === null) {
 						interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", ephemeral: true });
 						return;
 					}
 
-					const slotNumber = existingBounties.length + 1;
 					interaction.showModal(
 						new ModalBuilder().setCustomId("evergreenpost")
 							.setTitle("New Evergreen Bounty")
@@ -324,7 +331,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 				})
 				break;
 			case subcommands[5].name: // take-down
-				database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" } }).then(openBounties => {
+				database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
 					const bountyOptions = openBounties.map(bounty => {
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
