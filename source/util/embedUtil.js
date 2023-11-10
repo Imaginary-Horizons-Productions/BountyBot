@@ -181,7 +181,7 @@ async function buildModStatsEmbed(guild, member, hunter) {
 		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
 		.addFields(
 			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
-			{ name: "Disqualifications", value: `${await database.models.Participation.sum("dqCount", { where: { companyId: guild.id, userId: member.id } })} season DQs`, inline: true },
+			{ name: "Disqualifications", value: `${await database.models.Participation.sum("dqCount", { where: { companyId: guild.id, userId: member.id } }) ?? 0} season DQs`, inline: true },
 			{ name: "Penalties", value: `${hunter.penaltyCount} penalties (${hunter.penaltyPointTotal} points total)`, inline: true }
 		)
 		.setFooter(randomFooterTip())
