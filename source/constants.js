@@ -24,6 +24,7 @@ module.exports = {
 	MAX_MESSAGE_ACTION_ROWS: 5,
 	MAX_BUTTONS_PER_ROW: 5,
 	MAX_SELECT_OPTIONS: 25,
+	EMPTY_MESSAGE_PAYLOAD: { content: "\u200B", components: [], embeds: [] },
 
 	// Config
 	authPath,
