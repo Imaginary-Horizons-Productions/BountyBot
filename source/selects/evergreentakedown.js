@@ -12,7 +12,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
 		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-		if (evergreenBounties.length > 1) {
+		if (evergreenBounties.length > 0) {
 			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString())));
 			if (company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
