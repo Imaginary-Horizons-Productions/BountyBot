@@ -21,7 +21,7 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, false, 3000, options, subcommands,
 	(interaction) => {
-		database.models.Company.findByPk(interaction.guildId).then(company => {
+		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
 			const updatePayload = {};
 			let content = "The following server settings have been configured:";
 
