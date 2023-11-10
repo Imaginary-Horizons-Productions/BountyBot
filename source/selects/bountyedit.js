@@ -7,8 +7,15 @@ const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 const mainId = "bountyedit";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve bounty reconfigurations from the user */
-	(interaction, args) => {
+	async (interaction, args) => {
 		const [slotNumber] = interaction.values;
+		// Verify bounty exists
+		const existingBounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open", slotNumber } });
+		if (!existingBounty) {
+			interaction.update({ content: `You don't have a bounty in slot ${slotNumber}.`, components: [] });
+			return;
+		}
+
 		database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 			const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
 				.setLabel("Event Start (Unix Timestamp)")
