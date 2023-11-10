@@ -15,12 +15,6 @@ const options = [
 			{ name: "No prefix", value: "(nothing)" },
 			{ name: "Suppress notifications (@silent)", value: "@silent" }
 		]
-	},
-	{
-		type: "Boolean",
-		name: "server-boost-xp",
-		description: "Configure whether boosting the server awards XP (default true)",
-		required: false
 	}
 ];
 const subcommands = [];
@@ -34,12 +28,6 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			if (prefix !== null) {
 				updatePayload.announcementPrefix = prefix === "(nothing)" ? "" : prefix;
 				content += `\n- The announcment prefix was set to ${prefix}`;
-			}
-
-			const shouldBoostXP = interaction.options.getBoolean(options[1].name);
-			if (shouldBoostXP !== null) {
-				updatePayload.disableBoostXP = !shouldBoostXP;
-				content += `\n- XP for Server Boosts has been ${shouldBoostXP ? "en" : "dis"}abled`;
 			}
 
 			company.update(updatePayload);

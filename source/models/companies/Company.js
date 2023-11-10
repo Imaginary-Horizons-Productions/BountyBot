@@ -49,10 +49,6 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.STRING,
 			defaultValue: '@here'
 		},
-		disableBoostXP: {
-			type: DataTypes.BOOLEAN,
-			defaultValue: true
-		},
 		maxSimBounties: {
 			type: DataTypes.INTEGER,
 			defaultValue: 5

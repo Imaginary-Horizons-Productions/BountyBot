@@ -34,7 +34,6 @@ module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, boun
 				database.models.Company.update(
 					{
 						announcementPrefix: "@here",
-						disableBoostXP: true,
 						maxSimBounties: 5,
 						backupTimer: 3600000,
 						eventMultiplier: 1,
