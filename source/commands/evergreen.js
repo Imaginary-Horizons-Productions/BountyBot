@@ -264,7 +264,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 
 					const validatedCompleterIds = [];
 					const completerMembers = dedupedCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values() : [];
-					const levelTexts = [];
+					let levelTexts = [];
 					for (const member of completerMembers) {
 						if (!member.user.bot) {
 							const memberId = member.id;
@@ -317,8 +317,9 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 									text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
 								}
 								text += `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n`;
+								levelTexts = levelTexts.filter(text => Boolean(text));
 								if (levelTexts.length > 0) {
-									text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
+									text += `\n__**Rewards**__\n${levelTexts.join("\n")}`;
 								}
 								if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 									text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";

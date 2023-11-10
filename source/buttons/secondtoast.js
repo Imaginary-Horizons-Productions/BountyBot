@@ -30,7 +30,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		const recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
 		recipientIds.push(originalToast.senderId);
-		const levelTexts = [];
+		let levelTexts = [];
 		for (const userId of recipientIds) {
 			if (userId !== interaction.user.id) {
 				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
@@ -97,8 +97,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
 			}
 			text += `__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP`).join("\n")}${wasCrit ? `\n${interaction.member} + 1 XP` : ""}`;
+			levelTexts = levelTexts.filter(text => Boolean(text));
 			if (levelTexts.length > 0) {
-				text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
+				text += `\n__**Rewards**__\n${levelTexts.join("\n")}`;
 			}
 			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 				text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";

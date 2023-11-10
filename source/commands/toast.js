@@ -164,7 +164,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		database.models.Recipient.bulkCreate(rawRecipients);
 
 		// Add XP and update ranks
-		const levelTexts = [];
+		let levelTexts = [];
 		levelTexts.push(await sender.addXP(interaction.guild.name, critValue, false));
 		for (const recipientId of rewardedRecipients) {
 			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
@@ -192,8 +192,9 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
 						}
 						text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}\n`;
+						levelTexts = levelTexts.filter(text => Boolean(text));
 						if (levelTexts.length > 0) {
-							text += `\n__**Rewards**__\n${levelTexts.filter(text => Boolean(text)).join("\n")}`;
+							text += `\n__**Rewards**__\n${levelTexts.join("\n")}`;
 						}
 						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
