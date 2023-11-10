@@ -6,8 +6,15 @@ const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 const mainId = "evergreenedit";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve bounty reconfigurations from the user */
-	(interaction, args) => {
+	async (interaction, args) => {
 		const [slotNumber] = interaction.values;
+		// Verify bounty exists
+		const existingBounty = await database.models.Bounty.findOne({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open", slotNumber } });
+		if (!existingBounty) {
+			interaction.update({ content: `There is no evergreen bounty #${slotNumber}.`, components: [] });
+			return;
+		}
+
 		database.models.Bounty.findOne({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 			interaction.showModal(
 				new ModalBuilder().setCustomId(mainId)
