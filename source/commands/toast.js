@@ -169,6 +169,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		for (const recipientId of rewardedRecipients) {
 			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
 			levelTexts.push(await hunter.addXP(interaction.guild.name, 1, false));
+			hunter.increment("toastsReceived");
 		}
 
 		interaction.reply({

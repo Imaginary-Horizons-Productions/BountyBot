@@ -35,6 +35,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (userId !== interaction.user.id) {
 				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
 				levelTexts.push(await hunter.addXP(interaction.guild.name, 1, true));
+				hunter.increment("toastsReceived");
 			}
 		}
 
