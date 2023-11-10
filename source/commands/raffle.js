@@ -7,7 +7,7 @@ const mainId = "raffle";
 const options = [];
 const subcommands = [
 	{
-		name: "by-ranks",
+		name: "by-rank",
 		description: "Select a user at or above a particular rank"
 	},
 	{

@@ -12,16 +12,16 @@ module.exports = new SelectWrapper(mainId, 3000,
 			const qualifiedHunters = unvalidatedHunters.filter(hunter => !hunter.isRankDisqualified);
 			return interaction.guild.members.fetch({ user: qualifiedHunters.map(hunter => hunter.userId) });
 		}).then((unvalidatedMembers) => {
-			const eligibleHunters = unvalidatedMembers.filter(member => member.manageable);
-			if (eligibleHunters.size < 1) {
+			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
+			if (eligibleMembers.size < 1) {
 				database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
 					const rank = ranks[rankIndex];
 					interaction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${rankIndex + 1}`}).`, ephemeral: true });
 				});
 				return;
 			}
-			const winner = eligibleHunters.at(Math.floor(Math.random() * eligibleHunters.size));
-			interaction.reply(`The winner of this raffle is: <@${winner.userId}>`);
+			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
+			interaction.reply(`The winner of this raffle is: ${winner}`);
 			database.models.Company.findByPk(interaction.guildId).then(company => {
 				company.update("nextRaffleString", null);
 			});
