@@ -62,8 +62,6 @@ Configure BountyBot settings for this server
 > Choices: `Notify online members (@here)`, `Notify all members (@everyone)`, `No prefix`, `Suppress notifications (@silent)`
 
 Configure who to send notifications to (default @here)
-#### server-boost-xp (optional)
-Configure whether boosting the server awards XP (default true)
 ### /create-default
 > Permission Level: ManageChannels
 
