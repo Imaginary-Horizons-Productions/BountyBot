@@ -8,8 +8,23 @@ const { getRankUpdates } = require('../util/scoreUtil');
 const mainId = "bountypost";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve remaining bounty configurations from the user */
-	(interaction, args) => {
+	async (interaction, args) => {
 		const [slotNumber] = interaction.values;
+		// Check user actually has slot
+		const company = await database.models.Company.findByPk(interaction.guildId);
+		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } });
+		if (parseInt(slotNumber) > hunter.maxSlots(company.maxSimBounties)) {
+			interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
+			return;
+		}
+
+		// Check slot is not occupied
+		const existingBounty = await database.models.Bounty.findOne({ where: { state: "open", userId: interaction.user.id, companyId: interaction.guildId, slotNumber: parseInt(slotNumber) } });
+		if (existingBounty) {
+			interaction.update({ content: `You already have a bounty in slot ${slotNumber}.`, components: [] });
+			return;
+		}
+
 		interaction.showModal(
 			new ModalBuilder().setCustomId(mainId)
 				.setTitle(`New Bounty (Slot ${slotNumber})`)
@@ -116,7 +131,6 @@ module.exports = new SelectWrapper(mainId, 3000,
 			}
 
 			if (errors.length > 0) {
-				modalSubmission.message.edit({ components: [] });
 				modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
 				return;
 			}
