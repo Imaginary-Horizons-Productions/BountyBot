@@ -4,7 +4,7 @@ const { database } = require("../../database");
 const { Hunter } = require("../models/users/Hunter");
 const { Company } = require("../models/companies/Company");
 const { COMPANY_XP_COEFFICIENT } = require("../constants");
-const { generateTextBar } = require("./scoreUtil");
+const { generateTextBar } = require("./textUtil");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
