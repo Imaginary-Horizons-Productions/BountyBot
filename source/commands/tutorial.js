@@ -36,7 +36,7 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 				break;
 			case options[0].choices[1].value: // server
 				embed.setTitle("Server Setup Tips")
-					.setDescription("Here are some suggestions for setting up BountyBot on your server:")
+					.setDescription("Following are some suggestions for setting up BountyBot on your server. NOTE: If you kick BountyBot, it will delete all data related to your server from the database.")
 					.addFields(
 						{ name: "Join Link", value: "Add BountyBot to your server with [this link](https://discord.com/api/oauth2/authorize?client_id=536330483852771348&permissions=18135835404304&scope=bot)." },
 						{ name: "/create-default", value: "The `/create-default` command can create a bounty board forum channel, a reference channel for the scoreboard, or roles for showing off seasonal ranks." },
