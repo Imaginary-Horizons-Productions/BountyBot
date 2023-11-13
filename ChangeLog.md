@@ -1,6 +1,7 @@
 # BountyBot Change Log
 ## BountyBot Version 2.0.1:
 - Fixed the join link not asking for all needed permissions
+- `/bounty list` defaults to your own bounties
 
 ### Known Issues
 - When a Toast's Recipient Seconds that toast, they aren't filtered out of getting XP again

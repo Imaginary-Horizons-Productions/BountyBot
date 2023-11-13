@@ -86,13 +86,13 @@ const subcommands = [
 	},
 	{
 		name: "list",
-		description: "List all of a hunter's open bounties",
+		description: "List all of a hunter's open bounties (default: your own)",
 		optionsInput: [
 			{
 				type: "User",
 				name: "bounty-hunter",
 				description: "The bounty hunter to show open bounties for",
-				required: true
+				required: false
 			}
 		]
 	}
@@ -452,7 +452,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 				})
 				break;
 			case subcommands[8].name: // list
-				const listUserId = interaction.options.getUser(subcommands[8].optionsInput[0].name).id;
+				const listUserId = interaction.options.getUser(subcommands[8].optionsInput[0].name)?.id ?? interaction.user.id;
 				database.models.Bounty.findAll({ where: { userId: listUserId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(async existingBounties => {
 					if (existingBounties.length < 1) {
 						interaction.reply({ content: `<@${listUserId}> doesn't have any open bounties posted.`, ephemeral: true });
