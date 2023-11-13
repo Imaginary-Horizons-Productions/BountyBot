@@ -1,11 +1,10 @@
-const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 
 const mainId = "evergreenswapslot";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Complete the swaps */
-	async (interaction, [unparsedSourceSlot]) => {
+	async (interaction, [unparsedSourceSlot], database) => {
 		const sourceSlot = parseInt(unparsedSourceSlot);
 		const destinationSlot = parseInt(interaction.values[0]);
 		const company = await database.models.Company.findByPk(interaction.guildId);
@@ -25,7 +24,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					return thread.fetchStarterMessage();
 				}).then(async message => {
 					evergreenBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
-					message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString()))) });
+					message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database))) });
 				});
 			})
 		}

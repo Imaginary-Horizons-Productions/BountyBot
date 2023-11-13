@@ -1,6 +1,5 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { MAX_EMBED_FIELD_COUNT } = require('../constants');
 
@@ -81,7 +80,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty hunters who have above average season XP", PermissionFlagsBits.ManageRoles, true, false, 3000, options, subcommands,
-	(interaction) => {
+	(interaction, database) => {
 		let varianceThreshold;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // add
@@ -115,7 +114,7 @@ module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty h
 					database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(() => {
 						database.models.Rank.create(rawRank);
 					})
-					getRankUpdates(interaction.guild);
+					getRankUpdates(interaction.guild, database);
 					interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, ephemeral: true });
 				})
 				break;
@@ -157,7 +156,7 @@ module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty h
 						updateOptions.rankmoji = newRankmoji;
 					}
 					rank.update(updateOptions);
-					getRankUpdates(interaction.guild);
+					getRankUpdates(interaction.guild, database);
 					interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, ephemeral: true });
 				})
 				break;

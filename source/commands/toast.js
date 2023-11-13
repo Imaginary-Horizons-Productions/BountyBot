@@ -2,7 +2,6 @@ const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { Op } = require('sequelize');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
 const { getNumberEmoji, extractUserIdsFromMentions, checkTextsInAutoMod, timeConversion } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
@@ -31,7 +30,7 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000, options, subcommands,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
-	async (interaction) => {
+	async (interaction, database) => {
 		const errors = [];
 
 		// Find valid toastees
@@ -165,10 +164,10 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		// Add XP and update ranks
 		let levelTexts = [];
-		levelTexts.push(await sender.addXP(interaction.guild.name, critValue, false));
+		levelTexts.push(await sender.addXP(interaction.guild.name, critValue, false, database));
 		for (const recipientId of rewardedRecipients) {
 			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
-			levelTexts.push(await hunter.addXP(interaction.guild.name, 1, false));
+			levelTexts.push(await hunter.addXP(interaction.guild.name, 1, false, database));
 			hunter.increment("toastsReceived");
 		}
 
@@ -186,7 +185,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}).then(message => {
 			message.startThread({ name: "Rewards" }).then(thread => {
 				if (rewardedRecipients.length > 0) {
-					getRankUpdates(interaction.guild).then(rankUpdates => {
+					getRankUpdates(interaction.guild, database).then(rankUpdates => {
 						const multiplierString = company.eventMultiplierString();
 						let text = "";
 						if (rankUpdates.length > 0) {
@@ -201,7 +200,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 						thread.send(text);
-						updateScoreboard(company, interaction.guild);
+						updateScoreboard(company, interaction.guild, database);
 					})
 				}
 			});

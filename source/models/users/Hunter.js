@@ -1,5 +1,4 @@
 const { DataTypes, Model, Sequelize } = require('sequelize');
-const { database } = require('../../../database');
 const { congratulationBuilder } = require('../../util/textUtil');
 
 /** This class stores a user's information related to a specific company */
@@ -26,9 +25,10 @@ exports.Hunter = class extends Model {
 	 * @param {string} guildName
 	 * @param {number} points
 	 * @param {boolean} ignoreMultiplier
+	 * @param {Sequelize} database
 	 * @returns {string} level-up text
 	 */
-	async addXP(guildName, points, ignoreMultiplier) {
+	async addXP(guildName, points, ignoreMultiplier, database) {
 		const company = await database.models.Company.findByPk(this.companyId);
 		const totalPoints = points * (!ignoreMultiplier ? company.eventMultiplier : 1);
 

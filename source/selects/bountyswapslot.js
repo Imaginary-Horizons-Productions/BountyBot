@@ -1,12 +1,11 @@
 const { Op } = require('sequelize');
-const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 
 const mainId = "bountyswapslot";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Complete the swaps */
-	async (interaction, [unparsedSourceSlot]) => {
+	async (interaction, [unparsedSourceSlot], database) => {
 		const sourceSlot = parseInt(unparsedSourceSlot);
 		const destinationSlot = parseInt(interaction.values[0]);
 		const company = await database.models.Company.findByPk(interaction.guildId);
@@ -17,13 +16,13 @@ module.exports = new SelectWrapper(mainId, 3000,
 		sourceBounty.slotNumber = destinationSlot;
 		await sourceBounty.save();
 		await sourceBounty.reload();
-		sourceBounty.updatePosting(interaction.guild, company);
+		sourceBounty.updatePosting(interaction.guild, company, database);
 
 		if (destinationBounty) {
 			destinationBounty.slotNumber = sourceSlot;
 			await destinationBounty.save();
 			await destinationBounty.reload();
-			destinationBounty.updatePosting(interaction.guild, company);
+			destinationBounty.updatePosting(interaction.guild, company, database);
 		}
 
 		const hunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });

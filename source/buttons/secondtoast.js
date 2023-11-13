@@ -1,6 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { database } = require('../../database');
 const { Op } = require('sequelize');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
@@ -9,7 +8,7 @@ const { timeConversion } = require('../util/textUtil');
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
-	async (interaction, [toastId]) => {
+	async (interaction, [toastId], database) => {
 		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
 		if (originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", ephemeral: true });
@@ -34,7 +33,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		for (const userId of recipientIds) {
 			if (userId !== interaction.user.id) {
 				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
-				levelTexts.push(await hunter.addXP(interaction.guild.name, 1, true));
+				levelTexts.push(await hunter.addXP(interaction.guild.name, 1, true, database));
 				hunter.increment("toastsReceived");
 			}
 		}
@@ -78,7 +77,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			const critRoll = Math.random() * 100;
 			if (critRoll * critRoll * critRoll > 3375000 / lowestEffectiveToastLevel) {
 				wasCrit = true;
-				levelTexts.push(seconder.addXP(interaction.guild.name, 1, true));
+				levelTexts.push(seconder.addXP(interaction.guild.name, 1, true, database));
 			}
 		}
 
@@ -92,7 +91,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			embed.addFields({ name: "Seconded by", value: interaction.member.toString() });
 		}
 		interaction.update({ embeds: [embed] });
-		getRankUpdates(interaction.guild).then(rankUpdates => {
+		getRankUpdates(interaction.guild, database).then(rankUpdates => {
 			let text = "";
 			if (rankUpdates.length > 0) {
 				text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;

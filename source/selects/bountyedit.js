@@ -1,13 +1,12 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildScheduledEventEntityType } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { YEAR_IN_MS } = require('../constants');
-const { database } = require('../../database');
 const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 
 const mainId = "bountyedit";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve bounty reconfigurations from the user */
-	async (interaction, args) => {
+	async (interaction, args, database) => {
 		const [slotNumber] = interaction.values;
 		// Verify bounty exists
 		const existingBounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open", slotNumber } });
@@ -170,9 +169,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 				// update bounty board
 				const company = await database.models.Company.findByPk(modalSubmission.guildId);
 				const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.eventMultiplierString());
+				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.eventMultiplierString(), database);
 
-				bounty.updatePosting(modalSubmission.guild, company);
+				bounty.updatePosting(modalSubmission.guild, company, database);
 
 				modalSubmission.update({ content: "Bounty edited!", components: [] });
 				modalSubmission.channel.send(company.sendAnnouncement({ content: `${modalSubmission.member} has edited one of their bounties:`, embeds: [bountyEmbed] }));

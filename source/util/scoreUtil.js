@@ -1,6 +1,5 @@
-const { database } = require("../../database");
 const { Guild, EmbedBuilder, GuildTextThreadManager } = require("discord.js");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const { Company } = require("../models/companies/Company");
 const { Rank } = require("../models/companies/Rank");
 const { Season } = require("../models/seasons/Season");
@@ -11,9 +10,10 @@ const { congratulationBuilder } = require("./textUtil");
  * @param {Season} season
  * @param {Hunter[]} allHunters
  * @param {Rank[]} ranks
+ * @param {Sequelize} database
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
-async function calculateRanks(season, allHunters, ranks) {
+async function calculateRanks(season, allHunters, ranks, database) {
 	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 	const particpationMap = participations.reduce((map, participation) => {
 		map[participation.userId] = participation;
@@ -87,14 +87,15 @@ async function calculateRanks(season, allHunters, ranks) {
 /** Update ranks for all hunters in the guild, then return rank up messages
  * @param {Guild} guild
  * @param {boolean} force
+ * @param {Sequelize} database
  * @returns an array of rank and placement update strings
  */
-async function getRankUpdates(guild) {
+async function getRankUpdates(guild, database) {
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
 	const ranks = await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
 
-	return calculateRanks(season, allHunters, ranks).then(async (firstPlaceMessage) => {
+	return calculateRanks(season, allHunters, ranks, database).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 		const outMessages = [];
 		if (firstPlaceMessage) {

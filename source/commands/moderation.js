@@ -1,7 +1,6 @@
 const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { SAFE_DELIMITER } = require('../constants');
-const { database } = require('../../database');
 const { buildModStatsEmbed } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { getNumberEmoji } = require('../util/textUtil');
@@ -77,7 +76,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
-	(interaction) => {
+	(interaction, database) => {
 		let member;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // user-report
@@ -87,7 +86,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 						interaction.reply({ content: `${member} has not interacted with BountyBot on this server.`, ephemeral: true });
 						return;
 					}
-					buildModStatsEmbed(interaction.guild, member, hunter).then(embed => {
+					buildModStatsEmbed(interaction.guild, member, hunter, database).then(embed => {
 						interaction.reply({ embeds: [embed], ephemeral: true });
 					})
 				});
@@ -136,7 +135,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 					if (participationCreated || participation.isRankDisqualified) {
 						participation.increment("dqCount");
 					}
-					getRankUpdates(interaction.guild);
+					getRankUpdates(interaction.guild, database);
 					interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
 					member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				});
@@ -156,7 +155,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 					if (!participationCreated) {
 						participation.decrement("xp", { by: penaltyValue });
 					}
-					getRankUpdates(interaction.guild);
+					getRankUpdates(interaction.guild, database);
 					interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, ephemeral: true });
 					member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 				})

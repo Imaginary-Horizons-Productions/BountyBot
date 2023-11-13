@@ -2,7 +2,6 @@ const { EmbedBuilder } = require('discord.js');
 const { ZERO_WIDTH_WHITE_SPACE } = require('../constants');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
-const { database } = require('../../database');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
 
@@ -18,12 +17,12 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000, options, subcommands,
 	/** Get the BountyBot stats for yourself or someone else */
-	(interaction) => {
+	(interaction, database) => {
 		const target = interaction.options.getMember("bounty-hunter");
 		if (target && target.id !== interaction.user.id) {
 			if (target.id == interaction.client.user.id) {
 				// BountyBot
-				buildCompanyStatsEmbed(interaction.guild).then(embed => {
+				buildCompanyStatsEmbed(interaction.guild, database).then(embed => {
 					interaction.reply({
 						embeds: [embed],
 						ephemeral: true

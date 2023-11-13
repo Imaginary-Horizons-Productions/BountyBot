@@ -1,12 +1,11 @@
 const { Op } = require('sequelize');
-const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
 
 const mainId = "rafflerank";
 
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Given selected rank for raffle, randomly select eligible hunter */
-	(interaction, args) => {
+	(interaction, args, database) => {
 		const rankIndex = Number(interaction.values[0]);
 		database.models.Hunter.findAll({ where: { companyId: interaction.guildId, rank: { [Op.gte]: rankIndex } } }).then(unvalidatedHunters => {
 			const qualifiedHunters = unvalidatedHunters.filter(hunter => !hunter.isRankDisqualified);

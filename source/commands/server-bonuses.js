@@ -1,5 +1,4 @@
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
 const { buildServerBonusesEmbed } = require('../util/embedUtil');
 
 const mainId = "server-bonuses";
@@ -7,7 +6,7 @@ const options = [];
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Get info about the currently running server bonuses", null, false, false, 3000, options, subcommands,
 	/** Send the user info about currently running server bonuses */
-	(interaction) => {
+	(interaction, database) => {
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
 			return buildServerBonusesEmbed(interaction.channel, interaction.guild, company);
 		}).then(embed => {

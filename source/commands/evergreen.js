@@ -1,6 +1,5 @@
 const { PermissionFlagsBits, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
 const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates, generateBountyBoardThread } = require('../util/scoreUtil');
@@ -50,7 +49,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, false, 3000, options, subcommands,
-	(interaction) => {
+	(interaction, database) => {
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
@@ -129,12 +128,12 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 						const bounty = await database.models.Bounty.create(rawBounty);
 
 						// post in bounty board forum
-						const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString());
+						const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database);
 						interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 							if (company.bountyBoardId) {
 								interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
 									const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-									const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString())));
+									const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database)));
 									if (company.evergreenThreadId) {
 										return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 											const message = await thread.fetchStarterMessage();
@@ -301,15 +300,15 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 
 					for (const userId of validatedCompleterIds) {
 						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-						levelTexts.push(await hunter.addXP(interaction.guild.name, bountyValue, true));
+						levelTexts.push(await hunter.addXP(interaction.guild.name, bountyValue, true, database));
 						hunter.othersFinished++;
 						hunter.save();
 					}
 
-					bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString()).then(embed => {
+					bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database).then(embed => {
 						return interaction.reply({ embeds: [embed], fetchReply: true });
 					}).then(replyMessage => {
-						getRankUpdates(interaction.guild).then(rankUpdates => {
+						getRankUpdates(interaction.guild, database).then(rankUpdates => {
 							replyMessage.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 								const multiplierString = company.eventMultiplierString();
 								let text = "";
@@ -326,7 +325,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 								}
 								thread.send(text);
 							})
-							updateScoreboard(company, interaction.guild);
+							updateScoreboard(company, interaction.guild, database);
 						});
 					})
 				})

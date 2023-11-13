@@ -17,16 +17,16 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, false, false, 3000, options, subcommands,
 	/** View the XP scoreboard */
-	(interaction) => {
+	(interaction, database) => {
 		if (interaction.options.getString(options[0].name) === "season") {
-			buildSeasonalScoreboardEmbed(interaction.guild).then(embed => {
+			buildSeasonalScoreboardEmbed(interaction.guild, database).then(embed => {
 				interaction.reply({
 					embeds: [embed],
 					ephemeral: true
 				});
 			})
 		} else {
-			buildOverallScoreboardEmbed(interaction.guild).then(embed => {
+			buildOverallScoreboardEmbed(interaction.guild, database).then(embed => {
 				interaction.reply({
 					embeds: [embed],
 					ephemeral: true

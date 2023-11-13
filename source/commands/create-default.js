@@ -1,6 +1,5 @@
 const { PermissionFlagsBits, ChannelType, SortOrderType, ForumLayoutType, OverwriteType, GuildPremiumTier } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
 const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../util/embedUtil');
 const { generateBountyBoardThread } = require('../util/scoreUtil');
 
@@ -33,7 +32,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, false, 30000, options, subcommands,
-	(interaction) => {
+	(interaction, database) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // bounty-board-forum
 				interaction.guild.channels.create({
@@ -69,7 +68,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 								continue;
 							}
 							database.models.Hunter.findOne({ companyId: bounty.guildId, userId: bounty.userId }).then(poster => {
-								return bounty.asEmbed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, company.eventMultiplierString());
+								return bounty.asEmbed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, company.eventMultiplierString(), database);
 							}).then(bountyEmbed => {
 								return bountyBoard.threads.create({
 									name: bounty.title,
@@ -83,7 +82,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 
 						// make Evergreen Bounty list
 						if (evergreenBounties.length > 0) {
-							Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString()))).then(embeds => {
+							Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database))).then(embeds => {
 								generateBountyBoardThread(bountyBoard.threads, embeds, company);
 							})
 						}
@@ -114,7 +113,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 					const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 					const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 					scoreboard.send({
-						embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild) : await buildOverallScoreboardEmbed(interaction.guild)]
+						embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild, database) : await buildOverallScoreboardEmbed(interaction.guild, database)]
 					}).then(message => {
 						company.scoreboardChannelId = scoreboard.id;
 						company.scoreboardMessageId = message.id;

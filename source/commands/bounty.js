@@ -1,6 +1,5 @@
 const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { getNumberEmoji, extractUserIdsFromMentions, timeConversion } = require('../util/textUtil');
@@ -99,7 +98,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, false, 3000, options, subcommands,
-	(interaction) => {
+	(interaction, database) => {
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
@@ -279,7 +278,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					}
 					database.models.Completion.bulkCreate(rawCompletions);
 					const company = await database.models.Company.findByPk(interaction.guildId);
-					bounty.updatePosting(interaction.guild, company);
+					bounty.updatePosting(interaction.guild, company, database);
 
 					interaction.reply({
 						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, <@")}>\n\nThey will recieve the reward XP when you \`/bounty complete\`.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
@@ -303,7 +302,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 
 					database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: mentionedIds } } });
 					const company = await database.models.Company.findByPk(interaction.guildId);
-					bounty.updatePosting(interaction.guild, company);
+					bounty.updatePosting(interaction.guild, company, database);
 
 					interaction.reply({ //TODO #95 make sure acknowledging interactions is sharding safe
 						content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`,
@@ -381,17 +380,17 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 
 					for (const userId of validatedCompleterIds) {
 						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-						levelTexts.push(await hunter.addXP(interaction.guild.name, bountyValue, true));
+						levelTexts.push(await hunter.addXP(interaction.guild.name, bountyValue, true, database));
 						hunter.othersFinished++;
 						hunter.save();
 					}
 
 					const posterXP = Math.ceil(validatedCompleterIds.length / 2) * company.eventMultiplier;
-					levelTexts.push(await poster.addXP(interaction.guild.name, posterXP, true));
+					levelTexts.push(await poster.addXP(interaction.guild.name, posterXP, true, database));
 					poster.mineFinished++;
 					poster.save();
 
-					getRankUpdates(interaction.guild).then(rankUpdates => {
+					getRankUpdates(interaction.guild, database).then(rankUpdates => {
 						const multiplierString = company.eventMultiplierString();
 						let text = "";
 						if (rankUpdates.length > 0) {
@@ -406,7 +405,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 
-						bounty.asEmbed(interaction.guild, poster.level, company.eventMultiplierString()).then(embed => {
+						bounty.asEmbed(interaction.guild, poster.level, company.eventMultiplierString(), database).then(embed => {
 							const replyPayload = { embeds: [embed] };
 
 							if (company.bountyBoardId) {
@@ -420,10 +419,10 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							}
 							interaction.reply(replyPayload);
 						}).then(() => {
-							return bounty.updatePosting(interaction.guild, company);
+							return bounty.updatePosting(interaction.guild, company, database);
 						})
 
-						updateScoreboard(company, interaction.guild);
+						updateScoreboard(company, interaction.guild, database);
 					});
 				})
 				break;
@@ -461,7 +460,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					}
 					const hunter = await database.models.Hunter.findOne({ where: { userId: listUserId, companyId: interaction.guildId } });
 					const company = await database.models.Company.findByPk(interaction.guildId);
-					interaction.reply({ embeds: await Promise.all(existingBounties.map(bounty => bounty.asEmbed(interaction.guild, hunter.level, company.eventMultiplierString()))), ephemeral: true });
+					interaction.reply({ embeds: await Promise.all(existingBounties.map(bounty => bounty.asEmbed(interaction.guild, hunter.level, company.eventMultiplierString(), database))), ephemeral: true });
 				});
 				break;
 		}

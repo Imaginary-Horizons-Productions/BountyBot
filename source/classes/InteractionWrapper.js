@@ -1,12 +1,13 @@
 const { MAX_SET_TIMEOUT } = require("../constants");
 const { Interaction, ButtonInteraction, PermissionFlagsBits, CommandInteraction, SlashCommandBuilder, AnySelectMenuInteraction } = require("discord.js");
 const { BuildError } = require("./BuildError.js");
+const { Sequelize } = require("sequelize");
 
 class InteractionWrapper {
 	/** IHP wrapper for interaction responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: Interaction, args: string[]) => void} executeFunction
+	 * @param {(interaction: Interaction, args: string[], database: Sequelize) => void} executeFunction
 	*/
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		if (cooldownInMS > MAX_SET_TIMEOUT) {
@@ -49,7 +50,7 @@ class ButtonWrapper extends InteractionWrapper {
 	/** IHP wrapper for button responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: ButtonInteraction, args: string[]) => void} executeFunction
+	 * @param {(interaction: ButtonInteraction, args: string[], database: Sequelize) => void} executeFunction
 	 */
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -66,7 +67,7 @@ class CommandWrapper extends InteractionWrapper {
 	 * @param {number} cooldownInMS
 	 * @param {{type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: {name: string, value: string}[], choices?: { name: string, value }[]}[]} optionsInput
 	 * @param {{name: string, description: string, optionsInput?: {type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: {name: string, value: string}[], choices?: { name: string, value }[]}}[]} subcommandsInput
-	 * @param {(interaction: CommandInteraction) => void} executeFunction
+	 * @param {(interaction: CommandInteraction, database: Sequelize) => void} executeFunction
 	 */
 	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, optionsInput, subcommandsInput, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -124,7 +125,7 @@ class SelectWrapper extends InteractionWrapper {
 	/** IHP wrapper for any select responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: AnySelectMenuInteraction, args: string[]) => void} executeFunction
+	 * @param {(interaction: AnySelectMenuInteraction, args: string[], database: Sequelize) => void} executeFunction
 	 */
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
