@@ -15,7 +15,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, bounties, or server configs", PermissionFlagsBits.ManageGuild, false, false, 3000, options, subcommands,
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // all-hunter-stats
 				database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });

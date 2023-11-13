@@ -30,7 +30,7 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000, options, subcommands,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
-	async (interaction, database) => {
+	async (interaction, database, runMode) => {
 		const errors = [];
 
 		// Find valid toastees
@@ -42,7 +42,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		} else {
 			const toasteeMembers = (await interaction.guild.members.fetch({ user: toasteeIds })).values();
 			for (const member of toasteeMembers) {
-				if (!member.user.bot) {
+				if (runMode !== "prod" || !member.user.bot) {
 					nonBotToasteeIds.push(member.id);
 				}
 			}

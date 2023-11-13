@@ -15,7 +15,7 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the developers", PermissionFlagsBits.SendMessages, false, true, 3000, options, subcommands,
 	/** Open the modal associated with the feedback type to prompt more specific information */
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		if (!testGuildId || !feedbackChannelId) {
 			interaction.reply({ content: "The test server is not yet configured to receive feedback, thanks for your patience.", ephemeral: true });
 			return;

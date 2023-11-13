@@ -98,7 +98,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, false, 3000, options, subcommands,
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
@@ -256,7 +256,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 								bannedIds.push(memberId);
 								continue;
 							}
-							if (!member.user.bot) {
+							if (runMode !== "prod" || !member.user.bot) {
 								existingCompleterIds.push(memberId);
 								validatedCompleterIds.push(memberId);
 							}
@@ -344,7 +344,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					const completerMembers = allCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: allCompleterIds })).values() : [];
 					let levelTexts = [];
 					for (const member of completerMembers) {
-						if (!member.user.bot) {
+						if (runMode !== "prod" || !member.user.bot) {
 							const memberId = member.id;
 							await database.models.User.findOrCreate({ where: { id: memberId } });
 							const [hunter] = await database.models.Hunter.findOrCreate({

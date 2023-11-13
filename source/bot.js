@@ -94,7 +94,7 @@ client.on(Events.InteractionCreate, interaction => {
 				return;
 			}
 
-			command.execute(interaction, database);
+			command.execute(interaction, database, runMode);
 		} else if (interaction.isAutocomplete()) {
 			const command = getCommand(interaction.commandName);
 			const focusedOption = interaction.options.getFocused(true);

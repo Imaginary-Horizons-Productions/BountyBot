@@ -80,7 +80,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty hunters who have above average season XP", PermissionFlagsBits.ManageRoles, true, false, 3000, options, subcommands,
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		let varianceThreshold;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // add

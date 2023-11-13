@@ -30,7 +30,7 @@ const subcommands = [
 ];
 module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.ViewChannel, false, true, 3000, options, subcommands,
 	/** Command specifications go here */
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 
 	}
 );

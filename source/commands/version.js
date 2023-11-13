@@ -13,7 +13,7 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Get the most recent changes or the full change log", null, false, true, 3000, options, subcommands,
 	/** Send the user the most recent set of patch notes or full change log */
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		if (interaction.options.getBoolean(options[0].name)) {
 			buildVersionEmbed(interaction.client.user.displayAvatarURL()).then(embed => {
 				interaction.reply({ embeds: [embed], ephemeral: true });

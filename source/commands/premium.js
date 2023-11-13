@@ -6,7 +6,7 @@ const mainId = "premium";
 const options = [];
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, true, 3000, options, subcommands,
-	async (interaction, database) => {
+	async (interaction, database, runMode) => {
 		interaction.reply({
 			embeds: [
 				new EmbedBuilder().setColor(Colors.Blurple)

@@ -49,7 +49,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, false, 3000, options, subcommands,
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		let slotNumber;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // post
@@ -265,7 +265,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 					const completerMembers = dedupedCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values() : [];
 					let levelTexts = [];
 					for (const member of completerMembers) {
-						if (!member.user.bot) {
+						if (runMode !== "prod" || !member.user.bot) {
 							const memberId = member.id;
 							await database.models.User.findOrCreate({ where: { id: memberId } });
 							const [hunter] = await database.models.Hunter.findOrCreate({

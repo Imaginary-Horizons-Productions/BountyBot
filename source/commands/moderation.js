@@ -76,7 +76,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, false, 3000, options, subcommands,
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		let member;
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // user-report
