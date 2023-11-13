@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { Op } = require('sequelize');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
@@ -104,7 +104,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 				text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 			}
-			interaction.message.thread.send(text);
+			interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 		})
 	}
 );
