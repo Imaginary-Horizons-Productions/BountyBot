@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder } = require('discord.js');
+const { PermissionFlagsBits, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
@@ -323,7 +323,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 								if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 									text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 								}
-								thread.send(text);
+								thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 							})
 							updateScoreboard(company, interaction.guild, database);
 						});

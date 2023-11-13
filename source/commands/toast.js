@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { Op } = require('sequelize');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
@@ -199,7 +199,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
-						thread.send(text);
+						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 						updateScoreboard(company, interaction.guild, database);
 					})
 				}

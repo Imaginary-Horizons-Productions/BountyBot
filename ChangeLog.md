@@ -2,11 +2,11 @@
 ## BountyBot Version 2.0.1:
 - Fixed the join link not asking for all needed permissions
 - `/bounty list` defaults to your own bounties
+- Posts to rewards threads are now silent
 
 ### Known Issues
 - When a Toast's Recipient Seconds that toast, they aren't filtered out of getting XP again
 - Seconding a toast doesn't update the scoreboard reference channel
-- Posts to rewards threads aren't silenced
 - Rewards thread messages are missing some line breaks
 - Functionality to permanently revoke access to BountyBot isn't usable yet
 - The channel created by `/create-default scoreboard-reference` isn't immediately usable as a reference channel

@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
@@ -411,7 +411,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							if (company.bountyBoardId) {
 								interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 									bountyBoard.threads.fetch(bounty.postingId).then(thread => {
-										thread.send(text);
+										thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 									})
 								})
 							} else {

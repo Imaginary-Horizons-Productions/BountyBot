@@ -26,7 +26,7 @@ module.exports = new CommandWrapper(mainId, "Manage a server-wide event that mul
 	(interaction, database, runMode) => {
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
 			switch (interaction.options.getSubcommand()) {
-				case subcommands[0].name: // open-event
+				case subcommands[0].name: // start
 					const multiplier = interaction.options.getInteger(subcommands[0].optionsInput[0].name);
 					if (multiplier < 2) {
 						interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, ephemeral: true })
@@ -42,7 +42,7 @@ module.exports = new CommandWrapper(mainId, "Manage a server-wide event that mul
 					})
 					interaction.reply(company.sendAnnouncement({ content: `An XP multiplier event has started. Bounty and toast XP will be multiplied by ${multiplier}.` }));
 					break;
-				case subcommands[1].name: // close-event
+				case subcommands[1].name: // close
 					company.update({ "eventMultiplier": 1 });
 					interaction.guild.members.fetchMe().then(bountyBot => {
 						bountyBot.setNickname(null);
