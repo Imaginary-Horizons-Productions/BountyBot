@@ -6,7 +6,7 @@ const options = [];
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, true, 3000, options, subcommands,
 	/** Get BountyBot's description and contributors */
-	(interaction) => {
+	(interaction, database) => {
 		const avatarURL = interaction.client.user.avatarURL();
 		interaction.reply({
 			embeds: [

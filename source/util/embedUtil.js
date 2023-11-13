@@ -1,6 +1,6 @@
-const { EmbedBuilder, Guild, Colors, TextChannel, Utils } = require("discord.js");
 const fs = require("fs");
-const { database } = require("../../database");
+const { EmbedBuilder, Guild, Colors, TextChannel, Utils } = require("discord.js");
+const { Sequelize } = require("sequelize");
 const { Hunter } = require("../models/users/Hunter");
 const { Company } = require("../models/companies/Company");
 const { COMPANY_XP_COEFFICIENT } = require("../constants");
@@ -42,8 +42,11 @@ function randomFooterTip() {
 	return tipPool[Math.floor(Math.random() * tipPool.length)];
 }
 
-/** @param {Guild} guild */
-async function buildCompanyStatsEmbed(guild) {
+/**
+ * @param {Guild} guild
+ * @param {Sequelize} database
+ */
+async function buildCompanyStatsEmbed(guild, database) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
 	const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
 	const lastSeason = await database.models.Season.findOne({ where: { companyId: guild.id, isPreviousSeason: true } });
@@ -74,8 +77,9 @@ async function buildCompanyStatsEmbed(guild) {
 
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Guild} guild
+ * @param {Sequelize} database
  */
-async function buildSeasonalScoreboardEmbed(guild) {
+async function buildSeasonalScoreboardEmbed(guild, database) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: company.id, isCurrentSeason: true } });
 	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
@@ -113,8 +117,9 @@ async function buildSeasonalScoreboardEmbed(guild) {
 
 /** An overall scoreboard orders a company's hunters by total xp
  * @param {Guild} guild
+ * @param {Sequelize} database
  */
-async function buildOverallScoreboardEmbed(guild) {
+async function buildOverallScoreboardEmbed(guild, database) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
@@ -172,8 +177,9 @@ async function buildServerBonusesEmbed(channel, guild, company) {
  * @param {Guild} guild
  * @param {GuildMember} member
  * @param {Hunter} hunter
+ * @param {Sequelize} database
  */
-async function buildModStatsEmbed(guild, member, hunter) {
+async function buildModStatsEmbed(guild, member, hunter, database) {
 	const embed = new EmbedBuilder().setColor(member.displayColor)
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`Moderation Stats: ${member.user.tag}`)
@@ -240,13 +246,14 @@ async function buildVersionEmbed() {
 /** If the guild has a scoreboard reference channel, update the embed in it
  * @param {Company} company
  * @param {Guild} guild
+ * @param {Sequelize} database
  */
-function updateScoreboard(company, guild) {
+function updateScoreboard(company, guild, database) {
 	if (company.scoreboardChannelId && company.scoreboardMessageId) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
 		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild) : await buildOverallScoreboardEmbed(guild)] });
+			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, database) : await buildOverallScoreboardEmbed(guild, database)] });
 		});
 	}
 }

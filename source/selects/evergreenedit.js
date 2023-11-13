@@ -1,12 +1,11 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { database } = require('../../database');
 const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 
 const mainId = "evergreenedit";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve bounty reconfigurations from the user */
-	async (interaction, args) => {
+	async (interaction, args, database) => {
 		const [slotNumber] = interaction.values;
 		// Verify bounty exists
 		const existingBounty = await database.models.Bounty.findOne({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open", slotNumber } });
@@ -82,9 +81,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 				// update bounty board
 				const company = await database.models.Company.findByPk(modalSubmission.guildId);
-				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, company.level, company.eventMultiplierString());
+				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, company.level, company.eventMultiplierString(), database);
 				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(modalSubmission.guild, company.level, company.eventMultiplierString())));
+				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(modalSubmission.guild, company.level, company.eventMultiplierString(), database)));
 				if (company.bountyBoardId) {
 					const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
 					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {

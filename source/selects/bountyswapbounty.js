@@ -1,5 +1,4 @@
 const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
-const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 const { SAFE_DELIMITER } = require('../constants');
@@ -8,7 +7,7 @@ const { getNumberEmoji } = require('../util/textUtil');
 const mainId = "bountyswapbounty";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve the bounty to swap and solicit the slot to swap to */
-	(interaction, args) => {
+	(interaction, args, database) => {
 		database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
 			if (hunter.maxSlots() < 2) {
 				interaction.reply({ content: "You currently only have 1 bounty slot in this server.", ephemeral: true });

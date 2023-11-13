@@ -1,11 +1,10 @@
-const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
 const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "modtakedown";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Take down specified bounty */
-	(interaction, [posterId]) => {
+	(interaction, [posterId], database) => {
 		const slotNumber = interaction.values[0];
 		database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
@@ -26,7 +25,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				if (!participationCreated) {
 					participation.decrement("xp");
 				}
-				getRankUpdates(interaction.guild);
+				getRankUpdates(interaction.guild, database);
 			})
 			interaction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
 		});

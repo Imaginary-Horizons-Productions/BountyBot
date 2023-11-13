@@ -1,5 +1,4 @@
 const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
-const { database } = require('../../database');
 const { SelectWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 const { SAFE_DELIMITER } = require('../constants');
@@ -8,7 +7,7 @@ const { getNumberEmoji } = require('../util/textUtil');
 const mainId = "evergreenswapbounty";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve the bounty to swap and solicit the slot to swap to */
-	(interaction, args) => {
+	(interaction, args, database) => {
 		database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
 			const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
 			const previousBountySlot = parseInt(interaction.values[0]);

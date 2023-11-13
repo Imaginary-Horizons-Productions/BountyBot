@@ -1,6 +1,5 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { database } = require('../../database');
 const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "reset";
@@ -16,7 +15,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, bounties, or server configs", PermissionFlagsBits.ManageGuild, false, false, 3000, options, subcommands,
-	(interaction) => {
+	(interaction, database) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // all-hunter-stats
 				database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });
@@ -26,7 +25,7 @@ module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, boun
 					if (season) {
 						await database.models.Participation.destroy({ where: { seasonId: season.id } });
 					}
-					updateScoreboard(company, interaction.guild);
+					updateScoreboard(company, interaction.guild, database);
 					interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);
 				});
 				break;

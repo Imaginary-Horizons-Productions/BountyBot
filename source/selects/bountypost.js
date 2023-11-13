@@ -1,14 +1,13 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildScheduledEventEntityType } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { YEAR_IN_MS, MAX_EMBED_TITLE_LENGTH } = require('../constants');
-const { database } = require('../../database');
 const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 
 const mainId = "bountypost";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve remaining bounty configurations from the user */
-	async (interaction, args) => {
+	async (interaction, args, database) => {
 		const [slotNumber] = interaction.values;
 		// Check user actually has slot
 		const company = await database.models.Company.findByPk(interaction.guildId);
@@ -136,8 +135,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 			}
 
 			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-			poster.addXP(modalSubmission.guild.name, 1, true).then(() => {
-				getRankUpdates(modalSubmission.guild);
+			poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
+				getRankUpdates(modalSubmission.guild, database);
 			});
 
 			if (shouldMakeEvent) {
@@ -161,7 +160,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 			// post in bounty board forum
 			const company = await database.models.Company.findByPk(modalSubmission.guildId);
-			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.eventMultiplierString());
+			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.eventMultiplierString(), database);
 			modalSubmission.reply(company.sendAnnouncement({ content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 				if (company.bountyBoardId) {
 					modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {

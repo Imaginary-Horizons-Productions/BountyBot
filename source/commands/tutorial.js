@@ -18,7 +18,7 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBot", null, false, true, 3000, options, subcommands,
 	/** Send the user a embed with tips to start using BountyBot */
-	(interaction) => {
+	(interaction, database) => {
 		const embed = new EmbedBuilder().setColor(Colors.Blurple).setAuthor(ihpAuthorPayload)
 			.setThumbnail(interaction.client.user.avatarURL())
 			.setFooter(randomFooterTip());
