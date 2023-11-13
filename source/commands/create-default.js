@@ -32,7 +32,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, false, 30000, options, subcommands,
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // bounty-board-forum
 				interaction.guild.channels.create({

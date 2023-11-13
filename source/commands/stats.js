@@ -17,7 +17,7 @@ const options = [
 const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000, options, subcommands,
 	/** Get the BountyBot stats for yourself or someone else */
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
 		if (target && target.id !== interaction.user.id) {
 			if (target.id == interaction.client.user.id) {

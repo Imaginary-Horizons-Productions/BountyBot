@@ -35,7 +35,7 @@ const subcommands = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Randomly select a bounty hunter from a variety of pools", PermissionFlagsBits.ManageGuild, false, true, 3000, options, subcommands,
-	(interaction, database) => {
+	(interaction, database, runMode) => {
 		switch (interaction.options.getSubcommand()) {
 			case subcommands[0].name: // by-rank
 				database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(async ranks => {

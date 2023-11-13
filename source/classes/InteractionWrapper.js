@@ -67,7 +67,7 @@ class CommandWrapper extends InteractionWrapper {
 	 * @param {number} cooldownInMS
 	 * @param {{type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: {name: string, value: string}[], choices?: { name: string, value }[]}[]} optionsInput
 	 * @param {{name: string, description: string, optionsInput?: {type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: {name: string, value: string}[], choices?: { name: string, value }[]}}[]} subcommandsInput
-	 * @param {(interaction: CommandInteraction, database: Sequelize) => void} executeFunction
+	 * @param {(interaction: CommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
 	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, optionsInput, subcommandsInput, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
