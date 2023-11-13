@@ -61,15 +61,19 @@ client.on(Events.ClientReady, () => {
 
 			buildVersionEmbed(client.user.displayAvatarURL()).then(embed => {
 				client.guilds.fetch(testGuildId).then(guild => {
-					guild.channels.fetch(announcementsChannelId).then(announcementsChannel => {
-						announcementsChannel.send({ embeds: [embed] }).then(message => {
-							message.crosspost();
-							writeFile('./config/versionData.json', JSON.stringify({
-								announcementsChannelId,
-								lastPostedVersion: currentFull,
-							}), "utf-8");
-						});
-					})
+					if (!announcementsChannelId) {
+						console.error("Patch notes post skipped due to falsy announcementsChannelId");
+					} else {
+						guild.channels.fetch(announcementsChannelId).then(announcementsChannel => {
+							announcementsChannel.send({ embeds: [embed] }).then(message => {
+								message.crosspost();
+								writeFile('./config/versionData.json', JSON.stringify({
+									announcementsChannelId,
+									lastPostedVersion: currentFull,
+								}), "utf-8");
+							});
+						})
+					}
 				})
 			}).catch(console.error);
 		});
