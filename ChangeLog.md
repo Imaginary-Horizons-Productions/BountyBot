@@ -1,17 +1,17 @@
 # BountyBot Change Log
+## BountyBot Version 2.0.1:
+- Fixed the join link not asking for all needed permissions
+
+### Known Issues
+- When a Toast's Recipient Seconds that toast, they aren't filtered out of getting XP again
+- Seconding a toast doesn't update the scoreboard reference channel
+- Posts to rewards threads aren't silenced
+- Rewards thread messages are missing some line breaks
+- Functionality to permanently revoke access to BountyBot isn't usable yet
+- The channel created by `/create-default scoreboard-reference` isn't immediately usable as a reference channel
+
 ## BountyBot Version 2.0.0:
 - Slash command support! **ALL FEATURES** have been redone to use slash commands and message components (ie buttons and selects)
 - Toasts can now be Seconded, letting other users toast the toastees and toaster in the same thread
-
-## Example Version 0.0.0:
-- Unordered item 1
-- Unordered item 2
-   1. Ordered item 1
-   1. Ordered item 2
-   1. Ordered item 3
-   1. Ordered item 4
-   1. Ordered item 5
-### Known Issues
-- Unordered item 1
-   - Unordered item 2
-   - Unordered item 3
+- Showcasing your bounty now increases the reward on it (showcasing bounties is now rate-limited)
+- Ground-up support for working in multiple servers
