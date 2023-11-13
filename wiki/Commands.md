@@ -30,7 +30,7 @@ Close one of your open bounties, awarding XP to completers
 #### /bounty take-down
 Take down one of your bounties without awarding XP (forfeit posting XP)
 #### /bounty list
-List all of a hunter's open bounties
+List all of a hunter's open bounties (default: your own)
 ### /commands
 
 > Usable in DMs: true
