@@ -27,18 +27,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		});
 		seconder.toastSeconded++;
 
-		const recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
+		let recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
 		recipientIds.push(originalToast.senderId);
+		recipientIds = recipientIds.filter(id => id !== interaction.user.id);
 		const levelTexts = [];
 		for (const userId of recipientIds) {
-			if (userId !== interaction.user.id) {
-				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
-				const levelText = await hunter.addXP(interaction.guild.name, 1, true, database);
-				if (levelText) {
-					levelTexts.push(levelText);
-				}
-				hunter.increment("toastsReceived");
+			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
+			const levelText = await hunter.addXP(interaction.guild.name, 1, true, database);
+			if (levelText) {
+				levelTexts.push(levelText);
 			}
+			hunter.increment("toastsReceived");
 		}
 
 		const recentToasts = await database.models.Seconding.findAll({ where: { seconderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } } });
