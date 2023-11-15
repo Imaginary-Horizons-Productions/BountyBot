@@ -3,6 +3,7 @@ const { SelectWrapper } = require('../classes');
 const { YEAR_IN_MS, MAX_EMBED_TITLE_LENGTH } = require('../constants');
 const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
+const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "bountypost";
 module.exports = new SelectWrapper(mainId, 3000,
@@ -137,6 +138,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
 			poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
 				getRankUpdates(modalSubmission.guild, database);
+				updateScoreboard(company, interaction.guild, database);
 			});
 
 			if (shouldMakeEvent) {
