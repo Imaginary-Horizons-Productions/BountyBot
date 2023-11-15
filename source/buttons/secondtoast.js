@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { timeConversion } = require('../util/textUtil');
+const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -97,7 +98,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			embed.addFields({ name: "Seconded by", value: interaction.member.toString() });
 		}
 		interaction.update({ embeds: [embed] });
-		getRankUpdates(interaction.guild, database).then(rankUpdates => {
+		getRankUpdates(interaction.guild, database).then(async rankUpdates => {
 			let text = `__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP`).join("\n")}`;
 			if (rankUpdates.length > 0) {
 				text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
@@ -109,6 +110,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 			}
 			interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
 		})
 	}
 );
