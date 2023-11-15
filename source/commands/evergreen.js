@@ -300,7 +300,10 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 
 					for (const userId of validatedCompleterIds) {
 						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-						levelTexts.push(await hunter.addXP(interaction.guild.name, bountyValue, true, database));
+						const levelText = await hunter.addXP(interaction.guild.name, bountyValue, true, database);
+						if (levelText) {
+							levelTexts.push(levelText);
+						}
 						hunter.othersFinished++;
 						hunter.save();
 					}
@@ -311,14 +314,12 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 						getRankUpdates(interaction.guild, database).then(rankUpdates => {
 							replyMessage.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 								const multiplierString = company.eventMultiplierString();
-								let text = "";
+								let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}`;
 								if (rankUpdates.length > 0) {
-									text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
+									text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 								}
-								text += `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n`;
-								levelTexts = levelTexts.filter(text => Boolean(text));
 								if (levelTexts.length > 0) {
-									text += `\n__**Rewards**__\n${levelTexts.join("\n")}`;
+									text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
 								}
 								if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 									text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";

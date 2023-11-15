@@ -163,11 +163,17 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		database.models.Recipient.bulkCreate(rawRecipients);
 
 		// Add XP and update ranks
-		let levelTexts = [];
-		levelTexts.push(await sender.addXP(interaction.guild.name, critValue, false, database));
+		const levelTexts = [];
+		const toasterLevelText = await sender.addXP(interaction.guild.name, critValue, false, database);
+		if (toasterLevelText) {
+			levelTexts.push(toasterLevelText);
+		}
 		for (const recipientId of rewardedRecipients) {
 			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
-			levelTexts.push(await hunter.addXP(interaction.guild.name, 1, false, database));
+			const toasteeLevelText = await hunter.addXP(interaction.guild.name, 1, false, database);
+			if (toasteeLevelText) {
+				levelTexts.push(toasteeLevelText);
+			}
 			hunter.increment("toastsReceived");
 		}
 
@@ -187,14 +193,12 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				if (rewardedRecipients.length > 0) {
 					getRankUpdates(interaction.guild, database).then(rankUpdates => {
 						const multiplierString = company.eventMultiplierString();
-						let text = "";
+						let text = `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}`;
 						if (rankUpdates.length > 0) {
-							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
+							text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 						}
-						text += `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}\n`;
-						levelTexts = levelTexts.filter(text => Boolean(text));
 						if (levelTexts.length > 0) {
-							text += `\n__**Rewards**__\n${levelTexts.join("\n")}`;
+							text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
 						}
 						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";

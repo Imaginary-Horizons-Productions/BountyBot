@@ -342,7 +342,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 
 					const validatedCompleterIds = [];
 					const completerMembers = allCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: allCompleterIds })).values() : [];
-					let levelTexts = [];
+					const levelTexts = [];
 					for (const member of completerMembers) {
 						if (runMode !== "prod" || !member.user.bot) {
 							const memberId = member.id;
@@ -380,26 +380,30 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 
 					for (const userId of validatedCompleterIds) {
 						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-						levelTexts.push(await hunter.addXP(interaction.guild.name, bountyValue, true, database));
+						const completerLevelText = await hunter.addXP(interaction.guild.name, bountyValue, true, database);
+						if (completerLevelText) {
+							levelTexts.push(completerLevelText);
+						}
 						hunter.othersFinished++;
 						hunter.save();
 					}
 
 					const posterXP = Math.ceil(validatedCompleterIds.length / 2) * company.eventMultiplier;
-					levelTexts.push(await poster.addXP(interaction.guild.name, posterXP, true, database));
+					const posterLevelText = await poster.addXP(interaction.guild.name, posterXP, true, database);
+					if (posterLevelText) {
+						levelTexts.push(posterLevelText);
+					}
 					poster.mineFinished++;
 					poster.save();
 
 					getRankUpdates(interaction.guild, database).then(rankUpdates => {
 						const multiplierString = company.eventMultiplierString();
-						let text = "";
+						let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}`;
 						if (rankUpdates.length > 0) {
-							text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}\n`;
+							text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 						}
-						text += `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}\n`;
-						levelTexts = levelTexts.filter(text => Boolean(text));
 						if (levelTexts.length > 0) {
-							text += `\n__**Rewards**__\n${levelTexts.join("\n")}`;
+							text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
 						}
 						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
