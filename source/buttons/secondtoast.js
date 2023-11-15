@@ -29,11 +29,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		const recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
 		recipientIds.push(originalToast.senderId);
-		let levelTexts = [];
+		const levelTexts = [];
 		for (const userId of recipientIds) {
 			if (userId !== interaction.user.id) {
 				const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
-				levelTexts.push(await hunter.addXP(interaction.guild.name, 1, true, database));
+				const levelText = await hunter.addXP(interaction.guild.name, 1, true, database);
+				if (levelText) {
+					levelTexts.push(levelText);
+				}
 				hunter.increment("toastsReceived");
 			}
 		}
@@ -77,7 +80,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			const critRoll = Math.random() * 100;
 			if (critRoll * critRoll * critRoll > 3375000 / lowestEffectiveToastLevel) {
 				wasCrit = true;
-				levelTexts.push(seconder.addXP(interaction.guild.name, 1, true, database));
+				recipientIds.push(interaction.user.id);
+				const levelText = await seconder.addXP(interaction.guild.name, 1, true, database);
+				if (levelText) {
+					levelTexts.push(levelText);
+				}
 			}
 		}
 
@@ -92,14 +99,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(rankUpdates => {
-			let text = "";
+			let text = `__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP`).join("\n")}`;
 			if (rankUpdates.length > 0) {
-				text += `\n__**Rank Ups**__\n${rankUpdates.join("\n")}`;
+				text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 			}
-			text += `__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP`).join("\n")}${wasCrit ? `\n${interaction.member} + 1 XP` : ""}`;
-			levelTexts = levelTexts.filter(text => Boolean(text));
 			if (levelTexts.length > 0) {
-				text += `\n__**Rewards**__\n${levelTexts.join("\n")}`;
+				text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
 			}
 			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 				text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
