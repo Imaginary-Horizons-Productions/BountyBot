@@ -3,7 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates, generateBountyBoardThread } = require('../util/scoreUtil');
-const { getNumberEmoji, extractUserIdsFromMentions, timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
+const { getNumberEmoji, extractUserIdsFromMentions, timeConversion, checkTextsInAutoMod, trimForSelectOptionDescription } = require('../util/textUtil');
 const { MAX_MESSAGE_CONTENT_LENGTH, MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH } = require('../constants');
 
 const mainId = "evergreen";
@@ -160,7 +160,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
-							description: bounty.description,
+							description: trimForSelectOptionDescription(bounty.description),
 							value: bounty.slotNumber.toString()
 						};
 					});
@@ -201,7 +201,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 									.setOptions(existingBounties.map(bounty => ({
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
-										description: bounty.description,
+										description: trimForSelectOptionDescription(bounty.description),
 										value: bounty.slotNumber.toString()
 									})))
 							)
@@ -227,7 +227,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 									.setOptions(existingBounties.map(bounty => ({
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
-										description: bounty.description,
+										description: trimForSelectOptionDescription(bounty.description),
 										value: bounty.slotNumber.toString()
 									})))
 							)
@@ -337,7 +337,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
-							description: bounty.description,
+							description: trimForSelectOptionDescription(bounty.description),
 							value: bounty.slotNumber.toString()
 						};
 					});

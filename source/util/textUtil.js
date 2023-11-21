@@ -178,11 +178,21 @@ async function checkTextsInAutoMod(channel, member, texts, context) {
 	return shouldBlockMessage;
 }
 
+/** @param {string} text */
+function trimForSelectOptionDescription(text) {
+	if (text.length > 100) {
+		return `${text.slice(0, 99)}…`;
+	} else {
+		return text;
+	}
+}
+
 module.exports = {
 	congratulationBuilder,
 	generateTextBar,
 	getNumberEmoji,
 	timeConversion,
 	extractUserIdsFromMentions,
-	checkTextsInAutoMod
+	checkTextsInAutoMod,
+	trimForSelectOptionDescription
 };

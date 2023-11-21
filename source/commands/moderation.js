@@ -3,7 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { SAFE_DELIMITER } = require('../constants');
 const { buildModStatsEmbed } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { getNumberEmoji } = require('../util/textUtil');
+const { getNumberEmoji, trimForSelectOptionDescription } = require('../util/textUtil');
 
 const mainId = "moderation";
 const options = [];
@@ -98,7 +98,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
-							description: bounty.description,
+							description: trimForSelectOptionDescription(bounty.description),
 							value: bounty.slotNumber.toString()
 						};
 					});

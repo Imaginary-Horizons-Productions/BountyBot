@@ -2,7 +2,7 @@ const { PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder, MessageF
 const { CommandWrapper } = require('../classes');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { getNumberEmoji, extractUserIdsFromMentions, timeConversion } = require('../util/textUtil');
+const { getNumberEmoji, extractUserIdsFromMentions, timeConversion, trimForSelectOptionDescription } = require('../util/textUtil');
 const { Op } = require('sequelize');
 const { Bounty } = require('../models/bounties/Bounty');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
@@ -158,7 +158,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 									.setOptions(openBounties.map(bounty => ({
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
-										description: bounty.description,
+										description: trimForSelectOptionDescription(bounty.description),
 										value: bounty.slotNumber.toString()
 									})))
 							)
@@ -184,7 +184,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 									.setOptions(openBounties.map(bounty => ({
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
-										description: bounty.description,
+										description: trimForSelectOptionDescription(bounty.description),
 										value: bounty.slotNumber.toString()
 									})))
 							)
@@ -217,7 +217,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 									.setOptions(existingBounties.map(bounty => ({
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
-										description: bounty.description,
+										description: trimForSelectOptionDescription(bounty.description),
 										value: bounty.slotNumber.toString()
 									})))
 							)
@@ -436,7 +436,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 						return {
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
-							description: bounty.description,
+							description: trimForSelectOptionDescription(bounty.description),
 							value: bounty.slotNumber.toString()
 						};
 					});
