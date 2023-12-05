@@ -100,11 +100,12 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 					permissionOverwrites: [
 						{
 							id: interaction.client.user,
-							allow: [PermissionFlagsBits.SendMessages],
+							allow: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages],
 							type: OverwriteType.Member
 						},
 						{
 							id: interaction.guildId,
+							allow: [PermissionFlagsBits.ViewChannel],
 							deny: [PermissionFlagsBits.SendMessages]
 						}
 					],
