@@ -83,18 +83,6 @@ Create Discord roles and set them as this server's ranks at default variance thr
 > Cooldown: 3 second(s)
 
 Get a link to BountyBot's data policy page
-### /event
-> Permission Level: ManageGuild
-
-> Usable in DMs: false
-
-> Cooldown: 3 second(s)
-
-Manage a server-wide event that multiplies XP of bounty completions, toast reciepts, and crit toasts
-#### /event start
-Start an XP multiplier event
-#### /event close
-End the event, returning to normal XP
 ### /evergreen
 > Permission Level: ManageChannels
 
@@ -127,6 +115,18 @@ Provide feedback on this bot to the developers
 > Choices: `bug report`, `feature request`
 
 the type of feedback you'd like to provide
+### /festival
+> Permission Level: ManageGuild
+
+> Usable in DMs: false
+
+> Cooldown: 3 second(s)
+
+Manage a server-wide festival to multiply XP of bounty completions, toast reciepts, and crit toasts
+#### /festival start
+Start an XP multiplier festival
+#### /festival close
+End the festival, returning to normal XP
 ### /moderation
 > Permission Level: ManageRoles
 
