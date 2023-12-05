@@ -3,6 +3,7 @@
 - A toast's seconder is always filtered out of eligibility for xp
 - Improved the formatting on rewards messages
 - Renamed `/event` to `/festival` to disambiguate with Discord Scheduled Events
+- Fixed the `/create-default scoreboard-reference` to immediately be usable as a reference channel
 
 ## BountyBot Version 2.0.1:
 - Fixed the join link not asking for all needed permissions
