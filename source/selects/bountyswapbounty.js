@@ -15,11 +15,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 			}
 
 			const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" } });
-			const previousBountySlot = parseInt(interaction.values[0]);
+			const previousBounty = existingBounties.find(bounty => bounty.id === interaction.values[0]);
 			const company = await database.models.Company.findByPk(interaction.guildId);
 			const slotOptions = [];
 			for (let i = 1; i <= hunter.maxSlots(company.maxSimBounties); i++) {
-				if (i != previousBountySlot) {
+				if (i != previousBounty.slotNumber) {
 					const existingBounty = existingBounties.find(bounty => bounty.slotNumber == i);
 					slotOptions.push(
 						{
@@ -32,7 +32,6 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}
 			}
 
-			const previousBounty = existingBounties.find(bounty => bounty.slotNumber == previousBountySlot);
 			interaction.update({
 				content: "If there is a bounty in the destination slot, it'll be swapped to the old bounty's slot.",
 				components: [
@@ -43,7 +42,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 							.addOptions([{ label: "placeholder", value: "placeholder" }])
 					),
 					new ActionRowBuilder().addComponents(
-						new StringSelectMenuBuilder().setCustomId(`bountyswapslot${SAFE_DELIMITER}${previousBountySlot}`)
+						new StringSelectMenuBuilder().setCustomId(`bountyswapslot${SAFE_DELIMITER}${previousBounty.slotNumber}`)
 							.setPlaceholder("Select a slot to swap the bounty to...")
 							.setMaxValues(1)
 							.setOptions(slotOptions)

@@ -99,7 +99,7 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
 							description: trimForSelectOptionDescription(bounty.description),
-							value: bounty.slotNumber.toString()
+							value: bounty.id
 						};
 					});
 

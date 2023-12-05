@@ -10,7 +10,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 	(interaction, args, database) => {
 		database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
 			const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
-			const previousBountySlot = parseInt(interaction.values[0]);
+			const previousBounty = existingBounties.find(bounty => bounty.id === interaction.values[0]);
+			const previousBountySlot = previousBounty.slotNumber;
 			const slotOptions = [];
 			for (const bounty of existingBounties) {
 				if (bounty.slotNumber != previousBountySlot) {
@@ -20,13 +21,12 @@ module.exports = new SelectWrapper(mainId, 3000,
 							label: `Slot ${bounty.slotNumber}: ${bounty.title}`,
 							// Evergreen bounties are not eligible for showcase bonuses
 							description: `XP Reward: ${Bounty.calculateReward(hunter.level, bounty.slotNumber, 0)}`,
-							value: bounty.slotNumber.toString()
+							value: bounty.id
 						}
 					);
 				}
 			}
 
-			const previousBounty = existingBounties.find(bounty => bounty.slotNumber == previousBountySlot);
 			interaction.update({
 				components: [
 					new ActionRowBuilder().addComponents(

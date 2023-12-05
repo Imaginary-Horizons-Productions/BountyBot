@@ -5,8 +5,8 @@ const mainId = "bountytakedown";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Take down the given bounty and completions */
 	async (interaction, args, database) => {
-		const [slotNumber] = interaction.values;
-		const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber, state: "open" }, include: database.models.Bounty.Company });
+		const [bountyId] = interaction.values;
+		const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
 		bounty.state = "deleted";
 		bounty.save();
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });

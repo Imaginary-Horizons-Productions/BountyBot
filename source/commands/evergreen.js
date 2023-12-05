@@ -161,7 +161,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
 							description: trimForSelectOptionDescription(bounty.description),
-							value: bounty.slotNumber.toString()
+							value: bounty.id
 						};
 					});
 
@@ -202,7 +202,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
 										description: trimForSelectOptionDescription(bounty.description),
-										value: bounty.slotNumber.toString()
+										value: bounty.id
 									})))
 							)
 						],
@@ -228,7 +228,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
 										description: trimForSelectOptionDescription(bounty.description),
-										value: bounty.slotNumber.toString()
+										value: bounty.id
 									})))
 							)
 						],
@@ -338,7 +338,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
 							description: trimForSelectOptionDescription(bounty.description),
-							value: bounty.slotNumber.toString()
+							value: bounty.id
 						};
 					});
 
