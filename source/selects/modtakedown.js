@@ -5,14 +5,13 @@ const mainId = "modtakedown";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Take down specified bounty */
 	(interaction, [posterId], database) => {
-		const slotNumber = interaction.values[0];
-		database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+		const [bountyId] = interaction.values;
+		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
 			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 			bounty.state = "deleted";
 			bounty.save();
-			const company = await database.models.Company.findOne({ where: { id: interaction.guildId } });
-			if (company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+			if (bounty.Company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 				postingThread.delete("Bounty taken down by moderator");
 			}

@@ -159,7 +159,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
 										description: trimForSelectOptionDescription(bounty.description),
-										value: bounty.slotNumber.toString()
+										value: bounty.id
 									})))
 							)
 						],
@@ -185,7 +185,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
 										description: trimForSelectOptionDescription(bounty.description),
-										value: bounty.slotNumber.toString()
+										value: bounty.id
 									})))
 							)
 						],
@@ -218,7 +218,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: bounty.title,
 										description: trimForSelectOptionDescription(bounty.description),
-										value: bounty.slotNumber.toString()
+										value: bounty.id
 									})))
 							)
 						],
@@ -437,7 +437,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							emoji: getNumberEmoji(bounty.slotNumber),
 							label: bounty.title,
 							description: trimForSelectOptionDescription(bounty.description),
-							value: bounty.slotNumber.toString()
+							value: bounty.id
 						};
 					});
 
