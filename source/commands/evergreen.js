@@ -128,12 +128,12 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 						const bounty = await database.models.Bounty.create(rawBounty);
 
 						// post in bounty board forum
-						const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database);
+						const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), database);
 						interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 							if (company.bountyBoardId) {
 								interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
 									const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-									const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database)));
+									const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), database)));
 									if (company.evergreenThreadId) {
 										return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 											const message = await thread.fetchStarterMessage();
@@ -308,12 +308,12 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 						hunter.save();
 					}
 
-					bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database).then(embed => {
+					bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), database).then(embed => {
 						return interaction.reply({ embeds: [embed], fetchReply: true });
 					}).then(replyMessage => {
 						getRankUpdates(interaction.guild, database).then(rankUpdates => {
 							replyMessage.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
-								const multiplierString = company.eventMultiplierString();
+								const multiplierString = company.festivalMultiplierString();
 								let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}`;
 								if (rankUpdates.length > 0) {
 									text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;

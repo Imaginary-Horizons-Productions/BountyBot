@@ -397,7 +397,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					poster.save();
 
 					getRankUpdates(interaction.guild, database).then(rankUpdates => {
-						const multiplierString = company.eventMultiplierString();
+						const multiplierString = company.festivalMultiplierString();
 						let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}`;
 						if (rankUpdates.length > 0) {
 							text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
@@ -409,7 +409,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 							text = "Message overflow! Many people (?) probably gained many things (?). Use `/stats` to look things up.";
 						}
 
-						bounty.asEmbed(interaction.guild, poster.level, company.eventMultiplierString(), database).then(embed => {
+						bounty.asEmbed(interaction.guild, poster.level, company.festivalMultiplierString(), database).then(embed => {
 							const replyPayload = { embeds: [embed] };
 
 							if (company.bountyBoardId) {
@@ -464,7 +464,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 					}
 					const hunter = await database.models.Hunter.findOne({ where: { userId: listUserId, companyId: interaction.guildId } });
 					const company = await database.models.Company.findByPk(interaction.guildId);
-					interaction.reply({ embeds: await Promise.all(existingBounties.map(bounty => bounty.asEmbed(interaction.guild, hunter.level, company.eventMultiplierString(), database))), ephemeral: true });
+					interaction.reply({ embeds: await Promise.all(existingBounties.map(bounty => bounty.asEmbed(interaction.guild, hunter.level, company.festivalMultiplierString(), database))), ephemeral: true });
 				});
 				break;
 		}

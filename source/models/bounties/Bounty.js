@@ -8,10 +8,10 @@ exports.Bounty = class extends Model {
 	/** Generate an embed for the given bounty
 	 * @param {Guild} guild
 	 * @param {number} posterLevel
-	 * @param {string} eventMultiplierString
+	 * @param {string} festivalMultiplierString
 	 * @param {Sequelize} database
 	 */
-	asEmbed(guild, posterLevel, eventMultiplierString, database) {
+	asEmbed(guild, posterLevel, festivalMultiplierString, database) {
 		return guild.members.fetch(this.userId).then(async author => {
 			const thumbnails = {
 				open: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
@@ -33,7 +33,7 @@ exports.Bounty = class extends Model {
 				embed.addFields({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 			}
 			embed.addFields(
-				{ name: "Reward", value: `${exports.Bounty.calculateReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${eventMultiplierString}`, inline: true }
+				{ name: "Reward", value: `${exports.Bounty.calculateReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true }
 			)
 
 			if (this.isEvergreen) {
@@ -64,7 +64,7 @@ exports.Bounty = class extends Model {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
-				this.asEmbed(guild, poster.level, company.eventMultiplierString(), database).then(embed => {
+				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), database).then(embed => {
 					posting.edit({ embeds: [embed] })
 				})
 			})
