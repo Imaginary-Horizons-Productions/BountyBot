@@ -1,7 +1,8 @@
 # BountyBot Change Log
-## BountyBot Version 2.1.0:
+## BountyBot Version 2.0.2:
 - A toast's seconder is always filtered out of eligibility for xp
 - Improved the formatting on rewards messages
+- Renamed `/event` to `/festival` to disambiguate with Discord Scheduled Events
 
 ## BountyBot Version 2.0.1:
 - Fixed the join link not asking for all needed permissions

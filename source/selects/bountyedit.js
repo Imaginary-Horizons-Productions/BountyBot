@@ -169,7 +169,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				// update bounty board
 				const company = await database.models.Company.findByPk(modalSubmission.guildId);
 				const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.eventMultiplierString(), database);
+				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.festivalMultiplierString(), database);
 
 				bounty.updatePosting(modalSubmission.guild, company, database);
 

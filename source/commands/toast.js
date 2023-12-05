@@ -192,7 +192,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			message.startThread({ name: "Rewards" }).then(thread => {
 				if (rewardedRecipients.length > 0) {
 					getRankUpdates(interaction.guild, database).then(rankUpdates => {
-						const multiplierString = company.eventMultiplierString();
+						const multiplierString = company.festivalMultiplierString();
 						let text = `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString}` : ""}`;
 						if (rankUpdates.length > 0) {
 							text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;

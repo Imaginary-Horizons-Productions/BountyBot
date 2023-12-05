@@ -152,7 +152,7 @@ async function buildOverallScoreboardEmbed(guild, database) {
 		.setTimestamp();
 }
 
-/** Build an embed mentioning if an event is running, the next raffle date and the raffle rewards
+/** Build an embed mentioning if a festival is running, the next raffle date and the raffle rewards
  * @param {TextChannel} channel
  * @param {Guild} guild
  * @param {Company} company
@@ -163,7 +163,7 @@ async function buildServerBonusesEmbed(channel, guild, company) {
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`${displayName} Server Bonuses`)
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
-		.setDescription(`There is ${company.eventMultiplier != 1 ? '' : 'not '}an XP multiplier event currently active${company.eventMultiplier == 1 ? '' : ` for ${company.eventMultiplierString()}`}.`)
+		.setDescription(`There is ${company.eventMultiplier != 1 ? '' : 'not '}an XP multiplier festival currently active${company.eventMultiplier == 1 ? '' : ` for ${company.eventMultiplierString()}`}.`)
 		.setFooter(randomFooterTip())
 		.setTimestamp();
 	if (company.nextRaffleString) {

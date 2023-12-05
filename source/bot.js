@@ -47,23 +47,17 @@ client.on(Events.ClientReady, () => {
 		})()
 
 		// Post Changelog
-		readFile('./ChangeLog.md', { encoding: 'utf8' }).then(data => {
-			let [currentFull, currentMajor, currentMinor, currentPatch] = data.match(/(\d+)\.(\d+)\.(\d+)/);
-			let [_lastFull, lastMajor, lastMinor, lastPatch] = lastPostedVersion.match(/(\d+)\.(\d+)\.(\d+)/);
+		if (announcementsChannelId) {
+			readFile('./ChangeLog.md', { encoding: 'utf8' }).then(data => {
+				let [currentFull, currentMajor, currentMinor, currentPatch] = data.match(/(\d+)\.(\d+)\.(\d+)/);
+				let [_lastFull, lastMajor, lastMinor, lastPatch] = lastPostedVersion.match(/(\d+)\.(\d+)\.(\d+)/);
 
-			if (parseInt(currentMajor) <= parseInt(lastMajor)) {
-				if (parseInt(currentMinor) <= parseInt(lastMinor)) {
-					if (parseInt(currentPatch) <= parseInt(lastPatch)) {
-						return;
-					}
+				if (parseInt(currentMajor) <= parseInt(lastMajor) && parseInt(currentMinor) <= parseInt(lastMinor) && parseInt(currentPatch) <= parseInt(lastPatch)) {
+					return;
 				}
-			}
 
-			buildVersionEmbed(client.user.displayAvatarURL()).then(embed => {
-				client.guilds.fetch(testGuildId).then(guild => {
-					if (!announcementsChannelId) {
-						console.error("Patch notes post skipped due to falsy announcementsChannelId");
-					} else {
+				buildVersionEmbed(client.user.displayAvatarURL()).then(embed => {
+					client.guilds.fetch(testGuildId).then(guild => {
 						guild.channels.fetch(announcementsChannelId).then(announcementsChannel => {
 							announcementsChannel.send({ embeds: [embed] }).then(message => {
 								message.crosspost();
@@ -73,10 +67,12 @@ client.on(Events.ClientReady, () => {
 								}), "utf-8");
 							});
 						})
-					}
-				})
-			}).catch(console.error);
-		});
+					})
+				}).catch(console.error);
+			});
+		} else {
+			console.error("Patch notes post skipped due to falsy announcementsChannelId");
+		}
 	}
 });
 

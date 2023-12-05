@@ -68,7 +68,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 								continue;
 							}
 							database.models.Hunter.findOne({ companyId: bounty.guildId, userId: bounty.userId }).then(poster => {
-								return bounty.asEmbed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, company.eventMultiplierString(), database);
+								return bounty.asEmbed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, company.festivalMultiplierString(), database);
 							}).then(bountyEmbed => {
 								return bountyBoard.threads.create({
 									name: bounty.title,
@@ -82,7 +82,7 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 
 						// make Evergreen Bounty list
 						if (evergreenBounties.length > 0) {
-							Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.eventMultiplierString(), database))).then(embeds => {
+							Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), database))).then(embeds => {
 								generateBountyBoardThread(bountyBoard.threads, embeds, company);
 							})
 						}

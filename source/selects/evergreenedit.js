@@ -81,9 +81,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 				// update bounty board
 				const company = await database.models.Company.findByPk(modalSubmission.guildId);
-				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, company.level, company.eventMultiplierString(), database);
+				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, company.level, company.festivalMultiplierString(), database);
 				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(modalSubmission.guild, company.level, company.eventMultiplierString(), database)));
+				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(modalSubmission.guild, company.level, company.festivalMultiplierString(), database)));
 				if (company.bountyBoardId) {
 					const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
 					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
