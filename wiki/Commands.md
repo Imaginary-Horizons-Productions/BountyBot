@@ -259,5 +259,7 @@ Get starting bounty hunter tips or server setup tips
 > Cooldown: 3 second(s)
 
 Get the most recent changes or the full change log
-#### get-recent-changes
-Otherwise get the full change log
+#### notes-length
+> Choices: `Last version`, `Full change log`
+
+Get the changes in last version or the full change log
