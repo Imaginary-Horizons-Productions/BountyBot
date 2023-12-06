@@ -142,6 +142,28 @@ client.on(Events.ChannelDelete, channel => {
 			company.save();
 		}
 	})
+});
+
+client.on(Events.MessageDelete, message => {
+	databasePromise.then(database => {
+		return database.models.Company.findByPk(message.guildId);
+	}).then(company => {
+		if (message.id === company.scoreboardMessageId) {
+			company.scoreboardMessageId = null;
+			company.save();
+		}
+	})
+});
+
+client.on(Events.ThreadDelete, thread => {
+	databasePromise.then(database => {
+		return database.models.Company.findByPk(message.guildId);
+	}).then(company => {
+		if (thread.id === company.evergreenThreadId) {
+			company.evergreenThreadId = null;
+			company.save();
+		}
+	})
 })
 
 client.on(Events.GuildDelete, guild => {
