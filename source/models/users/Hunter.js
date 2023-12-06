@@ -26,7 +26,7 @@ exports.Hunter = class extends Model {
 	 * @param {number} points
 	 * @param {boolean} ignoreMultiplier
 	 * @param {Sequelize} database
-	 * @returns {string} level-up text
+	 * @returns {string[]} level-up texts
 	 */
 	async addXP(guildName, points, ignoreMultiplier, database) {
 		const company = await database.models.Company.findByPk(this.companyId);
@@ -48,20 +48,20 @@ exports.Hunter = class extends Model {
 		company.level = Math.floor(Math.sqrt(await company.xp / 3) + 1);
 		company.save();
 
-		let levelText = "";
+		const levelTexts = [];
 		if (this.level > previousLevel) {
 			const rewards = [];
 			for (let level = previousLevel + 1; level <= this.level; level++) {
 				rewards.push(this.levelUpReward(level, company.maxSimBounties, false));
 			}
-			levelText += `${congratulationBuilder()}, <@${this.userId}>! You have leveled up to level **${this.level}**!\n${rewards.join('\n')}`;
+			levelTexts.push(`${congratulationBuilder()}, <@${this.userId}>! You have leveled up to level **${this.level}**!\n\t- ${rewards.join('\n\t- ')}`);
 		}
 
 		if (company.level > previousCompanyLevel) {
-			levelText += `*${guildName} is now level ${company.level}! Evergreen bounties are now worth more XP!*\n`;
+			levelTexts.push(`${guildName} is now level ${company.level}! Evergreen bounties are now worth more XP!`);
 		}
 
-		return levelText;
+		return levelTexts;
 	}
 
 	levelUpReward(level, maxSlots, futureReward = true) {

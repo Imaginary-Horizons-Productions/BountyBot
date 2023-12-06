@@ -163,16 +163,16 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		database.models.Recipient.bulkCreate(rawRecipients);
 
 		// Add XP and update ranks
-		const levelTexts = [];
-		const toasterLevelText = await sender.addXP(interaction.guild.name, critValue, false, database);
-		if (toasterLevelText) {
-			levelTexts.push(toasterLevelText);
+		let levelTexts = [];
+		const toasterLevelTexts = await sender.addXP(interaction.guild.name, critValue, false, database);
+		if (toasterLevelTexts.length > 0) {
+			levelTexts = levelTexts.concat(toasterLevelTexts);
 		}
 		for (const recipientId of rewardedRecipients) {
 			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
-			const toasteeLevelText = await hunter.addXP(interaction.guild.name, 1, false, database);
-			if (toasteeLevelText) {
-				levelTexts.push(toasteeLevelText);
+			const toasteeLevelTexts = await hunter.addXP(interaction.guild.name, 1, false, database);
+			if (toasteeLevelTexts.length > 0) {
+				levelTexts = levelTexts.concat(toasteeLevelTexts);
 			}
 			hunter.increment("toastsReceived");
 		}

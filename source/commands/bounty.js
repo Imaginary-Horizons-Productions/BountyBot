@@ -342,7 +342,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 
 					const validatedCompleterIds = [];
 					const completerMembers = allCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: allCompleterIds })).values() : [];
-					const levelTexts = [];
+					let levelTexts = [];
 					for (const member of completerMembers) {
 						if (runMode !== "prod" || !member.user.bot) {
 							const memberId = member.id;
@@ -380,18 +380,18 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 
 					for (const userId of validatedCompleterIds) {
 						const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-						const completerLevelText = await hunter.addXP(interaction.guild.name, bountyValue, true, database);
-						if (completerLevelText) {
-							levelTexts.push(completerLevelText);
+						const completerLevelTexts = await hunter.addXP(interaction.guild.name, bountyValue, true, database);
+						if (completerLevelTexts.length > 0) {
+							levelTexts = levelTexts.concat(completerLevelTexts);
 						}
 						hunter.othersFinished++;
 						hunter.save();
 					}
 
 					const posterXP = Math.ceil(validatedCompleterIds.length / 2) * company.eventMultiplier;
-					const posterLevelText = await poster.addXP(interaction.guild.name, posterXP, true, database);
-					if (posterLevelText) {
-						levelTexts.push(posterLevelText);
+					const posterLevelTexts = await poster.addXP(interaction.guild.name, posterXP, true, database);
+					if (posterLevelTexts.length > 0) {
+						levelTexts = levelTexts.concat(posterLevelTexts);
 					}
 					poster.mineFinished++;
 					poster.save();

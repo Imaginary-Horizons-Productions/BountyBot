@@ -31,12 +31,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		let recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
 		recipientIds.push(originalToast.senderId);
 		recipientIds = recipientIds.filter(id => id !== interaction.user.id);
-		const levelTexts = [];
+		let levelTexts = [];
 		for (const userId of recipientIds) {
 			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
-			const levelText = await hunter.addXP(interaction.guild.name, 1, true, database);
-			if (levelText) {
-				levelTexts.push(levelText);
+			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, database);
+			if (recipientLevelTexts.length > 0) {
+				levelTexts = levelTexts.concat(recipientLevelTexts);
 			}
 			hunter.increment("toastsReceived");
 		}
@@ -81,9 +81,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (critRoll * critRoll * critRoll > 3375000 / lowestEffectiveToastLevel) {
 				wasCrit = true;
 				recipientIds.push(interaction.user.id);
-				const levelText = await seconder.addXP(interaction.guild.name, 1, true, database);
-				if (levelText) {
-					levelTexts.push(levelText);
+				const seconderLevelTexts = await seconder.addXP(interaction.guild.name, 1, true, database);
+				if (seconderLevelTexts.length > 0) {
+					levelTexts = levelTexts.concat(seconderLevelTexts);
 				}
 			}
 		}
