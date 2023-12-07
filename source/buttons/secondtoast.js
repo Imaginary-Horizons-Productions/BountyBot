@@ -10,6 +10,13 @@ const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, [toastId], database) => {
+		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
+		const [seconder] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
+		if (seconder.isBanned) {
+			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, ephemeral: true });
+			return;
+		}
+
 		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
 		if (originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", ephemeral: true });
@@ -22,10 +29,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-		const [seconder] = await database.models.Hunter.findOrCreate({
-			where: { userId: interaction.user.id, companyId: interaction.guildId }
-		});
 		seconder.toastSeconded++;
 
 		let recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
