@@ -170,8 +170,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 			bounty.updatePosting(modalSubmission.guild, bounty.Company, database);
 
-			modalSubmission.update({ content: "Bounty edited!", components: [] });
-			modalSubmission.channel.send(bounty.Company.sendAnnouncement({ content: `${modalSubmission.member} has edited one of their bounties:`, embeds: [bountyEmbed] }));
+			modalSubmission.update({ content: "Bounty edited!", embeds: [bountyEmbed], components: [] });
 		}).catch(console.error);
 	}
 );
