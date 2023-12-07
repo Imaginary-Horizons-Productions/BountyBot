@@ -52,7 +52,7 @@ exports.Hunter = class extends Model {
 		if (this.level > previousLevel) {
 			const rewards = [];
 			for (let level = previousLevel + 1; level <= this.level; level++) {
-				rewards.push(this.levelUpReward(level, company.maxSimBounties, false));
+				rewards.push(...this.levelUpReward(level, company.maxSimBounties, false));
 			}
 			levelTexts.push(`${congratulationBuilder()}, <@${this.userId}>! You have leveled up to level **${this.level}**!\n\t- ${rewards.join('\n\t- ')}`);
 		}
@@ -65,19 +65,19 @@ exports.Hunter = class extends Model {
 	}
 
 	levelUpReward(level, maxSlots, futureReward = true) {
-		let text = "";
+		const texts = [];
 		if (level % 2) {
-			text += `Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`;
+			texts.push(`Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
 		} else {
-			text += `Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`;
+			texts.push(`Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
 		}
 		const currentSlots = this.maxSlots(maxSlots);
 		if (currentSlots < maxSlots) {
 			if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
-				text += ` You ${futureReward ? "will" : "have"} unlock${futureReward ? "" : "ed"} bounty slot #${currentSlots}.`;
+				texts.push(` You ${futureReward ? "will" : "have"} unlock${futureReward ? "" : "ed"} bounty slot #${currentSlots}.`);
 			};
 		}
-		return text;
+		return texts;
 	}
 }
 
