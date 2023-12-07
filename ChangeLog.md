@@ -1,6 +1,7 @@
 # BountyBot Change Log
 ## BountyBot Version 2.1.0:
 - Made `/bounty edit` feedback ephemeral so that it can't be used as a non-rate limited showcase
+- Added `/moderation bountybot-ban` for permanently removing bounty and toast permission from users
 
 ## BountyBot Version 2.0.2:
 - A toast's seconder is always filtered out of eligibility for xp

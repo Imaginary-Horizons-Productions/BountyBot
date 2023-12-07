@@ -31,6 +31,12 @@ const subcommands = [];
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000, options, subcommands,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, database, runMode) => {
+		const toasterHunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
+		if (toasterHunter?.isBanned) {
+			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, ephemeral: true });
+			return;
+		}
+
 		const errors = [];
 
 		// Find valid toastees
