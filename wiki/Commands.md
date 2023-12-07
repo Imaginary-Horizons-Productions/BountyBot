@@ -143,6 +143,8 @@ Take down another user's bounty
 Toggle disqualification from ranking for a bounty hunter in the current season
 #### /moderation xp-penalty
 Reduce a bounty hunter's XP
+#### /moderation bountybot-ban
+Toggle whether the provided user can interact with bounties or toasts
 ### /premium
 
 > Usable in DMs: true
