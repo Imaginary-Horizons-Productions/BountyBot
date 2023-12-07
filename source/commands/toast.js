@@ -122,9 +122,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		season.increment("toastsRaised");
 		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-		const [sender] = await database.models.Hunter.findOrCreate({
-			where: { userId: interaction.user.id, companyId: interaction.guildId }
-		});
+		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 		sender.toastsRaised++;
 		const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 		for (const id of nonBotToasteeIds) {
