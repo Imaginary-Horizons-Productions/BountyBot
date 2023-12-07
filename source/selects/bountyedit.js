@@ -32,7 +32,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
 		}
 		interaction.showModal(
-			new ModalBuilder().setCustomId(mainId)
+			new ModalBuilder().setCustomId(interaction.id)
 				.setTitle(`Editing Bounty (${bounty.title})`)
 				.addComponents(
 					new ActionRowBuilder().addComponents(
@@ -66,7 +66,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					)
 				)
 		);
-		interaction.awaitModalSubmit({ filter: interaction => interaction.customId === mainId, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+		interaction.awaitModalSubmit({ filter: submission => submission.customId === interaction.id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 			const title = modalSubmission.fields.getTextInputValue("title");
 			const description = modalSubmission.fields.getTextInputValue("description");
 

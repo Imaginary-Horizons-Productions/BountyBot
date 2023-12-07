@@ -24,7 +24,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 		const feedbackType = interaction.options.getString("feedback-type");
 		switch (feedbackType) {
 			case "bug":
-				interaction.showModal(new ModalBuilder().setCustomId(feedbackType)
+				interaction.showModal(new ModalBuilder().setCustomId(interaction.id)
 					.setTitle("Bug Report")
 					.addComponents(
 						new ActionRowBuilder().addComponents(
@@ -56,7 +56,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 						)
 					)
 				);
-				interaction.awaitModalSubmit({ filter: (interaction) => interaction.customId === feedbackType, time: 300000 }).then(modalSubmission => {
+				interaction.awaitModalSubmit({ filter: (submission) => submission.customId === interaction.id, time: 300000 }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue("title")}`)
@@ -92,7 +92,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 				}).catch(console.error);
 				break;
 			case "feature":
-				interaction.showModal(new ModalBuilder().setCustomId(feedbackType)
+				interaction.showModal(new ModalBuilder().setCustomId(interaction.id)
 					.setTitle("Feature Request")
 					.addComponents(
 						new ActionRowBuilder().addComponents(
@@ -127,7 +127,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 						)
 					)
 				);
-				interaction.awaitModalSubmit({ filter: (interaction) => interaction.customId === feedbackType, time: 300000 }).then(modalSubmission => {
+				interaction.awaitModalSubmit({ filter: (submission) => submission.customId === interaction.id, time: 300000 }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue("title")}`)

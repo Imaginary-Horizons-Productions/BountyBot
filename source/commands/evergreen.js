@@ -68,7 +68,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 					}
 
 					interaction.showModal(
-						new ModalBuilder().setCustomId("evergreenpost")
+						new ModalBuilder().setCustomId(interaction.id)
 							.setTitle("New Evergreen Bounty")
 							.addComponents(
 								new ActionRowBuilder().addComponents(
@@ -93,7 +93,7 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 							)
 					);
 
-					interaction.awaitModalSubmit({ filter: interaction => interaction.customId === "evergreenpost", time: timeConversion(5, "m", "ms") }).then(async interaction => {
+					interaction.awaitModalSubmit({ filter: submission => submission.customId === interaction.id, time: timeConversion(5, "m", "ms") }).then(async interaction => {
 						const title = interaction.fields.getTextInputValue("title");
 						const description = interaction.fields.getTextInputValue("description");
 
