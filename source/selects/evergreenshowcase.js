@@ -11,7 +11,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				return;
 			}
 
-			bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), database).then(embed => {
+			bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
 				interaction.reply({ embeds: [embed] });
 			});
 		});
