@@ -1,4 +1,7 @@
 # BountyBot Change Log
+## BountyBot Version 2.1.0:
+- Made `/bounty edit` feedback ephemeral so that it can't be used as a non-rate limited showcase
+
 ## BountyBot Version 2.0.2:
 - A toast's seconder is always filtered out of eligibility for xp
 - Improved the formatting on rewards messages
