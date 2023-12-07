@@ -162,7 +162,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 			// post in bounty board forum
 			const company = await database.models.Company.findByPk(modalSubmission.guildId);
-			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.festivalMultiplierString(), database);
+			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.festivalMultiplierString(), false, database);
 			modalSubmission.reply(company.sendAnnouncement({ content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 				if (company.bountyBoardId) {
 					modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {

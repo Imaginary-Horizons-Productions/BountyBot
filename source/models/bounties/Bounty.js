@@ -9,15 +9,17 @@ exports.Bounty = class extends Model {
 	 * @param {Guild} guild
 	 * @param {number} posterLevel
 	 * @param {string} festivalMultiplierString
+	 * @param {boolean} shouldOmitRewardsField
 	 * @param {Sequelize} database
 	 */
-	asEmbed(guild, posterLevel, festivalMultiplierString, database) {
+	asEmbed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, database) {
 		return guild.members.fetch(this.userId).then(async author => {
 			const thumbnails = {
 				open: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
 				complete: "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
 				deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
 			};
+			const fields = [];
 			const embed = new EmbedBuilder().setColor(author.displayColor)
 				.setAuthor(ihpAuthorPayload)
 				.setThumbnail(thumbnails[this.state])
@@ -30,20 +32,24 @@ exports.Bounty = class extends Model {
 			}
 			if (this.scheduledEventId) {
 				const event = await guild.scheduledEvents.fetch(this.scheduledEventId);
-				embed.addFields({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
+				fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 			}
-			embed.addFields(
-				{ name: "Reward", value: `${exports.Bounty.calculateReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true }
-			)
+			if (!shouldOmitRewardsField) {
+				fields.push({ name: "Reward", value: `${exports.Bounty.calculateReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true });
+			}
 
 			if (this.isEvergreen) {
 				embed.setFooter({ text: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
 			} else {
 				const completions = await database.models.Completion.findAll({ where: { bountyId: this.id } });
 				if (completions.length > 0) {
-					embed.addFields({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
+					fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
 				}
 				embed.setFooter({ text: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+			}
+
+			if (fields.length > 0) {
+				embed.addFields(fields);
 			}
 
 			return embed;
@@ -64,7 +70,7 @@ exports.Bounty = class extends Model {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
-				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), database).then(embed => {
+				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), this.state !== "open", database).then(embed => {
 					posting.edit({ embeds: [embed] })
 				})
 			})

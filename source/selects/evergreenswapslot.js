@@ -24,7 +24,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					return thread.fetchStarterMessage();
 				}).then(async message => {
 					evergreenBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
-					message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), database))) });
+					message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), false, database))) });
 				});
 			})
 		}

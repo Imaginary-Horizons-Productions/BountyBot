@@ -166,11 +166,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 			// update bounty board
 			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, bounty.Company.festivalMultiplierString(), database);
+			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, bounty.Company.festivalMultiplierString(), false, database);
 
 			bounty.updatePosting(modalSubmission.guild, bounty.Company, database);
 
-			modalSubmission.update({ content: "Bounty edited!", embeds: [bountyEmbed], components: [] });
+			modalSubmission.update({ content: "Bounty edited! If you'd like to let other hunters know about the changes, you can use `/bounty showcase`.", embeds: [bountyEmbed], components: [] });
 		}).catch(console.error);
 	}
 );

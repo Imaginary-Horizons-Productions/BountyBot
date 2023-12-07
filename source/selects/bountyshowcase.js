@@ -17,7 +17,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			const hunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 			hunter.lastShowcaseTimestamp = new Date();
 			hunter.save();
-			bounty.asEmbed(interaction.guild, hunter.level, bounty.Company.festivalMultiplierString(), database).then(embed => {
+			bounty.asEmbed(interaction.guild, hunter.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
 				interaction.reply({ content: `${interaction.member} increased the reward on their bounty!`, embeds: [embed] });
 			})
 		})
