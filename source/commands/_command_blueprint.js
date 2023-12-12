@@ -1,6 +1,6 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { createSubcommandMappings } = require('../util/configUtil');
+const { createSubcommandMappings } = require('../util/fileUtil.js');
 
 const mainId = "";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, []);
