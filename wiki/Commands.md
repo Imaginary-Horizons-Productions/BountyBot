@@ -101,6 +101,8 @@ Swap the rewards of two evergreen bounties
 Show the embed for an evergreen bounty
 #### /evergreen complete
 Awarding XP to a hunter for completing an evergreen bounty
+#### /evergreen take-down
+Take down one of your bounties without awarding XP (forfeit posting XP)
 ### /feedback
 > Permission Level: SendMessages
 
