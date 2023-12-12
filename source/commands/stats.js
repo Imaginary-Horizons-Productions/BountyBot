@@ -6,16 +6,7 @@ const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('.
 const { generateTextBar } = require('../util/textUtil');
 
 const mainId = "stats";
-const options = [
-	{
-		type: "User",
-		name: "bounty-hunter",
-		description: "Whose stats to check; BountyBot for the server stats, empty for yourself",
-		required: false
-	}
-];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000,
 	/** Get the BountyBot stats for yourself or someone else */
 	(interaction, database, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
@@ -123,5 +114,12 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				});
 			})
 		}
+	}
+).setOptions(
+	{
+		type: "User",
+		name: "bounty-hunter",
+		description: "Whose stats to check; BountyBot for the server stats, empty for yourself",
+		required: false
 	}
 );

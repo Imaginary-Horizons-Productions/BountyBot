@@ -4,20 +4,7 @@ const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil');
 const { BOUNTYBOT_INVITE_URL } = require('../constants');
 
 const mainId = "tutorial";
-const options = [
-	{
-		type: "String",
-		name: "tutorial-type",
-		description: "Get starting bounty hunter tips or server setup tips",
-		required: true,
-		choices: [
-			{ name: "Starting Bounty Hunter Tips", value: "hunter" },
-			{ name: "Server Setup Tips", value: "server" }
-		]
-	}
-];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBot", null, false, true, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBot", null, false, true, 3000,
 	/** Send the user a embed with tips to start using BountyBot */
 	(interaction, database, runMode) => {
 		const embed = new EmbedBuilder().setColor(Colors.Blurple).setAuthor(ihpAuthorPayload)
@@ -49,5 +36,16 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 		}
 
 		interaction.reply({ embeds: [embed], ephemeral: true });
+	}
+).setOptions(
+	{
+		type: "String",
+		name: "tutorial-type",
+		description: "Get starting bounty hunter tips or server setup tips",
+		required: true,
+		choices: [
+			{ name: "Starting Bounty Hunter Tips", value: "hunter" },
+			{ name: "Server Setup Tips", value: "server" }
+		]
 	}
 );

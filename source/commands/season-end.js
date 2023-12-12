@@ -4,9 +4,7 @@ const { getRankUpdates } = require('../util/scoreUtil');
 const { buildCompanyStatsEmbed } = require('../util/embedUtil');
 
 const mainId = "season-end";
-const options = [];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, false, 3000,
 	/** End the Company's current season and start a new one */
 	async (interaction, database, runMode) => {
 		const company = await database.models.Company.findByPk(interaction.guildId);

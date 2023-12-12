@@ -3,9 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 
 const mainId = "premium";
-const options = [];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, true, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, true, 3000,
 	async (interaction, database, runMode) => {
 		interaction.reply({
 			embeds: [

@@ -3,9 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { BOUNTYBOT_INVITE_URL } = require('../constants');
 
 const mainId = "about";
-const options = [];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, true, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, true, 3000,
 	/** Get BountyBot's description and contributors */
 	(interaction, database, runMode) => {
 		const avatarURL = interaction.client.user.avatarURL();
