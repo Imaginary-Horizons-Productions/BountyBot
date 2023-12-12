@@ -3,17 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { MAX_EMBED_TITLE_LENGTH, testGuildId, feedbackChannelId } = require('../constants');
 
 const mainId = "feedback";
-const options = [
-	{
-		type: "String",
-		name: "feedback-type",
-		description: "the type of feedback you'd like to provide",
-		required: true,
-		choices: [{ name: "bug report", value: "bug" }, { name: "feature request", value: "feature" }]
-	}
-];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the developers", PermissionFlagsBits.SendMessages, false, true, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the developers", PermissionFlagsBits.SendMessages, false, true, 3000,
 	/** Open the modal associated with the feedback type to prompt more specific information */
 	(interaction, database, runMode) => {
 		if (!testGuildId || !feedbackChannelId) {
@@ -163,5 +153,13 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 				}).catch(console.error);
 				break;
 		}
+	}
+).setOptions(
+	{
+		type: "String",
+		name: "feedback-type",
+		description: "the type of feedback you'd like to provide",
+		required: true,
+		choices: [{ name: "bug report", value: "bug" }, { name: "feature request", value: "feature" }]
 	}
 );

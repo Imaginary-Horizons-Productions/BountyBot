@@ -3,22 +3,7 @@ const { CommandWrapper } = require('../classes');
 const { GLOBAL_MAX_BOUNTY_SLOTS } = require('../constants');
 
 const mainId = "config-premium";
-const options = [
-	{
-		type: "Number",
-		name: "level-threshold-multiplier",
-		description: "Configure the XP coefficient for bounty hunter levels (default 3)",
-		required: false,
-	},
-	{
-		type: "Integer",
-		name: "bounty-slots",
-		description: `Configure the max number (between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS}) of bounty slots hunters can have (default 5)`,
-		required: false
-	}
-];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, false, 3000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, false, 3000,
 	(interaction, database, runMode) => {
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
 			const updatePayload = {};
@@ -43,5 +28,18 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			company.update(updatePayload);
 			interaction.reply({ content, ephemeral: true });
 		});
+	}
+).setOptions(
+	{
+		type: "Number",
+		name: "level-threshold-multiplier",
+		description: "Configure the XP coefficient for bounty hunter levels (default 3)",
+		required: false,
+	},
+	{
+		type: "Integer",
+		name: "bounty-slots",
+		description: `Configure the max number (between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS}) of bounty slots hunters can have (default 5)`,
+		required: false
 	}
 );

@@ -7,28 +7,7 @@ const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "toast";
-const options = [
-	{
-		type: "String",
-		name: "toastees",
-		description: "The mention(s) of the bounty hunter(s) to whom you are raising a toast",
-		required: true
-	},
-	{
-		type: "String",
-		name: "message",
-		description: "The text of the toast to raise",
-		required: true
-	},
-	{
-		type: "String",
-		name: "image-url",
-		description: "The URL to the image to add to the toast",
-		required: false
-	}
-];
-const subcommands = [];
-module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000, options, subcommands,
+module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, database, runMode) => {
 		const toasterHunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
@@ -213,5 +192,24 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				}
 			});
 		});
+	}
+).setOptions(
+	{
+		type: "String",
+		name: "toastees",
+		description: "The mention(s) of the bounty hunter(s) to whom you are raising a toast",
+		required: true
+	},
+	{
+		type: "String",
+		name: "message",
+		description: "The text of the toast to raise",
+		required: true
+	},
+	{
+		type: "String",
+		name: "image-url",
+		description: "The URL to the image to add to the toast",
+		required: false
 	}
 );
