@@ -9,14 +9,14 @@ module.exports = new SelectWrapper(mainId, 3000,
 	/** Recieve the bounty to swap and solicit the slot to swap to */
 	(interaction, args, database) => {
 		database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
-			if (hunter.maxSlots() < 2) {
+			const company = await database.models.Company.findByPk(interaction.guildId);
+			if (hunter.maxSlots(company.maxSimBounties) < 2) {
 				interaction.reply({ content: "You currently only have 1 bounty slot in this server.", ephemeral: true });
 				return;
 			}
 
 			const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" } });
 			const previousBounty = existingBounties.find(bounty => bounty.id === interaction.values[0]);
-			const company = await database.models.Company.findByPk(interaction.guildId);
 			const slotOptions = [];
 			for (let i = 1; i <= hunter.maxSlots(company.maxSimBounties); i++) {
 				if (i != previousBounty.slotNumber) {
