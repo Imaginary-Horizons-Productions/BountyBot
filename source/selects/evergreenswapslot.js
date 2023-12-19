@@ -4,14 +4,14 @@ const { Bounty } = require('../models/bounties/Bounty');
 const mainId = "evergreenswapslot";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Complete the swaps */
-	async (interaction, [unparsedSourceSlot], database) => {
-		const sourceSlot = parseInt(unparsedSourceSlot);
-		const destinationSlot = parseInt(interaction.values[0]);
+	async (interaction, [sourceBountyId], database) => {
 		const company = await database.models.Company.findByPk(interaction.guildId);
 
 		const evergreenBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
-		const sourceBounty = evergreenBounties.find(bounty => bounty.slotNumber == sourceSlot);
-		const destinationBounty = evergreenBounties.find(bounty => bounty.slotNumber == destinationSlot);
+		const sourceBounty = evergreenBounties.find(bounty => bounty.id === sourceBountyId);
+		const sourceSlot = sourceBounty.slotNumber;
+		const destinationBounty = evergreenBounties.find(bounty => bounty.id === interaction.values[0]);
+		const destinationSlot = destinationBounty.slotNumber;
 		sourceBounty.slotNumber = destinationSlot;
 		await sourceBounty.save();
 

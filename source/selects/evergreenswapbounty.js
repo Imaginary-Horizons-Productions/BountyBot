@@ -36,7 +36,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 							.addOptions([{ label: "placeholder", value: "placeholder" }])
 					),
 					new ActionRowBuilder().addComponents(
-						new StringSelectMenuBuilder().setCustomId(`evergreenswapslot${SAFE_DELIMITER}${previousBountySlot}`)
+						new StringSelectMenuBuilder().setCustomId(`evergreenswapslot${SAFE_DELIMITER}${previousBounty.id}`)
 							.setPlaceholder("Select a bounty to swap with...")
 							.setMaxValues(1)
 							.setOptions(slotOptions)
