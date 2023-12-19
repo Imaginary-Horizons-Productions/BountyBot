@@ -3,6 +3,8 @@ const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions } = require("../../util/textUtil");
+const { getRankUpdates } = require("../../util/scoreUtil");
+const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction

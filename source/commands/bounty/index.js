@@ -18,6 +18,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 	async (interaction, database, runMode) => {
 		const userId = interaction.user.id;
 		await database.models.User.findOrCreate({ where: { id: userId } });
+		await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId, companyId: interaction.guildId } });
 		if (hunter.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, ephemeral: true });
