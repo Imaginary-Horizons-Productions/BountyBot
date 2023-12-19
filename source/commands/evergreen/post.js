@@ -1,7 +1,7 @@
 const { CommandInteraction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH } = require("../../constants");
-const { checkTextsInAutoMod } = require("../../util/textUtil");
+const { checkTextsInAutoMod, timeConversion } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 
 /**
