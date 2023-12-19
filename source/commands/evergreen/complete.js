@@ -1,9 +1,10 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions } = require("../../util/textUtil");
+const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
