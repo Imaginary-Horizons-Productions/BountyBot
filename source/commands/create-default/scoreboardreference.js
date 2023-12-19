@@ -1,5 +1,6 @@
 const { CommandInteraction, ChannelType, PermissionFlagsBits, OverwriteType } = require("discord.js");
 const { Sequelize } = require("sequelize");
+const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require("../../util/embedUtil");
 
 /**
  * @param {CommandInteraction} interaction
