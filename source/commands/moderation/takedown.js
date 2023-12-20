@@ -1,6 +1,7 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getNumberEmoji, trimForSelectOptionDescription } = require("../../util/textUtil");
+const { SAFE_DELIMITER } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
