@@ -23,7 +23,9 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 	getRankUpdates(interaction.guild, database);
 	interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
-	member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+	if (!member.bot) {
+		member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+	}
 };
 
 module.exports = {

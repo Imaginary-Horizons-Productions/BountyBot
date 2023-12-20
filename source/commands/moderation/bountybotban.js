@@ -18,11 +18,9 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 	hunter.save();
 	interaction.reply({ content: `${member} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot.`, ephemeral: true });
-	member.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`).catch(error => {
-		if (error.code !== 50007) { // Error: Bots can't send messages to bots
-			console.error(error);
-		}
-	});
+	if (!member.bot) {
+		member.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`);
+	}
 };
 
 module.exports = {

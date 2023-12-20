@@ -24,7 +24,9 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 	getRankUpdates(interaction.guild, database);
 	interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, ephemeral: true });
-	member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+	if (!member.bot) {
+		member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+	}
 };
 
 module.exports = {
