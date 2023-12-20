@@ -9,14 +9,20 @@ const { Sequelize } = require("sequelize");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const member = interaction.options.getUser("user");
-	const hunter = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId } });
+	await database.models.User.findOrCreate({ where: { id: member.id } });
+	await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+	const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId } });
 	hunter.isBanned = !hunter.isBanned;
 	if (hunter.isBanned) {
 		hunter.hasBeenBanned = true;
 	}
 	hunter.save();
 	interaction.reply({ content: `${member} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot.`, ephemeral: true });
-	member.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`);
+	member.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`).catch(error => {
+		if (error.code !== 50007) { // Error: Bots can't send messages to bots
+			console.error(error);
+		}
+	});
 };
 
 module.exports = {
