@@ -1,5 +1,6 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
+const { getRankUpdates } = require("../../util/scoreUtil");
 
 /**
  * @param {CommandInteraction} interaction
