@@ -157,7 +157,7 @@ client.on(Events.MessageDelete, message => {
 
 client.on(Events.ThreadDelete, thread => {
 	databasePromise.then(database => {
-		return database.models.Company.findByPk(message.guildId);
+		return database.models.Company.findByPk(thread.guildId);
 	}).then(company => {
 		if (thread.id === company.evergreenThreadId) {
 			company.evergreenThreadId = null;
