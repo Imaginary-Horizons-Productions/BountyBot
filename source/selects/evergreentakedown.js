@@ -9,7 +9,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 		bounty.state = "deleted";
 		bounty.save();
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
+		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
 		if (evergreenBounties.length > 0) {
 			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database)));
 			if (bounty.Company.bountyBoardId) {
