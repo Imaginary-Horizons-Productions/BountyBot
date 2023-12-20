@@ -1,6 +1,7 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
+const { MAX_EMBED_FIELD_COUNT } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
