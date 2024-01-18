@@ -60,7 +60,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(recipient => recipient.userId));
 		}, []);
 
-		const wasCrit = false;
+		let wasCrit = false;
 		if (critSecondsAvailable > 0) {
 			let lowestEffectiveToastLevel = seconder.level + 2;
 			for (const userId of recipientIds) {
