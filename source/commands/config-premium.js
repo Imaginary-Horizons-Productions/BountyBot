@@ -9,13 +9,13 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			const updatePayload = {};
 			let content = "The following server settings have been configured:";
 
-			const xpCoefficient = interaction.options.getNumber(options[0].name);
+			const xpCoefficient = interaction.options.getNumber("level-threshold-multiplier");
 			if (xpCoefficient !== null) {
 				updatePayload.xpCoefficient = xpCoefficient;
 				content += `\n- The level-up xp coefficient has been set to ${xpCoefficient}.`;
 			}
 
-			const slots = interaction.options.getInteger(options[1].name);
+			const slots = interaction.options.getInteger("bounty-slots");
 			if (slots !== null) {
 				if (slots < 1 || slots > GLOBAL_MAX_BOUNTY_SLOTS) {
 					interaction.reply({ content: `Your settings were not set because ${slots} is an invalid value for bounty slots (must be between 1 and 10 inclusive).`, ephemeral: true });

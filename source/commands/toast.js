@@ -19,7 +19,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const errors = [];
 
 		// Find valid toastees
-		const toasteeIds = extractUserIdsFromMentions(interaction.options.getString(options[0].name), [interaction.user.id]);
+		const toasteeIds = extractUserIdsFromMentions(interaction.options.getString("toastees"), [interaction.user.id]);
 
 		const nonBotToasteeIds = [];
 		if (toasteeIds.length < 1) {
@@ -40,7 +40,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const embed = new EmbedBuilder();
 
 		// Validate image-url is a URL
-		const imageURL = interaction.options.getString(options[2].name);
+		const imageURL = interaction.options.getString("image-url");
 		try {
 			if (imageURL) {
 				new URL(imageURL);
@@ -56,7 +56,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		const toastText = interaction.options.getString(options[1].name);
+		const toastText = interaction.options.getString("message");
 		const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [toastText], "toast");
 		if (isBlockedByAutoMod) {
 			interaction.reply({ content: "Your toast was blocked by AutoMod.", ephemeral: true });

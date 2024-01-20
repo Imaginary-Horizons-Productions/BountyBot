@@ -5,7 +5,7 @@ const mainId = "scoreboard";
 module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, false, false, 3000,
 	/** View the XP scoreboard */
 	(interaction, database, runMode) => {
-		if (interaction.options.getString(options[0].name) === "season") {
+		if (interaction.options.getString("scoreboard-type") === "season") {
 			buildSeasonalScoreboardEmbed(interaction.guild, database).then(embed => {
 				interaction.reply({
 					embeds: [embed],

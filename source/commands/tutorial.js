@@ -11,8 +11,8 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 			.setThumbnail(interaction.client.user.avatarURL())
 			.setFooter(randomFooterTip());
 
-		switch (interaction.options.getString(options[0].name)) {
-			case options[0].choices[0].value: // hunter
+		switch (interaction.options.getString("tutorial-type")) {
+			case "hunter":
 				embed.setTitle("Bounty Hunter Starting Tips")
 					.setDescription("BountyBot allows server members to post objectives as bounties and awards XP to the bounty hunters who complete them. Here's how you can get started:")
 					.addFields(
@@ -22,7 +22,7 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 						{ name: "Other Features", value: "To get a list of all BountyBot's commands, use `/commands`." }
 					)
 				break;
-			case options[0].choices[1].value: // server
+			case "server":
 				embed.setTitle("Server Setup Tips")
 					.setDescription("Following are some suggestions for setting up BountyBot on your server. NOTE: If you kick BountyBot, it will delete all data related to your server from the database.")
 					.addFields(
