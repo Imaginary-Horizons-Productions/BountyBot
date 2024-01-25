@@ -1,4 +1,5 @@
 const { SelectWrapper } = require('../classes');
+const { EMPTY_MESSAGE_PAYLOAD } = require('../constants');
 
 const mainId = "bountyshowcase";
 module.exports = new SelectWrapper(mainId, 3000,
@@ -18,7 +19,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 			hunter.lastShowcaseTimestamp = new Date();
 			hunter.save();
 			bounty.asEmbed(interaction.guild, hunter.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
-				interaction.reply({ content: `${interaction.member} increased the reward on their bounty!`, embeds: [embed] });
+				interaction.update(EMPTY_MESSAGE_PAYLOAD);
+				interaction.channel.send({ content: `${interaction.member} increased the reward on their bounty!`, embeds: [embed] });
 			})
 		})
 	}
