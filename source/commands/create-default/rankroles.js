@@ -15,18 +15,21 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					name: "Platinum Rank",
 					color: "#669999",
 					icon: "./source/images/BountyBotIcon.jpg",
+					hoist: true,
 					reason: "/create-default rank-roles"
 				},
 				{
 					name: "Gold Rank",
 					color: "#daa520",
 					icon: "./source/images/BountyBotIcon.jpg",
+					hoist: true,
 					reason: "/create-default rank-roles"
 				},
 				{
 					name: "Silver Rank",
 					color: "#ccccff",
 					icon: "./source/images/BountyBotIcon.jpg",
+					hoist: true,
 					reason: "/create-default rank-roles"
 				},
 				{
