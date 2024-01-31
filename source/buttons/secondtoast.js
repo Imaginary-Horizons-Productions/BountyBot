@@ -102,7 +102,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(async rankUpdates => {
-			let text = `__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP`).join("\n")}`;
+			let text = `${interaction.member.displayName} seconded this toast!\n__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP`).join("\n")}`;
 			if (rankUpdates.length > 0) {
 				text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 			}

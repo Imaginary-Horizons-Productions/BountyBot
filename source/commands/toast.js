@@ -165,8 +165,8 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			components: [
 				new ActionRowBuilder().addComponents(
 					new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toast.id}`)
-						.setLabel("Seconded!")
-						.setEmoji(getNumberEmoji(2))
+						.setLabel("Hear, hear!")
+						.setEmoji("🥂")
 						.setStyle(ButtonStyle.Primary)
 				)
 			],
