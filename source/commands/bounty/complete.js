@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { updateScoreboard } = require("../../util/embedUtil");
@@ -114,6 +114,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			if (bounty.Company.bountyBoardId) {
 				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
 					bountyBoard.threads.fetch(bounty.postingId).then(thread => {
+						thread.setAppliedTags([bounty.Company.bountyBoardCompletedTagId])
 						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 					})
 				})

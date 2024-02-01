@@ -68,6 +68,12 @@ exports.initModel = function (sequelize) {
 		bountyBoardId: {
 			type: DataTypes.STRING
 		},
+		bountyBoardOpenTagId: {
+			type: DataTypes.STRING
+		},
+		bountyBoardCompletedTagId: {
+			type: DataTypes.STRING
+		},
 		evergreenThreadId: {
 			type: DataTypes.STRING
 		},

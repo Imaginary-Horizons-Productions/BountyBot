@@ -168,7 +168,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 					modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 						return bountyBoard.threads.create({
 							name: bounty.title,
-							message: { embeds: [bountyEmbed] }
+							message: { embeds: [bountyEmbed] },
+							appliedTags: [company.bountyBoardOpenTagId]
 						})
 					}).then(posting => {
 						bounty.postingId = posting.id;

@@ -122,7 +122,7 @@ async function getRankUpdates(guild, database) {
 					const hunter = allHunters.find(hunter => member.id === hunter.userId);
 					const rankRoleId = ranks[hunter.rank]?.roleId;
 					if (rankRoleId) {
-						await member.roles.add(rankRoleId);
+						await member.roles.add(rankRoleId).catch(console.error);
 						destinationRole = await guild.roles.fetch(rankRoleId);
 					}
 					// Note: higher ranks are lower value
@@ -144,7 +144,8 @@ async function getRankUpdates(guild, database) {
 function generateBountyBoardThread(threadManager, embeds, company) {
 	return threadManager.create({
 		name: "Evergreen Bounties",
-		message: { embeds }
+		message: { embeds },
+		appliedTags: [company.bountyBoardOpenTagId]
 	}).then(thread => {
 		company.evergreenThreadId = thread.id;
 		company.save();

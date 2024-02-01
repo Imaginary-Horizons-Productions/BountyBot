@@ -26,13 +26,16 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 				allow: [PermissionFlagsBits.SendMessagesInThreads]
 			}
 		],
-		//TODO #77 use "availableTags" to allow tagging bounties ("completed", "event", "open" as default tags?)
+		availableTags: [{ name: "Open", moderated: true }, { name: "Completed", moderated: true }],
 		defaultSortOrder: SortOrderType.CreationDate,
 		defaultForumLayout: ForumLayoutType.ListView,
 		reason: `/create-default bounty-board-forum by ${interaction.user}`
 	});
 
 	company.bountyBoardId = bountyBoard.id;
+	const [{ id: openTagId }, { id: completedTagId }] = bountyBoard.availableTags;
+	company.bountyBoardOpenTagId = openTagId;
+	company.bountyBoardCompletedTagId = completedTagId;
 
 	const evergreenBounties = [];
 	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, state: "open" }, order: [["createdAt", "DESC"]] }).then(bounties => {
@@ -46,7 +49,8 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({
 					name: bounty.title,
-					message: { embeds: [bountyEmbed] }
+					message: { embeds: [bountyEmbed] },
+					appliedTags: [openTagId]
 				})
 			}).then(posting => {
 				bounty.postingId = posting.id;

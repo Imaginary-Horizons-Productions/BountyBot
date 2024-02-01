@@ -1,4 +1,7 @@
 # BountyBot Change Log
+## BountyBot Version 2.2.0:
+- The default created bounty board now includes the `Open` and `Completed` tags for searching for open bounties
+
 ## BountyBot Version 2.1.1:
 - Fixed several crashes
 
