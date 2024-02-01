@@ -1,7 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { buildCompanyStatsEmbed } = require('../util/embedUtil');
+const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, false, 3000,
@@ -28,6 +28,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			await database.models.Season.create({ companyId: interaction.guildId });
 			await database.models.Hunter.update({ rank: null, lastRank: null, nextRankXP: null }, { where: { companyId: company.id } });
 			getRankUpdates(interaction.guild, database);
+			updateScoreboard(company, interaction.guild, database);
 			interaction.reply(company.sendAnnouncement({ content: "A new season has started, ranks and placements have been reset!", embeds: [embed] }));
 		})
 	}
