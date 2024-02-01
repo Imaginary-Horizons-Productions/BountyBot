@@ -1,6 +1,5 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { getRankUpdates } = require('../util/scoreUtil');
 const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "season-end";
@@ -26,8 +25,19 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				endingSeason.save();
 			}
 			await database.models.Season.create({ companyId: interaction.guildId });
-			await database.models.Hunter.update({ rank: null, lastRank: null, nextRankXP: null }, { where: { companyId: company.id } });
-			getRankUpdates(interaction.guild, database);
+			const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guild.id }, order: [["varianceThreshold", "DESC"]] });
+			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
+			if (roleIds.length > 0) {
+				const allHunters = await database.models.Hunter.findAll({ where: { companyId: interaction.guildId } });
+				interaction.guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
+					for (const member of memberCollection.values()) {
+						if (member.manageable) {
+							member.roles.remove(roleIds);
+						}
+					}
+				})
+			}
+			await database.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId: company.id } });
 			updateScoreboard(company, interaction.guild, database);
 			interaction.reply(company.sendAnnouncement({ content: "A new season has started, ranks and placements have been reset!", embeds: [embed] }));
 		})
