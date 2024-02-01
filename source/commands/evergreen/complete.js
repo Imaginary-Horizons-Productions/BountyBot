@@ -76,7 +76,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
 		const completerLevelTexts = await hunter.addXP(interaction.guild.name, bountyValue, true, database);
 		if (completerLevelTexts.length > 0) {
-			levelTexts.push(completerLevelTexts);
+			levelTexts = levelTexts.concat(completerLevelTexts);
 		}
 		hunter.othersFinished++;
 		hunter.save();
