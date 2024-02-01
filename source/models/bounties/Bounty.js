@@ -67,6 +67,8 @@ exports.Bounty = class extends Model {
 			guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(this.postingId);
 			}).then(thread => {
+				return thread.setArchived(false, "Unarchived for /bounty edit");
+			}).then(thread => {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
