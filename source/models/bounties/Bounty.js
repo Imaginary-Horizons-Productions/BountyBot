@@ -64,17 +64,18 @@ exports.Bounty = class extends Model {
 	async updatePosting(guild, company, database) {
 		if (company.bountyBoardId) {
 			const poster = await database.models.Hunter.findOne({ where: { userId: this.userId, companyId: this.companyId } });
-			guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+			return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(this.postingId);
 			}).then(thread => {
-				return thread.setArchived(false, "Unarchived for /bounty edit");
+				return thread.setArchived(false, "Unarchived to update posting");
 			}).then(thread => {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
 				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), this.state !== "open", database).then(embed => {
-					posting.edit({ embeds: [embed] })
+					posting.edit({ embeds: [embed] });
 				})
+				return posting.channel;
 			})
 		}
 	}

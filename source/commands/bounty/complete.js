@@ -115,7 +115,6 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
 					bountyBoard.threads.fetch(bounty.postingId).then(thread => {
 						thread.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
-						thread.setArchived(true, "bounty completed");
 						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 					})
 				})
@@ -125,6 +124,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			interaction.reply(replyPayload);
 		}).then(() => {
 			return bounty.updatePosting(interaction.guild, bounty.Company, database);
+		}).then(thread => {
+			if (thread) {
+				thread.setArchived(true, "bounty completed");
+			}
 		})
 
 		updateScoreboard(bounty.Company, interaction.guild, database);
