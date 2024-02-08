@@ -1,6 +1,6 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
+const { timeConversion, checkTextsInAutoMod, trimForModalTitle } = require('../util/textUtil');
 
 const mainId = "evergreenedit";
 module.exports = new SelectWrapper(mainId, 3000,
@@ -16,7 +16,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 		interaction.showModal(
 			new ModalBuilder().setCustomId(interaction.id)
-				.setTitle(`Editing Bounty (${bounty.title})`)
+				.setTitle(trimForModalTitle(`Edit Bounty: ${bounty.title}`))
 				.addComponents(
 					new ActionRowBuilder().addComponents(
 						new TextInputBuilder().setCustomId("title")

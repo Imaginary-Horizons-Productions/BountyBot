@@ -187,6 +187,15 @@ function trimForSelectOptionDescription(text) {
 	}
 }
 
+/** @param {string} text */
+function trimForModalTitle(text) {
+	if (text.length > 45) {
+		return `${text.slice(0, 44)}…`;
+	} else {
+		return text;
+	}
+}
+
 module.exports = {
 	congratulationBuilder,
 	generateTextBar,
@@ -194,5 +203,6 @@ module.exports = {
 	timeConversion,
 	extractUserIdsFromMentions,
 	checkTextsInAutoMod,
-	trimForSelectOptionDescription
+	trimForSelectOptionDescription,
+	trimForModalTitle
 };

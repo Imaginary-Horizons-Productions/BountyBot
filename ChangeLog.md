@@ -5,6 +5,7 @@
 - Fixed a crash when using `/evergreen complete` on multiple completers
 - Fixed `/season-end` not updating the scoreboard and not removing ranks roles
 - Fixed a crash when editing a bounty whose thread has been archived
+- Fixed a crash when editing a bounty whose title is too long
 
 ## BountyBot Version 2.1.1:
 - Fixed several crashes
