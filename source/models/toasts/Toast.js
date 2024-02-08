@@ -25,6 +25,10 @@ exports.initModel = function (sequelize) {
 		},
 		imageURL: {
 			type: DataTypes.STRING,
+		},
+		secondings: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
 		}
 	}, {
 		sequelize,

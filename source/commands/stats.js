@@ -4,6 +4,7 @@ const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
+const { Op } = require('sequelize');
 
 const mainId = "stats";
 module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000,
@@ -36,8 +37,8 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 					const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
+					const mostSecondedToast = await database.models.Toast.findOne({ where: { senderId: target.id, companyId: interaction.guildId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] })
 
-					//TODO #80 add "most seconded toast"
 					interaction.reply({
 						embeds: [
 							new EmbedBuilder().setColor(target.displayColor)
@@ -46,14 +47,11 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
 								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${hunter.rank !== null ? ` which qualifies for ${rankName}` : ""}.`)
 								.addFields(
-									{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
-									{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished === 1 ? 'y' : 'ies'}`, inline: true },
-									{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
+									{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
-									{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
-									{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised === 1 ? "" : "s"}`, inline: true },
-									{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded === 1 ? "" : "s"}`, inline: true },
-									{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
+									{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with **${mostSecondedToast.secondings} secondings**` : "No toasts seconded yet..." },
+									{ name: "Bounty Stats", value: `Bounties Hunted: ${hunter.othersFinished} bount${hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${hunter.mineFinished} bount${hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
+									{ name: "Toast Stats", value: `Toasts Raised: ${hunter.toastsRaised} toast${hunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${hunter.toastsSeconded} toast${hunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${hunter.toastsReceived} toast${hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
 								)
 								.setFooter(randomFooterTip())
 								.setTimestamp()
@@ -80,8 +78,8 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
+				const mostSecondedToast = await database.models.Toast.findOne({ where: { senderId: interaction.user.id, companyId: interaction.guildId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] })
 
-				//TODO #80 add "most seconded toast"
 				interaction.reply({
 					embeds: [
 						new EmbedBuilder().setColor(interaction.member.displayColor)
@@ -94,18 +92,12 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								You have ${bountySlots} bounty slot${bountySlots === 1 ? '' : 's'}!`
 							)
 							.addFields(
-								{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}` },
-								{ name: `Level ${hunter.level + 1} Reward`, value: hunter.levelUpReward(hunter.level + 1, maxSimBounties, true), inline: true },
-								{ name: `Level ${hunter.level + 2} Reward`, value: hunter.levelUpReward(hunter.level + 2, maxSimBounties, true), inline: true },
-								{ name: `Level ${hunter.level + 3} Reward`, value: hunter.levelUpReward(hunter.level + 3, maxSimBounties, true), inline: true },
-								{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
-								{ name: "Bounties Hunted", value: `${hunter.othersFinished} bount${hunter.othersFinished === 1 ? 'y' : 'ies'}`, inline: true },
-								{ name: "Bounty Postings", value: `${hunter.mineFinished} bount${hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
+								{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 								{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
-								{ name: ZERO_WIDTH_WHITE_SPACE, value: ZERO_WIDTH_WHITE_SPACE },
-								{ name: "Toasts Raised", value: `${hunter.toastsRaised} toast${hunter.toastsRaised === 1 ? "" : "s"}`, inline: true },
-								{ name: "Toasts Seconded", value: `${hunter.toastsSeconded} toast${hunter.toastsSeconded === 1 ? "" : "s"}`, inline: true },
-								{ name: "Toasts Recieved", value: `${hunter.toastsReceived} toast${hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
+								{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with **${mostSecondedToast.secondings} secondings**` : "No toasts seconded yet..." },
+								{ name: "Bounty Stats", value: `Bounties Hunted: ${hunter.othersFinished} bount${hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${hunter.mineFinished} bount${hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
+								{ name: "Toast Stats", value: `Toasts Raised: ${hunter.toastsRaised} toast${hunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${hunter.toastsSeconded} toast${hunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${hunter.toastsReceived} toast${hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
+								{ name: "Upcoming Level-Up Rewards", value: [hunter.level + 1, hunter.level + 2, hunter.level + 3].map(level => `Level ${level}\n- ${hunter.levelUpReward(level, maxSimBounties, true).join("\n- ")}`).join("\n") }
 							)
 							.setFooter(randomFooterTip())
 							.setTimestamp()
