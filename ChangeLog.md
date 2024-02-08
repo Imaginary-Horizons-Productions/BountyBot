@@ -1,11 +1,15 @@
 # BountyBot Change Log
+## BountyBot Version 2.3.0:
+- Each bounty hunter's most seconded toast (starting from this update) will be shown off in their `/stats`
+- Completed bounties will now archive their posting threads on the bounty board forum
+- Fixed a crash when editing a bounty whose thread has been archived
+
 ## BountyBot Version 2.2.0:
 - The default created bounty board now includes the `Open` and `Completed` tags for searching for open bounties
 - The Platinum, Gold, and Silver default rank roles are now hoisted (displays its members separately)
 - Fixed a crash when using `/evergreen complete` on multiple completers
 - Fixed `/season-end` not updating the scoreboard and not removing ranks roles
 - Fixed a crash when editing a bounty whose thread has been archived
-- Fixed a crash when editing a bounty whose title is too long
 
 ## BountyBot Version 2.1.1:
 - Fixed several crashes

@@ -30,6 +30,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 
 		seconder.toastSeconded++;
+		originalToast.increment("secondings");
 
 		let recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
 		recipientIds.push(originalToast.senderId);
