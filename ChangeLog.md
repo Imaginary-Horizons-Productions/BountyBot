@@ -2,7 +2,7 @@
 ## BountyBot Version 2.3.0:
 - Each bounty hunter's most seconded toast (starting from this update) will be shown off in their `/stats`
 - Completed bounties will now archive their posting threads on the bounty board forum
-- Fixed a crash when editing a bounty whose thread has been archived
+- Fixed a crash when editing a bounty whose thread title is too long
 
 ## BountyBot Version 2.2.0:
 - The default created bounty board now includes the `Open` and `Completed` tags for searching for open bounties
