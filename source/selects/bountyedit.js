@@ -1,6 +1,6 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildScheduledEventEntityType } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { YEAR_IN_MS } = require('../constants');
+const { YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require('../constants');
 const { timeConversion, checkTextsInAutoMod, trimForModalTitle } = require('../util/textUtil');
 
 const mainId = "bountyedit";
@@ -32,7 +32,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
 		}
 		interaction.showModal(
-			new ModalBuilder().setCustomId(interaction.id)
+			new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle(trimForModalTitle(`Edit Bounty: ${bounty.title}`))
 				.addComponents(
 					new ActionRowBuilder().addComponents(
@@ -66,7 +66,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					)
 				)
 		);
-		interaction.awaitModalSubmit({ filter: submission => submission.customId === interaction.id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+		interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 			const title = modalSubmission.fields.getTextInputValue("title");
 			const description = modalSubmission.fields.getTextInputValue("description");
 

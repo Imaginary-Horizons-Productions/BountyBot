@@ -1,6 +1,6 @@
 const { CommandInteraction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH } = require("../../constants");
+const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { checkTextsInAutoMod, timeConversion } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 
@@ -26,7 +26,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 
 	interaction.showModal(
-		new ModalBuilder().setCustomId(interaction.id)
+		new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("New Evergreen Bounty")
 			.addComponents(
 				new ActionRowBuilder().addComponents(
@@ -51,7 +51,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			)
 	);
 
-	interaction.awaitModalSubmit({ filter: submission => submission.customId === interaction.id, time: timeConversion(5, "m", "ms") }).then(async interaction => {
+	interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: timeConversion(5, "m", "ms") }).then(async interaction => {
 		const title = interaction.fields.getTextInputValue("title");
 		const description = interaction.fields.getTextInputValue("description");
 

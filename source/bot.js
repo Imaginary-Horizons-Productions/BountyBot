@@ -5,7 +5,7 @@ const { readFile, writeFile } = require("fs").promises;
 const { getCommand, slashData } = require("./commands/_commandDictionary.js");
 const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
-const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium } = require("./constants.js");
+const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { connectToDatabase } = require("../database.js");
 //#endregion
@@ -78,9 +78,16 @@ client.on(Events.ClientReady, () => {
 
 client.on(Events.InteractionCreate, interaction => {
 	databasePromise.then(database => {
-		if (interaction.isModalSubmit()) {
-			// Modal Submissions should be handled in the interactions that show them via awaitModalSubmission
-			return;
+		if (interaction.isAutocomplete()) {
+			const command = getCommand(interaction.commandName);
+			const focusedOption = interaction.options.getFocused(true);
+			const unfilteredChoices = command.autocomplete?.[focusedOption.name] ?? [];
+			if (unfilteredChoices.length < 1) {
+				console.error(`Attempted autocomplete on misconfigured command ${interaction.commandName} ${focusedOption.name}`);
+			}
+			const choices = unfilteredChoices.filter(choice => choice.value.includes(focusedOption.value.toLowerCase()))
+				.slice(0, 25);
+			interaction.respond(choices);
 		} else if (interaction.isCommand()) {
 			const command = getCommand(interaction.commandName);
 			if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
@@ -95,16 +102,8 @@ client.on(Events.InteractionCreate, interaction => {
 			}
 
 			command.execute(interaction, database, runMode);
-		} else if (interaction.isAutocomplete()) {
-			const command = getCommand(interaction.commandName);
-			const focusedOption = interaction.options.getFocused(true);
-			const unfilteredChoices = command.autocomplete?.[focusedOption.name] ?? [];
-			if (unfilteredChoices.length < 1) {
-				console.error(`Attempted autocomplete on misconfigured command ${interaction.commandName} ${focusedOption.name}`);
-			}
-			const choices = unfilteredChoices.filter(choice => choice.value.includes(focusedOption.value.toLowerCase()))
-				.slice(0, 25);
-			interaction.respond(choices);
+		} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
+			return;
 		} else {
 			const [mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
 			let getter;

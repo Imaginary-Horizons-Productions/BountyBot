@@ -1,6 +1,6 @@
 const { ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { MAX_EMBED_TITLE_LENGTH, testGuildId, feedbackChannelId } = require('../constants');
+const { MAX_EMBED_TITLE_LENGTH, testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../constants');
 
 const mainId = "feedback";
 module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the developers", PermissionFlagsBits.SendMessages, false, true, 3000,
@@ -11,10 +11,9 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 			return;
 		}
 
-		const feedbackType = interaction.options.getString("feedback-type");
-		switch (feedbackType) {
+		switch (interaction.options.getString("feedback-type")) {
 			case "bug":
-				interaction.showModal(new ModalBuilder().setCustomId(interaction.id)
+				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Bug Report")
 					.addComponents(
 						new ActionRowBuilder().addComponents(
@@ -46,7 +45,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 						)
 					)
 				);
-				interaction.awaitModalSubmit({ filter: (submission) => submission.customId === interaction.id, time: 300000 }).then(modalSubmission => {
+				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: 300000 }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue("title")}`)
@@ -82,7 +81,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 				}).catch(console.error);
 				break;
 			case "feature":
-				interaction.showModal(new ModalBuilder().setCustomId(interaction.id)
+				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Feature Request")
 					.addComponents(
 						new ActionRowBuilder().addComponents(
@@ -117,7 +116,7 @@ module.exports = new CommandWrapper(mainId, "Provide feedback on this bot to the
 						)
 					)
 				);
-				interaction.awaitModalSubmit({ filter: (submission) => submission.customId === interaction.id, time: 300000 }).then(modalSubmission => {
+				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: 300000 }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue("title")}`)

@@ -1,6 +1,6 @@
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, GuildScheduledEventEntityType } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { YEAR_IN_MS, MAX_EMBED_TITLE_LENGTH } = require('../constants');
+const { YEAR_IN_MS, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require('../constants');
 const { timeConversion, checkTextsInAutoMod } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
@@ -26,7 +26,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 		}
 
 		interaction.showModal(
-			new ModalBuilder().setCustomId(interaction.id)
+			new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle(`New Bounty (Slot ${slotNumber})`)
 				.addComponents(
 					new ActionRowBuilder().addComponents(
@@ -65,7 +65,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				)
 		);
 
-		interaction.awaitModalSubmit({ filter: (submission) => submission.customId === interaction.id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+		interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 			const title = modalSubmission.fields.getTextInputValue("title");
 			const description = modalSubmission.fields.getTextInputValue("description");
 
