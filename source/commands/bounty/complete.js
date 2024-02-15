@@ -60,6 +60,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
+	interaction.deferReply({ ephemeral: true });
 	season.increment("bountiesCompleted");
 
 	bounty.state = "completed";
@@ -121,7 +122,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			} else {
 				replyPayload.content = text;
 			}
-			interaction.reply(replyPayload);
+			interaction.editReply(replyPayload);
 		}).then(() => {
 			return bounty.updatePosting(interaction.guild, bounty.Company, database);
 		}).then(thread => {
