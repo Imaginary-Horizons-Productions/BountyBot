@@ -1,6 +1,7 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getNumberEmoji, trimForSelectOptionDescription } = require("../../util/textUtil");
+const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
@@ -19,17 +20,54 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		};
 	});
 
-	interaction.reply({
-		content: "If you'd like to change the title, description, or image of an evergreen bounty, you can use `/evergreen edit` instead.",
-		components: [
-			new ActionRowBuilder().addComponents(
-				new StringSelectMenuBuilder().setCustomId("evergreentakedown")
-					.setPlaceholder("Select a bounty to take down...")
-					.setMaxValues(1)
-					.setOptions(bountyOptions)
-			)
-		],
-		ephemeral: true
+	interaction.deferReply({ ephemeral: true }).then(() => {
+		return interaction.editReply({
+			content: "If you'd like to change the title, description, or image of an evergreen bounty, you can use `/evergreen edit` instead.",
+			components: [
+				new ActionRowBuilder().addComponents(
+					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+						.setPlaceholder("Select a bounty to take down...")
+						.setMaxValues(1)
+						.setOptions(bountyOptions)
+				)
+			]
+		});
+	}).then(reply => {
+		const collector = reply.createMessageComponentCollector({ max: 1 });
+		collector.on("collect", async (collectedInteraction) => {
+			const [bountyId] = collectedInteraction.values;
+			const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+			bounty.state = "deleted";
+			bounty.save();
+			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+			const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
+			if (evergreenBounties.length > 0) {
+				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database)));
+				if (bounty.Company.bountyBoardId) {
+					const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+					bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
+						const message = await thread.fetchStarterMessage();
+						message.edit({ embeds });
+					});
+				}
+			} else if (bounty.Company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(thread => {
+					thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
+					return database.models.Company.findByPk(bounty.companyId);
+				}).then(company => {
+					company.evergreenThreadId = null;
+					company.save();
+				});
+			}
+			bounty.destroy();
+
+			collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", ephemeral: true });
+		})
+
+		collector.on("end", () => {
+			interaction.deleteReply();
+		})
 	});
 };
 
