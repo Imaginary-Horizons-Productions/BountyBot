@@ -8,7 +8,6 @@ for (const file of [
 	"bountyswapslot.js",
 	"evergreenswapbounty.js",
 	"evergreenswapslot.js",
-	"modtakedown.js",
 	"rafflerank.js"
 ]) {
 	/** @type {SelectWrapper} */

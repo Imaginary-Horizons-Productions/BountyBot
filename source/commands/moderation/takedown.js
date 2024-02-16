@@ -1,7 +1,8 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getNumberEmoji, trimForSelectOptionDescription } = require("../../util/textUtil");
-const { SAFE_DELIMITER } = require("../../constants");
+const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { getRankUpdates } = require("../../util/scoreUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -26,18 +27,52 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		return;
 	}
 
-	interaction.reply({
-		content: "The poster will also lose the XP they gained for posting the removed bounty.",
-		components: [
-			new ActionRowBuilder().addComponents(
-				new StringSelectMenuBuilder().setCustomId(`modtakedown${SAFE_DELIMITER}${poster.id}`)
-					.setPlaceholder("Select a bounty to take down...")
-					.setMaxValues(1)
-					.setOptions(slotOptions)
-			)
-		],
-		ephemeral: true
-	});
+	interaction.deferReply({ ephemeral: true }).then(() => {
+		return interaction.editReply({
+			content: "The poster will also lose the XP they gained for posting the removed bounty.",
+			components: [
+				new ActionRowBuilder().addComponents(
+					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${poster.id}`)
+						.setPlaceholder("Select a bounty to take down...")
+						.setMaxValues(1)
+						.setOptions(slotOptions)
+				)
+			],
+			ephemeral: true
+		});
+	}).then(reply => {
+		const collector = reply.createMessageComponentCollector({ max: 1 });
+		collector.on("collect", (collectedInteraction) => {
+			const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
+			const [bountyId] = collectedInteraction.values;
+			database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
+				await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+				bounty.state = "deleted";
+				bounty.save();
+				if (bounty.Company.bountyBoardId) {
+					const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
+					postingThread.delete("Bounty taken down by moderator");
+				}
+				bounty.destroy();
+
+				database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async poster => {
+					poster.decrement("xp");
+					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: posterId, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
+					if (!participationCreated) {
+						participation.decrement("xp");
+					}
+					getRankUpdates(interaction.guild, database);
+				})
+				collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
+			});
+		})
+
+		collector.on("end", () => {
+			interaction.deleteReply();
+		})
+	})
 };
 
 module.exports = {
