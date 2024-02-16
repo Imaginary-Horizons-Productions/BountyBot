@@ -129,16 +129,18 @@ client.on(Events.ChannelDelete, channel => {
 	databasePromise.then(database => {
 		return database.models.Company.findByPk(channel.guildId);
 	}).then(company => {
-		let shouldSaveCompany = false;
-		if (channel.id === company.bountyBoardId) {
-			company.bountyBoardId = null;
-			shouldSaveCompany = true;
-		} else if (channel.id === company.scoreboardChannelId) {
-			company.scoreboardChannelId = null;
-			shouldSaveCompany = true;
-		}
-		if (shouldSaveCompany) {
-			company.save();
+		if (company) {
+			let shouldSaveCompany = false;
+			if (channel.id === company.bountyBoardId) {
+				company.bountyBoardId = null;
+				shouldSaveCompany = true;
+			} else if (channel.id === company.scoreboardChannelId) {
+				company.scoreboardChannelId = null;
+				shouldSaveCompany = true;
+			}
+			if (shouldSaveCompany) {
+				company.save();
+			}
 		}
 	})
 });
