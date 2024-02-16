@@ -6,7 +6,6 @@ const selectDictionary = {};
 for (const file of [
 	"bountyswapbounty.js",
 	"bountyswapslot.js",
-	"bountytakedown.js",
 	"evergreenedit.js",
 	"evergreenshowcase.js",
 	"evergreenswapbounty.js",
