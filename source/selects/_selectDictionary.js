@@ -4,8 +4,6 @@ const { SelectWrapper } = require("../classes");
 const selectDictionary = {};
 
 for (const file of [
-	"bountyswapbounty.js",
-	"bountyswapslot.js",
 	"evergreenswapbounty.js",
 	"evergreenswapslot.js"
 ]) {
