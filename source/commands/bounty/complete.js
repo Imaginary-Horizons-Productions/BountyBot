@@ -29,7 +29,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	// poster guaranteed to exist, creating a bounty gives 1 XP
 	const poster = await database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } });
 	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-	const bountyValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount) * bounty.Company.eventMultiplier;
+	const bountyBaseValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount);
+	const bountyValue = bountyBaseValue * bounty.Company.eventMultiplier;
 
 	const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
@@ -98,7 +99,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 	getRankUpdates(interaction.guild, database).then(rankUpdates => {
 		const multiplierString = bounty.Company.festivalMultiplierString();
-		let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}`;
+		let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}`;
 		if (rankUpdates.length > 0) {
 			text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 		}

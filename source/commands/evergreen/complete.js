@@ -69,7 +69,8 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	await database.models.Completion.bulkCreate(rawCompletions);
 
 	// Evergreen bounties are not eligible for showcase bonuses
-	const bountyValue = Bounty.calculateReward(company.level, slotNumber, 0) * company.eventMultiplier;
+	const bountyBaseValue = Bounty.calculateReward(company.level, slotNumber, 0);
+	const bountyValue = bountyBaseValue * company.eventMultiplier;
 	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 
 	for (const userId of validatedCompleterIds) {
@@ -88,7 +89,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		getRankUpdates(interaction.guild, database).then(rankUpdates => {
 			replyMessage.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 				const multiplierString = company.festivalMultiplierString();
-				let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyValue} XP${multiplierString}`).join("\n")}`;
+				let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}`;
 				if (rankUpdates.length > 0) {
 					text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 				}
