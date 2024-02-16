@@ -1,7 +1,7 @@
 const { CommandInteraction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
-const { checkTextsInAutoMod, timeConversion } = require("../../util/textUtil");
+const { textsHaveAutoModInfraction, timeConversion } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 
 /**
@@ -55,8 +55,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const title = interaction.fields.getTextInputValue("title");
 		const description = interaction.fields.getTextInputValue("description");
 
-		const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [title, description], "evergreen post");
-		if (isBlockedByAutoMod) {
+		if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [title, description], "evergreen post")) {
 			interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", ephemeral: true });
 			return;
 		}

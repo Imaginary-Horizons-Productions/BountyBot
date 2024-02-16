@@ -2,7 +2,7 @@ const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { Op } = require('sequelize');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
-const { getNumberEmoji, extractUserIdsFromMentions, checkTextsInAutoMod, timeConversion } = require('../util/textUtil');
+const { extractUserIdsFromMentions, textsHaveAutoModInfraction, timeConversion } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 
@@ -57,8 +57,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}
 
 		const toastText = interaction.options.getString("message");
-		const isBlockedByAutoMod = await checkTextsInAutoMod(interaction.channel, interaction.member, [toastText], "toast");
-		if (isBlockedByAutoMod) {
+		if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")) {
 			interaction.reply({ content: "Your toast was blocked by AutoMod.", ephemeral: true });
 			return;
 		}

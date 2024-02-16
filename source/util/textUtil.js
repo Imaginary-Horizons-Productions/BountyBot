@@ -133,7 +133,7 @@ function extractUserIdsFromMentions(mentionsText, excludedIds) {
  * @param {string} context
  * @returns whether or not any of the texts included something the auto mod blocks as a message
  */
-async function checkTextsInAutoMod(channel, member, texts, context) {
+async function textsHaveAutoModInfraction(channel, member, texts, context) {
 	const autoModRules = await channel.guild.autoModerationRules.fetch();
 	let shouldBlockMessage = false;
 	for (const rule of autoModRules.values()) {
@@ -202,7 +202,7 @@ module.exports = {
 	getNumberEmoji,
 	timeConversion,
 	extractUserIdsFromMentions,
-	checkTextsInAutoMod,
+	textsHaveAutoModInfraction,
 	trimForSelectOptionDescription,
 	trimForModalTitle
 };

@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { getNumberEmoji, trimForSelectOptionDescription, timeConversion, checkTextsInAutoMod, trimForModalTitle } = require("../../util/textUtil");
+const { getNumberEmoji, trimForSelectOptionDescription, timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../constants");
 
 /**
@@ -100,8 +100,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				const description = modalSubmission.fields.getTextInputValue("description");
 
 				const errors = [];
-				const isBlockedByAutoMod = await checkTextsInAutoMod(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty");
-				if (isBlockedByAutoMod) {
+				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty")) {
 					errors.push("The bounty's new title or description would trip this server's AutoMod.");
 				}
 

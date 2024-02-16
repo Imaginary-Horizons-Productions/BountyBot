@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuil
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { Hunter } = require("../../models/users/Hunter");
-const { getNumberEmoji, timeConversion, checkTextsInAutoMod } = require("../../util/textUtil");
+const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS } = require("../../constants");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
@@ -110,8 +110,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 
-				const isBlockedByAutoMod = await checkTextsInAutoMod(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post");
-				if (isBlockedByAutoMod) {
+				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post")) {
 					modalSubmission.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", ephemeral: true });
 					return;
 				}
