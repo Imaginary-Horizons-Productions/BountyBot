@@ -1,8 +1,11 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { Hunter } = require("../../models/users/Hunter");
-const { getNumberEmoji } = require("../../util/textUtil");
+const { getNumberEmoji, timeConversion, checkTextsInAutoMod } = require("../../util/textUtil");
+const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS } = require("../../constants");
+const { updateScoreboard } = require("../../util/embedUtil");
+const { getRankUpdates } = require("../../util/scoreUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -32,18 +35,198 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 		return;
 	}
 
-	interaction.reply({
-		content: "You can post a bounty for other server members to help out with. Here's some examples:\n\t• __Party Up__ Get bounty hunters to join you for a game session\n\t• __WTB/WTS__ Get the word out your looking to trade\n\t• __Achievement Get__ Get help working toward an achievement\n\nTo make a bounty, you'll need:\n\t• a title\n\t• a description\nOptionally, you can also add:\n\t• a url for an image\n\t• a start and end time (to make an event to go with your bounty)\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
-		components: [
-			new ActionRowBuilder().addComponents(
-				new StringSelectMenuBuilder().setCustomId("bountypost")
-					.setPlaceholder("XP awarded depends on slot used...")
-					.setMaxValues(1)
-					.setOptions(slotOptions)
-			)
-		],
-		ephemeral: true
-	});
+	interaction.deferReply({ ephemeral: true }).then(() => {
+		return interaction.editReply({
+			content: "You can post a bounty for other server members to help out with. Here's some examples:\n\t• __Party Up__ Get bounty hunters to join you for a game session\n\t• __WTB/WTS__ Get the word out your looking to trade\n\t• __Achievement Get__ Get help working toward an achievement\n\nTo make a bounty, you'll need:\n\t• a title\n\t• a description\nOptionally, you can also add:\n\t• a url for an image\n\t• a start and end time (to make an event to go with your bounty)\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
+			components: [
+				new ActionRowBuilder().addComponents(
+					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+						.setPlaceholder("XP awarded depends on slot used...")
+						.setMaxValues(1)
+						.setOptions(slotOptions)
+				)
+			]
+		})
+	}).then((reply) => {
+		const collector = reply.createMessageComponentCollector({ max: 1 });
+		collector.on("collect", async collectedInteraction => {
+			const [slotNumber] = collectedInteraction.values;
+			// Check user actually has slot
+			const company = await database.models.Company.findByPk(interaction.guildId);
+			const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } });
+			if (parseInt(slotNumber) > hunter.maxSlots(company.maxSimBounties)) {
+				interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
+				return;
+			}
+
+			// Check slot is not occupied
+			const existingBounty = await database.models.Bounty.findOne({ where: { state: "open", userId: interaction.user.id, companyId: interaction.guildId, slotNumber: parseInt(slotNumber) } });
+			if (existingBounty) {
+				interaction.update({ content: `You already have a bounty in slot ${slotNumber}.`, components: [] });
+				return;
+			}
+
+			collectedInteraction.showModal(
+				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
+					.setTitle(`New Bounty (Slot ${slotNumber})`)
+					.addComponents(
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("title")
+								.setLabel("Title")
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Discord markdown allowed...")
+								.setMaxLength(MAX_EMBED_TITLE_LENGTH)
+						),
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("description")
+								.setLabel("Description")
+								.setStyle(TextInputStyle.Paragraph)
+								.setPlaceholder("Bounties with clear instructions are easier to complete...")
+						),
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("imageURL")
+								.setLabel("Image URL")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+						),
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("startTimestamp")
+								.setLabel("Event Start (Unix Timestamp)")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Required if making an event with the bounty")
+						),
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("endTimestamp")
+								.setLabel("Event End (Unix Timestamp)")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Required if making an event with the bounty")
+						)
+					)
+			);
+
+			collectedInteraction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+				const title = modalSubmission.fields.getTextInputValue("title");
+				const description = modalSubmission.fields.getTextInputValue("description");
+
+				const isBlockedByAutoMod = await checkTextsInAutoMod(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post");
+				if (isBlockedByAutoMod) {
+					modalSubmission.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", ephemeral: true });
+					return;
+				}
+
+				const rawBounty = {
+					userId: modalSubmission.user.id,
+					companyId: modalSubmission.guildId,
+					slotNumber: parseInt(slotNumber),
+					isEvergreen: false,
+					title,
+					description
+				};
+				const errors = [];
+
+				const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
+				if (imageURL) {
+					try {
+						new URL(imageURL);
+						rawBounty.attachmentURL = imageURL;
+					} catch (error) {
+						errors.push(error.message);
+					}
+				}
+
+				const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
+				const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue("endTimestamp"));
+				const shouldMakeEvent = startTimestamp && endTimestamp;
+				if (startTimestamp || endTimestamp) {
+					if (!shouldMakeEvent) {
+						errors.push("Cannot make event with only start or only end timestamp.")
+					}
+					if (!startTimestamp) {
+						errors.push("Start timestamp must be an integer.");
+					} else if (!endTimestamp) {
+						errors.push("End timestamp must be an integer.");
+					} else {
+						if (startTimestamp > endTimestamp) {
+							errors.push("End timestamp was before start timestamp.");
+						}
+
+						const nowTimestamp = Date.now() / 1000;
+						if (nowTimestamp >= startTimestamp) {
+							errors.push("Start timestamp must be in the future.");
+						}
+
+						if (nowTimestamp >= endTimestamp) {
+							errors.push("End timestamp must be in the future.");
+						}
+
+						if (startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+							errors.push("Start timestamp cannot be 5 years in the future or further.");
+						}
+
+						if (endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+							errors.push("End timestamp cannot be 5 years in the future or further.");
+						}
+					}
+				}
+
+				if (errors.length > 0) {
+					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
+					return;
+				}
+
+				const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
+				poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
+					getRankUpdates(modalSubmission.guild, database);
+					updateScoreboard(company, interaction.guild, database);
+				});
+
+				if (shouldMakeEvent) {
+					const eventPayload = {
+						name: `Bounty: ${title}`,
+						description,
+						scheduledStartTime: startTimestamp * 1000,
+						scheduledEndTime: endTimestamp * 1000,
+						privacyLevel: 2,
+						entityType: GuildScheduledEventEntityType.External,
+						entityMetadata: { location: `${modalSubmission.member.displayName}'s #${slotNumber} Bounty` }
+					};
+					if (imageURL) {
+						eventPayload.image = imageURL;
+					}
+					const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
+					rawBounty.scheduledEventId = event.id;
+				}
+
+				const bounty = await database.models.Bounty.create(rawBounty);
+
+				// post in bounty board forum
+				const company = await database.models.Company.findByPk(modalSubmission.guildId);
+				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.festivalMultiplierString(), false, database);
+				modalSubmission.reply(company.sendAnnouncement({ content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
+					if (company.bountyBoardId) {
+						modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+							return bountyBoard.threads.create({
+								name: bounty.title,
+								message: { embeds: [bountyEmbed] },
+								appliedTags: [company.bountyBoardOpenTagId]
+							})
+						}).then(posting => {
+							bounty.postingId = posting.id;
+							bounty.save()
+						});
+					} else {
+						interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
+					}
+				});
+			}).catch(console.error);
+		});
+
+		collector.on("end", () => {
+			interaction.deleteReply();
+		})
+	})
 };
 
 module.exports = {
