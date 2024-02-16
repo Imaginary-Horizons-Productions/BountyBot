@@ -7,8 +7,7 @@ for (const file of [
 	"bountyswapbounty.js",
 	"bountyswapslot.js",
 	"evergreenswapbounty.js",
-	"evergreenswapslot.js",
-	"rafflerank.js"
+	"evergreenswapslot.js"
 ]) {
 	/** @type {SelectWrapper} */
 	const select = require(`./${file}`);
