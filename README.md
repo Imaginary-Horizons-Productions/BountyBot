@@ -18,7 +18,7 @@ Looking for quick recongition or doing something less planned? Raise a toast to 
 ## Rewarding Quality Interaction
 ### Level-Up!
 As bounty hunters complete bounties and receive toasts, they'll gain XP towards leveling up!
-![stats](source\images\readme\stats.png)
+![stats](https://github.com/Imaginary-Horizons-Productions/BountyBot/tree/ntseng/main/source/images/readme/stats.png)
 
 Level-up rewards can contain increasing the rewards on the user's posted bounties and more bounty slots.
 
@@ -33,11 +33,11 @@ BountyBot also supports rotating seasons with (`/season-end`), so XP leads don't
 
 ### Seasonal Placements
 BountyBot will track who has earned the most experience in the current season.
-![scoreboard](source\images\readme\scoreboard.png)
+![scoreboard](https://github.com/Imaginary-Horizons-Productions/BountyBot/tree/ntseng/main/source/images/readme/scoreboard.png)
 
 ### Raffle Support
 Server admins can use the `/raffle` commands to randomly select a bounty hunter by level or by rank.
-![raffle](source\images\readme\raffle.png)
+![raffle](https://github.com/Imaginary-Horizons-Productions/BountyBot/tree/ntseng/main/source/images/readme/raffle.png)
 
 ## Configure and Customize for *Your Server*
 ### Set Up in a Flash
@@ -46,7 +46,7 @@ Use the `/create-default` slash commands to have BountyBot automatically set up 
 #### Bounty Board Forum
 Organize your server's bounties in a forum so bounty hunters can browse through all the server's bounties at the same time. BountyBot sets up and manages the Open and Completed forum tags so bounty hunters can quickly filter for bounties they want to participate in.
 
-![bountyboard](source\images\readme\bountyboard.png)
+![bountyboard](https://github.com/Imaginary-Horizons-Productions/BountyBot/tree/ntseng/main/source/images/readme/bountyboard.png)
 
 Bounty hunters can also use the `/bounty showcase` command to promote their bounties in relevant topic channels (with rate-limiting managed by the bot).
 
@@ -59,7 +59,7 @@ BountyBot can create the Discord roles to associate with ranks automatically. Us
 ### Built-in Moderation
 BountyBot rejects bounties and toasts containing words and phrases flagged in your server's AutoMod. Bot managers can also use the `/moderation` command to correct any problems that happen to fall through the cracks.
 
-![moderation](source\images\readme\moderation.png)
+![moderation](https://github.com/Imaginary-Horizons-Productions/BountyBot/tree/ntseng/main/source/images/readme/moderation.png)
 
 ## Sponsors
 <!-- sponsors --><!-- sponsors -->
