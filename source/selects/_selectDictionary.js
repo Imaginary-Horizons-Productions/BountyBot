@@ -4,8 +4,6 @@ const { SelectWrapper } = require("../classes");
 const selectDictionary = {};
 
 for (const file of [
-	"evergreenswapbounty.js",
-	"evergreenswapslot.js"
 ]) {
 	/** @type {SelectWrapper} */
 	const select = require(`./${file}`);
