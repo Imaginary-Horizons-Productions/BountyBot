@@ -23,23 +23,23 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			return;
 		}
 
-		interaction.deferReply({ ephemeral: true }).then(() => {
-			return interaction.editReply({
-				content: "You can showcase 1 bounty per week. The showcased bounty's XP reward will be increased.",
-				components: [
-					new ActionRowBuilder().addComponents(
-						new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-							.setPlaceholder("Select a bounty to showcase...")
-							.setMaxValues(1)
-							.setOptions(existingBounties.map(bounty => ({
-								emoji: getNumberEmoji(bounty.slotNumber),
-								label: bounty.title,
-								description: trimForSelectOptionDescription(bounty.description),
-								value: bounty.id
-							})))
-					)
-				]
-			})
+		interaction.reply({
+			content: "You can showcase 1 bounty per week. The showcased bounty's XP reward will be increased.",
+			components: [
+				new ActionRowBuilder().addComponents(
+					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+						.setPlaceholder("Select a bounty to showcase...")
+						.setMaxValues(1)
+						.setOptions(existingBounties.map(bounty => ({
+							emoji: getNumberEmoji(bounty.slotNumber),
+							label: bounty.title,
+							description: trimForSelectOptionDescription(bounty.description),
+							value: bounty.id
+						})))
+				)
+			],
+			ephemeral: true,
+			fetchReply: true
 		}).then(reply => {
 			const collector = reply.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", (collectedInteraction) => {

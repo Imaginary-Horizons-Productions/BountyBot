@@ -20,18 +20,18 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		};
 	});
 
-	interaction.deferReply({ ephemeral: true }).then(() => {
-		return interaction.editReply({
-			content: "If you'd like to change the title, description, or image of an evergreen bounty, you can use `/evergreen edit` instead.",
-			components: [
-				new ActionRowBuilder().addComponents(
-					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-						.setPlaceholder("Select a bounty to take down...")
-						.setMaxValues(1)
-						.setOptions(bountyOptions)
-				)
-			]
-		});
+	interaction.reply({
+		content: "If you'd like to change the title, description, or image of an evergreen bounty, you can use `/evergreen edit` instead.",
+		components: [
+			new ActionRowBuilder().addComponents(
+				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+					.setPlaceholder("Select a bounty to take down...")
+					.setMaxValues(1)
+					.setOptions(bountyOptions)
+			)
+		],
+		ephemeral: true,
+		fetchReply: true
 	}).then(reply => {
 		const collector = reply.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", async (collectedInteraction) => {

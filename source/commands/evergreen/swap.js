@@ -17,23 +17,23 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		return;
 	}
 
-	interaction.deferReply({ ephemeral: true }).then(() => {
-		return interaction.editReply({
-			content: "Swapping a bounty to another slot will change the XP reward for that bounty.",
-			components: [
-				new ActionRowBuilder().addComponents(
-					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}evergreen`)
-						.setPlaceholder("Select a bounty to swap...")
-						.setMaxValues(1)
-						.setOptions(existingBounties.map(bounty => ({
-							emoji: getNumberEmoji(bounty.slotNumber),
-							label: bounty.title,
-							description: trimForSelectOptionDescription(bounty.description),
-							value: bounty.id
-						})))
-				)
-			]
-		});
+	interaction.reply({
+		content: "Swapping a bounty to another slot will change the XP reward for that bounty.",
+		components: [
+			new ActionRowBuilder().addComponents(
+				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}evergreen`)
+					.setPlaceholder("Select a bounty to swap...")
+					.setMaxValues(1)
+					.setOptions(existingBounties.map(bounty => ({
+						emoji: getNumberEmoji(bounty.slotNumber),
+						label: bounty.title,
+						description: trimForSelectOptionDescription(bounty.description),
+						value: bounty.id
+					})))
+			)
+		],
+		ephemeral: true,
+		fetchReply: true
 	}).then(reply => {
 		const collector = reply.createMessageComponentCollector({ max: 2 });
 		collector.on("collect", async (collectedInteraction) => {

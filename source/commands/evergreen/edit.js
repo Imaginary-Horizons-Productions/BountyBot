@@ -25,18 +25,18 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		return;
 	}
 
-	interaction.deferReply({ ephemeral: true }).then(() => {
-		return interaction.editReply({
-			content: "Editing an evergreen bounty will not change previous completions.",
-			components: [
-				new ActionRowBuilder().addComponents(
-					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-						.setPlaceholder("Select a bounty to edit...")
-						.setMaxValues(1)
-						.setOptions(slotOptions)
-				)
-			]
-		});
+	interaction.reply({
+		content: "Editing an evergreen bounty will not change previous completions.",
+		components: [
+			new ActionRowBuilder().addComponents(
+				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+					.setPlaceholder("Select a bounty to edit...")
+					.setMaxValues(1)
+					.setOptions(slotOptions)
+			)
+		],
+		ephemeral: true,
+		fetchReply: true
 	}).then(reply => {
 		const collector = reply.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", async (collectedInteraction) => {

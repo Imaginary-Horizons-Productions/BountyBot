@@ -27,19 +27,18 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		return;
 	}
 
-	interaction.deferReply({ ephemeral: true }).then(() => {
-		return interaction.editReply({
-			content: "The poster will also lose the XP they gained for posting the removed bounty.",
-			components: [
-				new ActionRowBuilder().addComponents(
-					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${poster.id}`)
-						.setPlaceholder("Select a bounty to take down...")
-						.setMaxValues(1)
-						.setOptions(slotOptions)
-				)
-			],
-			ephemeral: true
-		});
+	interaction.reply({
+		content: "The poster will also lose the XP they gained for posting the removed bounty.",
+		components: [
+			new ActionRowBuilder().addComponents(
+				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${poster.id}`)
+					.setPlaceholder("Select a bounty to take down...")
+					.setMaxValues(1)
+					.setOptions(slotOptions)
+			)
+		],
+		ephemeral: true,
+		fetchReply: true
 	}).then(reply => {
 		const collector = reply.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", (collectedInteraction) => {
