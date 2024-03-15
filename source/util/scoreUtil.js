@@ -116,8 +116,8 @@ async function getRankUpdates(guild, database) {
 		for (const member of updatedMembers.values()) {
 			if (member.manageable) {
 				await member.roles.remove(roleIds);
-				const participation = updatedParticipationsMap[member.id];
-				if (!participation.isRankDisqualified) { // Feature: remove rank roles from DQ'd users but don't give them new ones
+				// Feature: remove rank roles from DQ'd users but don't give them new ones
+				if (member.id in updatedParticipationsMap && !updatedParticipationsMap[member.id].isRankDisqualified) {
 					let destinationRole;
 					const hunter = allHunters.find(hunter => member.id === hunter.userId);
 					const rankRoleId = ranks[hunter.rank]?.roleId;
