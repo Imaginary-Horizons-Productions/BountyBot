@@ -11,10 +11,10 @@ module.exports = new CommandWrapper(mainId, "Get BountyBot's description and con
 			embeds: [
 				new EmbedBuilder().setColor(Colors.Blurple)
 					.setAuthor({ name: "Imaginary Horizons Productions", iconURL: "https://cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://discord.gg/3QqFqHc" })
-					.setTitle("About BountyBot (v2.0.2)")
+					.setTitle("About BountyBot (v2.4.0)")
 					.setURL(BOUNTYBOT_INVITE_URL)
 					.setThumbnail(avatarURL)
-					.setDescription("BountyBot allows server members to post objectives as bounties and awards XP to the bounty hunters who complete them.")
+					.setDescription("BountyBot is a Discord bot that facilitates community interaction by allowing users to create server-wide quests and rewarding active server particpation.")
 					.addFields(
 						{ name: "Design & Engineering", value: "Nathaniel Tseng ( <@106122478715150336> | [Twitch](https://www.twitch.tv/arcane_ish) )" },
 						{ name: "Engineering", value: "Lucas Ensign ( <@112785244733628416> | [Twitter](https://twitter.com/SillySalamndr) )" },
