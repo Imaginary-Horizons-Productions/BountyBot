@@ -1,4 +1,9 @@
 # BountyBot Change Log
+## BountyBot Version 2.4.0:
+- Ephemeral messages in multi-step processes now clean themselves up
+- Fixed a crash on `/bounty complete`
+- Fixed a few other crashes and typos
+
 ## BountyBot Version 2.3.0:
 - Each bounty hunter's most seconded toast (starting from this update) will be shown off in their `/stats`
 - Completed bounties will now archive their posting threads on the bounty board forum
