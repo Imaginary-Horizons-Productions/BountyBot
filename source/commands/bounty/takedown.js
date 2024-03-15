@@ -51,9 +51,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
 					hunter.decrement("xp");
 					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-					const [particiaption, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
+					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
 					if (!participationCreated) {
-						particiaption.decrement("xp");
+						participation.decrement("xp");
 					}
 					getRankUpdates(interaction.guild, database);
 				})
