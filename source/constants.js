@@ -32,6 +32,7 @@ module.exports = {
 	announcementsChannelId,
 	lastPostedVersion,
 	premium: require("../config/premium.json"),
+	commandIds: {},
 
 	// Internal Constants
 	BOUNTYBOT_INVITE_URL: "https://discord.com/api/oauth2/authorize?client_id=536330483852771348&permissions=18135835404336&scope=bot%20applications.commands",

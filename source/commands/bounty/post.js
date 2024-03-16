@@ -3,7 +3,7 @@ const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { Hunter } = require("../../models/users/Hunter");
 const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction } = require("../../util/textUtil");
-const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS } = require("../../constants");
+const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, commandIds } = require("../../constants");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 
@@ -216,7 +216,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 							bounty.save()
 						});
 					} else {
-						interaction.followUp({ content: "Looks like your server doesn't have a bounty board channel. Make one with `/create-default bounty-board-forum`?", ephemeral: true });
+						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with </create-default bounty-board-forum:${commandIds["create-default"]}>?`, ephemeral: true });
 					}
 				});
 			}).catch(console.error);
