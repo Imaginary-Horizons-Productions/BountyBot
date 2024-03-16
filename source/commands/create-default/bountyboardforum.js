@@ -27,6 +27,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 			}
 		],
 		availableTags: [{ name: "Open", moderated: true }, { name: "Completed", moderated: true }],
+		defaultReactionEmoji: { name: "👀" },
 		defaultSortOrder: SortOrderType.CreationDate,
 		defaultForumLayout: ForumLayoutType.ListView,
 		reason: `/create-default bounty-board-forum by ${interaction.user}`
