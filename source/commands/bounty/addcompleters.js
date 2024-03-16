@@ -1,6 +1,7 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions } = require("../../util/textUtil");
+const { commandIds } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
@@ -60,7 +61,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	bounty.updatePosting(interaction.guild, bounty.Company, database);
 
 	interaction.reply({
-		content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, <@")}>\n\nThey will recieve the reward XP when you \`/bounty complete\`.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
+		content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, <@")}>\n\nThey will recieve the reward XP when you </bounty complete:${commandIds.bounty}>.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
 		ephemeral: true
 	});
 };

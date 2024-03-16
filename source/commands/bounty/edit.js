@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getNumberEmoji, trimForSelectOptionDescription, timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
-const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../constants");
+const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS, commandIds } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
@@ -196,7 +196,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 				bounty.updatePosting(modalSubmission.guild, bounty.Company, database);
 
-				modalSubmission.update({ content: "Bounty edited! You can use `/bounty showcase` to let other bounty hunters know about the changes.", embeds: [bountyEmbed], components: [] });
+				modalSubmission.update({ content: `Bounty edited! You can use </bounty showcase:${commandIds.bounty}> to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], components: [] });
 			}).catch(console.error);
 		});
 	})

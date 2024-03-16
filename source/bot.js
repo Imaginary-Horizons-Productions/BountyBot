@@ -17,7 +17,7 @@ const { readFile, writeFile } = require("fs").promises;
 const { getCommand, slashData } = require("./commands/_commandDictionary.js");
 const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
-const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING } = require("./constants.js");
+const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { connectToDatabase } = require("../database.js");
 //#endregion
@@ -47,6 +47,14 @@ client.login(require(authPath).token)
 client.on(Events.ClientReady, () => {
 	console.log(`Connected as ${client.user.tag}`);
 	if (runMode === "prod") {
+		client.application.commands.fetch().then(commands => {
+			const idMap = {};
+			commands.each(command => {
+				idMap[command.name] = command.id;
+			})
+			commandIds = idMap;
+		});
+
 		(async () => {
 			try {
 				await new REST({ version: 9 }).setToken(require(authPath).token).put(
@@ -85,6 +93,12 @@ client.on(Events.ClientReady, () => {
 		} else {
 			console.error("Patch notes post skipped due to falsy announcementsChannelId");
 		}
+	} else {
+		client.application.commands.fetch({ guildId: testGuildId }).then(commands => {
+			commands.each(command => {
+				commandIds[command.name] = command.id;
+			})
+		});
 	}
 });
 
@@ -103,7 +117,7 @@ client.on(Events.InteractionCreate, interaction => {
 		} else if (interaction.isCommand()) {
 			const command = getCommand(interaction.commandName);
 			if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with \`/premium\`.`, ephemeral: true });
+				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with </premium:${commandIds.premium}>.`, ephemeral: true });
 				return;
 			}
 
