@@ -1,4 +1,7 @@
 # BountyBot Change Log
+## BountyBot Version 2.5.0:
+- Bounty board forums created by `/create-default` now have 👀 as a default reaction
+
 ## BountyBot Version 2.4.0:
 - Ephemeral messages in multi-step processes now clean themselves up
 - Fixed a crash on `/bounty complete`
