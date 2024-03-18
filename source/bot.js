@@ -48,11 +48,9 @@ client.on(Events.ClientReady, () => {
 	console.log(`Connected as ${client.user.tag}`);
 	if (runMode === "prod") {
 		client.application.commands.fetch().then(commands => {
-			const idMap = {};
 			commands.each(command => {
-				idMap[command.name] = command.id;
+				commandIds[command.name] = command.id;
 			})
-			commandIds = idMap;
 		});
 
 		(async () => {
