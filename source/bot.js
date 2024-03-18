@@ -20,6 +20,7 @@ const { getSelect } = require("./selects/_selectDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { connectToDatabase } = require("../database.js");
+const { commandMention } = require("./util/textUtil.js");
 //#endregion
 
 //#region Executing Code
@@ -47,18 +48,16 @@ client.login(require(authPath).token)
 client.on(Events.ClientReady, () => {
 	console.log(`Connected as ${client.user.tag}`);
 	if (runMode === "prod") {
-		client.application.commands.fetch().then(commands => {
-			commands.each(command => {
-				commandIds[command.name] = command.id;
-			})
-		});
-
-		(async () => {
+		(() => {
 			try {
-				await new REST({ version: 9 }).setToken(require(authPath).token).put(
+				new REST({ version: 9 }).setToken(require(authPath).token).put(
 					Routes.applicationCommands(client.user.id),
 					{ body: slashData }
-				)
+				).then(commands => {
+					for (const command of commands) {
+						commandIds[command.name] = command.id;
+					}
+				})
 			} catch (error) {
 				console.error(error);
 			}
@@ -115,7 +114,7 @@ client.on(Events.InteractionCreate, interaction => {
 		} else if (interaction.isCommand()) {
 			const command = getCommand(interaction.commandName);
 			if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with </premium:${commandIds.premium}>.`, ephemeral: true });
+				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, ephemeral: true });
 				return;
 			}
 

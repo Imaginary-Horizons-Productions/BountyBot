@@ -1,7 +1,8 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
-const { MAX_EMBED_FIELD_COUNT, commandIds } = require("../../constants");
+const { MAX_EMBED_FIELD_COUNT } = require("../../constants");
+const { commandMention } = require("../../util/textUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -14,7 +15,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const newThreshold = interaction.options.getNumber("variance-threshold");
 	const existingThresholds = ranks.map(rank => rank.varianceThreshold);
 	if (existingThresholds.includes(newThreshold)) {
-		interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use </rank edit:${commandIds.rank}>.`, ephemeral: true });
+		interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use ${commandMention("rank edit")}.`, ephemeral: true });
 		return;
 	}
 

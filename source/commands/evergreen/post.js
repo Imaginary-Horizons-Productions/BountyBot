@@ -1,7 +1,7 @@
 const { CommandInteraction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING, commandIds } = require("../../constants");
-const { textsHaveAutoModInfraction, timeConversion } = require("../../util/textUtil");
+const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { textsHaveAutoModInfraction, timeConversion, commandMention } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 
 /**
@@ -105,7 +105,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					bounty.save()
 				});
 			} else {
-				interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with </create-default bounty-board-forum:${commandIds["create-default"]}>?`, ephemeral: true });
+				interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, ephemeral: true });
 			}
 		});
 	}).catch(console.error)

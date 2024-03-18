@@ -1,7 +1,7 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { getNumberEmoji, trimForSelectOptionDescription } = require("../../util/textUtil");
-const { SKIP_INTERACTION_HANDLING, commandIds } = require("../../constants");
+const { getNumberEmoji, trimForSelectOptionDescription, commandMention } = require("../../util/textUtil");
+const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
@@ -21,7 +21,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	});
 
 	interaction.reply({
-		content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use </evergreen edit:${commandIds.evergreen}> instead.`,
+		content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,
 		components: [
 			new ActionRowBuilder().addComponents(
 				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)

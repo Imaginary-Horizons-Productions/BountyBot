@@ -1,4 +1,15 @@
 const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
+const { commandIds } = require("../constants");
+
+/** @param {string} commandAndOrSubcommand */
+function commandMention(commandAndOrSubcommand) {
+	const [mainCommand] = commandAndOrSubcommand.split(" ");
+	if (!(mainCommand in commandIds)) {
+		return `\`/${commandAndOrSubcommand}\``;
+	}
+
+	return `</${commandAndOrSubcommand}:${commandIds[mainCommand]}>`;
+}
 
 const CONGRATULATORY_PHRASES = [
 	"Congratulations",
@@ -197,6 +208,7 @@ function trimForModalTitle(text) {
 }
 
 module.exports = {
+	commandMention,
 	congratulationBuilder,
 	generateTextBar,
 	getNumberEmoji,

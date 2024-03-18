@@ -1,7 +1,7 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { trimForSelectOptionDescription, getNumberEmoji } = require("../../util/textUtil");
-const { SKIP_INTERACTION_HANDLING, commandIds } = require("../../constants");
+const { trimForSelectOptionDescription, getNumberEmoji, commandMention } = require("../../util/textUtil");
+const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 
 /**
@@ -22,7 +22,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		});
 
 		interaction.reply({
-			content: `If you'd like to change the title, description, image, or time of your bounty, you can use </bounty edit:${commandIds.bounty}> instead.`,
+			content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
 			components: [
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)

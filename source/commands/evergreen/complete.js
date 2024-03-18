@@ -3,7 +3,7 @@ const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
-const { extractUserIdsFromMentions } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, commandMention } = require("../../util/textUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH, commandIds } = require("../../constants");
 
 /**
@@ -97,7 +97,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
 				}
 				if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-					text = `Message overflow! Many people (?) probably gained many things (?). Use </stats:${commandIds.stats}> to look things up.`;
+					text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 				}
 				thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 			})

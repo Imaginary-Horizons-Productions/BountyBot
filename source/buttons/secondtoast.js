@@ -1,9 +1,9 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { Op } = require('sequelize');
-const { MAX_MESSAGE_CONTENT_LENGTH, commandIds } = require('../constants');
+const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { timeConversion } = require('../util/textUtil');
+const { timeConversion, commandMention } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "secondtoast";
@@ -111,7 +111,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
 			}
 			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-				text = `Message overflow! Many people (?) probably gained many things (?). Use </stats:${commandIds.stats}> to look things up.`;
+				text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 			}
 			interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);

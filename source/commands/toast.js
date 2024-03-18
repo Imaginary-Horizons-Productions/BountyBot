@@ -2,7 +2,7 @@ const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { Op } = require('sequelize');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
-const { extractUserIdsFromMentions, textsHaveAutoModInfraction, timeConversion } = require('../util/textUtil');
+const { extractUserIdsFromMentions, textsHaveAutoModInfraction, timeConversion, commandMention } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 
@@ -183,7 +183,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 							text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
 						}
 						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-							text = `Message overflow! Many people (?) probably gained many things (?). Use </stats:${commandIds.stats}> to look things up.`;
+							text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 						}
 						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 						updateScoreboard(company, interaction.guild, database);
