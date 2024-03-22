@@ -30,7 +30,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	const poster = await database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } });
 	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	const bountyBaseValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount);
-	const bountyValue = bountyBaseValue * bounty.Company.eventMultiplier;
+	const bountyValue = bountyBaseValue * bounty.Company.festivalMultiplier;
 
 	const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
@@ -89,7 +89,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		hunter.save();
 	}
 
-	const posterXP = Math.ceil(validatedCompleterIds.length / 2) * bounty.Company.eventMultiplier;
+	const posterXP = Math.ceil(validatedCompleterIds.length / 2) * bounty.Company.festivalMultiplier;
 	const posterLevelTexts = await poster.addXP(interaction.guild.name, posterXP, true, database);
 	if (posterLevelTexts.length > 0) {
 		levelTexts = levelTexts.concat(posterLevelTexts);

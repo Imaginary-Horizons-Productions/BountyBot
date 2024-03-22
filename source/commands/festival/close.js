@@ -9,7 +9,7 @@ const { Company } = require("../../models/companies/Company");
  * @param {[Company]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[company]) {
-	company.update({ "eventMultiplier": 1 });
+	company.update({ "festivalMultiplier": 1 });
 	interaction.guild.members.fetchMe().then(bountyBot => {
 		bountyBot.setNickname(null);
 	})

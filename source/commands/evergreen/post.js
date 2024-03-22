@@ -65,9 +65,11 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			companyId: interaction.guildId,
 			slotNumber: parseInt(slotNumber),
 			isEvergreen: true,
-			title,
-			description
+			title
 		};
+		if (description) {
+			rawBounty.description = description;
+		}
 
 		const imageURL = interaction.fields.getTextInputValue("imageURL");
 		if (imageURL) {

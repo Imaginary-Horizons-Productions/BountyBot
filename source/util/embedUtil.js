@@ -163,7 +163,7 @@ async function buildServerBonusesEmbed(channel, guild, company) {
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`${displayName} Server Bonuses`)
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
-		.setDescription(`There is ${company.eventMultiplier != 1 ? '' : 'not '}an XP multiplier festival currently active${company.eventMultiplier == 1 ? '' : ` for ${company.eventMultiplierString()}`}.`)
+		.setDescription(`There is ${company.festivalMultiplier != 1 ? '' : 'not '}an XP multiplier festival currently active${company.festivalMultiplier == 1 ? '' : ` for ${company.festivalMultiplierString()}`}.`)
 		.setFooter(randomFooterTip())
 		.setTimestamp();
 	if (company.nextRaffleString) {
@@ -197,7 +197,7 @@ async function buildModStatsEmbed(guild, member, hunter, database) {
 	const lastFiveBounties = await database.models.Bounty.findAll({ where: { userId: member.id, companyId: guild.id, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5 });
 	lastFiveBounties.forEach(async bounty => {
 		const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
-		bountyHistory += `__${bounty.title}__ ${bounty.description}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${completions.map(completion => completion.userId).join('>, <@')
+		bountyHistory += `__${bounty.title}__${bounty.description !== null ? ` ${bounty.description}` : ""}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${completions.map(completion => completion.userId).join('>, <@')
 			}>\n\n`;
 	})
 

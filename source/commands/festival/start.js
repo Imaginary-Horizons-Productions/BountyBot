@@ -14,7 +14,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 		interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, ephemeral: true })
 		return;
 	}
-	company.update({ "eventMultiplier": multiplier });
+	company.update({ "festivalMultiplier": multiplier });
 	interaction.guild.members.fetchMe().then(bountyBot => {
 		const multiplierTag = ` [XP x ${multiplier}]`;
 		const bountyBotName = bountyBot.nickname ?? bountyBot.displayName;

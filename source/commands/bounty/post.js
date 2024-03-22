@@ -80,6 +80,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 						new ActionRowBuilder().addComponents(
 							new TextInputBuilder().setCustomId("description")
 								.setLabel("Description")
+								.setRequired(false)
 								.setStyle(TextInputStyle.Paragraph)
 								.setPlaceholder("Bounties with clear instructions are easier to complete...")
 						),
@@ -120,9 +121,11 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 					companyId: modalSubmission.guildId,
 					slotNumber: parseInt(slotNumber),
 					isEvergreen: false,
-					title,
-					description
+					title
 				};
+				if (description) {
+					rawBounty.description = description;
+				}
 				const errors = [];
 
 				const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
@@ -184,13 +187,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				if (shouldMakeEvent) {
 					const eventPayload = {
 						name: `Bounty: ${title}`,
-						description,
 						scheduledStartTime: startTimestamp * 1000,
 						scheduledEndTime: endTimestamp * 1000,
 						privacyLevel: 2,
 						entityType: GuildScheduledEventEntityType.External,
 						entityMetadata: { location: `${modalSubmission.member.displayName}'s #${slotNumber} Bounty` }
 					};
+					if (description) {
+						eventPayload.description = description;
+					}
 					if (imageURL) {
 						eventPayload.image = imageURL;
 					}

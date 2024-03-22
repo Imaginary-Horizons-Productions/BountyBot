@@ -24,12 +24,17 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}bounty`)
 						.setPlaceholder("Select a bounty to swap...")
 						.setMaxValues(1)
-						.setOptions(openBounties.map(bounty => ({
-							emoji: getNumberEmoji(bounty.slotNumber),
-							label: bounty.title,
-							description: trimForSelectOptionDescription(bounty.description),
-							value: bounty.id
-						})))
+						.setOptions(openBounties.map(bounty => {
+							const optionPayload = {
+								emoji: getNumberEmoji(bounty.slotNumber),
+								label: bounty.title,
+								value: bounty.id
+							};
+							if (bounty.description !== null) {
+								optionPayload.description = trimForSelectOptionDescription(bounty.description);
+							}
+							return optionPayload;
+						}))
 				)
 			],
 			ephemeral: true,

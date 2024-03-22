@@ -23,12 +23,17 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setPlaceholder("Select a bounty to edit...")
 					.setMaxValues(1)
-					.setOptions(openBounties.map(bounty => ({
-						emoji: getNumberEmoji(bounty.slotNumber),
-						label: bounty.title,
-						description: trimForSelectOptionDescription(bounty.description),
-						value: bounty.id
-					})))
+					.setOptions(openBounties.map(bounty => {
+						const optionPayload = {
+							emoji: getNumberEmoji(bounty.slotNumber),
+							label: bounty.title,
+							value: bounty.id
+						}
+						if (bounty.description !== null) {
+							optionPayload.description = trimForSelectOptionDescription(bounty.description);
+						}
+						return optionPayload;
+					}))
 			)
 		],
 		ephemeral: true,
@@ -78,7 +83,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 								.setRequired(false)
 								.setStyle(TextInputStyle.Paragraph)
 								.setPlaceholder("Bounties with clear instructions are easier to complete...")
-								.setValue(bounty.description)
+								.setValue(bounty.description ?? "")
 						),
 						new ActionRowBuilder().addComponents(
 							new TextInputBuilder().setCustomId("imageURL")
@@ -154,9 +159,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				if (title) {
 					bounty.title = title;
 				}
-				if (description) {
-					bounty.description = description;
-				}
+				bounty.description = description;
 				if (imageURL) {
 					bounty.attachmentURL = imageURL;
 				} else if (bounty.attachmentURL) {
@@ -167,13 +170,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				if (shouldMakeEvent) {
 					const eventPayload = {
 						name: `Bounty: ${title}`,
-						description,
 						scheduledStartTime: startTimestamp * 1000,
 						scheduledEndTime: endTimestamp * 1000,
 						privacyLevel: 2,
 						entityType: GuildScheduledEventEntityType.External,
 						entityMetadata: { location: `${modalSubmission.member.displayName}'s #${bounty.slotNumber} Bounty` }
 					};
+					if (description) {
+						eventPayload.description = description;
+					}
 					if (imageURL) {
 						eventPayload.image = imageURL;
 					}

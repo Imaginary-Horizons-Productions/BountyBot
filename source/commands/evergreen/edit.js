@@ -12,12 +12,15 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } });
 	const slotOptions = openBounties.map(bounty => {
-		return {
+		const optionPayload = {
 			emoji: getNumberEmoji(bounty.slotNumber),
 			label: bounty.title,
-			description: trimForSelectOptionDescription(bounty.description),
 			value: bounty.id
 		};
+		if (bounty.description !== null) {
+			optionPayload.description = trimForSelectOptionDescription(bounty.description);
+		}
+		return optionPayload;
 	});
 
 	if (slotOptions.length < 1) {
@@ -66,7 +69,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 								.setRequired(false)
 								.setStyle(TextInputStyle.Paragraph)
 								.setPlaceholder("Bounties with clear instructions are easier to complete...")
-								.setValue(bounty.description)
+								.setValue(bounty.description ?? "")
 						),
 						new ActionRowBuilder().addComponents(
 							new TextInputBuilder().setCustomId("imageURL")
@@ -104,9 +107,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				if (title) {
 					bounty.title = title;
 				}
-				if (description) {
-					bounty.description = description;
-				}
+				bounty.description = description;
 				if (imageURL) {
 					bounty.attachmentURL = imageURL;
 				} else if (bounty.attachmentURL) {
