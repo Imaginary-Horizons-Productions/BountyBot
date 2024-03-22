@@ -163,7 +163,7 @@ async function buildServerBonusesEmbed(channel, guild, company) {
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`${displayName} Server Bonuses`)
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
-		.setDescription(`There is ${company.eventMultiplier != 1 ? '' : 'not '}an XP multiplier festival currently active${company.eventMultiplier == 1 ? '' : ` for ${company.eventMultiplierString()}`}.`)
+		.setDescription(`There is ${company.festivalMultiplier != 1 ? '' : 'not '}an XP multiplier festival currently active${company.festivalMultiplier == 1 ? '' : ` for ${company.festivalMultiplierString()}`}.`)
 		.setFooter(randomFooterTip())
 		.setTimestamp();
 	if (company.nextRaffleString) {

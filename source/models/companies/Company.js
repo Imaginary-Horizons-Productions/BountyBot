@@ -4,8 +4,8 @@ const { DataTypes, Model, Sequelize } = require('sequelize');
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
 exports.Company = class extends Model {
 	festivalMultiplierString() {
-		if (this.eventMultiplier != 1) {
-			return ` ***x${this.eventMultiplier}***`;
+		if (this.festivalMultiplier != 1) {
+			return ` ***x${this.festivalMultiplier}***`;
 		} else {
 			return "";
 		}

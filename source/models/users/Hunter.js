@@ -30,7 +30,7 @@ exports.Hunter = class extends Model {
 	 */
 	async addXP(guildName, points, ignoreMultiplier, database) {
 		const company = await database.models.Company.findByPk(this.companyId);
-		const totalPoints = points * (!ignoreMultiplier ? company.eventMultiplier : 1);
+		const totalPoints = points * (!ignoreMultiplier ? company.festivalMultiplier : 1);
 
 		const previousLevel = this.level;
 		const previousCompanyLevel = company.level;

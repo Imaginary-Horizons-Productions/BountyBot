@@ -13,7 +13,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			announcementPrefix: "@here",
 			maxSimBounties: 5,
 			backupTimer: 3600000,
-			eventMultiplier: 1,
+			festivalMultiplier: 1,
 			xpCoefficient: 3
 		},
 		{ where: { id: interaction.guildId } }
