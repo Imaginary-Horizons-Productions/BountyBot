@@ -12,12 +12,15 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
 	const bountyOptions = openBounties.map(bounty => {
-		return {
+		const optionPayload = {
 			emoji: getNumberEmoji(bounty.slotNumber),
 			label: bounty.title,
-			description: trimForSelectOptionDescription(bounty.description),
 			value: bounty.id
 		};
+		if (bounty.description !== null) {
+			optionPayload.description = trimForSelectOptionDescription(bounty.description);
+		}
+		return optionPayload;
 	});
 
 	interaction.reply({

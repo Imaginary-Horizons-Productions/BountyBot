@@ -24,9 +24,10 @@ exports.Bounty = class extends Model {
 				.setAuthor(ihpAuthorPayload)
 				.setThumbnail(thumbnails[this.state])
 				.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
-				.setDescription(this.description)
 				.setTimestamp();
-
+			if (this.description) {
+				embed.setDescription(this.description)
+			}
 			if (this.attachmentURL) {
 				embed.setImage(this.attachmentURL);
 			}
@@ -117,7 +118,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		description: { //TODONOW add null-safety to logic
+		description: {
 			type: DataTypes.STRING
 		},
 		attachmentURL: {

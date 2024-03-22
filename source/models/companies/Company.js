@@ -57,7 +57,7 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 3600000
 		},
-		festivalMultiplier: { //TODONOW change implementations
+		festivalMultiplier: {
 			type: DataTypes.INTEGER,
 			defaultValue: 1
 		},

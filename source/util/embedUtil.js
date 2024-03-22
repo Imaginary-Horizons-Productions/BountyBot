@@ -197,7 +197,7 @@ async function buildModStatsEmbed(guild, member, hunter, database) {
 	const lastFiveBounties = await database.models.Bounty.findAll({ where: { userId: member.id, companyId: guild.id, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5 });
 	lastFiveBounties.forEach(async bounty => {
 		const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
-		bountyHistory += `__${bounty.title}__ ${bounty.description}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${completions.map(completion => completion.userId).join('>, <@')
+		bountyHistory += `__${bounty.title}__${bounty.description !== null ? ` ${bounty.description}` : ""}\n${bounty.xpAwarded} XP per completer\nCompleters: <@${completions.map(completion => completion.userId).join('>, <@')
 			}>\n\n`;
 	})
 

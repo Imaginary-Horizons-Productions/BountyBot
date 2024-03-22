@@ -13,12 +13,15 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: posterId, state: "open" } }).then(openBounties => {
 		const bountyOptions = openBounties.map(bounty => {
-			return {
+			const optionPayload = {
 				emoji: getNumberEmoji(bounty.slotNumber),
 				label: bounty.title,
-				description: trimForSelectOptionDescription(bounty.description),
 				value: bounty.id
 			};
+			if (bounty.description !== null) {
+				optionPayload.description = trimForSelectOptionDescription(bounty.description);
+			}
+			return optionPayload;
 		});
 
 		interaction.reply({
