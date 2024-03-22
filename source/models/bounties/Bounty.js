@@ -117,9 +117,8 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		description: {
-			type: DataTypes.STRING,
-			allowNull: false
+		description: { //TODONOW add null-safety to logic
+			type: DataTypes.STRING
 		},
 		attachmentURL: {
 			type: DataTypes.STRING,
