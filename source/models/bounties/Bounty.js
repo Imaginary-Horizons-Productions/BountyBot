@@ -87,7 +87,10 @@ exports.Bounty = class extends Model {
 									new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${this.id}`)
 										.setStyle(ButtonStyle.Success)
 										.setLabel("Complete")
-										.setDisabled(new Date() < new Date(new Date(this.createdAt) + timeConversion(5, "m", "ms")))
+										.setDisabled(new Date() < new Date(new Date(this.createdAt) + timeConversion(5, "m", "ms"))),
+									new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${this.id}`)
+										.setStyle(ButtonStyle.Danger)
+										.setLabel("Take Down")
 								)
 							]
 						});
