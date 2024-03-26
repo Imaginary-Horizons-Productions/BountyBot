@@ -76,7 +76,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 	// poster guaranteed to exist, creating a bounty gives 1 XP
 	const poster = await database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } });
-	const bountyBaseValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount);
+	const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, slotNumber, bounty.showcaseCount);
 	const bountyValue = bountyBaseValue * bounty.Company.festivalMultiplier;
 	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	let levelTexts = [];
@@ -90,8 +90,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		hunter.save();
 	}
 
-	const posterXP = Math.ceil(validatedCompleterIds.length / 2) * bounty.Company.festivalMultiplier;
-	const posterLevelTexts = await poster.addXP(interaction.guild.name, posterXP, true, database);
+	const posterXP = bounty.calculatePosterReward(validatedCompleterIds.length);
+	const posterLevelTexts = await poster.addXP(interaction.guild.name, posterXP * bounty.Company.festivalMultiplier, true, database);
 	if (posterLevelTexts.length > 0) {
 		levelTexts = levelTexts.concat(posterLevelTexts);
 	}

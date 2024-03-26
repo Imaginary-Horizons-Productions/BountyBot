@@ -55,7 +55,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 									emoji: getNumberEmoji(bounty.slotNumber),
 									label: `Slot ${bounty.slotNumber}: ${bounty.title}`,
 									// Evergreen bounties are not eligible for showcase bonuses
-									description: `XP Reward: ${Bounty.calculateReward(hunter.level, bounty.slotNumber, 0)}`,
+									description: `XP Reward: ${Bounty.calculateCompleterReward(hunter.level, bounty.slotNumber, 0)}`,
 									value: bounty.id
 								}
 							);
@@ -107,7 +107,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				}
 
 				// Evergreen bounties are not eligible for showcase bonuses
-				interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.calculateReward(company.level, destinationSlot, 0)} XP and **${destinationBounty.title}** is now worth ${Bounty.calculateReward(company.level, sourceSlot, 0)} XP.`);
+				interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, destinationSlot, 0)} XP and **${destinationBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, sourceSlot, 0, 0).completerReward} XP.`);
 			}
 		})
 

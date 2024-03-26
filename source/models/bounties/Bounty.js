@@ -38,7 +38,7 @@ exports.Bounty = class extends Model {
 				fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 			}
 			if (!shouldOmitRewardsField) {
-				fields.push({ name: "Reward", value: `${exports.Bounty.calculateReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true });
+				fields.push({ name: "Reward", value: `${exports.Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true });
 			}
 
 			if (this.isEvergreen) {
@@ -97,9 +97,19 @@ exports.Bounty = class extends Model {
 		}
 	}
 
-	static calculateReward(posterLevel, slotNumber, showcaseCount) {
+	static calculateCompleterReward(posterLevel, slotNumber, showcaseCount) {
 		const showcaseMultiplier = 0.25 * showcaseCount + 1;
 		return Math.max(2, Math.floor((6 + 0.5 * posterLevel - 3 * slotNumber + 0.5 * slotNumber % 2) * showcaseMultiplier));
+	}
+
+	calculatePosterReward(hunterCount) {
+		let posterXP = Math.ceil(hunterCount / 2);
+		for (const property of ["description", "attachmentURL", "scheduledEventId"]) {
+			if (this[property] !== null) {
+				posterXP++;
+			}
+		}
+		return posterXP;
 	}
 }
 

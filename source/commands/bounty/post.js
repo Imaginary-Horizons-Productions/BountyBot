@@ -24,7 +24,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 			slotOptions.push({
 				emoji: getNumberEmoji(slotNumber),
 				label: `Slot ${slotNumber}`,
-				description: `Reward: ${Bounty.calculateReward(hunter.level, slotNumber, 0)} XP`,
+				description: `Reward: ${Bounty.calculateCompleterReward(hunter.level, slotNumber, 0)} XP`,
 				value: slotNumber.toString()
 			})
 		}
@@ -82,7 +82,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 								.setLabel("Description")
 								.setRequired(false)
 								.setStyle(TextInputStyle.Paragraph)
-								.setPlaceholder("Bounties with clear instructions are easier to complete...")
+								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
 						),
 						new ActionRowBuilder().addComponents(
 							new TextInputBuilder().setCustomId("imageURL")

@@ -18,7 +18,7 @@ const discordTips = [
 	"Server subscriptions cost more on mobile because the mobile app stores take a cut."
 ].map(text => ({ text, iconURL: discordIconURL }));
 /** @type {import("discord.js").EmbedFooterData[]} */
-const applicationSpecificTips = [
+const bountyBotTips = [
 	"You can showcase one of your bounties once a week to increase its rewards.",
 	"Send bug reports or feature requests with the \"/feedback\".",
 	"Bounties can't be completed until 5 minutes after they've been posted. Don't make them too easy!",
@@ -33,9 +33,10 @@ const applicationSpecificTips = [
 	"The Overjustification Effect means a small reward can be less motivating than no reward.",
 	"Manage bounties from within games with the Discord Overlay (default: Shift + Tab)!",
 	"Server level is based on total bounty hunter level--higher server level means better evergreen bounty rewards.",
-	"A bounty poster cannot complete their own bounty."
+	"A bounty poster cannot complete their own bounty.",
+	"Adding a description, image or time to a bounty all add 1 bonus XP for the poster."
 ].map(text => ({ text, iconURL: bountyBotIcon }));
-const tipPool = applicationSpecificTips.concat(applicationSpecificTips, discordTips);
+const tipPool = bountyBotTips.concat(bountyBotTips, discordTips);
 
 /** twice as likely to roll an application specific tip as a discord tip */
 function randomFooterTip() {
