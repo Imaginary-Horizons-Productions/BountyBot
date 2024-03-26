@@ -60,7 +60,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 									{
 										emoji: getNumberEmoji(i),
 										label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
-										description: `XP Reward: ${Bounty.calculateReward(hunter.level, i, existingBounty?.showcaseCount ?? 0)}`,
+										description: `XP Reward: ${Bounty.calculateCompleterReward(hunter.level, i, existingBounty?.showcaseCount ?? 0)}`,
 										value: i.toString()
 									}
 								)
@@ -107,7 +107,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					}
 
 					const hunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
-					interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateReward(hunter.level, destinationSlot, sourceBounty.showcaseCount)} XP.` }));
+					interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(hunter.level, destinationSlot, sourceBounty.showcaseCount)} XP.` }));
 				}
 			})
 

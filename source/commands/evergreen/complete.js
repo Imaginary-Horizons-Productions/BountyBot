@@ -69,7 +69,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	await database.models.Completion.bulkCreate(rawCompletions);
 
 	// Evergreen bounties are not eligible for showcase bonuses
-	const bountyBaseValue = Bounty.calculateReward(company.level, slotNumber, 0);
+	const bountyBaseValue = Bounty.calculateCompleterReward(company.level, slotNumber, 0);
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 

@@ -82,7 +82,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 								.setLabel("Description")
 								.setRequired(false)
 								.setStyle(TextInputStyle.Paragraph)
-								.setPlaceholder("Bounties with clear instructions are easier to complete...")
+								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
 								.setValue(bounty.description ?? "")
 						),
 						new ActionRowBuilder().addComponents(

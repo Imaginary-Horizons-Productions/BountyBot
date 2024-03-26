@@ -72,7 +72,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						bounty.save();
 
 						const poster = await database.models.Hunter.findOne({ where: { userId: collectedInteraction.user.id, companyId: collectedInteraction.guildId } });
-						const bountyBaseValue = Bounty.calculateReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
+						const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
 						const company = await database.models.Company.findByPk(collectedInteraction.guildId);
 						const bountyValue = bountyBaseValue * company.festivalMultiplier;
 						database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
@@ -87,8 +87,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							hunter.save();
 						}
 
-						const posterXP = Math.ceil(validatedHunters.length / 2) * company.festivalMultiplier;
-						const posterLevelTexts = await poster.addXP(collectedInteraction.guild.name, posterXP, true, database);
+						const posterXP = bounty.calculatePosterReward(validatedHunterIds.length);
+						const posterLevelTexts = await poster.addXP(collectedInteraction.guild.name, posterXP * company.festivalMultiplier, true, database);
 						if (posterLevelTexts.length > 0) {
 							levelTexts = levelTexts.concat(posterLevelTexts);
 						}
