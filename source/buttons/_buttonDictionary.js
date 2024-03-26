@@ -5,6 +5,7 @@ const buttonDictionary = {};
 
 for (const file of [
 	"bbcomplete.js",
+	"bbtakedown.js",
 	"secondtoast.js"
 ]) {
 	/** @type {ButtonWrapper} */

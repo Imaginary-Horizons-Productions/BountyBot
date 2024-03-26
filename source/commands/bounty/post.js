@@ -214,11 +214,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 							return bountyBoard.threads.create({
 								name: bounty.title,
 								message: {
-									embeds: [bountyEmbed], components: [new ActionRowBuilder().addComponents(
+									embeds: [bountyEmbed],
+									components: [new ActionRowBuilder().addComponents(
 										new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${bounty.id}`)
 											.setStyle(ButtonStyle.Success)
 											.setLabel("Complete")
-											.setDisabled(true)
+											.setDisabled(true),
+										new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
+											.setStyle(ButtonStyle.Danger)
+											.setLabel("Take Down")
 									)]
 								},
 								appliedTags: [company.bountyBoardOpenTagId]
