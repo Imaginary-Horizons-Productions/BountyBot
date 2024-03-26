@@ -9,7 +9,7 @@ const { updateScoreboard } = require('../util/embedUtil');
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
-	async (interaction, [toastId], database) => {
+	async (interaction, [toastId], database, runMode) => {
 		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [seconder] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 		if (seconder.isBanned) {

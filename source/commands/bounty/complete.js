@@ -26,12 +26,6 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	// poster guaranteed to exist, creating a bounty gives 1 XP
-	const poster = await database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } });
-	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-	const bountyBaseValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount);
-	const bountyValue = bountyBaseValue * bounty.Company.festivalMultiplier;
-
 	const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 	const completerIdsWithoutReciept = [];
@@ -42,9 +36,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		}
 	}
 
-	const validatedCompleterIds = [];
 	const completerMembers = allCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: allCompleterIds })).values() : [];
-	let levelTexts = [];
+	const validatedCompleterIds = [];
+	const validatedHunters = [];
 	for (const member of completerMembers) {
 		if (runMode !== "prod" || !member.user.bot) {
 			const memberId = member.id;
@@ -52,6 +46,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
 			if (!hunter.isBanned) {
 				validatedCompleterIds.push(memberId);
+				validatedHunters.push(hunter);
 			}
 		}
 	}
@@ -62,6 +57,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}
 
 	interaction.deferReply({ ephemeral: true });
+	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	season.increment("bountiesCompleted");
 
 	bounty.state = "completed";
@@ -77,10 +73,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		});
 	}
 	await database.models.Completion.bulkCreate(rawCompletions);
-	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 
-	for (const userId of validatedCompleterIds) {
-		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
+	// poster guaranteed to exist, creating a bounty gives 1 XP
+	const poster = await database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } });
+	const bountyBaseValue = Bounty.calculateReward(poster.level, slotNumber, bounty.showcaseCount);
+	const bountyValue = bountyBaseValue * bounty.Company.festivalMultiplier;
+	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
+	let levelTexts = [];
+
+	for (const hunter of validatedHunters) {
 		const completerLevelTexts = await hunter.addXP(interaction.guild.name, bountyValue, true, database);
 		if (completerLevelTexts.length > 0) {
 			levelTexts = levelTexts.concat(completerLevelTexts);
@@ -125,11 +126,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			}
 			interaction.editReply(replyPayload);
 		}).then(() => {
-			return bounty.updatePosting(interaction.guild, bounty.Company, database);
-		}).then(thread => {
-			if (thread) {
-				thread.setArchived(true, "bounty completed");
-			}
+			bounty.updatePosting(interaction.guild, bounty.Company, database);
 		})
 
 		updateScoreboard(bounty.Company, interaction.guild, database);

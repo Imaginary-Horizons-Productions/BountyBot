@@ -1,9 +1,9 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { Hunter } = require("../../models/users/Hunter");
 const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction, commandMention } = require("../../util/textUtil");
-const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS } = require("../../constants");
+const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, SAFE_DELIMITER } = require("../../constants");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 
@@ -213,7 +213,14 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 						modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
 								name: bounty.title,
-								message: { embeds: [bountyEmbed] },
+								message: {
+									embeds: [bountyEmbed], components: [new ActionRowBuilder().addComponents(
+										new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${bounty.id}`)
+											.setStyle(ButtonStyle.Success)
+											.setLabel("Complete")
+											.setDisabled(true)
+									)]
+								},
 								appliedTags: [company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {

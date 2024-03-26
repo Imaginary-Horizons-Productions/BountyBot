@@ -1,7 +1,9 @@
-﻿const { EmbedBuilder, Guild } = require('discord.js');
+﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { DataTypes, Model, Sequelize } = require('sequelize');
 const { ihpAuthorPayload } = require('../../util/embedUtil');
 const { Company } = require('../companies/Company');
+const { SAFE_DELIMITER } = require('../../constants');
+const { timeConversion } = require('../../util/textUtil');
 
 /** Bounties are user created objectives for other server members to complete */
 exports.Bounty = class extends Model {
@@ -74,9 +76,23 @@ exports.Bounty = class extends Model {
 				return thread.fetchStarterMessage();
 			}).then(posting => {
 				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), this.state !== "open", database).then(embed => {
-					posting.edit({ embeds: [embed] });
+					if (this.state === "completed") {
+						posting.edit({ embeds: [embed], components: [] });
+						posting.channel.setArchived(true, "bounty completed");
+					} else {
+						posting.edit({
+							embeds: [embed],
+							components: [
+								new ActionRowBuilder().addComponents(
+									new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${this.id}`)
+										.setStyle(ButtonStyle.Success)
+										.setLabel("Complete")
+										.setDisabled(new Date() < new Date(new Date(this.createdAt) + timeConversion(5, "m", "ms")))
+								)
+							]
+						});
+					}
 				})
-				return posting.channel;
 			})
 		}
 	}

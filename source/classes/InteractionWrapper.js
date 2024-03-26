@@ -50,7 +50,7 @@ class ButtonWrapper extends InteractionWrapper {
 	/** IHP wrapper for button responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: ButtonInteraction, args: string[], database: Sequelize) => void} executeFunction
+	 * @param {(interaction: ButtonInteraction, args: string[], database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -133,7 +133,7 @@ class SelectWrapper extends InteractionWrapper {
 	/** IHP wrapper for any select responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: AnySelectMenuInteraction, args: string[], database: Sequelize) => void} executeFunction
+	 * @param {(interaction: AnySelectMenuInteraction, args: string[], database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
