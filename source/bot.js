@@ -143,7 +143,7 @@ client.on(Events.InteractionCreate, interaction => {
 				return;
 			}
 
-			interactionWrapper.execute(interaction, args, database);
+			interactionWrapper.execute(interaction, args, database, runMode);
 		}
 	})
 });
