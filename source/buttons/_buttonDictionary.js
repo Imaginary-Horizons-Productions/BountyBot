@@ -7,6 +7,7 @@ for (const file of [
 	"bbaddcompleters.js",
 	"bbcomplete.js",
 	"bbremovecompleters.js",
+	"bbshowcase.js",
 	"bbtakedown.js",
 	"secondtoast.js"
 ]) {

@@ -92,8 +92,11 @@ exports.Bounty = class extends Model {
 										.setStyle(ButtonStyle.Primary)
 										.setLabel("Credit Hunters"),
 									new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${this.id}`)
-										.setStyle(ButtonStyle.Primary)
+										.setStyle(ButtonStyle.Secondary)
 										.setLabel("Uncredit Hunters"),
+									new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${this.id}`)
+										.setStyle(ButtonStyle.Primary)
+										.setLabel("Showcase this Bounty"),
 									new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${this.id}`)
 										.setStyle(ButtonStyle.Danger)
 										.setLabel("Take Down")

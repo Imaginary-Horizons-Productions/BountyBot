@@ -19,6 +19,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					new ActionRowBuilder().addComponents(
 						new UserSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}`)
 							.setPlaceholder("Select bounty hunters...")
+							.setMaxValues(5)
 					)
 				],
 				fetchReply: true,
