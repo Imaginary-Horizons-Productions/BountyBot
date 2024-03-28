@@ -1,7 +1,9 @@
-const { CommandInteraction, PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType } = require("discord.js");
+const { CommandInteraction, PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 const { Company } = require("../../models/companies/Company");
+const { SAFE_DELIMITER } = require("../../constants");
+const { timeConversion } = require("../../util/textUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -50,7 +52,24 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({
 					name: bounty.title,
-					message: { embeds: [bountyEmbed] },
+					message: {
+						embeds: [bountyEmbed],
+						components: new ActionRowBuilder().addComponents(
+							new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${bounty.id}`)
+								.setStyle(ButtonStyle.Success)
+								.setLabel("Complete")
+								.setDisabled(new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))),
+							new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${bounty.id}`)
+								.setStyle(ButtonStyle.Primary)
+								.setLabel("Credit Hunters"),
+							new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${bounty.id}`)
+								.setStyle(ButtonStyle.Primary)
+								.setLabel("Uncredit Hunters"),
+							new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
+								.setStyle(ButtonStyle.Danger)
+								.setLabel("Take Down")
+						)
+					},
 					appliedTags: [openTagId]
 				})
 			}).then(posting => {

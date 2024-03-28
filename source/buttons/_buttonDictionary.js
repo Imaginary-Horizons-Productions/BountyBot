@@ -4,7 +4,9 @@ const { ButtonWrapper } = require("../classes");
 const buttonDictionary = {};
 
 for (const file of [
+	"bbaddcompleters.js",
 	"bbcomplete.js",
+	"bbremovecompleters.js",
 	"bbtakedown.js",
 	"secondtoast.js"
 ]) {

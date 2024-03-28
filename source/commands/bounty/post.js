@@ -220,6 +220,12 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 											.setStyle(ButtonStyle.Success)
 											.setLabel("Complete")
 											.setDisabled(true),
+										new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${bounty.id}`)
+											.setStyle(ButtonStyle.Primary)
+											.setLabel("Credit Hunters"),
+										new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${bounty.id}`)
+											.setStyle(ButtonStyle.Primary)
+											.setLabel("Uncredit Hunters"),
 										new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
 											.setStyle(ButtonStyle.Danger)
 											.setLabel("Take Down")
