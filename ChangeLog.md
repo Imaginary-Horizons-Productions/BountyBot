@@ -2,7 +2,7 @@
 ## BountyBot Version 2.5.0:
 - Bounty board forums created by `/create-default` now have 👀 as a default reaction
 - BountyBot now provides shortcut links when mentioning its own commands
-- Threads on the bounty board now include Complete, Add Completers, Remove Completers, and Take Down buttons
+- Threads on the bounty board now include Complete, Add Completers, Remove Completers, Showcase, and Take Down buttons
 - Bounty descriptions are now optional
 - Adding a description, image, or start and end timestamps each add a 1 XP bonus to the poster's XP on completion
 
