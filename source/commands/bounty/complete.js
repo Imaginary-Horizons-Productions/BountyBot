@@ -116,7 +116,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 			if (bounty.Company.bountyBoardId) {
 				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
-					bountyBoard.threads.fetch(bounty.postingId).then(thread => {
+					bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
+						if (thread.archived) {
+							await thread.setArchived(false, "bounty completed");
+						}
 						thread.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
 						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 					})

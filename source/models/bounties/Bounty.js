@@ -69,9 +69,10 @@ exports.Bounty = class extends Model {
 			const poster = await database.models.Hunter.findOne({ where: { userId: this.userId, companyId: this.companyId } });
 			return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(this.postingId);
-			}).then(thread => {
-				return thread.setArchived(false, "Unarchived to update posting");
-			}).then(thread => {
+			}).then(async thread => {
+				if (thread.archived) {
+					await thread.setArchived(false, "Unarchived to update posting");
+				}
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
