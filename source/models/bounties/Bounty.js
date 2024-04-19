@@ -76,38 +76,37 @@ exports.Bounty = class extends Model {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
-				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), this.state !== "open", database).then(embed => {
-					if (this.state === "completed") {
-						posting.edit({ embeds: [embed], components: [] });
-						posting.channel.setArchived(true, "bounty completed");
-					} else {
-						posting.edit({
-							embeds: [embed],
-							components: [
-								new ActionRowBuilder().addComponents(
-									new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${this.id}`)
-										.setStyle(ButtonStyle.Success)
-										.setLabel("Complete")
-										.setDisabled(new Date() < new Date(new Date(this.createdAt) + timeConversion(5, "m", "ms"))),
-									new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${this.id}`)
-										.setStyle(ButtonStyle.Primary)
-										.setLabel("Credit Hunters"),
-									new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${this.id}`)
-										.setStyle(ButtonStyle.Secondary)
-										.setLabel("Uncredit Hunters"),
-									new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${this.id}`)
-										.setStyle(ButtonStyle.Primary)
-										.setLabel("Showcase this Bounty"),
-									new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${this.id}`)
-										.setStyle(ButtonStyle.Danger)
-										.setLabel("Take Down")
-								)
-							]
-						});
-					}
+				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), false, database).then(embed => {
+					posting.edit({
+						embeds: [embed],
+						components: this.generateBountyBoardButtons()
+					});
 				})
 			})
 		}
+	}
+
+	generateBountyBoardButtons() {
+		return [
+			new ActionRowBuilder().addComponents(
+				new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${this.id}`)
+					.setStyle(ButtonStyle.Success)
+					.setLabel("Complete")
+					.setDisabled(new Date() < new Date(new Date(this.createdAt) + timeConversion(5, "m", "ms"))),
+				new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${this.id}`)
+					.setStyle(ButtonStyle.Primary)
+					.setLabel("Credit Hunters"),
+				new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${this.id}`)
+					.setStyle(ButtonStyle.Secondary)
+					.setLabel("Uncredit Hunters"),
+				new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${this.id}`)
+					.setStyle(ButtonStyle.Primary)
+					.setLabel("Showcase this Bounty"),
+				new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${this.id}`)
+					.setStyle(ButtonStyle.Danger)
+					.setLabel("Take Down")
+			)
+		]
 	}
 
 	static calculateCompleterReward(posterLevel, slotNumber, showcaseCount) {

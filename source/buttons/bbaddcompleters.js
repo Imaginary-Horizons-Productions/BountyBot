@@ -61,8 +61,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						})
 					}
 					database.models.Completion.bulkCreate(rawCompletions);
+					const poster = await database.models.Hunter.findOne({ where: { companyId: collectedInteraction.guildId, userId: collectedInteraction.user.id } });
 					const company = await database.models.Company.findByPk(collectedInteraction.guildId);
-					bounty.updatePosting(collectedInteraction.guild, company, database);
+					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(async embed => {
+						if (collectedInteraction.channel.archived) {
+							await collectedInteraction.channel.setArchived(false, "bounty complete");
+						}
+						collectedInteraction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
+					});
 
 					collectedInteraction.reply({
 						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, <@")}>\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,

@@ -95,7 +95,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						poster.mineFinished++;
 						poster.save();
 
-						getRankUpdates(collectedInteraction.guild, database).then(rankUpdates => {
+						getRankUpdates(collectedInteraction.guild, database).then(async rankUpdates => {
 							const multiplierString = company.festivalMultiplierString();
 							let text = `__**XP Gained**__\n${validatedHunterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${collectedInteraction.member} + ${posterXP} XP${multiplierString}`;
 							if (rankUpdates.length > 0) {
@@ -108,9 +108,15 @@ module.exports = new ButtonWrapper(mainId, 3000,
 								text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 							}
 
+							if (collectedInteraction.channel.archived) {
+								await collectedInteraction.channel.setArchived(false, "bounty complete");
+							}
 							collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 							collectedInteraction.reply({ content: text, flags: MessageFlags.SuppressNotifications });
-							bounty.updatePosting(collectedInteraction.guild, company, database);
+							bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), true, database).then(embed => {
+								collectedInteraction.message.edit({ embeds: [embed], components: [] });
+								collectedInteraction.channel.setArchived(true, "bounty completed");
+							})
 							updateScoreboard(company, collectedInteraction.guild, database);
 						});
 					}

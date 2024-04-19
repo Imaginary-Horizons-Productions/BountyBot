@@ -48,10 +48,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					bounty.increment("showcaseCount");
 					await bounty.save().then(bounty => bounty.reload());
 					const company = await database.models.Company.findByPk(collectedInteraction.guildId);
-					bounty.updatePosting(collectedInteraction.guild, company, database);
 					poster.lastShowcaseTimestamp = new Date();
 					poster.save();
-					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(embed => {
+					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(async embed => {
+						if (collectedInteraction.channel.archived) {
+							await collectedInteraction.channel.setArchived(false, "bounty complete");
+						}
+						collectedInteraction.message.edit({ embeds: [embed] });
 						showcaseChannel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 					})
 				})

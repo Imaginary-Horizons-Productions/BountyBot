@@ -1,7 +1,6 @@
 const { ActionRowBuilder, UserSelectMenuBuilder } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { commandMention } = require('../util/textUtil');
 const { Op } = require('sequelize');
 
 const mainId = "bbremovecompleters";
@@ -30,8 +29,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				collector.on("collect", async (collectedInteraction) => {
 					const removedIds = collectedInteraction.members.map((_, key) => key);
 					database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: removedIds } } });
+					const poster = await database.models.Hunter.findOne({ where: { companyId: collectedInteraction.guildId, userId: collectedInteraction.user.id } });
 					const company = await database.models.Company.findByPk(collectedInteraction.guildId);
-					bounty.updatePosting(collectedInteraction.guild, company, database);
+					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(async embed => {
+						if (collectedInteraction.channel.archived) {
+							await collectedInteraction.channel.setArchived(false, "bounty complete");
+						}
+						collectedInteraction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
+					});
 
 					collectedInteraction.reply({
 						content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${removedIds.join(">, ")}>`,
