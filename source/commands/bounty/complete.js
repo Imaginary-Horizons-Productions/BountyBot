@@ -111,25 +111,23 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 		}
 
-		bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(embed => {
-			const replyPayload = { embeds: [embed] };
-
+		bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
 			if (bounty.Company.bountyBoardId) {
-				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
-					bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
-						if (thread.archived) {
-							await thread.setArchived(false, "bounty completed");
-						}
-						thread.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
-						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
-					})
-				})
+				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+				bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
+					if (thread.archived) {
+						await thread.setArchived(false, "bounty completed");
+					}
+					thread.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
+					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+					return thread.fetchStarterMessage();
+				}).then(posting => {
+					posting.edit({ embeds: [embed], components: [] });
+					posting.channel.setArchived(true, "bounty completed");
+				});
 			} else {
-				replyPayload.content = text;
+				interaction.editReply({ content: text, embeds: [embed] });
 			}
-			interaction.editReply(replyPayload);
-		}).then(() => {
-			bounty.updatePosting(interaction.guild, bounty.Company, database);
 		})
 
 		updateScoreboard(bounty.Company, interaction.guild, database);
