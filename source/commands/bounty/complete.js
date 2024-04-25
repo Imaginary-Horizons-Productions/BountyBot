@@ -5,6 +5,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, timeConversion, commandMention } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
+const { getItemNames } = require("../../items/_itemDictionary");
 
 /**
  * @param {CommandInteraction} interaction
@@ -88,6 +89,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		}
 		hunter.othersFinished++;
 		hunter.save();
+		if (Math.random() * 8 >= 7) {
+			const itemNames = getItemNames();
+			const rolledItem = itemNames[Math.floor(Math.random()) * itemNames.length];
+			const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: rolledItem });
+			if (!itemWasCreated) {
+				itemRow.increment();
+			}
+			levelTexts.push(`<@${hunter.userId}> has found a **${rolledItem}**!`);
+		}
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedCompleterIds.length);
@@ -97,6 +107,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}
 	poster.mineFinished++;
 	poster.save();
+	if (Math.random() * 4 >= 3) {
+		const itemNames = getItemNames();
+		const rolledItem = itemNames[Math.floor(Math.random()) * itemNames.length];
+		const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: rolledItem });
+		if (!itemWasCreated) {
+			itemRow.increment();
+		}
+		levelTexts.push(`<@${poster.userId}> has found a **${rolledItem}**!`);
+	}
 
 	getRankUpdates(interaction.guild, database).then(rankUpdates => {
 		const multiplierString = bounty.Company.festivalMultiplierString();
@@ -125,6 +144,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					posting.edit({ embeds: [embed], components: [] });
 					posting.channel.setArchived(true, "bounty completed");
 				});
+				interaction.editReply({ content: `The bounty was completed. <#${bounty.Company.bountyBoardId}>` });
 			} else {
 				interaction.editReply({ content: text, embeds: [embed] });
 			}

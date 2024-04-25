@@ -21,7 +21,7 @@ module.exports = {
 				name: "",
 				description: "",
 				required: false,
-				autocomplete: [{ name: "", value: "" }], // optional
+				autocompleteFilter: (interaction, database) => { return [{ name: "", value: "" }] }, // optional
 				choices: [{ name: "", value: "" }]  // optional
 			}
 		]

@@ -1,4 +1,12 @@
 # BountyBot Change Log
+## BountyBot Version 2.6.0:
+### Items
+Items are consumables that are associated with a Discord account (rather than a server). They drop from bounties and do cool things when used.
+- Added Profile Colorizers: these come in many different colors and allow you to change the color of your profile in the server they're used in
+
+## BountyBot Version 2.5.1:
+- Fixed a crash
+
 ## BountyBot Version 2.5.0:
 - Bounty board forums created by `/create-default` now have 👀 as a default reaction
 - BountyBot now provides shortcut links when mentioning its own commands

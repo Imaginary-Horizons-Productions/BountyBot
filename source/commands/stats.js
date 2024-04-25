@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, Colors } = require('discord.js');
 const { ZERO_WIDTH_WHITE_SPACE } = require('../constants');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
@@ -41,7 +41,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 
 					interaction.reply({
 						embeds: [
-							new EmbedBuilder().setColor(target.displayColor)
+							new EmbedBuilder().setColor(Colors[hunter.profileColor])
 								.setAuthor(ihpAuthorPayload)
 								.setThumbnail(target.user.avatarURL())
 								.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
@@ -82,7 +82,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 
 				interaction.reply({
 					embeds: [
-						new EmbedBuilder().setColor(interaction.member.displayColor)
+						new EmbedBuilder().setColor(Colors[hunter.profileColor])
 							.setAuthor(ihpAuthorPayload)
 							.setThumbnail(interaction.user.avatarURL())
 							.setTitle(`You are __Level ${hunter.level}__ in ${interaction.guild.name}`)
