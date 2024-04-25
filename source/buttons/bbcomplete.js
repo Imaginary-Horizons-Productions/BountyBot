@@ -5,6 +5,7 @@ const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { commandMention } = require('../util/textUtil');
+const { getItemNames } = require('../items/_itemDictionary');
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -85,6 +86,15 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							}
 							hunter.othersFinished++;
 							hunter.save();
+							if (Math.random() * 8 >= 7) {
+								const itemNames = getItemNames();
+								const rolledItem = itemNames[Math.floor(Math.random()) * itemNames.length];
+								const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: rolledItem });
+								if (!itemWasCreated) {
+									itemRow.increment();
+								}
+								levelTexts.push(`<@${hunter.userId}> has found a **${rolledItem}**!`);
+							}
 						}
 
 						const posterXP = bounty.calculatePosterReward(validatedHunterIds.length);
@@ -94,6 +104,15 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						}
 						poster.mineFinished++;
 						poster.save();
+						if (Math.random() * 4 >= 3) {
+							const itemNames = getItemNames();
+							const rolledItem = itemNames[Math.floor(Math.random()) * itemNames.length];
+							const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: rolledItem });
+							if (!itemWasCreated) {
+								itemRow.increment();
+							}
+							levelTexts.push(`<@${poster.userId}> has found a **${rolledItem}**!`);
+						}
 
 						getRankUpdates(collectedInteraction.guild, database).then(async rankUpdates => {
 							const multiplierString = company.festivalMultiplierString();

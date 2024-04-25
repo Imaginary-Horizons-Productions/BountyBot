@@ -70,7 +70,7 @@ class CommandWrapper extends InteractionWrapper {
 	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
 		this.premiumCommand = isPremiumCommand;
-		this.autocomplete = {};
+		this.autocompleteFilters = {};
 		this.builder = new SlashCommandBuilder()
 			.setName(mainIdInput)
 			.setDescription(descriptionInput)
@@ -80,17 +80,17 @@ class CommandWrapper extends InteractionWrapper {
 		}
 	}
 
-	/** @param {...{type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: {name: string, value: string}[], choices?: { name: string, value }[]}} optionsInput */
+	/** @param {...{type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocompleteFilter?: (interaction: CommandInteraction, database: Sequelize) => Promise<{name: string, value: string}[]>, choices?: { name: string, value }[]}} optionsInput */
 	setOptions(...optionsInput) {
 		optionsInput.forEach(option => {
 			this.builder[`add${option.type}Option`](built => {
 				built.setName(option.name).setDescription(option.description).setRequired(option.required);
-				if (option.autocomplete?.length > 0) {
-					if (option.name in this.autocomplete) {
+				if ("autocompleteFilter" in option) {
+					if (option.name in this.autocompleteFilters) {
 						throw new BuildError(`duplicate autocomplete key (${option.name})`);
 					}
 					built.setAutocomplete(true);
-					this.autocomplete[option.name] = option.autocomplete;
+					this.autocompleteFilters[option.name] = option.autocompleteFilter;
 				} else if (option.choices?.length > 0) {
 					built.addChoices(...option.choices);
 				}
@@ -100,7 +100,7 @@ class CommandWrapper extends InteractionWrapper {
 		return this;
 	}
 
-	/** @param {{name: string, description: string, optionsInput?: {type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: {name: string, value: string}[], choices?: { name: string, value }[]}}[]} subcommandsInput */
+	/** @param {{name: string, description: string, optionsInput?: {type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocompleteFilter?: (interaction: CommandInteraction, database: Sequelize) => Promise<{name: string, value: string}[]>, choices?: { name: string, value }[]}}[]} subcommandsInput */
 	setSubcommands(subcommandsInput) {
 		subcommandsInput.forEach(subcommand => {
 			this.builder.addSubcommand(built => {
@@ -109,12 +109,12 @@ class CommandWrapper extends InteractionWrapper {
 					subcommand.optionsInput.forEach(option => {
 						built[`add${option.type}Option`](subBuilt => {
 							subBuilt.setName(option.name).setDescription(option.description).setRequired(option.required);
-							if (option.autocomplete?.length > 0) {
-								if (option.name in this.autocomplete) {
+							if ("autocompleteFilter" in option) {
+								if (option.name in this.autocompleteFilters) {
 									throw new BuildError(`duplicate autocomplete key (${option.name})`);
 								}
 								subBuilt.setAutocomplete(true);
-								this.autocomplete[option.name] = option.autocomplete;
+								this.autocompleteFilters[option.name] = option.autocompleteFilter;
 							} else if (option.choices?.length > 0) {
 								subBuilt.addChoices(...option.choices);
 							}

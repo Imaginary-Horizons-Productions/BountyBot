@@ -149,6 +149,10 @@ exports.initModel = function (sequelize) {
 		penaltyPointTotal: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
+		},
+		profileColor: {
+			type: DataTypes.STRING,
+			defaultValue: "Default"
 		}
 	}, {
 		sequelize,

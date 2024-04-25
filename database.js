@@ -15,6 +15,7 @@ function connectToDatabase(mode) {
 		const { Company, initModel: initCompany } = require("./source/models/companies/Company.js");
 		const { Rank, initModel: initRank } = require("./source/models/companies/Rank.js");
 		const { User, initModel: initUser } = require("./source/models/users/User.js");
+		const { Item, initModel: initItem } = require("./source/models/users/Item.js");
 		const { Hunter, initModel: initHunter } = require("./source/models/users/Hunter.js");
 		const { Bounty, initModel: initBounty } = require("./source/models/bounties/Bounty.js");
 		const { Completion, initModel: initCompletion } = require("./source/models/bounties/Completion.js");
@@ -27,6 +28,7 @@ function connectToDatabase(mode) {
 		initCompany(database);
 		initRank(database);
 		initUser(database);
+		initItem(database);
 		initHunter(database);
 		initBounty(database);
 		initCompletion(database);
@@ -42,6 +44,13 @@ function connectToDatabase(mode) {
 		Rank.Company = Rank.belongsTo(Company, {
 			foreignKey: "companyId"
 		});
+
+		Item.User = Item.belongsTo(User, {
+			foreignKey: "userId"
+		})
+		User.Items = User.hasMany(Item, {
+			foreignKey: "userId"
+		})
 
 		Hunter.User = Hunter.belongsTo(User, {
 			foreignKey: "userId"

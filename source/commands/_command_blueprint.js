@@ -15,7 +15,7 @@ module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.V
 		name: "",
 		description: "",
 		required: false,
-		autocomplete: [{ name: "", value: "" }], // optional
+		autocompleteFilter: (interaction, database) => { return [{ name: "", value: "" }] }, // optional
 		choices: [{ name: "", value: "" }] // optional
 	}
 ).setSubcommands(subcommandSlashData);
