@@ -254,6 +254,16 @@ Get tips for starting with BountyBot
 > Choices: `Starting Bounty Hunter Tips`, `Server Setup Tips`
 
 Get starting bounty hunter tips or server setup tips
+### /use-item
+> Permission Level: SendMessages
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+description
+#### item-name
+Results will be filtered by your inventory
 ### /version
 
 > Usable in DMs: true
