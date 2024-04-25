@@ -12,7 +12,7 @@ exports.initModel = function (sequelize) {
 			defaultValue: DataTypes.UUIDV4
 		},
 		bountyId: {
-			type: DataTypes.BIGINT
+			type: DataTypes.UUID
 		},
 		userId: {
 			type: DataTypes.STRING
