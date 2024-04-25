@@ -34,7 +34,8 @@ const bountyBotTips = [
 	"Manage bounties from within games with the Discord Overlay (default: Shift + Tab)!",
 	"Server level is based on total bounty hunter level--higher server level means better evergreen bounty rewards.",
 	"A bounty poster cannot complete their own bounty.",
-	"Adding a description, image or time to a bounty all add 1 bonus XP for the poster."
+	"Adding a description, image or time to a bounty all add 1 bonus XP for the poster.",
+	"Bounty posters have double the chance to find items compared to completers."
 ].map(text => ({ text, iconURL: bountyBotIcon }));
 const tipPool = bountyBotTips.concat(bountyBotTips, discordTips);
 
