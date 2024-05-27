@@ -32,9 +32,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		seconder.toastSeconded++;
 		originalToast.increment("secondings");
 
-		let recipientIds = originalToast.Recipients.map(reciept => reciept.recipientId);
-		recipientIds.push(originalToast.senderId);
-		recipientIds = recipientIds.filter(id => id !== interaction.user.id);
+		const recipientIds = [];
+		originalToast.Recipients.forEach(reciept => {
+			if (reciept.id !== interaction.user.id) {
+				recipientIds.push(reciept.recipientId);
+			}
+		});
 		let levelTexts = [];
 		for (const userId of recipientIds) {
 			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
