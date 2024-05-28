@@ -5,10 +5,11 @@ Items are consumables that are associated with a Discord account (rather than a 
 - Look up which items you've found with `/inventory` then use them with `/item`
 - Added Profile Colorizers: these come in many different colors and allow you to change the color of your profile in the server they're used in
 
-### Balance
+### Other Changes
 - A toast's raiser is no longer considered recieving secondings on that toast.
    - This lead to weird incentives to be the first to toast an event/achievement to get the secondings and not second toasts by competitors.
    - In the case of raising a toast to all members of a group from within a group, having someone else raise a toast to the first toast's raiser will achieve the same effect.
+- Fixed crashes when using bounty board thread buttons
 
 ## BountyBot Version 2.5.1:
 - Fixed a crash
