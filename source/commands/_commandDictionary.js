@@ -14,6 +14,8 @@ exports.commandFiles = [
 	"evergreen",
 	"feedback.js",
 	"festival",
+	"inventory.js",
+	"item.js",
 	"moderation",
 	"premium.js",
 	"raffle",
@@ -25,7 +27,6 @@ exports.commandFiles = [
 	"stats.js",
 	"toast.js",
 	"tutorial.js",
-	"use-item.js",
 	"version.js"
 ];
 /** @type {Record<string, CommandWrapper>} */
@@ -43,17 +44,4 @@ for (const file of exports.commandFiles) {
 /** @param {string} commandName */
 exports.getCommand = function (commandName) {
 	return commandDictionary[commandName];
-}
-
-/**
- * @param {string} commandName
- * @param {string} optionName
- * @param {CommandInteraction} interaction
- * @param {Sequelize} database
- * @returns {Promise<{name: string, value: string}[]>}}
- */
-exports.useAutocompleteFilter = function (commandName, optionName, interaction, database) {
-	return commandDictionary[commandName].autocompleteFilters[optionName](interaction, database).then(allOptions => {
-		return allOptions.slice(0, 25);
-	});
 }

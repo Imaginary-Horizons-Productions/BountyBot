@@ -2,6 +2,7 @@
 ## BountyBot Version 2.6.0:
 ### Items
 Items are consumables that are associated with a Discord account (rather than a server). They drop from bounties and do cool things when used.
+- Look up which items you've found with `/inventory` then use them with `/item`
 - Added Profile Colorizers: these come in many different colors and allow you to change the color of your profile in the server they're used in
 
 ### Balance
