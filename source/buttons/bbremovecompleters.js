@@ -33,9 +33,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					const company = await database.models.Company.findByPk(collectedInteraction.guildId);
 					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(async embed => {
 						if (collectedInteraction.channel.archived) {
-							await collectedInteraction.channel.setArchived(false, "bounty complete");
+							await collectedInteraction.channel.setArchived(false, "completers removed from bounty");
 						}
-						collectedInteraction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
+						interaction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
 					});
 
 					collectedInteraction.reply({

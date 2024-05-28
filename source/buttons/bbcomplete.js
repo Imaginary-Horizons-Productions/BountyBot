@@ -133,7 +133,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 							collectedInteraction.reply({ content: text, flags: MessageFlags.SuppressNotifications });
 							bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), true, database).then(embed => {
-								collectedInteraction.message.edit({ embeds: [embed], components: [] });
+								interaction.message.edit({ embeds: [embed], components: [] });
 								collectedInteraction.channel.setArchived(true, "bounty completed");
 							})
 							updateScoreboard(company, collectedInteraction.guild, database);
