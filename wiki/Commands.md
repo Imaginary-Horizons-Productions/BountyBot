@@ -127,6 +127,24 @@ Manage a server-wide festival to multiply XP of bounty completions, toast reciep
 Start an XP multiplier festival
 #### /festival close
 End the festival, returning to normal XP
+### /inventory
+> Permission Level: ViewChannel
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+Show the user the items in their inventory
+### /item
+> Permission Level: SendMessages
+
+> Usable in DMs: true
+
+> Cooldown: 3 second(s)
+
+Get details on a selected item and a button to use it
+#### item-name
+The item to look up details on
 ### /moderation
 > Permission Level: ManageRoles
 
@@ -254,16 +272,6 @@ Get tips for starting with BountyBot
 > Choices: `Starting Bounty Hunter Tips`, `Server Setup Tips`
 
 Get starting bounty hunter tips or server setup tips
-### /use-item
-> Permission Level: SendMessages
-
-> Usable in DMs: true
-
-> Cooldown: 3 second(s)
-
-description
-#### item-name
-Results will be filtered by your inventory
 ### /version
 
 > Usable in DMs: true
