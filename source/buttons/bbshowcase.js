@@ -52,9 +52,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					poster.save();
 					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(async embed => {
 						if (collectedInteraction.channel.archived) {
-							await collectedInteraction.channel.setArchived(false, "bounty complete");
+							await collectedInteraction.channel.setArchived(false, "bounty showcased");
 						}
-						collectedInteraction.message.edit({ embeds: [embed] });
+						interaction.message.edit({ embeds: [embed] });
 						showcaseChannel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 					})
 				})
