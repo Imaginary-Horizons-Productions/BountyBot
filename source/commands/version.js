@@ -1,3 +1,4 @@
+const { AttachmentBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildVersionEmbed } = require('../util/embedUtil');
 
@@ -12,10 +13,7 @@ module.exports = new CommandWrapper(mainId, "Get the most recent changes or the 
 		} else {
 			interaction.reply({
 				content: "Here are all the changes so far: ",
-				files: [{
-					attachment: "./ChangeLog.md",
-					name: 'ChangeLog.md'
-				}],
+				files: [new AttachmentBuilder("./ChangeLog.md")],
 				ephemeral: true
 			});
 		}
