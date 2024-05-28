@@ -36,7 +36,10 @@ for (const file of [
 	"profile-colorizer-purple.js",
 	"profile-colorizer-red.js",
 	"profile-colorizer-white.js",
-	"profile-colorizer-yellow.js"
+	"profile-colorizer-yellow.js",
+	"xp-boost-epic.js",
+	"xp-boost-legendary.js",
+	"xp-boost.js"
 ]) {
 	/** @type {Item} */
 	const item = require(`./${file}`);
@@ -44,8 +47,9 @@ for (const file of [
 	ITEM_NAMES.push(item.name);
 }
 
-exports.getItemNames = function () {
-	return ITEM_NAMES;
+/** @param {string[]} exclusions */
+exports.getItemNames = function (exclusions) {
+	return ITEM_NAMES.filter(name => !exclusions.includes(name));
 }
 
 /** @param {string} itemName */

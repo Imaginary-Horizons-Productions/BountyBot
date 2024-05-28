@@ -45,6 +45,6 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 		name: "item-name",
 		description: "The item to look up details on",
 		required: true,
-		autocomplete: getItemNames().map(name => ({ name, value: name }))
+		autocomplete: getItemNames([]).map(name => ({ name, value: name }))
 	}
 );

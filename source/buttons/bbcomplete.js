@@ -87,7 +87,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							hunter.othersFinished++;
 							hunter.save();
 							if (Math.random() * 8 >= 7) {
-								const itemNames = getItemNames();
+								const itemNames = getItemNames(["Epic XP Boost", "Legendary XP Boost"]);
 								const rolledItem = itemNames[Math.floor(Math.random()) * itemNames.length];
 								const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: rolledItem });
 								if (!itemWasCreated) {
@@ -105,7 +105,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						poster.mineFinished++;
 						poster.save();
 						if (Math.random() * 4 >= 3) {
-							const itemNames = getItemNames();
+							const itemNames = getItemNames(["Epic XP Boost", "Legendary XP Boost"]);
 							const rolledItem = itemNames[Math.floor(Math.random()) * itemNames.length];
 							const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: rolledItem });
 							if (!itemWasCreated) {
