@@ -129,7 +129,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					});
 				}
 
-				modalSubmission.channel.send(bounty.Company.sendAnnouncement({ content: `${modalSubmission.member} has edited an evergreen bounty:`, embeds: [bountyEmbed] }));
+				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], ephemeral: true });
 			}).catch(console.error);
 		})
 	})
