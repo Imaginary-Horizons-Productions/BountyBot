@@ -157,15 +157,15 @@ async function textsHaveAutoModInfraction(channel, member, texts, context) {
 			continue;
 		}
 
-		//TODO #93 use rule.triggerMetaData.allowList
 		const hasRegexTrigger = texts.some(text => rule.triggerMetadata.regexPatterns.some(regex => new RegExp(regex).test(text)));
 		const hasKeywordFilter = texts.some(text => rule.triggerMetadata.keywordFilter.some(regex => new RegExp(regex).test(text)));
+		const hasAllowListFilter = texts.some(text => rule.triggerMetadata.allowList.some(regex => new RegExp(regex).test(text)))
 		//TODO #94 fetch Discord presets from enum
 		const exceedsMentionLimit = texts.some(text => {
 			text.match(/<@[\d&]+>/)?.length > rule.triggerMetadata.mentionTotalLimit
 		});
-		for (const action of rule.actions) {
-			if (hasRegexTrigger || hasKeywordFilter || exceedsMentionLimit) {
+		if (((hasRegexTrigger || hasKeywordFilter) && !hasAllowListFilter) || exceedsMentionLimit) {
+			for (const action of rule.actions) {
 				switch (action.type) {
 					case AutoModerationActionType.SendAlertMessage:
 						if (action.metadata.channelId) {
