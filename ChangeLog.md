@@ -1,4 +1,7 @@
 # BountyBot Change Log
+## BountyBot Version 2.6.1:
+- Added XP Boosts: use them to gain XP in the used server
+
 ## BountyBot Version 2.6.0:
 ### Items
 Items are consumables that are associated with a Discord account (rather than a server). They drop from bounties and do cool things when used.
