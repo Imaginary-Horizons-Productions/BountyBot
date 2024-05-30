@@ -1,6 +1,4 @@
-const { CommandInteraction } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { Sequelize } = require('sequelize');
 
 /** @type {string[]} */
 exports.commandFiles = [

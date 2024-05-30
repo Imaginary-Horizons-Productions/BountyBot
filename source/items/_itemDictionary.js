@@ -52,6 +52,29 @@ exports.getItemNames = function (exclusions) {
 	return ITEM_NAMES.filter(name => !exclusions.includes(name));
 }
 
+/** pool picker range: 0-120
+ * @type {Record<number, string[]>} key as theshold to get to pool defined by string array
+ */
+const DROP_TABLE = {
+	90: ["XP Boost"],
+	0: exports.getItemNames(["XP Boost", "Epic XP Boost", "Legendary XP Boost"])
+};
+
+/** @param {number} dropRate as a decimal between 0 and 1 (exclusive) */
+exports.rollItemDrop = function (dropRate) {
+	if (Math.random() < dropRate) {
+		const poolThresholds = Object.keys(DROP_TABLE).map(unparsed => parseFloat(unparsed)).sort((a, b) => b - a);
+		const poolRandomNumber = Math.random() * 120;
+		for (const threshold of poolThresholds) {
+			if (poolRandomNumber > threshold) {
+				const pool = DROP_TABLE[threshold];
+				return pool[Math.floor(Math.random() * pool.length)];
+			}
+		}
+	}
+	return null;
+}
+
 /** @param {string} itemName */
 exports.getItemDescription = function (itemName) {
 	return ITEMS[itemName].description;
