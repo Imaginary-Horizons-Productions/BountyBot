@@ -23,7 +23,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				content: "Which channel should this bounty be showcased in?",
 				components: [
 					new ActionRowBuilder().addComponents(
-						new ChannelSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}`)
+						new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 							.setPlaceholder("Select channel...")
 							.setChannelTypes(ChannelType.GuildText)
 					)
