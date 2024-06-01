@@ -57,7 +57,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	interaction.deferReply({ ephemeral: true });
+	interaction.deferReply();
 	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	season.increment("bountiesCompleted");
 
@@ -91,9 +91,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		hunter.save();
 		const droppedItem = rollItemDrop(1 / 8);
 		if (droppedItem) {
-			const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: droppedItem });
+			const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: interaction.user.id, itemName: droppedItem } });
 			if (!itemWasCreated) {
-				itemRow.increment();
+				itemRow.increment("count");
 			}
 			levelTexts.push(`<@${hunter.userId}> has found a **${droppedItem}**!`);
 		}
@@ -108,9 +108,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	poster.save();
 	const droppedItem = rollItemDrop(1 / 4);
 	if (droppedItem) {
-		const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ userId: interaction.user.id, itemName: droppedItem });
+		const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: interaction.user.id, itemName: droppedItem } });
 		if (!itemWasCreated) {
-			itemRow.increment();
+			itemRow.increment("count");
 		}
 		levelTexts.push(`<@${poster.userId}> has found a **${droppedItem}**!`);
 	}
@@ -129,6 +129,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		}
 
 		bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
+			const completionPrefix = `<@${bounty.userId}>'s bounty, **${bounty.title}**, was completed!`;
 			if (bounty.Company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
 				bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
@@ -142,9 +143,18 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					posting.edit({ embeds: [embed], components: [] });
 					posting.channel.setArchived(true, "bounty completed");
 				});
-				interaction.editReply({ content: `The bounty was completed. <#${bounty.Company.bountyBoardId}>` });
+				interaction.editReply({ content: `${completionPrefix} <#${bounty.Company.bountyBoardId}>` });
 			} else {
-				interaction.editReply({ content: text, embeds: [embed] });
+				interaction.editReply({ content: `${completionPrefix}` }).then(message => {
+					message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
+						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+					})
+				}).catch(error => {
+					// Ignore Missing Access errors, they only prevent the making of the thread
+					if (error.code !== 50001) {
+						console.error(error);
+					}
+				});
 			}
 		})
 
