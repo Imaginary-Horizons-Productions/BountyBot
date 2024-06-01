@@ -1,6 +1,9 @@
 # BountyBot Change Log
 ## BountyBot Version 2.6.1:
 - Added XP Boosts: use them to gain XP in the used server
+- The bot now announces when a bounty has been completed publically (so other bounty hunters know)
+- The complete button on the bounty board now takes an input of a which channel to announce the bounty's completion in
+- Completing a bounty without a bounty board now stows rewards lists in a thread
 
 ## BountyBot Version 2.6.0:
 ### Items
