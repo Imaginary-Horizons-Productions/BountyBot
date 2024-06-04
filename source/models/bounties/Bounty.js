@@ -16,9 +16,10 @@ exports.Bounty = class extends Model {
 	 */
 	asEmbed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, database) {
 		return guild.members.fetch(this.userId).then(async author => {
+			const company = await database.models.Company.findByPk(guild.id);
 			const thumbnails = {
-				open: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
-				complete: "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
+				open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
+				complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
 				deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
 			};
 			const fields = [];

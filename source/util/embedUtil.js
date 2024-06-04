@@ -110,7 +110,7 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Season Scoreboard")
 		.setDescription(description || "No Bounty Hunters yet…")
 		.setFooter(randomFooterTip())
@@ -145,9 +145,10 @@ async function buildOverallScoreboardEmbed(guild, database) {
 		}
 	}
 
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Scoreboard")
 		.setDescription(description || "No Bounty Hunters yet...")
 		.setFooter(randomFooterTip())
@@ -164,7 +165,7 @@ async function buildServerBonusesEmbed(channel, guild, company) {
 	const embed = new EmbedBuilder().setColor(displayColor)
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`${displayName} Server Bonuses`)
-		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
+		.setThumbnail(company.serverBonusesThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
 		.setDescription(`There is ${company.festivalMultiplier != 1 ? '' : 'not '}an XP multiplier festival currently active${company.festivalMultiplier == 1 ? '' : ` for ${company.festivalMultiplierString()}`}.`)
 		.setFooter(randomFooterTip())
 		.setTimestamp();

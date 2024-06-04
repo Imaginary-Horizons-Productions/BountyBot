@@ -62,9 +62,10 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
+		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		// Build rest of embed
 		embed.setColor("e5b271")
-			.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
+			.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
 			.setTitle(toastText)
 			.setDescription(`A toast to <@${nonBotToasteeIds.join(">, <@")}>!`)
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
@@ -102,7 +103,6 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const rewardedRecipients = [];
 		let critValue = 0;
 		//TODO #96 combine fetch and toastsRaised increment with upsert?
-		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		season.increment("toastsRaised");
 		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });

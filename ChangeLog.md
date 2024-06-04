@@ -1,4 +1,7 @@
 # BountyBot Change Log
+## BountyBot Version 2.7.0:
+- Added the ability to customize embed thumbnails per server in `/config-premium`
+
 ## BountyBot Version 2.6.1:
 - Added XP Boosts: use them to gain XP in the used server
 - The bot now announces when a bounty has been completed publically (so other bounty hunters know)
