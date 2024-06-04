@@ -50,6 +50,16 @@ Configure premium BountyBot settings for this server
 Configure the XP coefficient for bounty hunter levels (default 3)
 #### bounty-slots (optional)
 Configure the max number (between 1 and 10) of bounty slots hunters can have (default 5)
+#### toast-thumbnail-url (optional)
+Configure the image shown in the thumbnail of toasts
+#### open-bounty-thumbnail-url (optional)
+Configure the image shown in the thumbnail of open bounties
+#### completed-bounty-thumbnail-url (optional)
+Configure the image shown in the thumbnail of completed bounties
+#### scoreboard-thumbnail-url (optional)
+Configure the image shown in the thumbnail of the scoreboard
+#### server-bonuses-thumbnail-url (optional)
+Configure the image shown in the thumbnail of the server bonuses message
 ### /config-server
 > Permission Level: ManageGuild
 
