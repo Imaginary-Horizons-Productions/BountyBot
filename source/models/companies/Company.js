@@ -88,6 +88,21 @@ exports.initModel = function (sequelize) {
 		},
 		nextRaffleString: {
 			type: DataTypes.STRING
+		},
+		toastThumbnailURL: {
+			type: DataTypes.STRING
+		},
+		openBountyThumbnailURL: {
+			type: DataTypes.STRING
+		},
+		completedBountyThumbnailURL: {
+			type: DataTypes.STRING
+		},
+		scoreboardThumbnailURL: {
+			type: DataTypes.STRING
+		},
+		serverBonusesThumbnailURL: {
+			type: DataTypes.STRING
 		}
 	}, {
 		sequelize,

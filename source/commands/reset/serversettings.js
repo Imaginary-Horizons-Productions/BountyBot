@@ -14,7 +14,12 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			maxSimBounties: 5,
 			backupTimer: 3600000,
 			festivalMultiplier: 1,
-			xpCoefficient: 3
+			xpCoefficient: 3,
+			toastThumbnailURL: null,
+			openBountyThumbnailURL: null,
+			completedBountyThumbnailURL: null,
+			scoreboardThumbnailURL: null,
+			serverBonusesThumbnailURL: null
 		},
 		{ where: { id: interaction.guildId } }
 	);
