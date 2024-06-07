@@ -1,6 +1,7 @@
 # BountyBot Change Log
 ## BountyBot Version 2.7.0:
 - Added the ability to customize embed thumbnails per server in `/config-premium`
+- `/item` now previews the color of Profile Colorizers in its own embed
 
 ## BountyBot Version 2.6.1:
 - Added XP Boosts: use them to gain XP in the used server
