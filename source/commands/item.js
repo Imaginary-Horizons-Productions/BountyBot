@@ -1,7 +1,8 @@
-const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
 const { getItemNames, getItemDescription, useItem } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../constants.js');
+const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil.js');
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, true, 3000,
@@ -10,8 +11,20 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 		interaction.deferReply({ ephemeral: true }).then(async () => {
 			const itemRow = await database.models.Item.findOne({ where: { userId: interaction.user.id, itemName } });
 			const hasItem = itemRow !== null && itemRow.count > 0;
+			let embedColor = Colors.Blurple;
+			if (itemName.includes("Profile Colorizer")) {
+				const [color] = itemName.split("Profile Colorizer");
+				embedColor = Colors[color.replace(/ /g, "")];
+			}
 			return interaction.editReply({
-				content: `**${itemName}**\nEffect: ${getItemDescription(itemName)}\n\nYou have: ${hasItem ? itemRow.count : "0"}`,
+				embeds: [
+					new EmbedBuilder().setColor(embedColor)
+						.setAuthor(ihpAuthorPayload)
+						.setTitle(itemName)
+						.setDescription(getItemDescription(itemName))
+						.addFields({ name: "You have", value: hasItem ? itemRow.count.toString() : "0" })
+						.setFooter(randomFooterTip())
+				],
 				components: [
 					new ActionRowBuilder().addComponents(
 						new ButtonBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}`)
