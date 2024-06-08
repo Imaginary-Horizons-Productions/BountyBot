@@ -34,7 +34,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		const recipientIds = [];
 		originalToast.Recipients.forEach(reciept => {
-			if (reciept.id !== interaction.user.id) {
+			if (reciept.recipientId !== interaction.user.id) {
 				recipientIds.push(reciept.recipientId);
 			}
 		});
@@ -106,7 +106,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(async rankUpdates => {
-			let text = `${interaction.member.displayName} seconded this toast!\n__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP`).join("\n")}`;
+			let text = `${interaction.member.displayName} seconded this toast!\n__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP${id === interaction.user.id ? " *Critical Toast!*" : ""}`).join("\n")}`;
 			if (rankUpdates.length > 0) {
 				text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 			}
