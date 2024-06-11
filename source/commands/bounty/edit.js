@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getNumberEmoji, trimForSelectOptionDescription, timeConversion, textsHaveAutoModInfraction, trimForModalTitle, commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS, commandIds } = require("../../constants");
@@ -29,7 +29,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 							label: bounty.title,
 							value: bounty.id
 						}
-						if (bounty.description !== null) {
+						if (bounty.description) {
 							optionPayload.description = trimForSelectOptionDescription(bounty.description);
 						}
 						return optionPayload;
@@ -200,6 +200,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, bounty.Company.festivalMultiplierString(), false, database);
 
 				bounty.updatePosting(modalSubmission.guild, bounty.Company, database);
+				database.models.Company.findByPk(interaction.guildId).then(company => {
+					if (company.bountyBoardId) {
+						modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+							return bountyBoard.threads.fetch(bounty.postingId);
+						}).then(posting => {
+							posting.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
+						});
+					}
+				});
 
 				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], components: [] });
 			}).catch(console.error);

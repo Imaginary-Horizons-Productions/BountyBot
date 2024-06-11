@@ -4,6 +4,8 @@
 - `/item` now previews the color of Profile Colorizers in its own embed
 - Fixed a bug where a hunter would gain XP for seconding a toast they were originally a recipient of
 - Added a label for when a toast or seconding is a critical toast (awards the toaster XP)
+- Editing a bounty now sends a message to mark the time of the edit in the bounty board's thread (if it exists)
+- Fixed a crash when editing a bounty without a description
 
 ## BountyBot Version 2.6.1:
 - Added XP Boosts: use them to gain XP in the used server
