@@ -29,7 +29,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 							label: bounty.title,
 							value: bounty.id
 						};
-						if (bounty.description !== null) {
+						if (bounty.description) {
 							optionPayload.description = trimForSelectOptionDescription(bounty.description);
 						}
 						return optionPayload;

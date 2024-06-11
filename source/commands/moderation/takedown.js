@@ -14,12 +14,15 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const poster = interaction.options.getUser("poster");
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } });
 	const slotOptions = openBounties.map(bounty => {
-		return {
+		const optionPayload = {
 			emoji: getNumberEmoji(bounty.slotNumber),
 			label: bounty.title,
-			description: trimForSelectOptionDescription(bounty.description),
 			value: bounty.id
 		};
+		if (bounty.description) {
+			optionPayload.description = trimForSelectOptionDescription(bounty.description);
+		}
+		return optionPayload;
 	});
 
 	if (slotOptions.length < 1) {
