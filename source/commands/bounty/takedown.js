@@ -1,8 +1,9 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { trimForSelectOptionDescription, getNumberEmoji, commandMention } = require("../../util/textUtil");
+const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
+const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -12,18 +13,6 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  */
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: posterId, state: "open" } }).then(openBounties => {
-		const bountyOptions = openBounties.map(bounty => {
-			const optionPayload = {
-				emoji: getNumberEmoji(bounty.slotNumber),
-				label: bounty.title,
-				value: bounty.id
-			};
-			if (bounty.description) {
-				optionPayload.description = trimForSelectOptionDescription(bounty.description);
-			}
-			return optionPayload;
-		});
-
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
 			components: [
@@ -31,7 +20,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to take down...")
 						.setMaxValues(1)
-						.setOptions(bountyOptions)
+						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
 			ephemeral: true,

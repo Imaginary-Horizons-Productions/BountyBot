@@ -1,7 +1,8 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { getNumberEmoji, trimForSelectOptionDescription, commandMention } = require("../../util/textUtil");
+const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -11,18 +12,6 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-	const bountyOptions = openBounties.map(bounty => {
-		const optionPayload = {
-			emoji: getNumberEmoji(bounty.slotNumber),
-			label: bounty.title,
-			value: bounty.id
-		};
-		if (bounty.description) {
-			optionPayload.description = trimForSelectOptionDescription(bounty.description);
-		}
-		return optionPayload;
-	});
-
 	interaction.reply({
 		content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,
 		components: [
@@ -30,7 +19,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setPlaceholder("Select a bounty to take down...")
 					.setMaxValues(1)
-					.setOptions(bountyOptions)
+					.setOptions(bountiesToSelectOptions(openBounties))
 			)
 		],
 		ephemeral: true,

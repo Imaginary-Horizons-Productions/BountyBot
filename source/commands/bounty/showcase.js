@@ -1,7 +1,8 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { getNumberEmoji, trimForSelectOptionDescription, timeConversion } = require("../../util/textUtil");
+const { timeConversion } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -30,17 +31,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to showcase...")
 						.setMaxValues(1)
-						.setOptions(existingBounties.map(bounty => {
-							const optionPayload = {
-								emoji: getNumberEmoji(bounty.slotNumber),
-								label: bounty.title,
-								value: bounty.id
-							};
-							if (bounty.description) {
-								optionPayload.description = trimForSelectOptionDescription(bounty.description);
-							}
-							return optionPayload;
-						}))
+						.setOptions(bountiesToSelectOptions(existingBounties))
 				)
 			],
 			ephemeral: true,

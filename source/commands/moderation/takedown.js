@@ -1,8 +1,8 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { getNumberEmoji, trimForSelectOptionDescription } = require("../../util/textUtil");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
+const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -13,19 +13,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const poster = interaction.options.getUser("poster");
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } });
-	const slotOptions = openBounties.map(bounty => {
-		const optionPayload = {
-			emoji: getNumberEmoji(bounty.slotNumber),
-			label: bounty.title,
-			value: bounty.id
-		};
-		if (bounty.description) {
-			optionPayload.description = trimForSelectOptionDescription(bounty.description);
-		}
-		return optionPayload;
-	});
-
-	if (slotOptions.length < 1) {
+	if (openBounties.length < 1) {
 		interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, ephemeral: true });
 		return;
 	}
@@ -37,7 +25,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${poster.id}`)
 					.setPlaceholder("Select a bounty to take down...")
 					.setMaxValues(1)
-					.setOptions(slotOptions)
+					.setOptions(bountiesToSelectOptions(openBounties))
 			)
 		],
 		ephemeral: true,

@@ -1,7 +1,8 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { getNumberEmoji, trimForSelectOptionDescription, timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
+const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -11,19 +12,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } });
-	const slotOptions = openBounties.map(bounty => {
-		const optionPayload = {
-			emoji: getNumberEmoji(bounty.slotNumber),
-			label: bounty.title,
-			value: bounty.id
-		};
-		if (bounty.description !== null) {
-			optionPayload.description = trimForSelectOptionDescription(bounty.description);
-		}
-		return optionPayload;
-	});
-
-	if (slotOptions.length < 1) {
+	if (openBounties.length < 1) {
 		interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", ephemeral: true });
 		return;
 	}
@@ -35,7 +24,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setPlaceholder("Select a bounty to edit...")
 					.setMaxValues(1)
-					.setOptions(slotOptions)
+					.setOptions(bountiesToSelectOptions(openBounties))
 			)
 		],
 		ephemeral: true,
