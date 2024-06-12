@@ -4,7 +4,7 @@ const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, commandMention } = require("../../util/textUtil");
-const { MAX_MESSAGE_CONTENT_LENGTH, commandIds } = require("../../constants");
+const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 
 /**
  * @param {CommandInteraction} interaction
