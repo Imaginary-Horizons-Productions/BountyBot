@@ -1,5 +1,4 @@
 const { EmbedBuilder, Colors } = require('discord.js');
-const { ZERO_WIDTH_WHITE_SPACE } = require('../constants');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
