@@ -2,6 +2,7 @@ const { ActionRowBuilder, UserSelectMenuBuilder } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { Op } = require('sequelize');
+const { listifyEN } = require('../util/textUtil');
 
 const mainId = "bbremovecompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -38,8 +39,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						interaction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
 					});
 
+					collectedInteraction.channel.send({ content: `${listifyEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 					collectedInteraction.reply({
-						content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${removedIds.join(">, ")}>`,
+						content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`,
 						ephemeral: true
 					});
 				})
