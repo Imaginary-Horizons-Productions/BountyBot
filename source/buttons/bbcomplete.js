@@ -4,7 +4,7 @@ const { MAX_MESSAGE_CONTENT_LENGTH, SKIP_INTERACTION_HANDLING } = require('../co
 const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { commandMention } = require('../util/textUtil');
+const { commandMention, timeConversion } = require('../util/textUtil');
 const { rollItemDrop } = require('../items/_itemDictionary');
 
 const mainId = "bbcomplete";
