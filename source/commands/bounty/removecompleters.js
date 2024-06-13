@@ -1,6 +1,6 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { extractUserIdsFromMentions } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -25,6 +25,13 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: mentionedIds } } });
 		const company = await database.models.Company.findByPk(interaction.guildId);
 		bounty.updatePosting(interaction.guild, company, database);
+		if (company.bountyBoardId) {
+			interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+				return bountyBoard.threads.fetch(bounty.postingId);
+			}).then(posting => {
+				posting.send({ content: `${listifyEN(mentionedIds.map(id => `<@${id}>`))} ${mentionedIds.length === 1 ? "has" : "have"} been removed as ${mentionedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
+			});
+		}
 
 		interaction.reply({ //TODO #95 make sure acknowledging interactions is sharding safe
 			content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`,

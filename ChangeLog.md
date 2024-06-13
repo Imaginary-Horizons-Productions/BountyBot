@@ -5,6 +5,7 @@
 - Fixed a bug where a hunter would gain XP for seconding a toast they were originally a recipient of
 - Added a label for when a toast or seconding is a critical toast (awards the toaster XP)
 - Adding completers to a bounty now sends a public message in the bounty board's thread (if it exists)
+- Removing completers from a bounty now sends a public message in the bounty board's thread (if it exists)
 - Editing a bounty now sends a message to mark the time of the edit in the bounty board's thread (if it exists)
 - Fixed several crashs when handling bounties lacking descriptions
 
