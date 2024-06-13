@@ -2,7 +2,7 @@ const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { Op } = require('sequelize');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
-const { extractUserIdsFromMentions, textsHaveAutoModInfraction, timeConversion, commandMention } = require('../util/textUtil');
+const { extractUserIdsFromMentions, textsHaveAutoModInfraction, timeConversion, commandMention, listifyEN } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 
@@ -67,7 +67,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		embed.setColor("e5b271")
 			.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
 			.setTitle(toastText)
-			.setDescription(`A toast to <@${nonBotToasteeIds.join(">, <@")}>!`)
+			.setDescription(`A toast to ${listifyEN(nonBotToasteeIds.map(id => `<@${id}>`))}!`)
 			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
 
 		// Make database entities

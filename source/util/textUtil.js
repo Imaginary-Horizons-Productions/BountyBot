@@ -191,6 +191,31 @@ async function textsHaveAutoModInfraction(channel, member, texts, context) {
 	return shouldBlockMessage;
 }
 
+/** Formats string array into Oxford English list syntax
+ *  @param {string[]} texts
+ *  @param {boolean} isMutuallyExclusive
+ */
+function listifyEN(texts, isMutuallyExclusive) {
+	if (texts.length > 2) {
+		const textsSansLast = texts.slice(0, texts.length - 1);
+		if (isMutuallyExclusive) {
+			return `${textsSansLast.join(", ")}, or ${texts[texts.length - 1]}`;
+		} else {
+			return `${textsSansLast.join(", ")}, and ${texts[texts.length - 1]}`;
+		}
+	} else if (texts.length === 2) {
+		if (isMutuallyExclusive) {
+			return texts.join(" or ");
+		} else {
+			return texts.join(" and ");
+		}
+	} else if (texts.length === 1) {
+		return texts[0];
+	} else {
+		return "";
+	}
+}
+
 /** @param {string} text */
 function trimForSelectOptionDescription(text) {
 	if (text.length > 100) {
@@ -217,6 +242,7 @@ module.exports = {
 	timeConversion,
 	extractUserIdsFromMentions,
 	textsHaveAutoModInfraction,
+	listifyEN,
 	trimForSelectOptionDescription,
 	trimForModalTitle
 };
