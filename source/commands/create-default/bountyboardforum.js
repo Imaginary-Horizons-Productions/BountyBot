@@ -54,7 +54,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 					name: bounty.title,
 					message: {
 						embeds: [bountyEmbed],
-						components: new ActionRowBuilder().addComponents(
+						components: [new ActionRowBuilder().addComponents(
 							new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${bounty.id}`)
 								.setStyle(ButtonStyle.Success)
 								.setLabel("Complete")
@@ -71,7 +71,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 							new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
 								.setStyle(ButtonStyle.Danger)
 								.setLabel("Take Down")
-						)
+						)]
 					},
 					appliedTags: [openTagId]
 				})

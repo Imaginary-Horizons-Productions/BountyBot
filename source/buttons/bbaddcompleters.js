@@ -1,7 +1,7 @@
 const { ActionRowBuilder, UserSelectMenuBuilder } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { commandMention } = require('../util/textUtil');
+const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -70,8 +70,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						interaction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
 					});
 
+					collectedInteraction.channel.send({ content: `${listifyEN(validatedCompleterIds.map(id => `<@${id}>`))} ${validatedCompleterIds.length === 1 ? "has" : "have"} been added as ${validatedCompleterIds.length === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
 					collectedInteraction.reply({
-						content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, <@")}>\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
+						content: `Completers have been added to **${bounty.title}**! They will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
 						ephemeral: true
 					});
 				})
