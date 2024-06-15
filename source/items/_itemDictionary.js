@@ -80,6 +80,11 @@ exports.getItemDescription = function (itemName) {
 	return ITEMS[itemName].description;
 }
 
+/** @param {string} itemName */
+exports.getItemCooldown = function (itemName) {
+	return ITEMS[itemName].cooldown;
+}
+
 /**
  * @param {string} itemName
  * @param {CommandInteraction} interaction
