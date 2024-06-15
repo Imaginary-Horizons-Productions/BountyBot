@@ -140,8 +140,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 					return thread.fetchStarterMessage();
 				}).then(posting => {
-					posting.edit({ embeds: [embed], components: [] });
-					posting.channel.setArchived(true, "bounty completed");
+					posting.edit({ embeds: [embed], components: [] }).then(() => {
+						posting.channel.setArchived(true, "bounty completed");
+					});
 				});
 				interaction.editReply({ content: `${completionPrefix} <#${bounty.Company.bountyBoardId}>` });
 			} else {

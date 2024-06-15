@@ -1,5 +1,6 @@
 # BountyBot Change Log
 ## BountyBot Version 2.7.1:
+- Added cooldowns to items, these are applied per user
 - Fixed a crash when using XP Boosts
 - Fixed a crash when looking up Light Grey Profile Colorizers
 

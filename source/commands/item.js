@@ -1,8 +1,10 @@
 const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
-const { getItemNames, getItemDescription, useItem } = require('../items/_itemDictionary.js');
+const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../constants.js');
 const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil.js');
+
+const ITEM_COOLDOWNS = new Map();
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, true, 3000,
@@ -42,6 +44,28 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 						collectedInteration.reply({ content: `You don't have any ${itemName}.`, ephemeral: true });
 						return;
 					}
+
+					const now = Date.now();
+
+					if (!ITEM_COOLDOWNS.has(itemName)) {
+						ITEM_COOLDOWNS.set(itemName, new Map());
+					}
+
+					const timestamps = ITEM_COOLDOWNS.get(itemName);
+					if (timestamps.has(collectedInteration.user.id)) {
+						const expirationTime = timestamps.get(collectedInteration.user.id) + getItemCooldown(itemName);
+
+						if (now < expirationTime) {
+							collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.round(expirationTime / 1000)}:R>.`, ephemeral: true });
+							return;
+						} else {
+							timestamps.delete(collectedInteration.user.id);
+						}
+					} else {
+						timestamps.set(collectedInteration.user.id, now);
+						setTimeout(() => timestamps.delete(collectedInteration.user.id), getItemCooldown(itemName));
+					}
+
 					useItem(itemName, collectedInteration, database);
 					itemRow.decrement("count");
 				})
