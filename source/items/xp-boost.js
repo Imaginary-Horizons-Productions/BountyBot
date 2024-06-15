@@ -1,4 +1,5 @@
 const { Item } = require("../classes");
+const { getRankUpdates } = require("../util/scoreUtil");
 
 const itemName = "XP Boost";
 const xpValue = 5;
