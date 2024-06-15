@@ -1,6 +1,6 @@
 const { Item } = require("../classes");
 
-const color = "Light Green";
+const color = "Light Grey";
 const itemName = `${color} Profile Colorizer`;
 module.exports = new Item(itemName, `Changes the color of your stats profile embed to ${color.toLowerCase()}`,
 	/** Sets the user's Hunter profile to Colors.LightGrey in the used guild */
