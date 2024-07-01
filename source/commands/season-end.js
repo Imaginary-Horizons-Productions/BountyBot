@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
+const { Op } = require('sequelize');
 
 const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, false, 3000,
@@ -19,7 +20,12 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				seasonBeforeEndingSeason.save();
 			}
 			const endingSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+			const shoutouts = [];
 			if (endingSeason) {
+				const firstPlace = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id, placement: { [Op.eq]: 1 } } });
+				if (firstPlace) {
+					shoutouts.push(`<@${firstPlace.userId}> was #1 in season XP this season!`);
+				}
 				endingSeason.isCurrentSeason = false;
 				endingSeason.isPreviousSeason = true;
 				endingSeason.save();
@@ -39,7 +45,11 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			}
 			await database.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId: company.id } });
 			updateScoreboard(company, interaction.guild, database);
-			interaction.reply(company.sendAnnouncement({ content: "A new season has started, ranks and placements have been reset!", embeds: [embed] }));
+			let announcementText = "A new season has started, ranks and placements have been reset!";
+			if (shoutouts.length > 0) {
+				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;
+			}
+			interaction.reply(company.sendAnnouncement({ content: announcementText, embeds: [embed] }));
 		})
 	}
 );

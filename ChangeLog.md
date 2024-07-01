@@ -1,4 +1,9 @@
 # BountyBot Change Log
+## BountyBot Version 2.8.0:
+### End of Season Shoutouts
+When a season ends, the following bounty hunters will be recognized in the end of season message:
+- The hunter placed \#1 in season xp
+
 ## BountyBot Version 2.7.1:
 - Added cooldowns to items, these are applied per user
 - Fixed a crash when using XP Boosts
