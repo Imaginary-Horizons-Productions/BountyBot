@@ -5,7 +5,7 @@ const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { commandMention, timeConversion } = require('../util/textUtil');
-const { rollItemDrop } = require('../items/_itemDictionary');
+const { rollItemDrop } = require('../util/itemUtil');
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
