@@ -8,6 +8,7 @@ const ITEMS = {};
 const ITEM_NAMES = [];
 
 for (const file of [
+	"bonus-bounty-showcase.js",
 	"profile-colorizer-aqua.js",
 	"profile-colorizer-blue.js",
 	"profile-colorizer-blurple.js",
@@ -56,8 +57,8 @@ exports.getItemNames = function (exclusions) {
  * @type {Record<number, string[]>} key as theshold to get to pool defined by string array
  */
 const DROP_TABLE = {
-	90: ["XP Boost"],
-	0: exports.getItemNames(["XP Boost", "Epic XP Boost", "Legendary XP Boost"])
+	90: ["XP Boost", "Bonus Bounty Showcase"],
+	0: exports.getItemNames(["XP Boost", "Epic XP Boost", "Legendary XP Boost", "Bonus Bounty Showcase"])
 };
 
 /** @param {number} dropRate as a decimal between 0 and 1 (exclusive) */
@@ -89,7 +90,8 @@ exports.getItemCooldown = function (itemName) {
  * @param {string} itemName
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
+ * @returns {Promise<boolean>} whether to skip decrementing the item count
  */
 exports.useItem = function (itemName, interaction, database) {
-	ITEMS[itemName].effect(interaction, database);
+	return ITEMS[itemName].effect(interaction, database);
 }

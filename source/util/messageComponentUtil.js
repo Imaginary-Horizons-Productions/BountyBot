@@ -13,7 +13,7 @@ function bountiesToSelectOptions(bounties) {
 			optionPayload.description = trimForSelectOptionDescription(bounty.description);
 		}
 		return optionPayload;
-	})
+	}).slice(0, 25);
 }
 
 module.exports = {

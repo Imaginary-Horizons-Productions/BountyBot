@@ -66,8 +66,11 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 						setTimeout(() => timestamps.delete(collectedInteration.user.id), getItemCooldown(itemName));
 					}
 
-					useItem(itemName, collectedInteration, database);
-					itemRow.decrement("count");
+					useItem(itemName, collectedInteration, database).then(shouldSkipDecrement => {
+						if (!shouldSkipDecrement) {
+							itemRow.decrement("count");
+						}
+					});
 				})
 			})
 

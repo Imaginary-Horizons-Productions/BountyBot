@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { timeConversion } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { showcaseBounty } = require("../../util/bountyUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -39,23 +40,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		}).then(reply => {
 			const collector = reply.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", (collectedInteraction) => {
-				const [bountyId] = collectedInteraction.values;
-				database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
-					if (bounty?.state !== "open") {
-						collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", ephemeral: true });
-						return;
-					}
-
-					bounty.increment("showcaseCount");
-					await bounty.save().then(bounty => bounty.reload());
-					bounty.updatePosting(interaction.guild, bounty.Company, database);
-					const hunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
-					hunter.lastShowcaseTimestamp = new Date();
-					hunter.save();
-					bounty.asEmbed(interaction.guild, hunter.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
-						interaction.channel.send({ content: `${interaction.member} increased the reward on their bounty!`, embeds: [embed] });
-					})
-				})
+				showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database);
 			})
 
 			collector.on("end", () => {

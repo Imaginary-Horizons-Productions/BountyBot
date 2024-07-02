@@ -1,7 +1,8 @@
-const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
+const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { timeConversion } = require('../util/textUtil');
+const { showcaseBounty } = require('../util/bountyUtil');
 
 const mainId = "bbshowcase";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -34,29 +35,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const collector = reply.createMessageComponentCollector({ max: 1 });
 
 				collector.on("collect", async (collectedInteraction) => {
-					const showcaseChannel = collectedInteraction.channels.first();
-					if (!showcaseChannel.members.has(collectedInteraction.client.user.id)) {
-						collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", ephemeral: true });
-						return;
-					}
-
-					if (!showcaseChannel.permissionsFor(collectedInteraction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
-						collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", ephemeral: true });
-						return;
-					}
-
-					bounty.increment("showcaseCount");
-					await bounty.save().then(bounty => bounty.reload());
-					const company = await database.models.Company.findByPk(collectedInteraction.guildId);
-					poster.lastShowcaseTimestamp = new Date();
-					poster.save();
-					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(async embed => {
-						if (collectedInteraction.channel.archived) {
-							await collectedInteraction.channel.setArchived(false, "bounty showcased");
-						}
-						interaction.message.edit({ embeds: [embed] });
-						showcaseChannel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
-					})
+					showcaseBounty(collectedInteraction, bountyId, collectedInteraction.channels.first(), false, database);
 				})
 
 				collector.on("end", () => {
