@@ -5,7 +5,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, timeConversion, commandMention } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
-const { rollItemDrop } = require("../../items/_itemDictionary");
+const { rollItemDrop } = require("../../util/itemUtil");
 
 /**
  * @param {CommandInteraction} interaction
