@@ -128,7 +128,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							interaction.message.edit({ embeds: [embed], components: [] });
 							collectedInteraction.channel.setArchived(true, "bounty completed");
 						})
-						collectedInteraction.channels.first().send({ content: `<@${bounty.userId}>'s bounty, **${bounty.title}**, was completed! ${interaction.channel}` }).catch(error => {
+						collectedInteraction.channels.first().send({ content: `<@${bounty.userId}>'s bounty, ${interaction.channel}, was completed!` }).catch(error => {
 							//Ignore Missing Permissions errors, user selected channel bot cannot post in
 							if (error.code !== 50013) {
 								console.error(error);

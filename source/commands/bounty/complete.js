@@ -57,7 +57,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	interaction.deferReply();
+	await interaction.deferReply();
 	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	season.increment("bountiesCompleted");
 
@@ -129,7 +129,6 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		}
 
 		bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
-			const completionPrefix = `<@${bounty.userId}>'s bounty, **${bounty.title}**, was completed!`;
 			if (bounty.Company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
 				bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
@@ -144,9 +143,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 						posting.channel.setArchived(true, "bounty completed");
 					});
 				});
-				interaction.editReply({ content: `${completionPrefix} <#${bounty.Company.bountyBoardId}>` });
+				interaction.editReply({ content: `<@${bounty.userId}>'s bounty, <#${bounty.postingId}>, was completed!` });
 			} else {
-				interaction.editReply({ content: `${completionPrefix}` }).then(message => {
+				interaction.editReply({ content: `<@${bounty.userId}>'s bounty, **${bounty.title}**, was completed!` }).then(message => {
 					message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 					})

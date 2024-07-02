@@ -4,6 +4,9 @@
 When a season ends, the following bounty hunters will be recognized in the end of season message:
 - The hunter placed \#1 in season xp
 
+### Other Changes
+- Fixed `/bounty complete` mentioning the bounty board instead of the completed bounty's thread
+
 ## BountyBot Version 2.7.1:
 - Added cooldowns to items, these are applied per user
 - Fixed a crash when using XP Boosts
