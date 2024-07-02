@@ -4,6 +4,9 @@
 When a season ends, the following bounty hunters will be recognized in the end of season message:
 - The hunter placed \#1 in season xp
 
+## Items
+- New: Bonus Bounty Showcase - allows the hunter to showcase and increase the reward on one of their bounties on a separate cooldown from the command
+
 ### Other Changes
 - Fixed `/bounty complete` mentioning the bounty board instead of the completed bounty's thread
 

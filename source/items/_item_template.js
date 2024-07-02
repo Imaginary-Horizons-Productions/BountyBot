@@ -3,7 +3,7 @@ const { Item } = require("../classes");
 const itemName = "";
 module.exports = new Item(itemName, "description", 3000,
 	/** specs */
-	(interaction, database) => {
+	async (interaction, database) => {
 
-}
+	}
 );
