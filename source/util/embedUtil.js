@@ -3,7 +3,7 @@ const { EmbedBuilder, Guild, Colors, TextChannel, Utils } = require("discord.js"
 const { Sequelize } = require("sequelize");
 const { Hunter } = require("../models/users/Hunter");
 const { Company } = require("../models/companies/Company");
-const { COMPANY_XP_COEFFICIENT } = require("../constants");
+const { COMPANY_XP_COEFFICIENT, MAX_EMBED_DESCRIPTION_LENGTH } = require("../constants");
 const { generateTextBar } = require("./textUtil");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
@@ -237,11 +237,11 @@ async function buildVersionEmbed() {
 
 	if (knownIssuesStart && knownIssuesStart < knownIssuesEnd) {
 		// Known Issues section found
-		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesStart))
+		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesStart).slice(0, MAX_EMBED_DESCRIPTION_LENGTH))
 			.addFields({ name: "Known Issues", value: data.slice(knownIssuesStart + 16, knownIssuesEnd) });
 	} else {
 		// Known Issues section not found
-		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesEnd));
+		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesEnd).slice(0, MAX_EMBED_DESCRIPTION_LENGTH));
 	}
 	return embed.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" });
 }
