@@ -2,9 +2,10 @@
  * @type {Record<number, string[]>} key as theshold to get to pool defined by string array
  */
 const DROP_TABLE = {
-	90: [
-		"XP Boost",
-		"Bonus Bounty Showcase"
+	70: [
+		"Bonus Bounty Showcase",
+		"Bounty Thumbnail",
+		"XP Boost"
 	],
 	0: [
 		"Aqua Profile Colorizer",

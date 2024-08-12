@@ -25,7 +25,7 @@ exports.Bounty = class extends Model {
 			const fields = [];
 			const embed = new EmbedBuilder().setColor(author.displayColor)
 				.setAuthor(ihpAuthorPayload)
-				.setThumbnail(thumbnails[this.state])
+				.setThumbnail(this.thumbnailURL ?? thumbnails[this.state])
 				.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
 				.setTimestamp();
 			if (this.description) {
@@ -117,7 +117,7 @@ exports.Bounty = class extends Model {
 
 	calculatePosterReward(hunterCount) {
 		let posterXP = Math.ceil(hunterCount / 2);
-		for (const property of ["description", "attachmentURL", "scheduledEventId"]) {
+		for (const property of ["description", "thumbnailURL", "attachmentURL", "scheduledEventId"]) {
 			if (this[property] !== null) {
 				posterXP++;
 			}
@@ -156,6 +156,9 @@ exports.initModel = function (sequelize) {
 		title: {
 			type: DataTypes.STRING,
 			allowNull: false
+		},
+		thumbnailURL: {
+			type: DataTypes.STRING
 		},
 		description: {
 			type: DataTypes.STRING

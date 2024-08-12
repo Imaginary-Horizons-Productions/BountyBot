@@ -9,6 +9,7 @@ const ITEM_NAMES = [];
 
 for (const file of [
 	"bonus-bounty-showcase.js",
+	"bounty-thumbnail.js",
 	"loot-box.js",
 	"profile-colorizer-aqua.js",
 	"profile-colorizer-blue.js",
