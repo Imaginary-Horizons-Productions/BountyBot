@@ -1,4 +1,4 @@
-const { CommandWrapper } = require('../classes');
+const { CommandWrapper, BuildError } = require('../classes');
 
 /** @type {string[]} */
 exports.commandFiles = [
@@ -35,6 +35,9 @@ exports.slashData = [];
 for (const file of exports.commandFiles) {
 	/** @type {CommandWrapper} */
 	const command = require(`./${file}`);
+	if (command.mainId in commandDictionary) {
+		throw new BuildError(`Duplicate command custom id: ${command.mainId}`);
+	}
 	commandDictionary[command.mainId] = command;
 	exports.slashData.push(command.builder.toJSON());
 }
