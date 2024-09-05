@@ -8,6 +8,7 @@ When a season ends, the following bounty hunters will be recognized in the end o
 - Bounty Thumbnail: allows a bounty's poster to add a thumbnail image to one of their bounties (also increasing completion XP for the poster)
 ### Other Changes
 - Fixed `/bounty complete` mentioning the bounty board instead of the completed bounty's thread
+- Converted all Light Green Profile Colorizers (which were unusable) to Light Grey Profile Colorizers
 
 ## BountyBot Version 2.7.1:
 - Added cooldowns to items, these are applied per user
