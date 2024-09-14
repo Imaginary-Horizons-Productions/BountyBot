@@ -25,6 +25,10 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				if (firstPlace) {
 					shoutouts.push(`<@${firstPlace.userId}> was #1 in season XP this season!`);
 				}
+				const mostPostingsCompleted = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["postingsCompleted", "DESC"]] });
+				if (mostPostingsCompleted) {
+					shoutouts.push(`<@${mostPostingsCompleted.userId}> posted the most completed bounties this season!`);
+				}
 				endingSeason.isCurrentSeason = false;
 				endingSeason.isPreviousSeason = true;
 				endingSeason.save();

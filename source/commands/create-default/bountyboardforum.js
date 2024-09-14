@@ -47,7 +47,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 				evergreenBounties.unshift(bounty);
 				continue;
 			}
-			database.models.Hunter.findOne({ companyId: bounty.guildId, userId: bounty.userId }).then(poster => {
+			database.models.Hunter.findOne({ where: { companyId: bounty.companyId, userId: bounty.userId } }).then(poster => {
 				return bounty.asEmbed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, company.festivalMultiplierString(), false, database);
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({

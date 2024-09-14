@@ -178,6 +178,11 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 					return;
 				}
 
+				const [season] = await database.models.Season.findOrCreate({ where: { companyId: modalSubmission.guildId, isCurrentSeason: true } });
+				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.user.id, seasonId: season.id }, defaults: { xp: 1 } });
+				if (!participationCreated) {
+					participation.increment({ xp: 1 });
+				}
 				const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
 				poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
 					getRankUpdates(modalSubmission.guild, database);
