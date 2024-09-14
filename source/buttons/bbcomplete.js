@@ -103,7 +103,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					if (!participationCreated) {
 						participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
 					}
-					const droppedItem = "XP Boost";//rollItemDrop(1 / 4);
+					const droppedItem = rollItemDrop(1 / 4);
 					if (droppedItem) {
 						const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: collectedInteraction.user.id, itemName: droppedItem } });
 						if (!itemWasCreated) {
