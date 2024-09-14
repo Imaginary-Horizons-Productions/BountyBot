@@ -146,9 +146,9 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		// Add XP and update ranks
 		let levelTexts = [];
 		const toasterLevelTexts = await sender.addXP(interaction.guild.name, critValue, false, database);
-		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: critValue } });
+		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: critValue, toastsRaised: 1 } });
 		if (!participationCreated) {
-			participation.increment({ xp: critValue });
+			participation.increment({ xp: critValue, toastsRaised: 1 });
 		}
 		if (toasterLevelTexts.length > 0) {
 			levelTexts = levelTexts.concat(toasterLevelTexts);
