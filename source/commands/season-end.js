@@ -23,11 +23,15 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			if (endingSeason) {
 				const firstPlace = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id, placement: 1 } });
 				if (firstPlace) {
-					shoutouts.push(`<@${firstPlace.userId}> was #1 in season XP this season!`);
+					shoutouts.push(`<@${firstPlace.userId}> earned the most XP this season!`);
 				}
 				const mostPostingsCompleted = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["postingsCompleted", "DESC"]] });
 				if (mostPostingsCompleted) {
 					shoutouts.push(`<@${mostPostingsCompleted.userId}> posted the most completed bounties this season!`);
+				}
+				const mostToastsRaised = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["toastsRaised", "DESC"]] });
+				if (mostToastsRaised) {
+					shoutouts.push(`<@${mostToastsRaised.userId}> raised the most toasts this season!`);
 				}
 				endingSeason.isCurrentSeason = false;
 				endingSeason.isPreviousSeason = true;
