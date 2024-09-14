@@ -183,8 +183,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId);
 					bounty.scheduledEventId = null;
 				}
-				bounty.editCount++;
-				bounty.save();
+				bounty.increment("editCount");
 
 				// update bounty board
 				const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });

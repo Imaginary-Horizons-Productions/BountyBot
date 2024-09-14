@@ -29,7 +29,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		seconder.toastSeconded++;
+		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
 
 		const recipientIds = [];
@@ -39,9 +39,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		});
 		let levelTexts = [];
+		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		for (const userId of recipientIds) {
 			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
 			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, database);
+			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: 1 } });
+			if (!participationCreated) {
+				participation.increment({ xp: 1 });
+			}
 			if (recipientLevelTexts.length > 0) {
 				levelTexts = levelTexts.concat(recipientLevelTexts);
 			}
@@ -92,11 +97,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (seconderLevelTexts.length > 0) {
 					levelTexts = levelTexts.concat(seconderLevelTexts);
 				}
+				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: 1 } });
+				if (!participationCreated) {
+					participation.increment({ xp: 1 });
+				}
 			}
 		}
 
 		database.models.Seconding.create({ toastId: originalToast.id, seconderId: interaction.user.id, wasCrit });
-		seconder.save();
 
 		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
 		if (interaction.message.embeds[0].data.fields?.length > 0) {

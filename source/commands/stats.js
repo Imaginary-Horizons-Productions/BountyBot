@@ -10,8 +10,8 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 	/** Get the BountyBot stats for yourself or someone else */
 	(interaction, database, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
-		if (target && target.id !== interaction.user.id) {
-			if (target.id == interaction.client.user.id) {
+		if (target) {
+			if (target.id === interaction.client.user.id) {
 				// BountyBot
 				buildCompanyStatsEmbed(interaction.guild, database).then(embed => {
 					interaction.reply({

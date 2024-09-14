@@ -79,8 +79,11 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		if (completerLevelTexts.length > 0) {
 			levelTexts = levelTexts.concat(completerLevelTexts);
 		}
-		hunter.othersFinished++;
-		hunter.save();
+		hunter.increment("othersFinished");
+		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });
+		if (!participationCreated) {
+			participation.increment({ xp: bountyValue });
+		}
 	}
 
 	bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), true, database).then(embed => {

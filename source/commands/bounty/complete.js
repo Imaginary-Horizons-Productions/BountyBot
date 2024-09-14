@@ -87,11 +87,14 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		if (completerLevelTexts.length > 0) {
 			levelTexts = levelTexts.concat(completerLevelTexts);
 		}
-		hunter.othersFinished++;
-		hunter.save();
+		hunter.increment("othersFinished");
+		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
+		if (!participationCreated) {
+			participation.increment({ xp: bountyValue });
+		}
 		const droppedItem = rollItemDrop(1 / 8);
 		if (droppedItem) {
-			const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: interaction.user.id, itemName: droppedItem } });
+			const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: hunter.userId, itemName: droppedItem } });
 			if (!itemWasCreated) {
 				itemRow.increment("count");
 			}
@@ -104,11 +107,14 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	if (posterLevelTexts.length > 0) {
 		levelTexts = levelTexts.concat(posterLevelTexts);
 	}
-	poster.mineFinished++;
-	poster.save();
+	poster.increment("mineFinished");
+	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: posterId, seasonId: season.id }, defaults: { xp: posterXP, postingsCompleted: 1 } });
+	if (!participationCreated) {
+		participation.increment({ xp: posterXP, postingsCompleted: 1 });
+	}
 	const droppedItem = rollItemDrop(1 / 4);
 	if (droppedItem) {
-		const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: interaction.user.id, itemName: droppedItem } });
+		const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: posterId, itemName: droppedItem } });
 		if (!itemWasCreated) {
 			itemRow.increment("count");
 		}

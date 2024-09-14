@@ -102,12 +102,11 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const rawRecipients = [];
 		const rewardedRecipients = [];
 		let critValue = 0;
-		//TODO #96 combine fetch and toastsRaised increment with upsert?
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		season.increment("toastsRaised");
 		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
-		sender.toastsRaised++;
+		sender.increment("toastsRaised");
 		const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 		for (const id of nonBotToasteeIds) {
 			//TODO #97 move to bulkCreate after finding solution to create by association only if user doesn't already exist
@@ -147,12 +146,20 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		// Add XP and update ranks
 		let levelTexts = [];
 		const toasterLevelTexts = await sender.addXP(interaction.guild.name, critValue, false, database);
+		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: critValue } });
+		if (!participationCreated) {
+			participation.increment({ xp: critValue });
+		}
 		if (toasterLevelTexts.length > 0) {
 			levelTexts = levelTexts.concat(toasterLevelTexts);
 		}
 		for (const recipientId of rewardedRecipients) {
 			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
 			const toasteeLevelTexts = await hunter.addXP(interaction.guild.name, 1, false, database);
+			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: 1 } });
+			if (!participationCreated) {
+				participation.increment("xp");
+			}
 			if (toasteeLevelTexts.length > 0) {
 				levelTexts = levelTexts.concat(toasteeLevelTexts);
 			}
