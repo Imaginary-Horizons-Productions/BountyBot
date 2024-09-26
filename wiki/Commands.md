@@ -36,6 +36,8 @@ List all of a hunter's open bounties (default: your own)
 
 Get a link to BountyBot's commands page
 ## /config-premium
+> 💎 Premium Command 💎
+
 > Usable in: Servers
 
 > Cooldown: 3 seconds
@@ -89,6 +91,8 @@ Create Discord roles and set them as this server's ranks at default variance thr
 
 Get a link to BountyBot's data policy page
 ## /evergreen
+> 💎 Premium Command 💎
+
 > Usable in: Servers
 
 > Cooldown: 3 seconds
@@ -120,6 +124,8 @@ Provide feedback on this bot to the developers
 
 the type of feedback you'd like to provide
 ## /festival
+> 💎 Premium Command 💎
+
 > Usable in: Servers
 
 > Cooldown: 3 seconds
@@ -185,6 +191,8 @@ Select a user at or above a particular level
 ### /raffle announce-upcoming
 Announce an upcoming raffle
 ## /rank
+> 💎 Premium Command 💎
+
 > Usable in: Servers
 
 > Cooldown: 3 seconds
