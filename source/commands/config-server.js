@@ -1,8 +1,8 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 
 const mainId = "config-server";
-module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, false, 3000,
+module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
 			const updatePayload = {};

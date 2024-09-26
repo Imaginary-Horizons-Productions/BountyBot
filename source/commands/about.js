@@ -1,9 +1,9 @@
-const { EmbedBuilder, Colors } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { BOUNTYBOT_INVITE_URL } = require('../constants');
 
 const mainId = "about";
-module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, true, 3000,
+module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Get BountyBot's description and contributors */
 	(interaction, database, runMode) => {
 		const avatarURL = interaction.client.user.avatarURL();

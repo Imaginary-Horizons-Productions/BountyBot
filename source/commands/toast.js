@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, InteractionContextType } = require('discord.js');
 const { Op } = require('sequelize');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { CommandWrapper } = require('../classes');
@@ -7,7 +7,7 @@ const { getRankUpdates } = require('../util/scoreUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "toast";
-module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, false, 30000,
+module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, database, runMode) => {
 		const toasterHunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });

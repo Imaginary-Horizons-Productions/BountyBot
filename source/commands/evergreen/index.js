@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { createSubcommandMappings } = require('../../util/fileUtil.js');
 
@@ -11,7 +11,7 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"complete.js",
 	"takedown.js"
 ]);
-module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, false, 3000,
+module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode);
 	}

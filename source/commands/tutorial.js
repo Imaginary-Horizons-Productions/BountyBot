@@ -1,11 +1,11 @@
-const { EmbedBuilder, Colors } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil');
 const { BOUNTYBOT_INVITE_URL } = require('../constants');
 const { commandMention } = require('../util/textUtil');
 
 const mainId = "tutorial";
-module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBot", null, false, true, 3000,
+module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBot", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Send the user a embed with tips to start using BountyBot */
 	(interaction, database, runMode) => {
 		const embed = new EmbedBuilder().setColor(Colors.Blurple).setAuthor(ihpAuthorPayload)
