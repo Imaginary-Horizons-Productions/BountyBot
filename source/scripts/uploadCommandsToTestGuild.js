@@ -11,7 +11,7 @@ const rest = new REST({ version: 9 }).setToken(token);
 
 		await rest.put(
 			Routes.applicationGuildCommands(botId, testGuildId),
-			{ body: { ...slashData, ...contextMenuData } },
+			{ body: [ ...slashData, ...contextMenuData ] },
 		);
 
 		console.log('Successfully reloaded slash commands on test guild.');

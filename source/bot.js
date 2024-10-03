@@ -53,7 +53,7 @@ client.on(Events.ClientReady, () => {
 			try {
 				new REST({ version: 9 }).setToken(require(authPath).token).put(
 					Routes.applicationCommands(client.user.id),
-					{ body: { ...slashData, ...contextMenuData }  }
+					{ body: [ ...slashData, ...contextMenuData ] }
 				).then(commands => {
 					for (const command of commands) {
 						commandIds[command.name] = command.id;
@@ -112,6 +112,20 @@ client.on(Events.InteractionCreate, interaction => {
 			const choices = unfilteredChoices.filter(choice => choice.value.toLowerCase().includes(focusedOption.value.toLowerCase()))
 				.slice(0, 25);
 			interaction.respond(choices);
+		} else if (interaction.isContextMenuCommand()) {
+			const contextMenu = getContextMenu(interaction.commandName);
+			if (contextMenu.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, ephemeral: true });
+				return;
+			}
+
+			const cooldownTimestamp = contextMenu.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
+			if (cooldownTimestamp) {
+				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, ephemeral: true });
+				return;
+			}
+
+			contextMenu.execute(interaction, database, runMode);
 		} else if (interaction.isCommand()) {
 			const command = getCommand(interaction.commandName);
 			if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
@@ -135,8 +149,6 @@ client.on(Events.InteractionCreate, interaction => {
 				getter = getButton;
 			} else if (interaction.isAnySelectMenu()) {
 				getter = getSelect;
-			} else if (interaction.isContextMenuCommand()) {
-				getter = getContextMenu;
 			}
 			const interactionWrapper = getter(mainId);
 			const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
