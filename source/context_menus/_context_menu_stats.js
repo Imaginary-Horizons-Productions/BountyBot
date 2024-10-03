@@ -1,3 +1,4 @@
+const { PermissionFlagBits, InteractionContextType } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 
 console.log(UserContextMenuWrapper);
@@ -5,7 +6,7 @@ console.log(UserContextMenuWrapper);
 console.log(UserContextMenuWrapper.constructor);
 
 const mainId = "context_menu_stats";
-module.exports = new UserContextMenuWrapper(mainId, "Get the BountyBot stats for this user", null, false, false, 3000,
+module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionContextType.Guild ], 3000,
 	/** Specs */
 	(interaction, database, runMode) => {
 		const target = interaction.targetMember;

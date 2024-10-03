@@ -155,17 +155,16 @@ class ContextMenuWrapper extends InteractionWrapper {
 	 * @param {string} descriptionInput
 	 * @param {PermissionFlagsBits | null} defaultMemberPermission
 	 * @param {boolean} isPremiumCommand
-	 * @param {boolean} allowInDMsInput
+	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
 	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
-	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
+	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
 		this.premiumCommand = isPremiumCommand;
 		this.builder = new ContextMenuCommandBuilder()
 			.setName(mainIdInput)
-			.setDescription(descriptionInput)
-			.setDMPermission(allowInDMsInput);
+			.setContexts(contextEnums);
 		if (defaultMemberPermission) {
 			this.builder.setDefaultMemberPermissions(defaultMemberPermission);
 		}
@@ -178,12 +177,12 @@ class UserContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {string} descriptionInput
 	 * @param {PermissionFlagsBits | null} defaultMemberPermission
 	 * @param {boolean} isPremiumCommand
-	 * @param {boolean} allowInDMsInput
+	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
 	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
-	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
-		super(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction);
+	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
+		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);
 		this.builder = this.builder.setType(ApplicationCommandType.User);
 	}
 };
@@ -194,12 +193,12 @@ class MessageContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {string} descriptionInput
 	 * @param {PermissionFlagsBits | null} defaultMemberPermission
 	 * @param {boolean} isPremiumCommand
-	 * @param {boolean} allowInDMsInput
+	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
 	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
-	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
-		super(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction);
+	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
+		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);
 		this.builder = this.builder.setType(ApplicationCommandType.User);
 	}
 };
