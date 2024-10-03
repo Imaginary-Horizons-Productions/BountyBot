@@ -38,6 +38,14 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: 0
 		},
+		postingsCompleted: {
+			type: DataTypes.INTEGER,
+			defaultValue: 0
+		},
+		toastsRaised: {
+			type: DataTypes.INTEGER,
+			defaultValue: 0
+		},
 		dqCount: {
 			type: DataTypes.INTEGER,
 			defaultValue: 0

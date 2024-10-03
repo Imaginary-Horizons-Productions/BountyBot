@@ -1,9 +1,9 @@
-const { EmbedBuilder, Colors } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 
 const mainId = "premium";
-module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, true, 3000,
+module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	async (interaction, database, runMode) => {
 		interaction.reply({
 			embeds: [

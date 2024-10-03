@@ -1,9 +1,9 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
 
 const mainId = "season-end";
-module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, false, 3000,
+module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
 	async (interaction, database, runMode) => {
 		const company = await database.models.Company.findByPk(interaction.guildId);
@@ -23,7 +23,15 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			if (endingSeason) {
 				const firstPlace = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id, placement: 1 } });
 				if (firstPlace) {
-					shoutouts.push(`<@${firstPlace.userId}> was #1 in season XP this season!`);
+					shoutouts.push(`<@${firstPlace.userId}> earned the most XP this season!`);
+				}
+				const mostPostingsCompleted = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["postingsCompleted", "DESC"]] });
+				if (mostPostingsCompleted) {
+					shoutouts.push(`<@${mostPostingsCompleted.userId}> posted the most completed bounties this season!`);
+				}
+				const mostToastsRaised = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["toastsRaised", "DESC"]] });
+				if (mostToastsRaised) {
+					shoutouts.push(`<@${mostToastsRaised.userId}> raised the most toasts this season!`);
 				}
 				endingSeason.isCurrentSeason = false;
 				endingSeason.isPreviousSeason = true;

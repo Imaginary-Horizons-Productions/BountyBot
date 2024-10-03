@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { createSubcommandMappings } = require('../../util/fileUtil.js');
 
@@ -7,7 +7,7 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"allhunterstats.js",
 	"serversettings.js"
 ]);
-module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, bounties, or server configs", PermissionFlagsBits.ManageGuild, false, false, 3000,
+module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, bounties, or server configs", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode);
 	}

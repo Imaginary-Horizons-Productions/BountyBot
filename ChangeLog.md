@@ -3,11 +3,15 @@
 ### End of Season Shoutouts
 When a season ends, the following bounty hunters will be recognized in the end of season message:
 - The hunter placed \#1 in season xp
+- The hunter who posted the most bounties completed in the season
+- The hunter who raised the most toasts in the season
 ## New Items
 - Bonus Bounty Showcase: allows the hunter to showcase and increase the reward on one of their bounties on a separate cooldown from the command
 - Bounty Thumbnail: allows a bounty's poster to add a thumbnail image to one of their bounties (also increasing completion XP for the poster)
 ### Other Changes
 - Fixed `/bounty complete` mentioning the bounty board instead of the completed bounty's thread
+- Fixed a bug where bounty posters were receiving item drops completers were stated to have recieved
+- Converted all Light Green Profile Colorizers (which were unusable) to Light Grey Profile Colorizers
 
 ## BountyBot Version 2.7.1:
 - Added cooldowns to items, these are applied per user

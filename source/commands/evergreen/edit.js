@@ -102,9 +102,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				} else if (bounty.attachmentURL) {
 					bounty.attachmentURL = null;
 				}
-
-				bounty.editCount++;
-				bounty.save();
+				bounty.increment("editCount");
 
 				// update bounty board
 				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database);

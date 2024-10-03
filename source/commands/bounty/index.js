@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { createSubcommandMappings } = require('../../util/fileUtil.js');
 
@@ -14,7 +14,7 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"takedown.js",
 	"list.js"
 ]);
-module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, false, 3000,
+module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, database, runMode) => {
 		const userId = interaction.user.id;
 		await database.models.User.findOrCreate({ where: { id: userId } });

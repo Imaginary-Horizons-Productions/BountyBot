@@ -1,4 +1,4 @@
-const { EmbedBuilder, Colors } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
@@ -6,12 +6,12 @@ const { generateTextBar } = require('../util/textUtil');
 const { Op } = require('sequelize');
 
 const mainId = "stats";
-module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, false, 3000,
+module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
 	/** Get the BountyBot stats for yourself or someone else */
 	(interaction, database, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
-		if (target && target.id !== interaction.user.id) {
-			if (target.id == interaction.client.user.id) {
+		if (target) {
+			if (target.id === interaction.client.user.id) {
 				// BountyBot
 				buildCompanyStatsEmbed(interaction.guild, database).then(embed => {
 					interaction.reply({

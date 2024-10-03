@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { createSubcommandMappings } = require('../../util/fileUtil.js');
 
@@ -8,7 +8,7 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"scoreboardreference.js",
 	"rankroles.js"
 ]);
-module.exports = new CommandWrapper(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, false, 30000,
+module.exports = new CommandWrapper(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, [InteractionContextType.Guild], 30000,
 	(interaction, database, runMode) => {
 		database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(([company]) => {
 			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, company);

@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors } = require('discord.js');
+const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
 const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../constants.js');
@@ -7,7 +7,7 @@ const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil.js');
 const ITEM_COOLDOWNS = new Map();
 
 const mainId = "item";
-module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, true, 3000,
+module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
 		const itemName = interaction.options.getString("item-name");
 		interaction.deferReply({ ephemeral: true }).then(async () => {
