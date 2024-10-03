@@ -5,7 +5,7 @@ console.log(UserContextMenuWrapper);
 
 console.log(UserContextMenuWrapper.constructor);
 
-const mainId = "context_menu_stats";
+const mainId = "User Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionContextType.Guild ], 3000,
 	/** Specs */
 	(interaction, database, runMode) => {
