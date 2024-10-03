@@ -1,5 +1,5 @@
 const { MAX_SET_TIMEOUT } = require("../constants");
-const { Interaction, ButtonInteraction, PermissionFlagsBits, CommandInteraction, SlashCommandBuilder, AnySelectMenuInteraction } = require("discord.js");
+const { Interaction, ButtonInteraction, PermissionFlagsBits, CommandInteraction, SlashCommandBuilder, AnySelectMenuInteraction, ContextMenuCommandBuilder, ApplicationCommandType, ContextMenuCommandInteraction } = require("discord.js");
 const { BuildError } = require("./BuildError.js");
 const { Sequelize } = require("sequelize");
 
@@ -135,9 +135,73 @@ class SelectWrapper extends InteractionWrapper {
 	 * @param {number} cooldownInMS
 	 * @param {(interaction: AnySelectMenuInteraction, args: string[], database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
-	constructor(mainIdInput, cooldownInMS, executeFunction) {
+	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
+		this.premiumCommand = isPremiumCommand;
+		this.builder = new ContextMenuCommandBuilder()
+			.setName(mainIdInput)
+			.setDescription(descriptionInput)
+			.setDMPermission(allowInDMsInput)
+			.setType();
+		if (defaultMemberPermission) {
+			this.builder.setDefaultMemberPermissions(defaultMemberPermission);
+		}
 	}
 };
 
-module.exports = { ButtonWrapper, CommandWrapper, SelectWrapper };
+class ContextMenuWrapper extends InteractionWrapper {
+	/** Wrapper properties for general context menus. Intended to be the basis for the two child types.
+	 * @param {string} mainIdInput
+	 * @param {string} descriptionInput
+	 * @param {PermissionFlagsBits | null} defaultMemberPermission
+	 * @param {boolean} isPremiumCommand
+	 * @param {boolean} allowInDMsInput
+	 * @param {number} cooldownInMS
+	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 */
+	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
+		super(mainIdInput, cooldownInMS, executeFunction);
+		this.premiumCommand = isPremiumCommand;
+		this.builder = new ContextMenuCommandBuilder()
+			.setName(mainIdInput)
+			.setDescription(descriptionInput)
+			.setDMPermission(allowInDMsInput);
+		if (defaultMemberPermission) {
+			this.builder.setDefaultMemberPermissions(defaultMemberPermission);
+		}
+	}
+};
+
+class UserContextMenuWrapper extends ContextMenuWrapper {
+	/** Wrapper properties for context menus on users.
+	 * @param {string} mainIdInput
+	 * @param {string} descriptionInput
+	 * @param {PermissionFlagsBits | null} defaultMemberPermission
+	 * @param {boolean} isPremiumCommand
+	 * @param {boolean} allowInDMsInput
+	 * @param {number} cooldownInMS
+	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 */
+	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
+		super(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction);
+		this.builder = this.builder.setType(ApplicationCommandType.User);
+	}
+};
+
+class MessageContextMenuWrapper extends ContextMenuWrapper {
+	/** Wrapper properties for context menus on messages.
+	 * @param {string} mainIdInput
+	 * @param {string} descriptionInput
+	 * @param {PermissionFlagsBits | null} defaultMemberPermission
+	 * @param {boolean} isPremiumCommand
+	 * @param {boolean} allowInDMsInput
+	 * @param {number} cooldownInMS
+	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 */
+	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
+		super(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction);
+		this.builder = this.builder.setType(ApplicationCommandType.User);
+	}
+};
+
+module.exports = { ButtonWrapper, CommandWrapper, SelectWrapper, ContextMenuWrapper, UserContextMenuWrapper, MessageContextMenuWrapper };

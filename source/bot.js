@@ -17,6 +17,7 @@ const { readFile, writeFile } = require("fs").promises;
 const { getCommand, slashData } = require("./commands/_commandDictionary.js");
 const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
+const { getContextMenu, contextMenuData } = require("./context_menus/_contextMenuDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { connectToDatabase } = require("../database.js");
@@ -52,7 +53,7 @@ client.on(Events.ClientReady, () => {
 			try {
 				new REST({ version: 9 }).setToken(require(authPath).token).put(
 					Routes.applicationCommands(client.user.id),
-					{ body: slashData }
+					{ body: { ...slashData, ...contextMenuData }  }
 				).then(commands => {
 					for (const command of commands) {
 						commandIds[command.name] = command.id;
@@ -134,6 +135,8 @@ client.on(Events.InteractionCreate, interaction => {
 				getter = getButton;
 			} else if (interaction.isAnySelectMenu()) {
 				getter = getSelect;
+			} else if (interaction.isContextMenuCommand()) {
+				getter = getContextMenu;
 			}
 			const interactionWrapper = getter(mainId);
 			const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
