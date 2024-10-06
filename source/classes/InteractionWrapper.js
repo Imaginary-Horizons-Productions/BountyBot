@@ -135,17 +135,8 @@ class SelectWrapper extends InteractionWrapper {
 	 * @param {number} cooldownInMS
 	 * @param {(interaction: AnySelectMenuInteraction, args: string[], database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
-	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, allowInDMsInput, cooldownInMS, executeFunction) {
+	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
-		this.premiumCommand = isPremiumCommand;
-		this.builder = new ContextMenuCommandBuilder()
-			.setName(mainIdInput)
-			.setDescription(descriptionInput)
-			.setDMPermission(allowInDMsInput)
-			.setType();
-		if (defaultMemberPermission) {
-			this.builder.setDefaultMemberPermissions(defaultMemberPermission);
-		}
 	}
 };
 
