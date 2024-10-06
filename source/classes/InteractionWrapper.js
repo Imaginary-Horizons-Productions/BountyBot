@@ -1,5 +1,5 @@
 const { MAX_SET_TIMEOUT } = require("../constants");
-const { Interaction, ButtonInteraction, PermissionFlagsBits, CommandInteraction, SlashCommandBuilder, AnySelectMenuInteraction, InteractionContextType, ContextMenuCommandBuilder, ApplicationCommandType, ContextMenuCommandInteraction } = require("discord.js");
+const { Interaction, ButtonInteraction, PermissionFlagsBits, CommandInteraction, SlashCommandBuilder, AnySelectMenuInteraction, InteractionContextType, ContextMenuCommandBuilder, ApplicationCommandType, ContextMenuCommandInteraction, UserContextMenuCommandInteraction, MessageContextMenuCommandInteraction } = require("discord.js");
 const { BuildError } = require("./BuildError.js");
 const { Sequelize } = require("sequelize");
 
@@ -179,7 +179,7 @@ class UserContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: UserContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);
@@ -195,7 +195,7 @@ class MessageContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: MessageContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);

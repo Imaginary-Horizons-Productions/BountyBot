@@ -1,4 +1,4 @@
-const { PermissionFlagBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 
 const mainId = "";
