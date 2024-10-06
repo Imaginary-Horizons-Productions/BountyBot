@@ -1,7 +1,9 @@
 const { PermissionFlagBits, InteractionContextType } = require('discord.js');
+const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
+const { generateTextBar } = require('../util/textUtil');
 const { UserContextMenuWrapper } = require('../classes');
 
-const mainId = "User Stats";
+const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionContextType.Guild ], 3000,
 	/** Specs */
 	(interaction, database, runMode) => {

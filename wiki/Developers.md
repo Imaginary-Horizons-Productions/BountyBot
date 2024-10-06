@@ -31,4 +31,5 @@ Please use `camelCase` unless one of the following exceptions apply:
 - Classes are in `PascalCase`
 - Interaction instances match their customIds
    - Slash commands use `kebab-case` as part of Discord convention
+   - Context menu commands have their customIds visible to the end user as the menu option name, and we use `Proper Noun Case` as a result
    - Others are `alllowercase`
