@@ -7,14 +7,20 @@ const { textsHaveAutoModInfraction } = require('../util/textUtil');
 const mainId = "Raise a Toast";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive toast text, then raise the toast to the user */
-	(interaction, database, runMode) => {
+	async (interaction, database, runMode) => {
 		if (interaction.targetId === interaction.user.id) {
 			interaction.reply({ content: "You cannot raise a toast to yourself.", ephemeral: true });
 			return;
 		}
 
-		if (interaction.targetUser.bot) {
+		if (runMode === "prod" && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot raist a toast to a bot.", ephemeral: true });
+			return;
+		}
+
+		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.targetId, companyId: interaction.guildId } });
+		if (hunter.isBanned) {
+			interaction.reply({ content: `${userMention(interaction.targetId)} cannot receive toasts because they are banned from interacting with BountyBot on this server.`, ephemeral: true });
 			return;
 		}
 
