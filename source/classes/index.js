@@ -1,5 +1,5 @@
 const { BuildError } = require("./BuildError");
-const { ButtonWrapper, CommandWrapper, SelectWrapper } = require("./InteractionWrapper");
+const { ButtonWrapper, CommandWrapper, SelectWrapper, ContextMenuWrapper, UserContextMenuWrapper, MessageContextMenuWrapper } = require("./InteractionWrapper");
 const { Item } = require("./Item");
 
 module.exports = {
@@ -7,5 +7,8 @@ module.exports = {
 	Item,
 	ButtonWrapper,
 	CommandWrapper,
-	SelectWrapper
+	SelectWrapper,
+	ContextMenuWrapper,
+	UserContextMenuWrapper,
+	MessageContextMenuWrapper
 };

@@ -1,6 +1,7 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, userMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { extractUserIdsFromMentions, commandMention, listifyEN, congratulationBuilder } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, listifyEN, commandMention } = require("../../util/textUtil");
+const { addCompleters } = require("../../engines/bountyEngine");
 
 /**
  * @param {CommandInteraction} interaction
@@ -48,26 +49,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	const rawCompletions = [];
-	for (const userId of validatedCompleterIds) {
-		rawCompletions.push({
-			bountyId: bounty.id,
-			userId,
-			companyId: interaction.guildId
-		})
-	}
-	database.models.Completion.bulkCreate(rawCompletions);
-	bounty.updatePosting(interaction.guild, bounty.Company, database);
-	if (bounty.Company.bountyBoardId) {
-		interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
-			return bountyBoard.threads.fetch(bounty.postingId);
-		}).then(posting => {
-			posting.send({ content: `${listifyEN(validatedCompleterIds.map(id => `<@${id}>`))} ${validatedCompleterIds.length === 1 ? "has" : "have"} been added as ${validatedCompleterIds.length === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-		});
-	}
-
+	addCompleters(interaction.guild, database, bounty, bounty.Company, validatedCompleterIds);
 	interaction.reply({
-		content: `The following bounty hunters have been added as completers to **${bounty.title}**: <@${validatedCompleterIds.join(">, <@")}>\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: <@${bannedIds.join(">, ")}>` : ""}`,
+		content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 		ephemeral: true
 	});
 };
