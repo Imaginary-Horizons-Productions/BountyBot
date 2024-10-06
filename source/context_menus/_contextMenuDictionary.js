@@ -2,7 +2,7 @@ const { ContextMenuWrapper } = require("../classes");
 
 /** @type {string[]} */
 exports.contextMenuFiles = [
-	"_context_menu_stats.js"
+	"stats.js"
 ];
 /** @type {Record<string, ContextMenuWrapper>} */
 const contextMenuDictionary = {};
