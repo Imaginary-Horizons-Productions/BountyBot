@@ -6,6 +6,7 @@
  * the database constantly.
  */
 const { Hunter } = require('../models/users/Hunter');
+const { Op } = require('sequelize');
 
 async function statsForUser(userId, companyId, database) {
     let hunter = await database.models.Hunter.findOne({ where: { userId, companyId } });
@@ -50,4 +51,36 @@ async function statsForUser(userId, companyId, database) {
 
 }
 
-module.exports = { statsForUser }
+async function statsForCompany(guild, database) {
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
+	const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
+	const lastSeason = await database.models.Season.findOne({ where: { companyId: guild.id, isPreviousSeason: true } });
+	const participantCount = await database.models.Participation.count({ where: { seasonId: currentSeason.id } });
+	const companyXP = await company.xp;
+	const currentSeasonXP = await currentSeason.totalXP;
+	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
+
+	const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
+	const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+	const participantPercentage = participantCount / guild.memberCount * 100;
+	const seasonXPDifference = currentSeasonXP - lastSeasonXP;
+	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
+	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
+
+    return {
+        level: company.level,
+        companyXP,
+        currentLevelThreshold,
+        nextLevelThreshold,
+        participantCount,
+        participantPercentage,
+        currentSeasonXP, 
+        bountiesCompleted: currentSeason.bountiesCompleted,
+        seasonXPDifference,
+        seasonBountyDifference,
+        toastsRaised: currentSeason.toastsRaised,
+        seasonToastDifference, 
+    };
+}
+
+module.exports = { statsForUser, statsForCompany }

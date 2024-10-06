@@ -2,7 +2,7 @@ const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
-const { Op } = require('sequelize');
+const { statsForUser } = require('../logic/stats.js');
 
 const mainId = "stats";
 module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
@@ -17,29 +17,27 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 						embeds: [embed],
 						ephemeral: true
 					});
-				})
+				});
 			} else {
 				// Other Hunter
-				try {
-					const {
-						profileColor,
-						hunterLevel,
-						hunterXP,
-						currentLevelThreshold,
-						nextLevelThreshold,
-						currentParticipation,
-						rank,
-						rankName,
-						previousParticipations,
-						mostSecondedToast,
-						othersFinished,
-						mineFinished,
-						toastsRaised,
-						toastsSeconded,
-						toastsReceived
-	
-					} = statsForUser(target.id, interaction.guildId, database);
-	
+				statsForUser(target.id, interaction.guildId, database).then(({
+					profileColor,
+					hunterLevel,
+					hunterXP,
+					currentLevelThreshold,
+					nextLevelThreshold,
+					currentParticipation,
+					rank,
+					rankName,
+					previousParticipations,
+					mostSecondedToast,
+					othersFinished,
+					mineFinished,
+					toastsRaised,
+					toastsSeconded,
+					toastsReceived
+
+				}) => {
 					interaction.reply({
 						embeds: [
 							new EmbedBuilder().setColor(Colors[profileColor])
@@ -59,35 +57,30 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 						],
 						ephemeral: true
 					});
-				} catch (message) {
-					interaction.reply({ content: message, ephemeral: true });
-					return;
-				}
+				}).catch(message => interaction.reply({ content: message, ephemeral: true }));
 			}
 		} else {
 			// Self
-			try {
-				const {
-					profileColor,
-					hunterLevel,
-					hunterXP,
-					bountySlots,
-					currentLevelThreshold,
-					nextLevelThreshold,
-					currentParticipation,
-					rank,
-					rankName,
-					previousParticipations,
-					mostSecondedToast,
-					othersFinished,
-					mineFinished,
-					toastsRaised,
-					toastsSeconded,
-					toastsReceived,
-					upcomingRewards
+			statsForUser(interaction.user.id, interaction.guildId, database).then(({
+				profileColor,
+				hunterLevel,
+				hunterXP,
+				bountySlots,
+				currentLevelThreshold,
+				nextLevelThreshold,
+				currentParticipation,
+				rank,
+				rankName,
+				previousParticipations,
+				mostSecondedToast,
+				othersFinished,
+				mineFinished,
+				toastsRaised,
+				toastsSeconded,
+				toastsReceived,
+				upcomingRewards
 
-				} = statsForUser(interaction.user.id, interaction.guildId, database);
-
+			}) => {
 				interaction.reply({
 					embeds: [
 						new EmbedBuilder().setColor(Colors[profileColor])
@@ -112,12 +105,10 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					],
 					ephemeral: true
 				});
-			} catch (message) {
-				let selfMessage = message.replace();
+			}).catch(message => {
+				let selfMessage = message.replace("The specified user doesn't", "You don't");
 				interaction.reply({ content: selfMessage , ephemeral: true });
-				return;
-
-			}
+			});
 		}
 	}
 ).setOptions(

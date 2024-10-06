@@ -1,7 +1,7 @@
-const { PermissionFlagBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagBits, InteractionContextType, Colors } = require('discord.js');
+const { UserContextMenuWrapper } = require('../classes');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
-const { UserContextMenuWrapper } = require('../classes');
 const { statsForUser } = require('../logic/stats.js');
 
 const mainId = "BountyBot Stats";
@@ -20,26 +20,23 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionCo
 				})
 			} else {
 				// Other Hunter
-				try {
-					const {
-						profileColor,
-						hunterLevel,
-						hunterXP,
-						currentLevelThreshold,
-						nextLevelThreshold,
-						currentParticipation,
-						rank,
-						rankName,
-						previousParticipations,
-						mostSecondedToast,
-						othersFinished,
-						mineFinished,
-						toastsRaised,
-						toastsSeconded,
-						toastsReceived
-	
-					} = statsForUser(target.id, interaction.guildId, database);
-	
+				statsForUser(target.id, interaction.guildId, database).then(({
+					profileColor,
+					hunterLevel,
+					hunterXP,
+					currentLevelThreshold,
+					nextLevelThreshold,
+					currentParticipation,
+					rank,
+					rankName,
+					previousParticipations,
+					mostSecondedToast,
+					othersFinished,
+					mineFinished,
+					toastsRaised,
+					toastsSeconded,
+					toastsReceived
+				}) => {
 					interaction.reply({
 						embeds: [
 							new EmbedBuilder().setColor(Colors[profileColor])
@@ -59,35 +56,29 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionCo
 						],
 						ephemeral: true
 					});
-				} catch (message) {
-					interaction.reply({ content: message, ephemeral: true });
-					return;
-				}
+				}).catch(message => interaction.reply({ content: message, ephemeral: true }));
 			}
 		} else {
 			// Self
-			try {
-				const {
-					profileColor,
-					hunterLevel,
-					hunterXP,
-					bountySlots,
-					currentLevelThreshold,
-					nextLevelThreshold,
-					currentParticipation,
-					rank,
-					rankName,
-					previousParticipations,
-					mostSecondedToast,
-					othersFinished,
-					mineFinished,
-					toastsRaised,
-					toastsSeconded,
-					toastsReceived,
-					upcomingRewards
-
-				} = statsForUser(interaction.user.id, interaction.guildId, database);
-
+			statsForUser(interaction.user.id, interaction.guildId, database).then(({
+				profileColor,
+				hunterLevel,
+				hunterXP,
+				bountySlots,
+				currentLevelThreshold,
+				nextLevelThreshold,
+				currentParticipation,
+				rank,
+				rankName,
+				previousParticipations,
+				mostSecondedToast,
+				othersFinished,
+				mineFinished,
+				toastsRaised,
+				toastsSeconded,
+				toastsReceived,
+				upcomingRewards
+			}) => {
 				interaction.reply({
 					embeds: [
 						new EmbedBuilder().setColor(Colors[profileColor])
@@ -112,12 +103,10 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionCo
 					],
 					ephemeral: true
 				});
-			} catch (message) {
-				let selfMessage = message.replace();
+			}).catch(message => {
+				let selfMessage = message.replace("The specified user doesn't", "You don't");
 				interaction.reply({ content: selfMessage , ephemeral: true });
-				return;
-
-			}
+			});
 		}
 	}
 );
