@@ -1,4 +1,5 @@
 const { PermissionFlagBits, InteractionContextType } = require('discord.js');
+const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
 const { UserContextMenuWrapper } = require('../classes');
