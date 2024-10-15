@@ -118,7 +118,7 @@ Take down one of your bounties without awarding XP (forfeit posting XP)
 
 > Permission Level: SendMessages
 
-Provide feedback on this bot to the developers
+Provide BountyBot feedback and get an invite to the test server
 ### feedback-type
 > Choices: `bug report`, `feature request`
 
