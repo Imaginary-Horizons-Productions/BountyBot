@@ -5,7 +5,6 @@ const { Hunter } = require("../models/users/Hunter");
 const { Company } = require("../models/companies/Company");
 const { COMPANY_XP_COEFFICIENT, MAX_EMBED_DESCRIPTION_LENGTH } = require("../constants");
 const { generateTextBar } = require("./textUtil");
-const { statsForCompany } = require("../logic/stats.js")
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
@@ -50,32 +49,32 @@ function randomFooterTip() {
  * @param {Sequelize} database
  */
 async function buildCompanyStatsEmbed(guild, database) {
-	const {
-		level,
-		companyXP,
-		currentLevelThreshold,
-		nextLevelThreshold,
-		participantCount,
-		participantPercentage,
-		currentSeasonXP,
-		bountiesCompleted,
-		seasonXPDifference,
-		seasonBountyDifference,
-		toastsRaised,
-		seasonToastDifference
-	} = await statsForCompany(guild, database);
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
+	const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
+	const lastSeason = await database.models.Season.findOne({ where: { companyId: guild.id, isPreviousSeason: true } });
+	const participantCount = await database.models.Participation.count({ where: { seasonId: currentSeason.id } });
+	const companyXP = await company.xp;
+	const currentSeasonXP = await currentSeason.totalXP;
+	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
+
+	const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
+	const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+	const particpantPercentage = participantCount / guild.memberCount * 100;
+	const seasonXPDifference = currentSeasonXP - lastSeasonXP;
+	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
+	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(ihpAuthorPayload)
-		.setTitle(`${guild.name} is __Level ${level}__`)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setTitle(`${guild.name} is __Level ${company.level}__`)
 		.setThumbnail(guild.iconURL())
 		.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
 		.addFields(
 			{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
-			{ name: "Participation", value: `${participantCount} server members have interacted with BountyBot this season (${participantPercentage.toPrecision(3)}% of server members)` },
-			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
+			{ name: "Participation", value: `${participantCount} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
+			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
 		)
 		.setFooter(randomFooterTip())
-		.setTimestamp();
+		.setTimestamp()
 }
 
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
