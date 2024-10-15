@@ -1,8 +1,9 @@
-const { PermissionFlagBits, InteractionContextType } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
 const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
 const { UserContextMenuWrapper } = require('../classes');
+const { Op } = require('sequelize');
 
 const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionContextType.Guild ], 3000,
