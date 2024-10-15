@@ -1,8 +1,8 @@
 const fs = require('fs');
 const { commandFiles } = require('../commands/_commandDictionary.js');
 const { contextMenuFiles } = require('../context_menus/_contextMenuDictionary.js');
-const { CommandWrapper, ContextMenuWrapper, UserContextMenuWrapper } = require('../classes');
-const { SlashCommandSubcommandBuilder, PermissionsBitField, InteractionContextType } = require('discord.js');
+const { CommandWrapper, ContextMenuWrapper } = require('../classes');
+const { SlashCommandSubcommandBuilder, PermissionsBitField, InteractionContextType, ApplicationCommandType } = require('discord.js');
 const { listifyEN } = require('../util/textUtil.js');
 
 const contextDictionary = {
@@ -59,7 +59,7 @@ if (contextMenuFiles.length > 0) {
 	for (const file of contextMenuFiles) {
 		/** @type {ContextMenuWrapper} */
 		const contextMenu = require(`./../context_menus/${file}`);
-		text += `### ${contextMenu instanceof UserContextMenuWrapper ? "User -> Apps" : "Message -> Apps"} -> ${contextMenu.mainId}\n`;
+		text += `### ${contextMenu.builder.type === ApplicationCommandType.User ? "User -> Apps" : "Message -> Apps"} -> ${contextMenu.mainId}\n`;
 		if (contextMenu.premiumCommand) {
 			text += `> 💎 Premium Feature 💎\n\n`
 		}
