@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters } = require('../engines/bountyEngine');
+const { addCompleters } = require('../logic/bounties.js');
 const { commandMention } = require('../util/textUtil');
 
 const mainId = "Give Bounty Credit";

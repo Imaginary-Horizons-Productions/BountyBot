@@ -1,7 +1,7 @@
 const { CommandInteraction, userMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention } = require("../../util/textUtil");
-const { addCompleters } = require("../../engines/bountyEngine");
+const { addCompleters } = require("../../logic/bounties.js");
 
 /**
  * @param {CommandInteraction} interaction
