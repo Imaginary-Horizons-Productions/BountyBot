@@ -6,6 +6,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4.1.6
@@ -22,11 +24,7 @@ jobs:
         with:
           branch: main
           folder: '.'
-  update-wiki:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
+
       - name: Setup npm
         run: npm ci --omit dev && node source/scripts/initialize.js
 
