@@ -2,7 +2,7 @@ const { ContextMenuWrapper } = require("../classes");
 
 /** @type {string[]} */
 exports.contextMenuFiles = [
-	"stats.js"
+	"BountyBot_Stats.js"
 ];
 /** @type {Record<string, ContextMenuWrapper>} */
 const contextMenuDictionary = {};
