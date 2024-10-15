@@ -22,7 +22,10 @@ jobs:
         with:
           branch: main
           folder: '.'
-
+  update-wiki:
+    permissions:
+      contents: write
+    steps:
       - name: Setup npm
         run: npm ci --omit dev && node source/scripts/initialize.js
 
@@ -33,8 +36,6 @@ jobs:
         run: git add .; git commit -m "updated commands page on wiki" && git push origin main || true
 
       - name: Push Wiki Changes
-        permissions:
-          contents: write
         uses: Andrew-Chen-Wang/github-wiki-action@v4.4.0
         with:
           path: wiki
