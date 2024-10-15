@@ -17,6 +17,7 @@ const { readFile, writeFile } = require("fs").promises;
 const { getCommand, slashData } = require("./commands/_commandDictionary.js");
 const { getButton } = require("./buttons/_buttonDictionary.js");
 const { getSelect } = require("./selects/_selectDictionary.js");
+const { getContextMenu, contextMenuData } = require("./context_menus/_contextMenuDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { connectToDatabase } = require("../database.js");
@@ -52,7 +53,7 @@ client.on(Events.ClientReady, () => {
 			try {
 				new REST({ version: 10 }).setToken(require(authPath).token).put(
 					Routes.applicationCommands(client.user.id),
-					{ body: slashData }
+					{ body: [ ...slashData, ...contextMenuData ] }
 				).then(commands => {
 					for (const command of commands) {
 						commandIds[command.name] = command.id;
@@ -111,6 +112,20 @@ client.on(Events.InteractionCreate, interaction => {
 			const choices = unfilteredChoices.filter(choice => choice.value.toLowerCase().includes(focusedOption.value.toLowerCase()))
 				.slice(0, 25);
 			interaction.respond(choices);
+		} else if (interaction.isContextMenuCommand()) {
+			const contextMenu = getContextMenu(interaction.commandName);
+			if (contextMenu.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+				interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, ephemeral: true });
+				return;
+			}
+
+			const cooldownTimestamp = contextMenu.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
+			if (cooldownTimestamp) {
+				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, ephemeral: true });
+				return;
+			}
+
+			contextMenu.execute(interaction, database, runMode);
 		} else if (interaction.isCommand()) {
 			const command = getCommand(interaction.commandName);
 			if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
