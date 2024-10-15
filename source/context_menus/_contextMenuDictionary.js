@@ -2,8 +2,8 @@ const { ContextMenuWrapper } = require("../classes");
 
 /** @type {string[]} */
 exports.contextMenuFiles = [
-	"_context_menu_stats.js",
-	"Raise_a_Toast.js"
+	"Raise_a_Toast.js",
+	"BountyBot_Stats.js"
 ];
 /** @type {Record<string, ContextMenuWrapper>} */
 const contextMenuDictionary = {};
@@ -18,7 +18,6 @@ for (const file of exports.contextMenuFiles) {
 	}
 	contextMenuDictionary[contextMenu.mainId] = contextMenu;
 	exports.contextMenuData.push(contextMenu.builder.toJSON());
-
 }
 
 /** @param {string} mainId */
