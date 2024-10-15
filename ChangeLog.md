@@ -4,6 +4,7 @@
 - Added the following BountyBot functionality to the Apps dropdown when right-clicking on a User or Message:
    - Check BountyBot Stats
    - Raise a Toast
+   - Grant Bounty Credit
 ### End of Season Shoutouts
 When a season ends, the following bounty hunters will be recognized in the end of season message:
 - The hunter placed \#1 in season xp

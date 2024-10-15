@@ -3,6 +3,7 @@ const { ContextMenuWrapper } = require("../classes");
 /** @type {string[]} */
 exports.contextMenuFiles = [
 	"BountyBot_Stats.js",
+	"Give_Bounty_Credit.js",
 	"Raise_a_Toast.js"
 ];
 /** @type {Record<string, ContextMenuWrapper>} */
