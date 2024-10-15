@@ -143,7 +143,7 @@ End the festival, returning to normal XP
 
 > Permission Level: ViewChannel
 
-Show the user the items in their inventory
+Show your inventory of usable items
 ## /item
 > Usable in: Servers
 
