@@ -34,7 +34,7 @@ List all of a hunter's open bounties (default: your own)
 
 > Cooldown: 3 seconds
 
-Get a link to BountyBot's commands page
+Get a link to BountyBot's commands wiki
 ## /config-premium
 > 💎 Premium Command 💎
 
