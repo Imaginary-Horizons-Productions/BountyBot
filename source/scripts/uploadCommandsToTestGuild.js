@@ -3,7 +3,7 @@ const { token, botId, testGuildId } = require('../../config/auth.json');
 const { slashData } = require('../commands/_commandDictionary');
 const { contextMenuData } = require('../context_menus/_contextMenuDictionary');
 
-const rest = new REST({ version: 9 }).setToken(token);
+const rest = new REST({ version: 10 }).setToken(token);
 
 (async () => {
 	try {
