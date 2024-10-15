@@ -5,7 +5,7 @@ const { commandMention } = require('../util/textUtil.js');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants.js');
 
 const mainId = "inventory";
-module.exports = new CommandWrapper(mainId, "Show the user the items in their inventory", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+module.exports = new CommandWrapper(mainId, "Show your inventory of usable items", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	(interaction, database, runMode) => {
 		database.models.Item.findAll({ where: { userId: interaction.user.id, count: { [Op.gt]: 0 } } }).then(itemRows => {
 			let content = `Here are the items in your inventory (use them with ${commandMention("item")}):\n- `;
