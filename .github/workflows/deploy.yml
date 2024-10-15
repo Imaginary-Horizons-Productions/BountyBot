@@ -33,8 +33,8 @@ jobs:
         run: git add .; git commit -m "updated commands page on wiki" && git push origin main || true
 
       - name: Push Wiki Changes
-        uses: Andrew-Chen-Wang/github-wiki-action@v4.4.0
         permissions:
           contents: write
+        uses: Andrew-Chen-Wang/github-wiki-action@v4.4.0
         with:
           path: wiki
