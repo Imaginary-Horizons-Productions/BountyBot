@@ -1,7 +1,7 @@
 const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { extractUserIdsFromMentions, textsHaveAutoModInfraction } = require('../util/textUtil');
-const { raiseToast } = require('../engines/toastEngine');
+const { raiseToast } = require('../logic/toasts.js');
 
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,

@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { raiseToast } = require('../engines/toastEngine');
+const { raiseToast } = require('../logic/toasts.js');
 const { textsHaveAutoModInfraction } = require('../util/textUtil');
 
 const mainId = "Raise a Toast";
