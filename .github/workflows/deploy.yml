@@ -36,7 +36,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "updated commands page on wiki" && git push origin main || true
+          git commit -m "update wiki/Commands.md" && git push origin main || true
 
       - name: Push Wiki Changes
         uses: Andrew-Chen-Wang/github-wiki-action@v4.4.0
