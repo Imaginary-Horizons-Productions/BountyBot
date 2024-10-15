@@ -23,6 +23,7 @@ jobs:
           branch: main
           folder: '.'
   update-wiki:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
