@@ -1,7 +1,12 @@
 const { CommandInteraction, userMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention } = require("../../util/textUtil");
-const { addCompleters } = require("../../logic/bounties.js");
+// const { addCompleters } = require("../../logic/bounties.js");
+
+/**
+ * @type {}
+ */
+let bounties;
 
 /**
  * @param {CommandInteraction} interaction
@@ -49,7 +54,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	addCompleters(interaction.guild, database, bounty, bounty.Company, validatedCompleterIds);
+	bounties.addCompleters(interaction.guild, bounty, bounty.Company, validatedCompleterIds);
 	interaction.reply({
 		content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 		ephemeral: true
@@ -75,5 +80,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	assignLogic: (logicBundle) => {
+		bounties = logicBundle.bounties;
+	}
 };

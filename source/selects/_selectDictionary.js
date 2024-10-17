@@ -14,3 +14,9 @@ for (const file of [
 exports.getSelect = function (mainId) {
 	return selectDictionary[mainId];
 }
+
+exports.setLogic = function (logicBlob) {
+	for (select in selectDictionary) {
+		select?.setLogic(logicBlob);
+	}
+}

@@ -20,3 +20,9 @@ for (const file of [
 exports.getButton = function (mainId) {
 	return buttonDictionary[mainId];
 }
+
+exports.setLogic = function (logicBlob) {
+	for (button in buttonDictionary) {
+		button?.setLogic(logicBlob);
+	}
+}

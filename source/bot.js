@@ -14,14 +14,15 @@ console.error = function () {
 const { Client, ActivityType, IntentsBitField, Events, Routes, REST } = require("discord.js");
 const { readFile, writeFile } = require("fs").promises;
 
-const { getCommand, slashData } = require("./commands/_commandDictionary.js");
-const { getButton } = require("./buttons/_buttonDictionary.js");
-const { getSelect } = require("./selects/_selectDictionary.js");
-const { getContextMenu, contextMenuData } = require("./context_menus/_contextMenuDictionary.js");
+const { getCommand, slashData, setLogic: setCommandLogic } = require("./commands/_commandDictionary.js");
+const { getButton, setLogic: setButtonLogic  } = require("./buttons/_buttonDictionary.js");
+const { getSelect, setLogic: setSelectLogic  } = require("./selects/_selectDictionary.js");
+const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic  } = require("./context_menus/_contextMenuDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { connectToDatabase } = require("../database.js");
 const { commandMention } = require("./util/textUtil.js");
+const logicBlob = require("./logic");
 //#endregion
 
 //#region Executing Code
@@ -39,7 +40,16 @@ const client = new Client({
 const interactionCooldowns = new Map();
 
 const runMode = process.argv[4];
-const databasePromise = connectToDatabase(runMode);
+const databasePromise = connectToDatabase(runMode).then(database => {
+	for (logicFile in logicBlob) { // Set the database for the logic files that store it
+		logicFile?.setDB(database);
+	}
+	setCommandLogic(logicBlob);
+	setButtonLogic(logicBlob);
+	setSelectLogic(logicBlob);
+	setContextMenuLogic(logicBlob);
+	return database; // Pass the database through
+});
 
 client.login(require(authPath).token)
 	.catch(console.error);
@@ -98,6 +108,9 @@ client.on(Events.ClientReady, () => {
 			})
 		});
 	}
+	databasePromise.then(database => {
+
+	});
 });
 
 client.on(Events.InteractionCreate, interaction => {

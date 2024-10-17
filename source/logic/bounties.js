@@ -3,14 +3,23 @@ const { Bounty } = require("../models/bounties/Bounty");
 const { userMention, Guild } = require("discord.js");
 const { listifyEN, congratulationBuilder } = require("../util/textUtil");
 
+let db;
+
+/**
+ * Set the database pointer for this logic file.
+ * @param {Sequelize} database 
+ */
+function setDB(database) {
+	db = database;
+}
+
 /**
  * @param {Guild} guild
- * @param {Sequelize} database
  * @param {Bounty} bounty
  * @param {Company} company
  * @param {string[]} completerIds
  */
-function addCompleters(guild, database, bounty, company, completerIds) {
+function addCompleters(guild, bounty, company, completerIds) {
 	const rawCompletions = [];
 	for (const userId of completerIds) {
 		rawCompletions.push({
@@ -31,5 +40,6 @@ function addCompleters(guild, database, bounty, company, completerIds) {
 }
 
 module.exports = {
+	setDB,
 	addCompleters
 }
