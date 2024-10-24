@@ -6,6 +6,8 @@ const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { commandMention, timeConversion } = require('../util/textUtil');
 const { rollItemDrop } = require('../util/itemUtil');
+const { completeBounty } = require('../logic/bounties');
+const { Hunter } = require('../models/users/Hunter');
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -40,8 +42,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 
 			// disallow completion within 5 minutes of creating bounty
-			const now = new Date();
-			if (runMode === "prod" && now < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
+			if (runMode === "prod" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
 				interaction.editReply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.` });
 				return;
 			}
@@ -59,89 +60,38 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const collector = reply.createMessageComponentCollector({ max: 1 });
 
 				collector.on("collect", async collectedInteraction => {
-					const season = await database.models.Season.findOne({ where: { companyId: collectedInteraction.guildId, isCurrentSeason: true } });
-					season.increment("bountiesCompleted");
-
-					bounty.state = "completed";
-					bounty.completedAt = now;
-					bounty.save();
-
-					const poster = await database.models.Hunter.findOne({ where: { userId: collectedInteraction.user.id, companyId: collectedInteraction.guildId } });
-					const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
-					const company = await database.models.Company.findByPk(collectedInteraction.guildId);
-					const bountyValue = bountyBaseValue * company.festivalMultiplier;
-					database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
-
-					let levelTexts = [];
-					for (const hunter of validatedHunters) {
-						const completerLevelTexts = await hunter.addXP(collectedInteraction.guild.name, bountyValue, true, database);
-						if (completerLevelTexts.length > 0) {
-							levelTexts = levelTexts.concat(completerLevelTexts);
-						}
-						hunter.increment("othersFinished");
-						const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: collectedInteraction.guildId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
-						if (!participationCreated) {
-							participation.increment({ xp: bountyValue });
-						}
-						const droppedItem = rollItemDrop(1 / 8);
-						if (droppedItem) {
-							const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: hunter.userId, itemName: droppedItem } });
-							if (!itemWasCreated) {
-								itemRow.increment("count");
-							}
-							levelTexts.push(`<@${hunter.userId}> has found a **${droppedItem}**!`);
-						}
+					/** @type {Hunter} */
+					const poster = await database.models.Hunter.findOne({ where: { userId: bounty.userId, companyId: bounty.companyId } });
+					const rewardTexts = await completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild, database);
+					const rankUpdates = await getRankUpdates(collectedInteraction.guild, database);
+					const multiplierString = company.festivalMultiplierString();
+					let text = `__**XP Gained**__\n${validatedHunterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${collectedInteraction.member} + ${posterXP} XP${multiplierString}`;
+					if (rankUpdates.length > 0) {
+						text += `\n\n__**Rank Ups**__\n - ${rankUpdates.join("\n- ")}`;
+					}
+					if (rewardTexts.length > 0) {
+						text += `\n\n__**Rewards**__\n - ${rewardTexts.join("\n- ")}`;
+					}
+					if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
+						text = `Message overflow! Many people(?) probably gained many things(?).Use ${commandMention("stats")} to look things up.`;
 					}
 
-					const posterXP = bounty.calculatePosterReward(validatedHunterIds.length);
-					const posterLevelTexts = await poster.addXP(collectedInteraction.guild.name, posterXP * company.festivalMultiplier, true, database);
-					if (posterLevelTexts.length > 0) {
-						levelTexts = levelTexts.concat(posterLevelTexts);
+					if (collectedInteraction.channel.archived) {
+						await collectedInteraction.channel.setArchived(false, "bounty complete");
 					}
-					poster.increment("mineFinished");
-					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: collectedInteraction.guildId, userId: collectedInteraction.user.id, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
-					if (!participationCreated) {
-						participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
-					}
-					const droppedItem = rollItemDrop(1 / 4);
-					if (droppedItem) {
-						const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: collectedInteraction.user.id, itemName: droppedItem } });
-						if (!itemWasCreated) {
-							itemRow.increment("count");
+					collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
+					collectedInteraction.reply({ content: text, flags: MessageFlags.SuppressNotifications });
+					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), true, database).then(embed => {
+						interaction.message.edit({ embeds: [embed], components: [] });
+						collectedInteraction.channel.setArchived(true, "bounty completed");
+					})
+					collectedInteraction.channels.first().send({ content: `<@${bounty.userId}>'s bounty, ${interaction.channel}, was completed!` }).catch(error => {
+						//Ignore Missing Permissions errors, user selected channel bot cannot post in
+						if (error.code !== 50013) {
+							console.error(error);
 						}
-						levelTexts.push(`<@${poster.userId}> has found a **${droppedItem}**!`);
-					}
-
-					getRankUpdates(collectedInteraction.guild, database).then(async rankUpdates => {
-						const multiplierString = company.festivalMultiplierString();
-						let text = `__**XP Gained**__\n${validatedHunterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${collectedInteraction.member} + ${posterXP} XP${multiplierString}`;
-						if (rankUpdates.length > 0) {
-							text += `\n\n__**Rank Ups**__\n - ${rankUpdates.join("\n- ")}`;
-						}
-						if (levelTexts.length > 0) {
-							text += `\n\n__**Rewards**__\n - ${levelTexts.join("\n- ")}`;
-						}
-						if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-							text = `Message overflow! Many people(?) probably gained many things(?).Use ${commandMention("stats")} to look things up.`;
-						}
-
-						if (collectedInteraction.channel.archived) {
-							await collectedInteraction.channel.setArchived(false, "bounty complete");
-						}
-						collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
-						collectedInteraction.reply({ content: text, flags: MessageFlags.SuppressNotifications });
-						bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), true, database).then(embed => {
-							interaction.message.edit({ embeds: [embed], components: [] });
-							collectedInteraction.channel.setArchived(true, "bounty completed");
-						})
-						collectedInteraction.channels.first().send({ content: `<@${bounty.userId}>'s bounty, ${interaction.channel}, was completed!` }).catch(error => {
-							//Ignore Missing Permissions errors, user selected channel bot cannot post in
-							if (error.code !== 50013) {
-								console.error(error);
-							}
-						});
-						updateScoreboard(company, collectedInteraction.guild, database);
 					});
+					updateScoreboard(company, collectedInteraction.guild, database);
 				})
 
 				collector.on("end", () => {

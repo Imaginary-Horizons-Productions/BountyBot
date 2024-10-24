@@ -33,6 +33,10 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				if (mostToastsRaised) {
 					shoutouts.push(`<@${mostToastsRaised.userId}> raised the most toasts this season!`);
 				}
+				const mostGoalContributions = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["goalContributions", "DESC"]] });
+				if (mostGoalContributions) {
+					shoutouts.push(`<@${mostGoalContributions.userId}> made the most goal contributions this season!`);
+				}
 				endingSeason.isCurrentSeason = false;
 				endingSeason.isPreviousSeason = true;
 				endingSeason.save();

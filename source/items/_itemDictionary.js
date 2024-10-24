@@ -10,6 +10,7 @@ const ITEM_NAMES = [];
 for (const file of [
 	"bonus-bounty-showcase.js",
 	"bounty-thumbnail.js",
+	"goal-initializer.js",
 	"loot-box.js",
 	"profile-colorizer-aqua.js",
 	"profile-colorizer-blue.js",
@@ -40,6 +41,7 @@ for (const file of [
 	"profile-colorizer-red.js",
 	"profile-colorizer-white.js",
 	"profile-colorizer-yellow.js",
+	"progress-in-a-can.js",
 	"unidentified-item.js",
 	"xp-boost-epic.js",
 	"xp-boost-legendary.js",

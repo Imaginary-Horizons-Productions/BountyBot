@@ -21,7 +21,6 @@ exports.commandFiles = [
 	"reset",
 	"scoreboard.js",
 	"season-end.js",
-	"server-bonuses.js",
 	"stats.js",
 	"toast.js",
 	"tutorial.js",

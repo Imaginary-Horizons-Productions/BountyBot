@@ -5,6 +5,7 @@ const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { timeConversion, commandMention } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
+const { progressGoal } = require('../logic/goals');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -31,6 +32,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
+		const progressText = await progressGoal(interaction.guildId, "secondings", interaction.user.id, database);
+		const rewardTexts = [];
+		if (progressText) {
+			rewardTexts.push(progressText);
+		}
 
 		const recipientIds = [];
 		originalToast.Recipients.forEach(reciept => {
@@ -38,7 +44,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		let levelTexts = [];
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		for (const userId of recipientIds) {
 			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
@@ -48,7 +53,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				participation.increment({ xp: 1 });
 			}
 			if (recipientLevelTexts.length > 0) {
-				levelTexts = levelTexts.concat(recipientLevelTexts);
+				rewardTexts.push(...recipientLevelTexts);
 			}
 			hunter.increment("toastsReceived");
 		}
@@ -95,7 +100,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(interaction.user.id);
 				const seconderLevelTexts = await seconder.addXP(interaction.guild.name, 1, true, database);
 				if (seconderLevelTexts.length > 0) {
-					levelTexts = levelTexts.concat(seconderLevelTexts);
+					rewardTexts = rewardTexts.concat(seconderLevelTexts);
 				}
 				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: 1 } });
 				if (!participationCreated) {
@@ -118,8 +123,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (rankUpdates.length > 0) {
 				text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 			}
-			if (levelTexts.length > 0) {
-				text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
+			if (rewardTexts.length > 0) {
+				text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
 			}
 			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 				text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
