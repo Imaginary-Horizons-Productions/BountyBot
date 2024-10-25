@@ -5,7 +5,6 @@ const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, timeConversion, commandMention } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
-const { rollItemDrop } = require("../../util/itemUtil");
 const { completeBounty } = require("../../logic/bounties");
 const { Hunter } = require("../../models/users/Hunter");
 

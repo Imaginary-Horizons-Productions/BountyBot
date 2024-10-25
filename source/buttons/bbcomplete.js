@@ -1,11 +1,9 @@
 const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { MAX_MESSAGE_CONTENT_LENGTH, SKIP_INTERACTION_HANDLING } = require('../constants');
-const { Bounty } = require('../models/bounties/Bounty');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { commandMention, timeConversion } = require('../util/textUtil');
-const { rollItemDrop } = require('../util/itemUtil');
 const { completeBounty } = require('../logic/bounties');
 const { Hunter } = require('../models/users/Hunter');
 

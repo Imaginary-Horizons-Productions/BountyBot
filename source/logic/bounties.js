@@ -4,7 +4,6 @@ const { Bounty } = require("../models/bounties/Bounty");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { listifyEN, congratulationBuilder } = require("../util/textUtil");
-const { updateScoreboard } = require("../util/embedUtil");
 const { progressGoal } = require("./goals");
 
 /**
