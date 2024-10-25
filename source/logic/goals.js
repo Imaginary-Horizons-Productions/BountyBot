@@ -13,6 +13,9 @@ async function progressGoal(companyId, progressType, userId, database) {
 	const goalProgressed = goal?.type === progressType;
 	if (goalProgressed) {
 		await database.models.Contributions.create({ goalId: goal.id, userId });
+		await database.models.Hunter.update("goalContributions", { where: { companyId, userId } });
+		const [season] = await database.models.Season.findOrCreate({ where: { companyId, isCurrentSeason: true } });
+		await database.models.Participation.upsert("goalContributions", { where: { companyId, userId, seasonId: season.id } });
 		const contributions = await database.models.Contributions.findAll({ where: { goalId: goal.id } });
 		if (goal.requiredContributions <= contributions.length) {
 			const dedupedContributorIds = [...new Set(contributions.map(contribution => contribution.userId))];

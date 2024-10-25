@@ -10,6 +10,9 @@ module.exports = new Item(itemName, "Add a contribution to the currently running
 			return true;
 		}
 		await database.models.Contributions.create({ goalId: goal.id, userId: interaction.user.id });
+		await database.models.Hunter.update("goalContributions", { where: { companyId: interaction.guildId, userId: interaction.user.id } });
+		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+		await database.models.Participation.upsert("goalContributions", { where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id } });
 		const contributions = await database.models.Contributions.findAll({ where: { goalId: goal.id } });
 		if (goal.requiredContributions <= contributions.length) {
 			const dedupedContributorIds = [...new Set(contributions.map(contribution => contribution.userId))];
