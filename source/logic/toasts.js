@@ -60,9 +60,11 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 	season.increment("toastsRaised");
 
 	const rewardTexts = [];
-	const progressString = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
-	if (progressString) {
-		rewardTexts.push(progressString);
+	if (rewardsAvailable > 0) {
+		const progressString = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
+		if (progressString) {
+			rewardTexts.push(progressString);
+		}
 	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 	const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
