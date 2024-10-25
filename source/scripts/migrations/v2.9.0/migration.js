@@ -7,4 +7,5 @@ connectToDatabase("migration").then(async database => {
 	queryInterface.addColumn("Hunter", "goalsInitiated", { type: DataTypes.BIGINT, defaultValue: 0 });
 	queryInterface.addColumn("Hunter", "goalContributions", { type: DataTypes.BIGINT, defaultValue: 0 });
 	queryInterface.addColumn("Participation", "goalContributions", { type: DataTypes.INTEGER, defaultValue: 0 });
+	queryInterface.removeColumn("Company", "serverBonusesThumbnailURL");
 });
