@@ -24,6 +24,8 @@ function connectToDatabase(mode) {
 		const { Seconding, initModel: initSeconding } = require("./source/models/toasts/Seconding.js");
 		const { Season, initModel: initSeason } = require("./source/models/seasons/Season.js");
 		const { Participation, initModel: initParticipation } = require("./source/models/seasons/Participation.js");
+		const { Goal, initModel: initGoal } = require("./source/models/companies/Goal.js");
+		const { Contribution, initModel: initContribution } = require("./source/models/companies/Contribution.js");
 
 		initCompany(database);
 		initRank(database);
@@ -37,6 +39,8 @@ function connectToDatabase(mode) {
 		initSeconding(database);
 		initSeason(database);
 		initParticipation(database);
+		initGoal(database);
+		initContribution(database);
 
 		Company.Ranks = Company.hasMany(Rank, {
 			foreignKey: "companyId"
@@ -162,6 +166,26 @@ function connectToDatabase(mode) {
 		})
 		Participation.Season = Participation.belongsTo(Season, {
 			foreignKey: "seasonId"
+		})
+
+		Goal.Company = Goal.belongsTo(Company, {
+			foreignKey: "companyId"
+		})
+		Company.Goals = Company.hasMany(Goal, {
+			foreignKey: "companyId"
+		})
+
+		Contribution.Goal = Contribution.belongsTo(Goal, {
+			foreignKey: "goalId"
+		})
+		Goal.Contributions = Goal.hasMany(Contribution, {
+			foreignKey: "goalId"
+		})
+		Contribution.User = Contribution.belongsTo(User, {
+			foreignKey: "userId"
+		})
+		User.Contributions = User.hasMany(Contribution, {
+			foreignKey: "userId"
 		})
 
 		return database.sync();

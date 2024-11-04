@@ -12,7 +12,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 		const itemName = interaction.options.getString("item-name");
 		interaction.deferReply({ ephemeral: true }).then(async () => {
 			const itemRow = await database.models.Item.findOne({ where: { userId: interaction.user.id, itemName } });
-			const hasItem = itemRow !== null && itemRow.count > 0;
+			const hasItem = itemRow !== null && itemRow.count > 0 || runMode !== "prod";
 			let embedColor = Colors.Blurple;
 			if (itemName.includes("Profile Colorizer")) {
 				const [color] = itemName.split("Profile Colorizer");
@@ -24,7 +24,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 						.setAuthor(ihpAuthorPayload)
 						.setTitle(itemName)
 						.setDescription(getItemDescription(itemName))
-						.addFields({ name: "You have", value: hasItem ? itemRow.count.toString() : "0" })
+						.addFields({ name: "You have", value: runMode !== "prod" ? "Debug Mode" : hasItem ? itemRow.count.toString() : "0" })
 						.setFooter(randomFooterTip())
 				],
 				components: [
@@ -40,7 +40,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			const collector = reply.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", (collectedInteration) => {
 				database.models.Item.findOne({ where: { userId: collectedInteration.user.id, itemName } }).then(itemRow => {
-					if (itemRow.count < 1) {
+					if (runMode === "prod" && itemRow.count < 1) {
 						collectedInteration.reply({ content: `You don't have any ${itemName}.`, ephemeral: true });
 						return;
 					}
@@ -67,7 +67,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 					}
 
 					useItem(itemName, collectedInteration, database).then(shouldSkipDecrement => {
-						if (!shouldSkipDecrement) {
+						if (!shouldSkipDecrement && runMode === "prod") {
 							itemRow.decrement("count");
 						}
 					});

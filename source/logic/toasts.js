@@ -4,6 +4,7 @@ const { timeConversion, commandMention, listifyEN } = require("../util/textUtil"
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require("../constants");
 const { getRankUpdates } = require("../util/scoreUtil");
 const { updateScoreboard } = require("../util/embedUtil");
+const { progressGoal } = require("./goals");
 
 /**
  * @param {import("discord.js").Interaction} interaction note this is the interaction that is awaiting a reply, not necessarily the interaction named "interaction" in the controller
@@ -57,13 +58,21 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 	let critValue = 0;
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	season.increment("toastsRaised");
+
+	const rewardTexts = [];
+	if (rewardsAvailable > 0) {
+		const progressString = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
+		if (progressString) {
+			rewardTexts.push(progressString);
+		}
+	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 	const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 	sender.increment("toastsRaised");
 	const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 	for (const id of toasteeIds) {
 		//TODO #97 move to bulkCreate after finding solution to create by association only if user doesn't already exist
-		const [user] = await database.models.User.findOrCreate({ where: { id } });
+		await database.models.User.findOrCreate({ where: { id } });
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
 			rewardedRecipients.push(id);
@@ -106,14 +115,13 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 	database.models.Recipient.bulkCreate(rawRecipients);
 
 	// Add XP and update ranks
-	let levelTexts = [];
 	const toasterLevelTexts = await sender.addXP(interaction.guild.name, critValue, false, database);
 	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: critValue, toastsRaised: 1 });
 	}
 	if (toasterLevelTexts.length > 0) {
-		levelTexts = levelTexts.concat(toasterLevelTexts);
+		rewardTexts.push(...toasterLevelTexts);
 	}
 	for (const recipientId of rewardedRecipients) {
 		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
@@ -123,7 +131,7 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 			participation.increment("xp");
 		}
 		if (toasteeLevelTexts.length > 0) {
-			levelTexts = levelTexts.concat(toasteeLevelTexts);
+			rewardTexts = rewardTexts.concat(toasteeLevelTexts);
 		}
 		hunter.increment("toastsReceived");
 	}
@@ -148,8 +156,8 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 					if (rankUpdates.length > 0) {
 						text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 					}
-					if (levelTexts.length > 0) {
-						text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
+					if (rewardTexts.length > 0) {
+						text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
 					}
 					if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 						text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
