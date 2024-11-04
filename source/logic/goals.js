@@ -9,7 +9,7 @@ const { listifyEN } = require("../util/textUtil");
  * @param {Sequelize} database
  */
 async function progressGoal(companyId, progressType, userId, database) {
-	const goal = await database.models.Goal.findOne({ where: { companyId, state: "open" } });
+	const goal = await database.models.Goal.findOne({ where: { companyId, state: "ongoing" } });
 	const goalProgressed = goal?.type === progressType;
 	if (goalProgressed) {
 		await database.models.Contributions.create({ goalId: goal.id, userId });

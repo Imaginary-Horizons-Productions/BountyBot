@@ -9,7 +9,7 @@ const GOAL_TYPE_MAP = {
 const itemName = "Goal Initializer";
 module.exports = new Item(itemName, "Begin a Server Goal if there isn't already one running", 3000,
 	async (interaction, database) => {
-		const existingGoals = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: "open" } });
+		const existingGoals = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: "ongoing" } });
 		if (existingGoals.length > 0) {
 			interaction.reply({ content: "This server already has a Server Goal running.", ephemeral: true });
 			return true;

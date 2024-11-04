@@ -127,7 +127,7 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 	}
 
 	const fields = [];
-	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "open" } });
+	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
 	if (goal) {
 		const contributions = await database.models.Contribution.findAll({ where: { goalId: goal.id } });
 		fields.push({ name: "Server Goal", value: `${generateTextBar(contributions.length, goal.requiredContributions, 15)} ${contributions.length}/${goal.requiredContributions} ${GOAL_LOCALIZATION[goal.type]}` });
@@ -187,7 +187,7 @@ async function buildOverallScoreboardEmbed(guild, database) {
 	}
 
 	const fields = [];
-	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "open" } });
+	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
 	if (goal) {
 		const contributions = await database.models.Contribution.findAll({ where: { goalId: goal.id } });
 		fields.push({ name: "Server Goal", value: `${generateTextBar(contributions.length, goal.requiredContributions, 15)} ${contributions.length}/${goal.requiredContributions} ${GOAL_LOCALIZATION[goal.type]}` });
