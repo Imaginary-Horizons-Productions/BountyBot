@@ -11,6 +11,11 @@ const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
 		database.models.Bounty.findByPk(bountyId).then(async bounty => {
+			if (!bounty) {
+				interaction.reply({ content: "This bounty could not be found.", ephemeral: true });
+				return;
+			}
+
 			await interaction.deferReply({ ephemeral: true });
 			if (bounty.userId !== interaction.user.id) {
 				interaction.editReply({ content: "Only the bounty poster can mark a bounty completed." });
