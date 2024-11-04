@@ -6,7 +6,7 @@ const DROP_TABLE = {
 		"Bonus Bounty Showcase",
 		"Bounty Thumbnail",
 		"Goal Initializer",
-		"Progress in a Can",
+		"Progress-in-a-Can",
 		"XP Boost"
 	],
 	0: [
