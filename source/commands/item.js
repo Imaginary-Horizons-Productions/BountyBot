@@ -67,7 +67,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 					}
 
 					useItem(itemName, collectedInteration, database).then(shouldSkipDecrement => {
-						if (!shouldSkipDecrement || runMode !== "prod") {
+						if (!shouldSkipDecrement && runMode === "prod") {
 							itemRow.decrement("count");
 						}
 					});

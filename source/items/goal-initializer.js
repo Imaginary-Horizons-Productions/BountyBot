@@ -17,9 +17,10 @@ module.exports = new Item(itemName, "Begin a Server Goal if there isn't already 
 
 		const eligibleTypes = ["bounties", "toasts", "secondings"];
 		const goalType = eligibleTypes[Math.floor(Math.random() * eligibleTypes.length)];
-		const previousSeason = database.models.Season.findOne({ where: { companyId: interaction.guildId, isPreviousSeason: true } });
+		const previousSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isPreviousSeason: true } });
 		const activeHunters = previousSeason ? (await database.models.Participation.findOne({ where: { seasonId: season.id }, order: [["placement", "DESC"]] })).placement : 3;
 		const requiredContributions = activeHunters * GOAL_TYPE_MAP[goalType].coefficient;
+		await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		await database.models.Goal.create({ companyId: interaction.guildId, type: goalType, requiredContributions });
 		interaction.reply({ content: `${interaction.member} has started a Server Goal to ${GOAL_TYPE_MAP[goalType].text(requiredContributions)}` });
 	}
