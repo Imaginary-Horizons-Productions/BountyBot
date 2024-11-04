@@ -10,7 +10,7 @@ const { Hunter } = require('../models/users/Hunter');
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
-		database.models.Bounty.findByPk(bountyId).then(async bounty => {
+		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
 			if (!bounty) {
 				interaction.reply({ content: "This bounty could not be found.", ephemeral: true });
 				return;
@@ -65,15 +65,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				collector.on("collect", async collectedInteraction => {
 					/** @type {Hunter} */
 					const poster = await database.models.Hunter.findOne({ where: { userId: bounty.userId, companyId: bounty.companyId } });
-					const rewardTexts = await completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild, database);
+					let [text, rewardTexts] = await completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild, database);
 					const rankUpdates = await getRankUpdates(collectedInteraction.guild, database);
-					const multiplierString = company.festivalMultiplierString();
-					let text = `__**XP Gained**__\n${validatedHunterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${collectedInteraction.member} + ${posterXP} XP${multiplierString}`;
 					if (rankUpdates.length > 0) {
-						text += `\n\n__**Rank Ups**__\n - ${rankUpdates.join("\n- ")}`;
+						text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 					}
 					if (rewardTexts.length > 0) {
-						text += `\n\n__**Rewards**__\n - ${rewardTexts.join("\n- ")}`;
+						text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
 					}
 					if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 						text = `Message overflow! Many people(?) probably gained many things(?).Use ${commandMention("stats")} to look things up.`;
@@ -82,9 +80,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					if (collectedInteraction.channel.archived) {
 						await collectedInteraction.channel.setArchived(false, "bounty complete");
 					}
-					collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
+					collectedInteraction.channel.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
 					collectedInteraction.reply({ content: text, flags: MessageFlags.SuppressNotifications });
-					bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), true, database).then(embed => {
+					bounty.asEmbed(collectedInteraction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(embed => {
 						interaction.message.edit({ embeds: [embed], components: [] });
 						collectedInteraction.channel.setArchived(true, "bounty completed");
 					})
@@ -94,7 +92,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							console.error(error);
 						}
 					});
-					updateScoreboard(company, collectedInteraction.guild, database);
+					updateScoreboard(bounty.Company, collectedInteraction.guild, database);
 				})
 
 				collector.on("end", () => {

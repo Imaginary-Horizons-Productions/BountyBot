@@ -5,6 +5,7 @@ const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { listifyEN, congratulationBuilder } = require("../util/textUtil");
 const { progressGoal } = require("./goals");
+const { rollItemDrop } = require("../util/itemUtil");
 
 /**
  * @param {Guild} guild
@@ -102,7 +103,12 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 		}
 		rewardTexts.push(`<@${poster.userId}> has found a **${droppedItem}**!`);
 	}
-	return rewardTexts;
+	const multiplierString = bounty.Company.festivalMultiplierString();
+
+	return [
+		`__**XP Gained**__\n${validatedHunters.map(hunter => `${userMention(hunter.userId)} + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${userMention(poster.userId)} + ${posterXP} XP${multiplierString}`,
+		rewardTexts
+	];
 }
 
 module.exports = {

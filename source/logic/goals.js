@@ -12,15 +12,17 @@ async function progressGoal(companyId, progressType, userId, database) {
 	const goal = await database.models.Goal.findOne({ where: { companyId, state: "ongoing" } });
 	const goalProgressed = goal?.type === progressType;
 	if (goalProgressed) {
-		await database.models.Contributions.create({ goalId: goal.id, userId });
-		await database.models.Hunter.update("goalContributions", { where: { companyId, userId } });
+		await database.models.Contribution.create({ goalId: goal.id, userId });
+		const [hunter] = await database.models.Hunter.findOrCreate({ where: { companyId, userId } });
+		hunter.increment("goalContributions");
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId, isCurrentSeason: true } });
-		await database.models.Participation.upsert("goalContributions", { where: { companyId, userId, seasonId: season.id } });
-		const contributions = await database.models.Contributions.findAll({ where: { goalId: goal.id } });
+		const [participation] = await database.models.Participation.findOrCreate({ where: { companyId, userId, seasonId: season.id } });
+		participation.increment("goalContributions");
+		const contributions = await database.models.Contribution.findAll({ where: { goalId: goal.id } });
 		if (goal.requiredContributions <= contributions.length) {
 			const dedupedContributorIds = [...new Set(contributions.map(contribution => contribution.userId))];
 			database.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: dedupedContributorIds } } });
-			goal.update("state", "completed");
+			goal.update({ state: "completed" });
 			return `The Server Goal was completed! ${listifyEN(dedupedContributorIds.map(id => userMention(id)))} gained an Item Find Boost for their next bounty completion!`
 		}
 		return `${userMention(userId)} contributed to the Server Goal!`;

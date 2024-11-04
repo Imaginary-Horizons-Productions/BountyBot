@@ -62,10 +62,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	await interaction.deferReply();
 	/** @type {Hunter} */
 	const poster = await database.models.Hunter.findOne({ where: { userId: bounty.userId, companyId: bounty.companyId } });
-	const rewardTexts = await completeBounty(bounty, poster, validatedHunters, interaction.guild, database);
+	let [text, rewardTexts] = await completeBounty(bounty, poster, validatedHunters, interaction.guild, database);
 	const rankUpdates = await getRankUpdates(interaction.guild, database);
-	const multiplierString = bounty.Company.festivalMultiplierString();
-	let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${interaction.member} + ${posterXP} XP${multiplierString}`;
 	if (rankUpdates.length > 0) {
 		text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 	}
