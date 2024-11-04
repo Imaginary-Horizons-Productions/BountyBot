@@ -237,12 +237,6 @@ The Season Scoreboard only includes hunters with XP this season
 > Permission Level: ManageGuild
 
 Start a new season for this server, resetting ranks and placements
-### /server-bonuses
-> Usable in: Servers
-
-> Cooldown: 3 seconds
-
-Get info about the currently running server bonuses
 ### /stats
 > Usable in: Servers
 
