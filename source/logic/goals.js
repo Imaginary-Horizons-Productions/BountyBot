@@ -1,6 +1,4 @@
-const { userMention } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { listifyEN } = require("../util/textUtil");
 
 /**
  * @param {string} companyId
@@ -9,9 +7,15 @@ const { listifyEN } = require("../util/textUtil");
  * @param {Sequelize} database
  */
 async function progressGoal(companyId, progressType, userId, database) {
+	const returnData = {
+		gpContributed: 0,
+		goalCompleted: false,
+		contributorIds: []
+	};
 	const goal = await database.models.Goal.findOne({ where: { companyId, state: "ongoing" } });
 	const goalProgressed = goal?.type === progressType;
 	if (goalProgressed) {
+		returnData.gpContributed = 1;
 		await database.models.Contribution.create({ goalId: goal.id, userId });
 		const [hunter] = await database.models.Hunter.findOrCreate({ where: { companyId, userId } });
 		hunter.increment("goalContributions");
@@ -19,15 +23,16 @@ async function progressGoal(companyId, progressType, userId, database) {
 		const [participation] = await database.models.Participation.findOrCreate({ where: { companyId, userId, seasonId: season.id } });
 		participation.increment("goalContributions");
 		const contributions = await database.models.Contribution.findAll({ where: { goalId: goal.id } });
-		if (goal.requiredContributions <= contributions.length) {
-			const dedupedContributorIds = [...new Set(contributions.map(contribution => contribution.userId))];
-			database.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: dedupedContributorIds } } });
+		returnData.goalCompleted = goal.requiredContributions <= contributions.length;
+		if (returnData.goalCompleted) {
+			returnData.contributorIds = [...new Set(contributions.map(contribution => contribution.userId))];
+			database.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: returnData.contributorIds } } });
 			goal.update({ state: "completed" });
-			return `The Server Goal was completed! ${listifyEN(dedupedContributorIds.map(id => userMention(id)))} gained an Item Find Boost for their next bounty completion!`
+		} else {
+			returnData.contributorIds.push(userId);
 		}
-		return `${userMention(userId)} contributed to the Server Goal!`;
 	}
-	return "";
+	return returnData;
 }
 
 module.exports = {

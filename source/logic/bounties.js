@@ -40,16 +40,15 @@ function addCompleters(guild, database, bounty, company, completerIds) {
  * @param {Hunter[]} validatedHunters
  * @param {Guild} guild
  * @param {Sequelize} database
+ * @returns {[string, string[], { gpContributed: number; goalCompleted: boolean; contributorIds: string[];}]}
  */
 async function completeBounty(bounty, poster, validatedHunters, guild, database) {
 	bounty.update({ state: "completed", completedAt: new Date() });
 	const season = await database.models.Season.findOne({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
 	season.increment("bountiesCompleted");
-	const progressString = await progressGoal(bounty.companyId, "bounties", bounty.userId, database);
 	const rewardTexts = [];
-	if (progressString) {
-		rewardTexts.push(progressString);
-	}
+	const progressData = await progressGoal(guild.id, "bounties", poster.userId, database);
+	rewardTexts.push(`This bounty contributed ${progressData.gpContributed} GP to the Server Goal!`);
 
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
 	const company = await database.models.Company.findByPk(bounty.companyId);
@@ -107,7 +106,8 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 
 	return [
 		`__**XP Gained**__\n${validatedHunters.map(hunter => `${userMention(hunter.userId)} + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${userMention(poster.userId)} + ${posterXP} XP${multiplierString}`,
-		rewardTexts
+		rewardTexts,
+		progressData
 	];
 }
 

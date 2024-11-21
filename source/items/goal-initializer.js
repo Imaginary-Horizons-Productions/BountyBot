@@ -9,6 +9,7 @@ const GOAL_TYPE_MAP = {
 const itemName = "Goal Initializer";
 module.exports = new Item(itemName, "Begin a Server Goal if there isn't already one running", 3000,
 	async (interaction, database) => {
+		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		const existingGoals = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: "ongoing" } });
 		if (existingGoals.length > 0) {
 			interaction.reply({ content: "This server already has a Server Goal running.", ephemeral: true });
@@ -22,6 +23,6 @@ module.exports = new Item(itemName, "Begin a Server Goal if there isn't already 
 		const requiredContributions = activeHunters * GOAL_TYPE_MAP[goalType].coefficient;
 		await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		await database.models.Goal.create({ companyId: interaction.guildId, type: goalType, requiredContributions });
-		interaction.reply({ content: `${interaction.member} has started a Server Goal to ${GOAL_TYPE_MAP[goalType].text(requiredContributions)}` });
+		interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member} has started a Server Goal to ${GOAL_TYPE_MAP[goalType].text(requiredContributions)}` }));
 	}
 );

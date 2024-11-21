@@ -1,8 +1,8 @@
-const { CommandInteraction, MessageFlags } = require("discord.js");
+const { CommandInteraction, MessageFlags, EmbedBuilder, userMention, channelMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { updateScoreboard } = require("../../util/embedUtil");
-const { extractUserIdsFromMentions, timeConversion, commandMention } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, timeConversion, commandMention, congratulationBuilder, listifyEN } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 const { completeBounty } = require("../../logic/bounties");
@@ -62,7 +62,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	await interaction.deferReply();
 	/** @type {Hunter} */
 	const poster = await database.models.Hunter.findOne({ where: { userId: bounty.userId, companyId: bounty.companyId } });
-	let [text, rewardTexts] = await completeBounty(bounty, poster, validatedHunters, interaction.guild, database);
+	let [text, rewardTexts, goalProgress] = await completeBounty(bounty, poster, validatedHunters, interaction.guild, database);
 	const rankUpdates = await getRankUpdates(interaction.guild, database);
 	if (rankUpdates.length > 0) {
 		text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
@@ -75,6 +75,17 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}
 
 	bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
+		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
+		if (goalProgress.goalCompleted) {
+			acknowledgeOptions.embeds = [
+				new EmbedBuilder().setColor("e5b271")
+					.setTitle("Server Goal Completed")
+					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+					.addFields({ name: "Contributors", value: listifyEN(goalProgress.contributorIds.map(id => userMention(id))) })
+			];
+		}
+
 		if (bounty.Company.bountyBoardId) {
 			const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
 			bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
@@ -89,9 +100,11 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					posting.channel.setArchived(true, "bounty completed");
 				});
 			});
-			interaction.editReply({ content: `<@${bounty.userId}>'s bounty, <#${bounty.postingId}>, was completed!` });
+			acknowledgeOptions.content += `${channelMention(bounty.postingId)}, was completed!`;
+			interaction.editReply(acknowledgeOptions);
 		} else {
-			interaction.editReply({ content: `<@${bounty.userId}>'s bounty, **${bounty.title}**, was completed!` }).then(message => {
+			acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
+			interaction.editReply(acknowledgeOptions).then(message => {
 				message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 				})
