@@ -244,7 +244,9 @@ async function buildModStatsEmbed(guild, member, hunter, database) {
  * @returns {MessageEmbed}
  */
 async function buildVersionEmbed() {
-	const data = await fs.promises.readFile('./ChangeLog.md', { encoding: 'utf8' });
+	const changelogPath = "./ChangeLog.md";
+	const data = await fs.promises.readFile(changelogPath, { encoding: 'utf8' });
+	const stats = await fs.promises.stat(changelogPath);
 	const dividerRegEx = /## .+ Version/g;
 	const changesStartRegEx = /\.\d+:/g;
 	let titleStart = dividerRegEx.exec(data).index;
@@ -259,7 +261,7 @@ async function buildVersionEmbed() {
 		.setDescription(data.slice(changesStartRegEx.lastIndex, sectionEnd).slice(0, MAX_EMBED_DESCRIPTION_LENGTH))
 		.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" })
 		.setFooter(randomFooterTip())
-		.setTimestamp();
+		.setTimestamp(stats.mtime);
 }
 
 /** If the guild has a scoreboard reference channel, update the embed in it
