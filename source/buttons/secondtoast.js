@@ -1,9 +1,9 @@
-const { EmbedBuilder, MessageFlags } = require('discord.js');
+const { EmbedBuilder, MessageFlags, userMention } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { Op } = require('sequelize');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { timeConversion, commandMention } = require('../util/textUtil');
+const { timeConversion, commandMention, congratulationBuilder, listifyEN } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 const { progressGoal } = require('../logic/goals');
 
@@ -19,7 +19,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 
 		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
-		if (originalToast.senderId === interaction.user.id) {
+		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", ephemeral: true });
 			return;
 		}
@@ -32,11 +32,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
-		const progressText = await progressGoal(interaction.guildId, "secondings", interaction.user.id, database);
-		const rewardTexts = [];
-		if (progressText) {
-			rewardTexts.push(progressText);
-		}
+		const progressData = await progressGoal(interaction.guildId, "secondings", interaction.user.id, database);
+		const rewardTexts = [`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`];
 
 		const recipientIds = [];
 		originalToast.Recipients.forEach(reciept => {
@@ -132,5 +129,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
 		})
+
+		if (progressData.goalCompleted) {
+			interaction.channel.send({
+				embeds: [
+					new EmbedBuilder().setColor("e5b271")
+						.setTitle("Server Goal Completed")
+						.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+						.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+						.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
+				]
+			});
+		}
 	}
 );

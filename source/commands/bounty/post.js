@@ -183,6 +183,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				if (!participationCreated) {
 					participation.increment({ xp: 1 });
 				}
+				const company = await database.models.Company.findByPk(modalSubmission.guildId);
 				const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
 				poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
 					getRankUpdates(modalSubmission.guild, database);
@@ -211,7 +212,6 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				const bounty = await database.models.Bounty.create(rawBounty);
 
 				// post in bounty board forum
-				const company = await database.models.Company.findByPk(modalSubmission.guildId);
 				const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, company.festivalMultiplierString(), false, database);
 				modalSubmission.reply(company.sendAnnouncement({ content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 					if (company.bountyBoardId) {

@@ -1,6 +1,6 @@
 const { EmbedBuilder, userMention, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { timeConversion, commandMention, listifyEN } = require("../util/textUtil");
+const { timeConversion, commandMention, listifyEN, congratulationBuilder } = require("../util/textUtil");
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require("../constants");
 const { getRankUpdates } = require("../util/scoreUtil");
 const { updateScoreboard } = require("../util/embedUtil");
@@ -15,13 +15,15 @@ const { progressGoal } = require("./goals");
  */
 async function raiseToast(interaction, database, toasteeIds, toastText, imageURL = null) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
-	const embed = new EmbedBuilder().setColor("e5b271")
-		.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
-		.setTitle(toastText)
-		.setDescription(`A toast to ${listifyEN(toasteeIds.map(id => userMention(id)))}!`)
-		.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
+	const embeds = [
+		new EmbedBuilder().setColor("e5b271")
+			.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
+			.setTitle(toastText)
+			.setDescription(`A toast to ${listifyEN(toasteeIds.map(id => userMention(id)))}!`)
+			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() })
+	];
 	if (imageURL) {
-		embed.setImage(imageURL);
+		embeds[0].setImage(imageURL);
 	}
 
 	// Make database entities
@@ -61,9 +63,15 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 
 	const rewardTexts = [];
 	if (rewardsAvailable > 0) {
-		const progressString = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
-		if (progressString) {
-			rewardTexts.push(progressString);
+		const progressData = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
+		rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
+		if (progressData.goalCompleted) {
+			embeds.push(new EmbedBuilder().setColor("e5b271")
+				.setTitle("Server Goal Completed")
+				.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+				.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+				.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
+			);
 		}
 	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
@@ -137,7 +145,7 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 	}
 
 	interaction.reply({
-		embeds: [embed],
+		embeds,
 		components: [
 			new ActionRowBuilder().addComponents(
 				new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toast.id}`)

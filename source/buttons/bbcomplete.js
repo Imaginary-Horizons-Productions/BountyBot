@@ -1,9 +1,9 @@
-const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, EmbedBuilder, userMention } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { MAX_MESSAGE_CONTENT_LENGTH, SKIP_INTERACTION_HANDLING } = require('../constants');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { commandMention, timeConversion } = require('../util/textUtil');
+const { commandMention, timeConversion, congratulationBuilder, listifyEN } = require('../util/textUtil');
 const { completeBounty } = require('../logic/bounties');
 const { Hunter } = require('../models/users/Hunter');
 
@@ -65,7 +65,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				collector.on("collect", async collectedInteraction => {
 					/** @type {Hunter} */
 					const poster = await database.models.Hunter.findOne({ where: { userId: bounty.userId, companyId: bounty.companyId } });
-					let [text, rewardTexts] = await completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild, database);
+					let [text, rewardTexts, goalProgress] = await completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild, database);
 					const rankUpdates = await getRankUpdates(collectedInteraction.guild, database);
 					if (rankUpdates.length > 0) {
 						text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
@@ -86,7 +86,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						interaction.message.edit({ embeds: [embed], components: [] });
 						collectedInteraction.channel.setArchived(true, "bounty completed");
 					})
-					collectedInteraction.channels.first().send({ content: `<@${bounty.userId}>'s bounty, ${interaction.channel}, was completed!` }).catch(error => {
+					const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
+					if (goalProgress.goalCompleted) {
+						announcementOptions.embeds = [
+							new EmbedBuilder().setColor("e5b271")
+								.setTitle("Server Goal Completed")
+								.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+								.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+								.addFields({ name: "Contributors", value: listifyEN(goalProgress.contributorIds.map(id => userMention(id))) })
+						];
+					}
+					collectedInteraction.channels.first().send(announcementOptions).catch(error => {
 						//Ignore Missing Permissions errors, user selected channel bot cannot post in
 						if (error.code !== 50013) {
 							console.error(error);
