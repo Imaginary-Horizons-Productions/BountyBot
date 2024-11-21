@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Guild, Colors, TextChannel, Utils } = require("discord.js");
+const { EmbedBuilder, Guild, Colors } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Hunter } = require("../models/users/Hunter");
 const { Company } = require("../models/companies/Company");
