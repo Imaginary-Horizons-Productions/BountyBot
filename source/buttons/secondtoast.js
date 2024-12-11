@@ -126,7 +126,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 				text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 			}
-			interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			if (interaction.channel.isThread()) {
+				interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			} else {
+				interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			}
 			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
 		})
 
