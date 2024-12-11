@@ -105,15 +105,14 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		} else {
 			acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
 			interaction.editReply(acknowledgeOptions).then(message => {
-				message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
-					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
-				})
-			}).catch(error => {
-				// Ignore Missing Access errors, they only prevent the making of the thread
-				if (error.code !== 50001) {
-					console.error(error);
+				if (interaction.channel.isThread()) {
+					interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				} else {
+					message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
+						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+					})
 				}
-			});
+			})
 		}
 
 		updateScoreboard(bounty.Company, interaction.guild, database);

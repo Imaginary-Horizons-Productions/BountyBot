@@ -156,25 +156,29 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 		],
 		fetchReply: true
 	}).then(message => {
-		message.startThread({ name: "Rewards" }).then(thread => {
-			if (rewardedRecipients.length > 0) {
-				getRankUpdates(interaction.guild, database).then(rankUpdates => {
-					const multiplierString = company.festivalMultiplierString();
-					let text = `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
-					if (rankUpdates.length > 0) {
-						text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
-					}
-					if (rewardTexts.length > 0) {
-						text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
-					}
-					if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-						text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-					}
-					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
-					updateScoreboard(company, interaction.guild, database);
-				})
-			}
-		});
+		if (rewardedRecipients.length > 0) {
+			getRankUpdates(interaction.guild, database).then(rankUpdates => {
+				const multiplierString = company.festivalMultiplierString();
+				let text = `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
+				if (rankUpdates.length > 0) {
+					text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
+				}
+				if (rewardTexts.length > 0) {
+					text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
+				}
+				if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
+					text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+				}
+				if (interaction.channel.isThread()) {
+					interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				} else {
+					message.startThread({ name: "Rewards" }).then(thread => {
+						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+					})
+				}
+				updateScoreboard(company, interaction.guild, database);
+			});
+		}
 	});
 }
 
