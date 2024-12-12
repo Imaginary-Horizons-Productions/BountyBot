@@ -77,12 +77,6 @@ async function buildCompanyStatsEmbed(guild, database) {
 		.setTimestamp()
 }
 
-const GOAL_LOCALIZATION = {
-	bounties: "Bounties Completed",
-	toasts: "Toasts Raised",
-	secondings: "Toasts Seconded"
-};
-
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Guild} guild
  * @param {Sequelize} database
@@ -129,8 +123,8 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 	const fields = [];
 	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
 	if (goal) {
-		const contributions = await database.models.Contribution.findAll({ where: { goalId: goal.id } });
-		fields.push({ name: "Server Goal", value: `${generateTextBar(contributions.length, goal.requiredContributions, 15)} ${contributions.length}/${goal.requiredContributions} ${GOAL_LOCALIZATION[goal.type]}` });
+		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
 	}
 	if (company.festivalMultiplier !== 1) {
 		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
@@ -189,8 +183,8 @@ async function buildOverallScoreboardEmbed(guild, database) {
 	const fields = [];
 	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
 	if (goal) {
-		const contributions = await database.models.Contribution.findAll({ where: { goalId: goal.id } });
-		fields.push({ name: "Server Goal", value: `${generateTextBar(contributions.length, goal.requiredContributions, 15)} ${contributions.length}/${goal.requiredContributions} ${GOAL_LOCALIZATION[goal.type]}` });
+		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
 	}
 	if (company.festivalMultiplier !== 1) {
 		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });

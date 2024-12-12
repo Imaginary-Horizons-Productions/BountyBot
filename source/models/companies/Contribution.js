@@ -18,6 +18,10 @@ exports.initModel = function (sequelize) {
 		userId: {
 			type: DataTypes.STRING,
 			allowNull: false
+		},
+		value: {
+			type: DataTypes.BIGINT,
+			allowNull: false
 		}
 	}, {
 		sequelize,
