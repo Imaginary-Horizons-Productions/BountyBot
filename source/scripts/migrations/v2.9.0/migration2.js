@@ -26,7 +26,7 @@ connectToDatabase("migration").then(async database => {
 			allowNull: false
 		}
 	}, {
-		sequelize,
+		sequelize: database,
 		modelName: "Goal",
 		freezeTableName: true
 	});
@@ -49,7 +49,7 @@ connectToDatabase("migration").then(async database => {
 			allowNull: false
 		}
 	}, {
-		sequelize,
+		sequelize: database,
 		modelName: "Contribution",
 		freezeTableName: true
 	});
