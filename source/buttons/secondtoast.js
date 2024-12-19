@@ -3,7 +3,7 @@ const { ButtonWrapper } = require('../classes');
 const { Op } = require('sequelize');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { timeConversion, commandMention, congratulationBuilder, listifyEN } = require('../util/textUtil');
+const { timeConversion, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 const { progressGoal } = require('../logic/goals');
 
@@ -109,10 +109,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		database.models.Seconding.create({ toastId: originalToast.id, seconderId: interaction.user.id, wasCrit });
 
 		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
-		if (interaction.message.embeds[0].data.fields?.length > 0) {
-			embed.spliceFields(0, 1, { name: "Seconded by", value: `${interaction.message.embeds[0].data.fields[0].value}, ${interaction.member.toString()}` });
-		} else {
+		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by");
+		if (secondedFieldIndex === -1) {
 			embed.addFields({ name: "Seconded by", value: interaction.member.toString() });
+		} else {
+			embed.spliceFields(secondedFieldIndex, 1, { name: "Seconded by", value: `${interaction.message.embeds[0].data.fields[secondedFieldIndex].value}, ${interaction.member.toString()}` });
+		}
+		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal");
+		if (goalProgressFieldIndex !== -1) {
+			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
+			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(async rankUpdates => {
@@ -128,8 +135,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 			if (interaction.channel.isThread()) {
 				interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
-			} else {
+			} else if (interaction.message.thread !== null) {
 				interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			} else {
+				interaction.message.startThread({ name: "Rewards" }).then(thread => {
+					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				})
 			}
 			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
 		})
