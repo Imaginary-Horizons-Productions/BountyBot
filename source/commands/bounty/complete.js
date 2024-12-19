@@ -2,7 +2,7 @@ const { CommandInteraction, MessageFlags, EmbedBuilder, userMention, channelMent
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { updateScoreboard } = require("../../util/embedUtil");
-const { extractUserIdsFromMentions, timeConversion, commandMention, congratulationBuilder, listifyEN } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, timeConversion, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 const { completeBounty } = require("../../logic/bounties");
@@ -75,6 +75,11 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}
 
 	bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
+		const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
+		if (goal) {
+			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+			embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} GP` });
+		}
 		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 		if (goalProgress.goalCompleted) {
 			acknowledgeOptions.embeds = [

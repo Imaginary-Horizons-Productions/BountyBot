@@ -1,6 +1,6 @@
 const { EmbedBuilder, userMention, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { timeConversion, commandMention, listifyEN, congratulationBuilder } = require("../util/textUtil");
+const { timeConversion, commandMention, listifyEN, congratulationBuilder, generateTextBar } = require("../util/textUtil");
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require("../constants");
 const { getRankUpdates } = require("../util/scoreUtil");
 const { updateScoreboard } = require("../util/embedUtil");
@@ -61,7 +61,7 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	season.increment("toastsRaised");
 
-	const rewardTexts = [];
+	let rewardTexts = [];
 	if (rewardsAvailable > 0) {
 		const progressData = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
 		rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
@@ -73,6 +73,11 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 				.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
 			);
 		}
+	}
+	const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
+	if (goal) {
+		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+		embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} GP` });
 	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 	const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
