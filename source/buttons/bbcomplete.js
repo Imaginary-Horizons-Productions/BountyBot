@@ -3,7 +3,7 @@ const { ButtonWrapper } = require('../classes');
 const { MAX_MESSAGE_CONTENT_LENGTH, SKIP_INTERACTION_HANDLING } = require('../constants');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { commandMention, timeConversion, congratulationBuilder, listifyEN } = require('../util/textUtil');
+const { commandMention, timeConversion, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
 const { completeBounty } = require('../logic/bounties');
 const { Hunter } = require('../models/users/Hunter');
 
@@ -82,7 +82,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					}
 					collectedInteraction.channel.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
 					collectedInteraction.reply({ content: text, flags: MessageFlags.SuppressNotifications });
-					bounty.asEmbed(collectedInteraction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(embed => {
+					bounty.asEmbed(collectedInteraction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
+						if (goalProgress.gpContributed > 0) {
+							const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
+							const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+							embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+						}
 						interaction.message.edit({ embeds: [embed], components: [] });
 						collectedInteraction.channel.setArchived(true, "bounty completed");
 					})

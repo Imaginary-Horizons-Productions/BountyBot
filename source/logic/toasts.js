@@ -73,11 +73,11 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 				.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
 			);
 		}
-	}
-	const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
-	if (goal) {
-		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
-		embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} GP` });
+		if (progressData.gpContributed > 0) {
+			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
+			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+		}
 	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 	const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });

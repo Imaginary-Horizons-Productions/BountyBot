@@ -75,10 +75,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}
 
 	bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
-		const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
-		if (goal) {
+		if (goalProgress.gpContributed > 0) {
+			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
 			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
-			embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} GP` });
+			embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 		}
 		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 		if (goalProgress.goalCompleted) {
