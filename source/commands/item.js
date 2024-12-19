@@ -3,6 +3,7 @@ const { CommandWrapper } = require('../classes/index.js');
 const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../constants.js');
 const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil.js');
+const { timeConversion } = require('../util/textUtil.js');
 
 const ITEM_COOLDOWNS = new Map();
 
@@ -39,6 +40,11 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 		}).then(reply => {
 			const collector = reply.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", (collectedInteration) => {
+				if (Date.now() > collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
+					collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, ephemeral: true });
+					return;
+				}
+
 				database.models.Item.findOne({ where: { userId: collectedInteration.user.id, itemName } }).then(itemRow => {
 					if (runMode === "prod" && itemRow.count < 1) {
 						collectedInteration.reply({ content: `You don't have any ${itemName}.`, ephemeral: true });
