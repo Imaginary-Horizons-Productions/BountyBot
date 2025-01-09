@@ -46,7 +46,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}
 
 			let {bounty: returnedBounty, allCompleters, poster, company} = await addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
-			updateBoardPosting(returnedBounty, company, poster, [interaction.targetId], allCompleters, modalSubmission.guild, database);
+			updateBoardPosting(returnedBounty, company, poster, [interaction.targetId], allCompleters, modalSubmission.guild);
 			modalSubmission.reply({
 				content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`,
 				ephemeral: true

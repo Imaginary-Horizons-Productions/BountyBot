@@ -54,7 +54,7 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
  * @param {UserId[]} numCompleters 
  * @param {Guild} guild 
  */
-async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, database) {
+async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild) {
 	let postingId = company.bountyBoardId;
 	if (!postingId) return;
 	let { boardId } = bounty;
@@ -69,7 +69,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
 	let starterMessage = await post.fetchStarterMessage();
 	starterMessage.edit({
-		embeds: [bounty.asEmbed(guild, poster.level, company.festivalMultiplierString(), false, database)],
+		embeds: [await bounty.embed(guild, poster.level, company.festivalMultiplierString(), false, company, completers)],
 		components: bounty.generateBountyBoardButtons()
 	});
 }
