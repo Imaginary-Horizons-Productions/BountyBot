@@ -1,13 +1,9 @@
 const { ActionRowBuilder, UserSelectMenuBuilder, userMention, bold } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-// const { addCompleters } = require('../logic/bounties.js');
+const { addCompleters } = require('../logic/bounties.js');
+const { updateBoardPosting } = require("../util/bountyUtil.js");
 const { listifyEN, commandMention } = require('../util/textUtil');
-
-/**
- * @type {}
- */
-let bounties;
 
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -58,7 +54,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						return;
 					}
 
-					bounties.addCompleters(collectedInteraction.guild, bounty, bounty.Company, validatedCompleterIds);
+					let {bounty: returnedBounty, numCompleters, poster, company} = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
+					updateBoardPosting(returnedBounty, company, poster, numCompleters, guild);
 					collectedInteraction.reply({
 						content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 						ephemeral: true

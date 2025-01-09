@@ -1,13 +1,9 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-// const { addCompleters } = require('../logic/bounties.js');
+const { addCompleters } = require('../logic/bounties.js');
+const { updateBoardPosting } = require("../util/bountyUtil.js");
 const { commandMention } = require('../util/textUtil');
-
-/**
- * @type {}
- */
-let bounties;
 
 const mainId = "Give Bounty Credit";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -49,7 +45,8 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			addCompleters(modalSubmission.guild, bounty, bounty.Company, [interaction.targetId]);
+			let {bounty: returnedBounty, numCompleters, poster, company} = await addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
+			updateBoardPosting(returnedBounty, company, poster, numCompleters, guild);
 			modalSubmission.reply({
 				content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`,
 				ephemeral: true

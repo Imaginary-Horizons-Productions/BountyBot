@@ -49,6 +49,6 @@ exports.getCommand = function (commandName) {
 
 exports.setLogic = function (logicBlob) {
 	for (command in commandDictionary) {
-		command?.setLogic(logicBlob);
+		command.setLogic?.(logicBlob);
 	}
 }

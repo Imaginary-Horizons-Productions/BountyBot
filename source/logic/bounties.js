@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const { Bounty } = require("../models/bounties/Bounty");
 const { userMention, Guild } = require("discord.js");
 const { listifyEN, congratulationBuilder } = require("../util/textUtil");
@@ -19,7 +19,7 @@ function setDB(database) {
  * @param {Company} company
  * @param {string[]} completerIds
  */
-function addCompleters(guild, bounty, company, completerIds) {
+async function addCompleters(guild, bounty, completerIds) {
 	const rawCompletions = [];
 	for (const userId of completerIds) {
 		rawCompletions.push({
@@ -29,14 +29,38 @@ function addCompleters(guild, bounty, company, completerIds) {
 		})
 	}
 	database.models.Completion.bulkCreate(rawCompletions);
-	bounty.updatePosting(guild, company, database);
-	if (company.bountyBoardId) {
-		guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
-			return bountyBoard.threads.fetch(bounty.postingId);
-		}).then(posting => {
-			posting.send({ content: `${listifyEN(completerIds.map(id => userMention(id)))} ${completerIds.length === 1 ? "has" : "have"} been added as ${completerIds.length === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-		});
-	}
+	// bounty.updatePosting(guild, company, database);
+	let numCompleters = await database.models.Completion.count({
+		where: {
+			[Op.and]: {
+				userId: bounty.userId,
+				bountyId: bounty.id,
+				companyId: bounty.companyId
+			}
+		}
+	});
+	let poster = await database.models.Hunter.findOne({
+		where: {
+			[Op.and]: {
+				userId: bounty.userId,
+				companyId: bounty.companyId
+			}
+		}
+	});
+	let company = await database.models.Company.findByPk(bounty.companyId);
+	return {
+		bounty,
+		numCompleters,
+		poster,
+		company
+	};
+	// if (company.bountyBoardId) {
+	// 	guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+	// 		return bountyBoard.threads.fetch(bounty.postingId);
+	// 	}).then(posting => {
+	// 		posting.send({ content: `${listifyEN(completerIds.map(id => userMention(id)))} ${completerIds.length === 1 ? "has" : "have"} been added as ${completerIds.length === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
+	// 	});
+	// }
 }
 
 module.exports = {

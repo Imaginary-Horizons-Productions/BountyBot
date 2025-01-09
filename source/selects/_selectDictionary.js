@@ -17,6 +17,6 @@ exports.getSelect = function (mainId) {
 
 exports.setLogic = function (logicBlob) {
 	for (select in selectDictionary) {
-		select?.setLogic(logicBlob);
+		select.setLogic?.(logicBlob);
 	}
 }

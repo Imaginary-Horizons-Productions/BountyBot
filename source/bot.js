@@ -42,7 +42,7 @@ const interactionCooldowns = new Map();
 const runMode = process.argv[4];
 const databasePromise = connectToDatabase(runMode).then(database => {
 	for (logicFile in logicBlob) { // Set the database for the logic files that store it
-		logicFile?.setDB(database);
+		logicFile.setDB?.(database);
 	}
 	setCommandLogic(logicBlob);
 	setButtonLogic(logicBlob);

@@ -1,5 +1,9 @@
-const { Interaction, TextChannel, PermissionFlagsBits } = require("discord.js");
+const { Interaction, TextChannel, PermissionFlagsBits, userMention, Guild } = require("discord.js");
+const { Bounty } = require("../models/bounties/Bounty");
+const { Company } = require("../models/companies/Company");
+const { Hunter } = require("../models/users/Hunter");
 const { Sequelize } = require("sequelize");
+const { listifyEN, congratulationBuilder } = require("./textUtil");
 
 /**
  * @param {Interaction} interaction
@@ -42,7 +46,35 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
 	})
 }
 
+/**
+ * 
+ * @param {Bounty} bounty 
+ * @param {Company} company 
+ * @param {Hunter} poster 
+ * @param {number|null} numCompleters 
+ * @param {Guild} guild 
+ */
+async function updateBoardPosting(bounty, company, poster, numCompleters, guild) {
+	bounty.updatePosting(); //Need to extract this into this function
+	let { boardId } = bounty;
+	let postingId = company.bountyBoardId;
+	if (boardId) {
+		let boardsChannel = await guild.channels.fetch(boardId);
+		let post = await boardsChannel.threads.fetch(postingId);
+		if (post.archived) {
+			await thread.setArchived(false, "Unarchived to update posting");
+		}
+		post.edit({ name: bounty.title });
+		post.send({ content: `${listifyEN(completerIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
+		let starterMessage = await post.fetchStarterMessage();
+		starterMessage.edit({
+			embeds: [bounty.asEmbed(guild, poster.level, company.festivalMultiplierString(), false, database)],
+			components: bounty.generateBountyBoardButtons()
+		});
+	}
+}
 
 module.exports = {
-	showcaseBounty
+	showcaseBounty,
+	updateBoardPosting
 }

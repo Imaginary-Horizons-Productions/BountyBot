@@ -1,12 +1,8 @@
 const { CommandInteraction, userMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention } = require("../../util/textUtil");
-// const { addCompleters } = require("../../logic/bounties.js");
-
-/**
- * @type {}
- */
-let bounties;
+const { addCompleters } = require("../../logic/bounties.js");
+const { updateBoardPosting } = require("../../util/bountyUtil.js");
 
 /**
  * @param {CommandInteraction} interaction
@@ -33,6 +29,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: interaction.guildId } });
 	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 	const bannedIds = [];
+	console.log("test")
 	for (const member of completerMembers) {
 		const memberId = member.id;
 		if (!existingCompleterIds.includes(memberId)) {
@@ -48,13 +45,14 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			}
 		}
 	}
-
+	console.log("test")
 	if (validatedCompleterIds.length < 1) {
 		interaction.reply({ content: "Could not find any new non-bot mentions in `hunters`.", ephemeral: true });
 		return;
 	}
 
-	bounties.addCompleters(interaction.guild, bounty, bounty.Company, validatedCompleterIds);
+	let {bounty: returnedBounty, numCompleters, poster, company} = await addCompleters(interaction.guild, bounty, validatedCompleterIds);
+	updateBoardPosting(returnedBounty, company, poster, numCompleters, guild);
 	interaction.reply({
 		content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 		ephemeral: true

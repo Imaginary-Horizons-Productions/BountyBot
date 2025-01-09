@@ -28,6 +28,6 @@ exports.getContextMenu = function (mainId) {
 
 exports.setLogic = function (logicBlob) {
 	for (contextMenu in contextMenuDictionary) {
-		contextMenu?.setLogic(logicBlob);
+		contextMenu.setLogic?.(logicBlob);
 	}
 }

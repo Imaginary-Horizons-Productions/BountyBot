@@ -23,6 +23,6 @@ exports.getButton = function (mainId) {
 
 exports.setLogic = function (logicBlob) {
 	for (button in buttonDictionary) {
-		button?.setLogic(logicBlob);
+		button.setLogic?.(logicBlob);
 	}
 }
