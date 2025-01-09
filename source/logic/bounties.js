@@ -29,13 +29,9 @@ async function addCompleters(guild, bounty, completerIds) {
 		})
 	}
 	await db.models.Completion.bulkCreate(rawCompletions);
-	let numCompleters = await db.models.Completion.count({
+	let allCompleters = await db.models.Completion.findAll({
 		where: {
-			[Op.and]: {
-				userId: bounty.userId,
-				bountyId: bounty.id,
-				companyId: bounty.companyId
-			}
+			bountyId: bounty.id
 		}
 	});
 	let poster = await db.models.Hunter.findOne({
@@ -49,7 +45,7 @@ async function addCompleters(guild, bounty, completerIds) {
 	let company = await db.models.Company.findByPk(bounty.companyId);
 	return {
 		bounty,
-		numCompleters,
+		allCompleters,
 		poster,
 		company
 	};

@@ -49,8 +49,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	let {bounty: returnedBounty, numCompleters, poster, company} = await addCompleters(interaction.guild, bounty, validatedCompleterIds);
-	updateBoardPosting(returnedBounty, company, poster, numCompleters, interaction.guild);
+	let {bounty: returnedBounty, allCompleters, poster, company} = await addCompleters(interaction.guild, bounty, validatedCompleterIds);
+	updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild, database);
 	interaction.reply({
 		content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 		ephemeral: true

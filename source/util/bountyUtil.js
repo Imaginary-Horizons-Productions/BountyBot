@@ -1,4 +1,4 @@
-const { Interaction, TextChannel, PermissionFlagsBits, userMention, Guild } = require("discord.js");
+const { Interaction, TextChannel, PermissionFlagsBits, userMention, Guild, UserId } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
@@ -51,28 +51,27 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
  * @param {Bounty} bounty 
  * @param {Company} company 
  * @param {Hunter} poster 
- * @param {number|null} numCompleters 
+ * @param {UserId[]} numCompleters 
  * @param {Guild} guild 
  */
-async function updateBoardPosting(bounty, company, poster, numCompleters, guild) {
-	bounty.updatePosting(); //Need to extract this into this function
-	if (!company.bountyBoardId) return;
-	let { boardId } = bounty;
+async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, database) {
 	let postingId = company.bountyBoardId;
-	if (boardId) {
-		let boardsChannel = await guild.channels.fetch(boardId);
-		let post = await boardsChannel.threads.fetch(postingId);
-		if (post.archived) {
-			await thread.setArchived(false, "Unarchived to update posting");
-		}
-		post.edit({ name: bounty.title });
-		post.send({ content: `${listifyEN(completerIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-		let starterMessage = await post.fetchStarterMessage();
-		starterMessage.edit({
-			embeds: [bounty.asEmbed(guild, poster.level, company.festivalMultiplierString(), false, database)],
-			components: bounty.generateBountyBoardButtons()
-		});
+	if (!postingId) return;
+	let { boardId } = bounty;
+	if (!boardId) return;
+	let boardsChannel = await guild.channels.fetch(boardId);
+	let post = await boardsChannel.threads.fetch(postingId);
+	if (post.archived) {
+		await thread.setArchived(false, "Unarchived to update posting");
 	}
+	post.edit({ name: bounty.title });
+	let numCompleters = newCompleterIds.length;
+	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
+	let starterMessage = await post.fetchStarterMessage();
+	starterMessage.edit({
+		embeds: [bounty.asEmbed(guild, poster.level, company.festivalMultiplierString(), false, database)],
+		components: bounty.generateBountyBoardButtons()
+	});
 }
 
 module.exports = {
