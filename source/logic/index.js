@@ -4,4 +4,6 @@
  * have relevant keys to be able to assign logic
  * files to commands/controllers
  */
-module.exports.bounties = require('./bounties.js');
+module.exports = {
+    bounties: require('./bounties.js')
+};

@@ -42,7 +42,7 @@ const interactionCooldowns = new Map();
 const runMode = process.argv[4];
 const databasePromise = connectToDatabase(runMode).then(database => {
 	for (logicFile in logicBlob) { // Set the database for the logic files that store it
-		logicFile.setDB?.(database);
+		logicBlob[logicFile].setDB?.(database);
 	}
 	setCommandLogic(logicBlob);
 	setButtonLogic(logicBlob);
@@ -151,7 +151,6 @@ client.on(Events.InteractionCreate, interaction => {
 				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, ephemeral: true });
 				return;
 			}
-
 			command.execute(interaction, database, runMode);
 		} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
 			return;

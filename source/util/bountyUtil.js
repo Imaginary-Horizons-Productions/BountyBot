@@ -56,6 +56,7 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
  */
 async function updateBoardPosting(bounty, company, poster, numCompleters, guild) {
 	bounty.updatePosting(); //Need to extract this into this function
+	if (!company.bountyBoardId) return;
 	let { boardId } = bounty;
 	let postingId = company.bountyBoardId;
 	if (boardId) {

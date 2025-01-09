@@ -28,9 +28,8 @@ async function addCompleters(guild, bounty, completerIds) {
 			companyId: guild.id
 		})
 	}
-	database.models.Completion.bulkCreate(rawCompletions);
-	// bounty.updatePosting(guild, company, database);
-	let numCompleters = await database.models.Completion.count({
+	await db.models.Completion.bulkCreate(rawCompletions);
+	let numCompleters = await db.models.Completion.count({
 		where: {
 			[Op.and]: {
 				userId: bounty.userId,
@@ -39,7 +38,7 @@ async function addCompleters(guild, bounty, completerIds) {
 			}
 		}
 	});
-	let poster = await database.models.Hunter.findOne({
+	let poster = await db.models.Hunter.findOne({
 		where: {
 			[Op.and]: {
 				userId: bounty.userId,
@@ -47,7 +46,7 @@ async function addCompleters(guild, bounty, completerIds) {
 			}
 		}
 	});
-	let company = await database.models.Company.findByPk(bounty.companyId);
+	let company = await db.models.Company.findByPk(bounty.companyId);
 	return {
 		bounty,
 		numCompleters,
