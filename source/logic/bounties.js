@@ -1,4 +1,4 @@
-const { Sequelize, Op } = require("sequelize");
+const { Sequelize } = require("sequelize");
 const { Bounty } = require("../models/bounties/Bounty");
 const { userMention, Guild } = require("discord.js");
 const { listifyEN, congratulationBuilder } = require("../util/textUtil");
@@ -36,10 +36,8 @@ async function addCompleters(guild, bounty, completerIds) {
 	});
 	let poster = await db.models.Hunter.findOne({
 		where: {
-			[Op.and]: {
-				userId: bounty.userId,
-				companyId: bounty.companyId
-			}
+			userId: bounty.userId,
+			companyId: bounty.companyId
 		}
 	});
 	let company = await db.models.Company.findByPk(bounty.companyId);
@@ -49,13 +47,6 @@ async function addCompleters(guild, bounty, completerIds) {
 		poster,
 		company
 	};
-	// if (company.bountyBoardId) {
-	// 	guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
-	// 		return bountyBoard.threads.fetch(bounty.postingId);
-	// 	}).then(posting => {
-	// 		posting.send({ content: `${listifyEN(completerIds.map(id => userMention(id)))} ${completerIds.length === 1 ? "has" : "have"} been added as ${completerIds.length === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-	// 	});
-	// }
 }
 
 module.exports = {

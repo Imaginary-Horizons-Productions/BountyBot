@@ -108,9 +108,6 @@ client.on(Events.ClientReady, () => {
 			})
 		});
 	}
-	databasePromise.then(database => {
-
-	});
 });
 
 client.on(Events.InteractionCreate, interaction => {

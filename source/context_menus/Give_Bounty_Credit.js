@@ -2,8 +2,34 @@ const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuil
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
-const { updateBoardPosting } = require("../util/bountyUtil.js");
 const { commandMention } = require('../util/textUtil');
+
+/**
+ * Updates the board posting for the bounty after adding the completers
+ * @param {Bounty} bounty 
+ * @param {Company} company 
+ * @param {Hunter} poster 
+ * @param {UserId[]} numCompleters 
+ * @param {Guild} guild 
+ */
+async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild) {
+	let postingId = company.bountyBoardId;
+	let { boardId } = bounty;
+	if (!postingId || !boardId) return;
+	let boardsChannel = await guild.channels.fetch(boardId);
+	let post = await boardsChannel.threads.fetch(postingId);
+	if (post.archived) {
+		await thread.setArchived(false, "Unarchived to update posting");
+	}
+	post.edit({ name: bounty.title });
+	let numCompleters = newCompleterIds.length;
+	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
+	let starterMessage = await post.fetchStarterMessage();
+	starterMessage.edit({
+		embeds: [await bounty.embed(guild, poster.level, company.festivalMultiplierString(), false, company, completers)],
+		components: bounty.generateBountyBoardButtons()
+	});
+}
 
 const mainId = "Give Bounty Credit";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -55,6 +81,6 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 	}
 );
 
-module.exports.assignLogic = (logicBundle) => {
+module.exports.setLogic = (logicBundle) => {
 	bounties = logicBundle.bounties;
 }
