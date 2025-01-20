@@ -3,7 +3,6 @@ const { userMention, Guild } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
-const { listifyEN, congratulationBuilder } = require("../util/textUtil");
 const { progressGoal } = require("./goals");
 const { rollItemDrop } = require("../util/itemUtil");
 
@@ -11,7 +10,7 @@ let db;
 
 /**
  * Set the database pointer for this logic file.
- * @param {Sequelize} database 
+ * @param {Sequelize} database
  */
 function setDB(database) {
 	db = database;

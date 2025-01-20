@@ -2,15 +2,15 @@ const { ActionRowBuilder, UserSelectMenuBuilder, userMention, bold } = require('
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
-const { listifyEN, commandMention, congratulationBuilder } = require('../util/textUtil');
+const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
 
 /**
  * Updates the board posting for the bounty after adding the completers
- * @param {Bounty} bounty 
- * @param {Company} company 
- * @param {Hunter} poster 
- * @param {UserId[]} numCompleters 
- * @param {Guild} guild 
+ * @param {Bounty} bounty
+ * @param {Company} company
+ * @param {Hunter} poster
+ * @param {UserId[]} numCompleters
+ * @param {Guild} guild
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
 	if (!btnPost) return;
@@ -40,7 +40,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				content: "Which bounty hunters should be credited with completing the bounty?",
 				components: [
 					new ActionRowBuilder().addComponents(
-						new UserSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}`)
+						new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 							.setPlaceholder("Select bounty hunters...")
 							.setMaxValues(5)
 					)
@@ -48,9 +48,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				fetchReply: true,
 				ephemeral: true
 			}).then(reply => {
-				const collector = reply.createMessageComponentCollector({ max: 1 });
-
-				collector.on("collect", async (collectedInteraction) => {
+				reply.awaitMessageComponent({ filter: (interaction) => interaction.customId === SKIP_INTERACTION_HANDLING, time: timeConversion(3, "m", "ms") }).then(async collectedInteraction => {
 					const validatedCompleterIds = [];
 					const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: collectedInteraction.guildId } });
 					const existingCompleterIds = existingCompletions.map(completion => completion.userId);
@@ -73,15 +71,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						return;
 					}
 
-					let {bounty: returnedBounty, allCompleters, poster, company} = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
+					let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
 					updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
 					collectedInteraction.update({
 						components: []
 					});
-				})
-
-				collector.on("end", () => {
+				}).then(() => {
 					interaction.deleteReply();
+				}).catch(error => {
+					if (error.code === "InteractionCollectorError") {
+						interaction.deleteReply();
+					}
 				})
 			})
 		})
