@@ -14,7 +14,6 @@ const { listifyEN, commandMention, congratulationBuilder } = require('../util/te
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
 	if (!btnPost) return;
-	console.log(btnPost);
 	if (btnPost.archived) {
 		await thread.setArchived(false, "Unarchived to update posting");
 	}
