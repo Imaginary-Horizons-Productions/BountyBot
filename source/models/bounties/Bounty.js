@@ -7,7 +7,8 @@ const { timeConversion } = require('../../util/textUtil');
 
 /** Bounties are user created objectives for other server members to complete */
 exports.Bounty = class extends Model {
-	/** Generate an embed for the given bounty
+
+	/** Generate an embed for the given bounty, in addition to fetching prerequisite data
 	 * @param {Guild} guild
 	 * @param {number} posterLevel
 	 * @param {string} festivalMultiplierString
