@@ -7,16 +7,29 @@ const { timeConversion } = require('../../util/textUtil');
 
 /** Bounties are user created objectives for other server members to complete */
 exports.Bounty = class extends Model {
-	/** Generate an embed for the given bounty
+
+	/** Generate an embed for the given bounty, in addition to fetching prerequisite data
 	 * @param {Guild} guild
 	 * @param {number} posterLevel
 	 * @param {string} festivalMultiplierString
 	 * @param {boolean} shouldOmitRewardsField
 	 * @param {Sequelize} database
 	 */
-	asEmbed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, database) {
+	async asEmbed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, database) {
+		const [company, completions] = await Promise.all([database.models.Company.findByPk(guild.id), database.models.Completion.findAll({ where: { bountyId: this.id } })]);
+		return this.embed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, company, completions);
+	}
+
+	/** Generate an embed for the given bounty
+	 * @param {Guild} guild
+	 * @param {number} posterLevel
+	 * @param {string} festivalMultiplierString
+	 * @param {boolean} shouldOmitRewardsField
+	 * @param {Company} company
+	 * @param {Completion[]} completions
+	 */
+	embed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, company, completions) {
 		return guild.members.fetch(this.userId).then(async author => {
-			const company = await database.models.Company.findByPk(guild.id);
 			const thumbnails = {
 				open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
 				complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
@@ -44,7 +57,6 @@ exports.Bounty = class extends Model {
 			if (this.isEvergreen) {
 				embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
 			} else {
-				const completions = await database.models.Completion.findAll({ where: { bountyId: this.id } });
 				if (completions.length > 0) {
 					fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
 				}

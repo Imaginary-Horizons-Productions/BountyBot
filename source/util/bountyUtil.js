@@ -42,7 +42,6 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
 	})
 }
 
-
 module.exports = {
 	showcaseBounty
 }

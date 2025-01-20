@@ -2,6 +2,30 @@ const { ActionRowBuilder, UserSelectMenuBuilder, userMention, bold } = require('
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
+const { listifyEN, commandMention, congratulationBuilder } = require('../util/textUtil');
+
+/**
+ * Updates the board posting for the bounty after adding the completers
+ * @param {Bounty} bounty 
+ * @param {Company} company 
+ * @param {Hunter} poster 
+ * @param {UserId[]} numCompleters 
+ * @param {Guild} guild 
+ */
+async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
+	if (!btnPost) return;
+	if (btnPost.archived) {
+		await thread.setArchived(false, "Unarchived to update posting");
+	}
+	btnPost.edit({ name: bounty.title });
+	let numCompleters = newCompleterIds.length;
+	btnPost.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
+	let starterMessage = await btnPost.fetchStarterMessage();
+	starterMessage.edit({
+		embeds: [await bounty.embed(guild, poster.level, company.festivalMultiplierString(), false, company, completers)],
+		components: bounty.generateBountyBoardButtons()
+	});
+}
 
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -31,20 +55,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: collectedInteraction.guildId } });
 					const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 					const bannedIds = [];
-					for (const member of collectedInteraction.members.values()) {
+					for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
 						const memberId = member.id;
-						if (!existingCompleterIds.includes(memberId)) {
-							await database.models.User.findOrCreate({ where: { id: memberId } });
-							const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
-							if (hunter.isBanned) {
-								bannedIds.push(memberId);
-								continue;
-							}
-							if (memberId !== interaction.user.id && (runMode !== "prod" || !member.user.bot)) {
-								existingCompleterIds.push(memberId);
-								validatedCompleterIds.push(memberId);
-							}
+						if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
+						await database.models.User.findOrCreate({ where: { id: memberId } });
+						const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
+						if (hunter.isBanned) {
+							bannedIds.push(memberId);
+							continue;
 						}
+						existingCompleterIds.push(memberId);
+						validatedCompleterIds.push(memberId);
 					}
 
 					if (validatedCompleterIds.length < 1) {
@@ -52,7 +73,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						return;
 					}
 
-					addCompleters(collectedInteraction.guild, database, bounty, bounty.Company, validatedCompleterIds);
+					let {bounty: returnedBounty, allCompleters, poster, company} = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
+					updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
 					collectedInteraction.update({
 						components: []
 					});
@@ -65,3 +87,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		})
 	}
 );
+
+module.exports.setLogic = (logicBundle) => {
+	bounties = logicBundle.bounties;
+}

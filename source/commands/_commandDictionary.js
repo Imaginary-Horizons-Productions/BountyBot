@@ -45,3 +45,9 @@ for (const file of exports.commandFiles) {
 exports.getCommand = function (commandName) {
 	return commandDictionary[commandName];
 }
+
+exports.setLogic = function (logicBlob) {
+	for (command in commandDictionary) {
+		command.setLogic?.(logicBlob);
+	}
+}

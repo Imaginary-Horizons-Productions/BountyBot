@@ -1,7 +1,34 @@
 const { CommandInteraction, userMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { extractUserIdsFromMentions, listifyEN, commandMention } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { addCompleters } = require("../../logic/bounties.js");
+
+/**
+ * Updates the board posting for the bounty after adding the completers
+ * @param {Bounty} bounty 
+ * @param {Company} company 
+ * @param {Hunter} poster 
+ * @param {UserId[]} numCompleters 
+ * @param {Guild} guild 
+ */
+async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild) {
+	let boardId = company.bountyBoardId;
+	let { postingId } = bounty;
+	if (!boardId || !postingId) return;
+	let boardsChannel = await guild.channels.fetch(boardId);
+	let post = await boardsChannel.threads.fetch(postingId);
+	if (post.archived) {
+		await thread.setArchived(false, "Unarchived to update posting");
+	}
+	post.edit({ name: bounty.title });
+	let numCompleters = newCompleterIds.length;
+	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
+	let starterMessage = await post.fetchStarterMessage();
+	starterMessage.edit({
+		embeds: [await bounty.embed(guild, poster.level, company.festivalMultiplierString(), false, company, completers)],
+		components: bounty.generateBountyBoardButtons()
+	});
+}
 
 /**
  * @param {CommandInteraction} interaction
@@ -28,28 +55,26 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: interaction.guildId } });
 	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 	const bannedIds = [];
-	for (const member of completerMembers) {
+	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
+		if (runMode === "prod" && member.user.bot) continue;
 		const memberId = member.id;
-		if (!existingCompleterIds.includes(memberId)) {
-			await database.models.User.findOrCreate({ where: { id: memberId } });
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
-			if (hunter.isBanned) {
-				bannedIds.push(memberId);
-				continue;
-			}
-			if (runMode !== "prod" || !member.user.bot) {
-				existingCompleterIds.push(memberId);
-				validatedCompleterIds.push(memberId);
-			}
+		await database.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+		if (hunter.isBanned) {
+			bannedIds.push(memberId);
+			continue;
 		}
+		existingCompleterIds.push(memberId);
+		validatedCompleterIds.push(memberId);
 	}
-
+	
 	if (validatedCompleterIds.length < 1) {
 		interaction.reply({ content: "Could not find any new non-bot mentions in `hunters`.", ephemeral: true });
 		return;
 	}
-
-	addCompleters(interaction.guild, database, bounty, bounty.Company, validatedCompleterIds);
+	
+	let {bounty: returnedBounty, allCompleters, poster, company} = await addCompleters(interaction.guild, bounty, validatedCompleterIds);
+	updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 	interaction.reply({
 		content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 		ephemeral: true
@@ -75,5 +100,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBundle) => {
+		bounties = logicBundle.bounties;
+	}
 };

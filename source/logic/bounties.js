@@ -7,14 +7,23 @@ const { listifyEN, congratulationBuilder } = require("../util/textUtil");
 const { progressGoal } = require("./goals");
 const { rollItemDrop } = require("../util/itemUtil");
 
+let db;
+
+/**
+ * Set the database pointer for this logic file.
+ * @param {Sequelize} database 
+ */
+function setDB(database) {
+	db = database;
+}
+
 /**
  * @param {Guild} guild
- * @param {Sequelize} database
  * @param {Bounty} bounty
  * @param {Company} company
  * @param {string[]} completerIds
  */
-function addCompleters(guild, database, bounty, company, completerIds) {
+async function addCompleters(guild, bounty, completerIds) {
 	const rawCompletions = [];
 	for (const userId of completerIds) {
 		rawCompletions.push({
@@ -23,15 +32,25 @@ function addCompleters(guild, database, bounty, company, completerIds) {
 			companyId: guild.id
 		})
 	}
-	database.models.Completion.bulkCreate(rawCompletions);
-	bounty.updatePosting(guild, company, database);
-	if (company.bountyBoardId) {
-		guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
-			return bountyBoard.threads.fetch(bounty.postingId);
-		}).then(posting => {
-			posting.send({ content: `${listifyEN(completerIds.map(id => userMention(id)))} ${completerIds.length === 1 ? "has" : "have"} been added as ${completerIds.length === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-		});
-	}
+	await db.models.Completion.bulkCreate(rawCompletions);
+	let allCompleters = await db.models.Completion.findAll({
+		where: {
+			bountyId: bounty.id
+		}
+	});
+	let poster = await db.models.Hunter.findOne({
+		where: {
+			userId: bounty.userId,
+			companyId: bounty.companyId
+		}
+	});
+	let company = await db.models.Company.findByPk(bounty.companyId);
+	return {
+		bounty,
+		allCompleters,
+		poster,
+		company
+	};
 }
 
 /**
@@ -112,6 +131,7 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 }
 
 module.exports = {
+	setDB,
 	addCompleters,
 	completeBounty
 }

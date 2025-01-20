@@ -25,3 +25,9 @@ for (const file of exports.contextMenuFiles) {
 exports.getContextMenu = function (mainId) {
 	return contextMenuDictionary[mainId];
 }
+
+exports.setLogic = function (logicBlob) {
+	for (contextMenu in contextMenuDictionary) {
+		contextMenu.setLogic?.(logicBlob);
+	}
+}
