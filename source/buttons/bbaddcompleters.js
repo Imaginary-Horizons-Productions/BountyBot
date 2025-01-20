@@ -56,20 +56,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: collectedInteraction.guildId } });
 					const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 					const bannedIds = [];
-					for (const member of collectedInteraction.members.values()) {
+					for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
 						const memberId = member.id;
-						if (!existingCompleterIds.includes(memberId)) {
-							await database.models.User.findOrCreate({ where: { id: memberId } });
-							const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
-							if (hunter.isBanned) {
-								bannedIds.push(memberId);
-								continue;
-							}
-							if (memberId !== interaction.user.id && (runMode !== "prod" || !member.user.bot)) {
-								existingCompleterIds.push(memberId);
-								validatedCompleterIds.push(memberId);
-							}
+						if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
+						await database.models.User.findOrCreate({ where: { id: memberId } });
+						const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
+						if (hunter.isBanned) {
+							bannedIds.push(memberId);
+							continue;
 						}
+						existingCompleterIds.push(memberId);
+						validatedCompleterIds.push(memberId);
 					}
 
 					if (validatedCompleterIds.length < 1) {

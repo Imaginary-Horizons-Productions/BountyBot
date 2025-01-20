@@ -55,26 +55,24 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: interaction.guildId } });
 	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 	const bannedIds = [];
-	for (const member of completerMembers) {
+	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
+		if (runMode === "prod" && member.user.bot) continue;
 		const memberId = member.id;
-		if (!existingCompleterIds.includes(memberId)) {
-			await database.models.User.findOrCreate({ where: { id: memberId } });
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
-			if (hunter.isBanned) {
-				bannedIds.push(memberId);
-				continue;
-			}
-			if (runMode !== "prod" || !member.user.bot) {
-				existingCompleterIds.push(memberId);
-				validatedCompleterIds.push(memberId);
-			}
+		await database.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+		if (hunter.isBanned) {
+			bannedIds.push(memberId);
+			continue;
 		}
+		existingCompleterIds.push(memberId);
+		validatedCompleterIds.push(memberId);
 	}
+	
 	if (validatedCompleterIds.length < 1) {
 		interaction.reply({ content: "Could not find any new non-bot mentions in `hunters`.", ephemeral: true });
 		return;
 	}
-
+	
 	let {bounty: returnedBounty, allCompleters, poster, company} = await addCompleters(interaction.guild, bounty, validatedCompleterIds);
 	updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 	interaction.reply({
