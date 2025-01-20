@@ -1,9 +1,5 @@
-const { Interaction, TextChannel, PermissionFlagsBits, userMention, Guild, UserId } = require("discord.js");
-const { Bounty } = require("../models/bounties/Bounty");
-const { Company } = require("../models/companies/Company");
-const { Hunter } = require("../models/users/Hunter");
+const { Interaction, TextChannel, PermissionFlagsBits } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { listifyEN, congratulationBuilder } = require("./textUtil");
 
 /**
  * @param {Interaction} interaction
