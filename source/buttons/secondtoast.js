@@ -1,10 +1,11 @@
-const { EmbedBuilder, MessageFlags } = require('discord.js');
+const { EmbedBuilder, MessageFlags, userMention } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { Op } = require('sequelize');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { timeConversion, commandMention } = require('../util/textUtil');
+const { timeConversion, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
+const { progressGoal } = require('../logic/goals');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -18,7 +19,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 
 		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
-		if (originalToast.senderId === interaction.user.id) {
+		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", ephemeral: true });
 			return;
 		}
@@ -31,6 +32,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
+		const progressData = await progressGoal(interaction.guildId, "secondings", interaction.user.id, database);
+		const rewardTexts = [`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`];
 
 		const recipientIds = [];
 		originalToast.Recipients.forEach(reciept => {
@@ -38,7 +41,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		let levelTexts = [];
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		for (const userId of recipientIds) {
 			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
@@ -48,7 +50,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				participation.increment({ xp: 1 });
 			}
 			if (recipientLevelTexts.length > 0) {
-				levelTexts = levelTexts.concat(recipientLevelTexts);
+				rewardTexts.push(...recipientLevelTexts);
 			}
 			hunter.increment("toastsReceived");
 		}
@@ -95,7 +97,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(interaction.user.id);
 				const seconderLevelTexts = await seconder.addXP(interaction.guild.name, 1, true, database);
 				if (seconderLevelTexts.length > 0) {
-					levelTexts = levelTexts.concat(seconderLevelTexts);
+					rewardTexts = rewardTexts.concat(seconderLevelTexts);
 				}
 				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: 1 } });
 				if (!participationCreated) {
@@ -107,10 +109,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		database.models.Seconding.create({ toastId: originalToast.id, seconderId: interaction.user.id, wasCrit });
 
 		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
-		if (interaction.message.embeds[0].data.fields?.length > 0) {
-			embed.spliceFields(0, 1, { name: "Seconded by", value: `${interaction.message.embeds[0].data.fields[0].value}, ${interaction.member.toString()}` });
-		} else {
+		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by");
+		if (secondedFieldIndex === -1) {
 			embed.addFields({ name: "Seconded by", value: interaction.member.toString() });
+		} else {
+			embed.spliceFields(secondedFieldIndex, 1, { name: "Seconded by", value: `${interaction.message.embeds[0].data.fields[secondedFieldIndex].value}, ${interaction.member.toString()}` });
+		}
+		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal");
+		if (goalProgressFieldIndex !== -1) {
+			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
+			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(async rankUpdates => {
@@ -118,14 +127,34 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (rankUpdates.length > 0) {
 				text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 			}
-			if (levelTexts.length > 0) {
-				text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
+			if (rewardTexts.length > 0) {
+				text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
 			}
 			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
 				text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 			}
-			interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			if (interaction.channel.isThread()) {
+				interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			} else if (interaction.message.thread !== null) {
+				interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+			} else {
+				interaction.message.startThread({ name: "Rewards" }).then(thread => {
+					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				})
+			}
 			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
 		})
+
+		if (progressData.goalCompleted) {
+			interaction.channel.send({
+				embeds: [
+					new EmbedBuilder().setColor("e5b271")
+						.setTitle("Server Goal Completed")
+						.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+						.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+						.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
+				]
+			});
+		}
 	}
 );

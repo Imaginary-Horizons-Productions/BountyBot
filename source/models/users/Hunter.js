@@ -129,6 +129,14 @@ exports.initModel = function (sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
+		goalsInitiated: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
+		goalContributions: {
+			type: DataTypes.BIGINT,
+			defaultValue: 0
+		},
 		isBanned: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
@@ -148,6 +156,10 @@ exports.initModel = function (sequelize) {
 		profileColor: {
 			type: DataTypes.STRING,
 			defaultValue: "Default"
+		},
+		itemFindBoost: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
 		}
 	}, {
 		sequelize,

@@ -37,7 +37,6 @@ exports.Bounty = class extends Model {
 			};
 			const fields = [];
 			const embed = new EmbedBuilder().setColor(author.displayColor)
-				.setAuthor(ihpAuthorPayload)
 				.setThumbnail(this.thumbnailURL ?? thumbnails[this.state])
 				.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
 				.setTimestamp();
@@ -56,12 +55,12 @@ exports.Bounty = class extends Model {
 			}
 
 			if (this.isEvergreen) {
-				embed.setFooter({ text: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
+				embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
 			} else {
 				if (completions.length > 0) {
 					fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
 				}
-				embed.setFooter({ text: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+				embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
 			}
 
 			if (fields.length > 0) {

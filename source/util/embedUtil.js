@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Guild, Colors, TextChannel, Utils } = require("discord.js");
+const { EmbedBuilder, Guild, Colors } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Hunter } = require("../models/users/Hunter");
 const { Company } = require("../models/companies/Company");
@@ -96,6 +96,12 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 			scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
 		}
 	}
+	const embed = new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+		.setTitle("The Season Scoreboard")
+		.setFooter(randomFooterTip())
+		.setTimestamp();
 	let description = "";
 	const andMore = "…and more";
 	const maxDescriptionLength = 2048 - andMore.length;
@@ -108,13 +114,29 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 		}
 	}
 
-	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
-		.setTitle("The Season Scoreboard")
-		.setDescription(description || "No Bounty Hunters yet…")
-		.setFooter(randomFooterTip())
-		.setTimestamp();
+	if (description) {
+		embed.setDescription(description);
+	} else {
+		embed.setDescription("No Bounty Hunters yet…");
+	}
+
+	const fields = [];
+	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
+	if (goal) {
+		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
+	}
+	if (company.festivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
+	}
+	if (company.nextRaffleString) {
+		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
+	}
+
+	if (fields.length > 0) {
+		embed.addFields(fields);
+	}
+	return embed;
 }
 
 /** An overall scoreboard orders a company's hunters by total xp
@@ -123,6 +145,7 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
  */
 async function buildOverallScoreboardEmbed(guild, database) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
+	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
@@ -133,6 +156,12 @@ async function buildOverallScoreboardEmbed(guild, database) {
 			scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
 		}
 	}
+	const embed = new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+		.setTitle("The Scoreboard")
+		.setFooter(randomFooterTip())
+		.setTimestamp();
 	let description = "";
 	const andMore = "…and more";
 	const maxDescriptionLength = 2048 - andMore.length;
@@ -145,32 +174,27 @@ async function buildOverallScoreboardEmbed(guild, database) {
 		}
 	}
 
-	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
-	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
-		.setTitle("The Scoreboard")
-		.setDescription(description || "No Bounty Hunters yet...")
-		.setFooter(randomFooterTip())
-		.setTimestamp();
-}
+	if (description) {
+		embed.setDescription(description);
+	} else {
+		embed.setDescription("No Bounty Hunters yet…");
+	}
 
-/** Build an embed mentioning if a festival is running, the next raffle date and the raffle rewards
- * @param {TextChannel} channel
- * @param {Guild} guild
- * @param {Company} company
- */
-async function buildServerBonusesEmbed(channel, guild, company) {
-	const { displayColor, displayName } = await guild.members.fetch(guild.client.user.id);
-	const embed = new EmbedBuilder().setColor(displayColor)
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
-		.setTitle(`${displayName} Server Bonuses`)
-		.setThumbnail(company.serverBonusesThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/734097732897079336/calendar.png')
-		.setDescription(`There is ${company.festivalMultiplier != 1 ? '' : 'not '}an XP multiplier festival currently active${company.festivalMultiplier == 1 ? '' : ` for ${company.festivalMultiplierString()}`}.`)
-		.setFooter(randomFooterTip())
-		.setTimestamp();
+	const fields = [];
+	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
+	if (goal) {
+		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
+	}
+	if (company.festivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
+	}
 	if (company.nextRaffleString) {
-		embed.addFields([{ name: "Next Raffle", value: Utils.cleanContent(`The next raffle will be on ${company.nextRaffleString}!`, channel) }]);
+		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
+	}
+
+	if (fields.length > 0) {
+		embed.addFields(fields);
 	}
 
 	return embed;
@@ -214,36 +238,24 @@ async function buildModStatsEmbed(guild, member, hunter, database) {
  * @returns {MessageEmbed}
  */
 async function buildVersionEmbed() {
-	const data = await fs.promises.readFile('./ChangeLog.md', { encoding: 'utf8' });
+	const changelogPath = "./ChangeLog.md";
+	const data = await fs.promises.readFile(changelogPath, { encoding: 'utf8' });
+	const stats = await fs.promises.stat(changelogPath);
 	const dividerRegEx = /## .+ Version/g;
 	const changesStartRegEx = /\.\d+:/g;
-	const knownIssuesStartRegEx = /### Known Issues/g;
 	let titleStart = dividerRegEx.exec(data).index;
 	changesStartRegEx.exec(data);
-	let knownIssuesStart;
-	let knownIssueStartResult = knownIssuesStartRegEx.exec(data);
-	if (knownIssueStartResult) {
-		knownIssuesStart = knownIssueStartResult.index;
-	}
-	let knownIssuesEnd = dividerRegEx.exec(data).index;
+	let sectionEnd = dividerRegEx.exec(data).index;
 
-	const embed = new EmbedBuilder().setColor(Colors.Blurple)
+	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)
 		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
 		.setURL('https://discord.gg/JxqE9EpKt9')
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')
+		.setDescription(data.slice(changesStartRegEx.lastIndex, sectionEnd).slice(0, MAX_EMBED_DESCRIPTION_LENGTH))
+		.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" })
 		.setFooter(randomFooterTip())
-		.setTimestamp();
-
-	if (knownIssuesStart && knownIssuesStart < knownIssuesEnd) {
-		// Known Issues section found
-		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesStart).slice(0, MAX_EMBED_DESCRIPTION_LENGTH))
-			.addFields({ name: "Known Issues", value: data.slice(knownIssuesStart + 16, knownIssuesEnd) });
-	} else {
-		// Known Issues section not found
-		embed.setDescription(data.slice(changesStartRegEx.lastIndex, knownIssuesEnd).slice(0, MAX_EMBED_DESCRIPTION_LENGTH));
-	}
-	return embed.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" });
+		.setTimestamp(stats.mtime);
 }
 
 /** If the guild has a scoreboard reference channel, update the embed in it
@@ -267,7 +279,6 @@ module.exports = {
 	buildCompanyStatsEmbed,
 	buildSeasonalScoreboardEmbed,
 	buildOverallScoreboardEmbed,
-	buildServerBonusesEmbed,
 	buildModStatsEmbed,
 	buildVersionEmbed,
 	updateScoreboard

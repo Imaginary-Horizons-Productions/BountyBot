@@ -1,9 +1,10 @@
 const { EmbedBuilder, userMention, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { timeConversion, commandMention, listifyEN } = require("../util/textUtil");
+const { timeConversion, commandMention, listifyEN, congratulationBuilder, generateTextBar } = require("../util/textUtil");
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require("../constants");
 const { getRankUpdates } = require("../util/scoreUtil");
 const { updateScoreboard } = require("../util/embedUtil");
+const { progressGoal } = require("./goals");
 
 /**
  * @param {import("discord.js").Interaction} interaction note this is the interaction that is awaiting a reply, not necessarily the interaction named "interaction" in the controller
@@ -14,13 +15,15 @@ const { updateScoreboard } = require("../util/embedUtil");
  */
 async function raiseToast(interaction, database, toasteeIds, toastText, imageURL = null) {
 	const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
-	const embed = new EmbedBuilder().setColor("e5b271")
-		.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
-		.setTitle(toastText)
-		.setDescription(`A toast to ${listifyEN(toasteeIds.map(id => userMention(id)))}!`)
-		.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() });
+	const embeds = [
+		new EmbedBuilder().setColor("e5b271")
+			.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
+			.setTitle(toastText)
+			.setDescription(`A toast to ${listifyEN(toasteeIds.map(id => userMention(id)))}!`)
+			.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() })
+	];
 	if (imageURL) {
-		embed.setImage(imageURL);
+		embeds[0].setImage(imageURL);
 	}
 
 	// Make database entities
@@ -57,13 +60,32 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 	let critValue = 0;
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	season.increment("toastsRaised");
+
+	let rewardTexts = [];
+	if (rewardsAvailable > 0) {
+		const progressData = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
+		rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
+		if (progressData.goalCompleted) {
+			embeds.push(new EmbedBuilder().setColor("e5b271")
+				.setTitle("Server Goal Completed")
+				.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+				.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+				.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
+			);
+		}
+		if (progressData.gpContributed > 0) {
+			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
+			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+		}
+	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 	const [sender] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 	sender.increment("toastsRaised");
 	const toast = await database.models.Toast.create({ companyId: interaction.guildId, senderId: interaction.user.id, text: toastText, imageURL });
 	for (const id of toasteeIds) {
 		//TODO #97 move to bulkCreate after finding solution to create by association only if user doesn't already exist
-		const [user] = await database.models.User.findOrCreate({ where: { id } });
+		await database.models.User.findOrCreate({ where: { id } });
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
 			rewardedRecipients.push(id);
@@ -106,14 +128,13 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 	database.models.Recipient.bulkCreate(rawRecipients);
 
 	// Add XP and update ranks
-	let levelTexts = [];
 	const toasterLevelTexts = await sender.addXP(interaction.guild.name, critValue, false, database);
 	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: critValue, toastsRaised: 1 });
 	}
 	if (toasterLevelTexts.length > 0) {
-		levelTexts = levelTexts.concat(toasterLevelTexts);
+		rewardTexts.push(...toasterLevelTexts);
 	}
 	for (const recipientId of rewardedRecipients) {
 		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: recipientId, companyId: interaction.guildId } });
@@ -123,13 +144,13 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 			participation.increment("xp");
 		}
 		if (toasteeLevelTexts.length > 0) {
-			levelTexts = levelTexts.concat(toasteeLevelTexts);
+			rewardTexts = rewardTexts.concat(toasteeLevelTexts);
 		}
 		hunter.increment("toastsReceived");
 	}
 
 	interaction.reply({
-		embeds: [embed],
+		embeds,
 		components: [
 			new ActionRowBuilder().addComponents(
 				new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toast.id}`)
@@ -140,25 +161,29 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 		],
 		fetchReply: true
 	}).then(message => {
-		message.startThread({ name: "Rewards" }).then(thread => {
-			if (rewardedRecipients.length > 0) {
-				getRankUpdates(interaction.guild, database).then(rankUpdates => {
-					const multiplierString = company.festivalMultiplierString();
-					let text = `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
-					if (rankUpdates.length > 0) {
-						text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
-					}
-					if (levelTexts.length > 0) {
-						text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
-					}
-					if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-						text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-					}
-					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
-					updateScoreboard(company, interaction.guild, database);
-				})
-			}
-		});
+		if (rewardedRecipients.length > 0) {
+			getRankUpdates(interaction.guild, database).then(rankUpdates => {
+				const multiplierString = company.festivalMultiplierString();
+				let text = `__**XP Gained**__\n${rewardedRecipients.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
+				if (rankUpdates.length > 0) {
+					text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
+				}
+				if (rewardTexts.length > 0) {
+					text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
+				}
+				if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
+					text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+				}
+				if (interaction.channel.isThread()) {
+					interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				} else {
+					message.startThread({ name: "Rewards" }).then(thread => {
+						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+					})
+				}
+				updateScoreboard(company, interaction.guild, database);
+			});
+		}
 	});
 }
 

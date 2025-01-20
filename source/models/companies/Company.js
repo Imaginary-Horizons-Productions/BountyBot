@@ -100,9 +100,6 @@ exports.initModel = function (sequelize) {
 		},
 		scoreboardThumbnailURL: {
 			type: DataTypes.STRING
-		},
-		serverBonusesThumbnailURL: {
-			type: DataTypes.STRING
 		}
 	}, {
 		sequelize,
