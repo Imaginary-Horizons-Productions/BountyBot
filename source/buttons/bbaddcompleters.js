@@ -2,7 +2,7 @@ const { ActionRowBuilder, UserSelectMenuBuilder, userMention, bold } = require('
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
-const { listifyEN, commandMention } = require('../util/textUtil');
+const { listifyEN, commandMention, congratulationBuilder } = require('../util/textUtil');
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -12,17 +12,16 @@ const { listifyEN, commandMention } = require('../util/textUtil');
  * @param {UserId[]} numCompleters 
  * @param {Guild} guild 
  */
-async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnChannel) {
-	let { postingId } = bounty;
-	if (!postingId) return;
-	let post = await btnChannel.threads.fetch(postingId);
-	if (post.archived) {
+async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
+	if (!btnPost) return;
+	console.log(btnPost);
+	if (btnPost.archived) {
 		await thread.setArchived(false, "Unarchived to update posting");
 	}
-	post.edit({ name: bounty.title });
+	btnPost.edit({ name: bounty.title });
 	let numCompleters = newCompleterIds.length;
-	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-	let starterMessage = await post.fetchStarterMessage();
+	btnPost.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
+	let starterMessage = await btnPost.fetchStarterMessage();
 	starterMessage.edit({
 		embeds: [await bounty.embed(guild, poster.level, company.festivalMultiplierString(), false, company, completers)],
 		components: bounty.generateBountyBoardButtons()

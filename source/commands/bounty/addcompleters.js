@@ -1,6 +1,6 @@
 const { CommandInteraction, userMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { extractUserIdsFromMentions, listifyEN, commandMention } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { addCompleters } = require("../../logic/bounties.js");
 
 /**

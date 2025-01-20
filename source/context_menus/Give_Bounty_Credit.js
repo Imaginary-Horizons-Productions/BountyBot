@@ -2,7 +2,7 @@ const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuil
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
-const { commandMention } = require('../util/textUtil');
+const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 
 /**
  * Updates the board posting for the bounty after adding the completers
