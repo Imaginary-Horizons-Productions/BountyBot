@@ -81,6 +81,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}).catch(error => {
 					if (error.code === "InteractionCollectorError") {
 						interaction.deleteReply();
+					} else {
+						console.error(error);
 					}
 				})
 			})
