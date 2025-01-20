@@ -12,9 +12,9 @@ const { addCompleters } = require("../../logic/bounties.js");
  * @param {Guild} guild 
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild) {
-	let postingId = company.bountyBoardId;
-	let { boardId } = bounty;
-	if (!postingId || !boardId) return;
+	let boardId = company.bountyBoardId;
+	let { postingId } = bounty;
+	if (!boardId || !postingId) return;
 	let boardsChannel = await guild.channels.fetch(boardId);
 	let post = await boardsChannel.threads.fetch(postingId);
 	if (post.archived) {
