@@ -1,4 +1,4 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, userMention, bold } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
@@ -47,45 +47,41 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				],
 				fetchReply: true,
 				ephemeral: true
-			}).then(reply => {
-				reply.awaitMessageComponent({ filter: (interaction) => interaction.customId === SKIP_INTERACTION_HANDLING, time: timeConversion(3, "m", "ms") }).then(async collectedInteraction => {
-					const validatedCompleterIds = [];
-					const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: collectedInteraction.guildId } });
-					const existingCompleterIds = existingCompletions.map(completion => completion.userId);
-					const bannedIds = [];
-					for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
-						const memberId = member.id;
-						if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
-						await database.models.User.findOrCreate({ where: { id: memberId } });
-						const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
-						if (hunter.isBanned) {
-							bannedIds.push(memberId);
-							continue;
-						}
-						existingCompleterIds.push(memberId);
-						validatedCompleterIds.push(memberId);
+			}).then(message => message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
+				const validatedCompleterIds = [];
+				const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: collectedInteraction.guildId } });
+				const existingCompleterIds = existingCompletions.map(completion => completion.userId);
+				const bannedIds = [];
+				for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
+					const memberId = member.id;
+					if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
+					await database.models.User.findOrCreate({ where: { id: memberId } });
+					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
+					if (hunter.isBanned) {
+						bannedIds.push(memberId);
+						continue;
 					}
+					existingCompleterIds.push(memberId);
+					validatedCompleterIds.push(memberId);
+				}
 
-					if (validatedCompleterIds.length < 1) {
-						collectedInteraction.reply({ content: "Could not find any new non-bot completers.", ephemeral: true });
-						return;
-					}
+				if (validatedCompleterIds.length < 1) {
+					collectedInteraction.reply({ content: "Could not find any new non-bot completers.", ephemeral: true });
+					return;
+				}
 
-					let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
-					updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
-					collectedInteraction.update({
-						components: []
-					});
-				}).then(() => {
-					interaction.deleteReply();
-				}).catch(error => {
-					if (error.code === "InteractionCollectorError") {
-						interaction.deleteReply();
-					} else {
-						console.error(error);
-					}
-				})
-			})
+				let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
+				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
+				collectedInteraction.update({
+					components: []
+				});
+			}).catch(error => {
+				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+					console.error(error);
+				}
+			}).finally(() => {
+				interaction.deleteReply();
+			});
 		})
 	}
 );
