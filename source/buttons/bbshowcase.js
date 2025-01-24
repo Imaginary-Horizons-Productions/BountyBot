@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType } = require('discord.js');
+const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { timeConversion } = require('../util/textUtil');
@@ -31,16 +31,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				],
 				fetchReply: true,
 				ephemeral: true
-			}).then(reply => {
-				const collector = reply.createMessageComponentCollector({ max: 1 });
-
-				collector.on("collect", async (collectedInteraction) => {
-					showcaseBounty(collectedInteraction, bountyId, collectedInteraction.channels.first(), false, database);
-				})
-
-				collector.on("end", () => {
-					interaction.deleteReply();
-				})
+			}).then(message => message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.ChannelSelect })).then(collectedInteraction => {
+				showcaseBounty(collectedInteraction, bountyId, collectedInteraction.channels.first(), false, database);
+			}).catch(error => {
+				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+					console.error(error);
+				}
+			}).finally(() => {
+				interaction.deleteReply();
 			})
 		})
 	}
