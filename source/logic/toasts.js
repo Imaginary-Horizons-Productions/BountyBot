@@ -159,8 +159,8 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 					.setStyle(ButtonStyle.Primary)
 			)
 		],
-		fetchReply: true
-	}).then(message => {
+		withResponse: true
+	}).then(response => {
 		if (rewardedRecipients.length > 0) {
 			getRankUpdates(interaction.guild, database).then(rankUpdates => {
 				const multiplierString = company.festivalMultiplierString();
@@ -177,7 +177,7 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 				if (interaction.channel.isThread()) {
 					interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
 				} else {
-					message.startThread({ name: "Rewards" }).then(thread => {
+					response.resource.message.startThread({ name: "Rewards" }).then(thread => {
 						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
 					})
 				}

@@ -1,4 +1,4 @@
-const { CommandInteraction, GuildPremiumTier } = require("discord.js");
+const { CommandInteraction, GuildPremiumTier, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
 /**
@@ -56,7 +56,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		roleId: role.id,
 		rankmoji: rankmojis[index]
 	})));
-	interaction.reply({ content: `Created roles: ${roles.map((role, index) => `${rankmojis[index]} ${role} at ${varianceThresholds[index]} standard deviations`).join(", ")}`, ephemeral: true });
+	interaction.reply({ content: `Created roles: ${roles.map((role, index) => `${rankmojis[index]} ${role} at ${varianceThresholds[index]} standard deviations`).join(", ")}`, flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

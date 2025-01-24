@@ -1,4 +1,4 @@
-const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
@@ -6,7 +6,7 @@ const { UserContextMenuWrapper } = require('../classes');
 const { Op } = require('sequelize');
 
 const mainId = "BountyBot Stats";
-module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionContextType.Guild ], 3000,
+module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
 	/** Specs */
 	(interaction, database, runMode) => {
 		const target = interaction.targetMember;
@@ -15,14 +15,14 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionCo
 			buildCompanyStatsEmbed(interaction.guild, database).then(embed => {
 				interaction.reply({
 					embeds: [embed],
-					ephemeral: true
+					flags: [MessageFlags.Ephemeral]
 				});
 			})
 		} else {
 			// Other Hunter
 			database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId } }).then(async hunter => {
 				if (!hunter) {
-					interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", ephemeral: true });
+					interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
@@ -54,7 +54,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [ InteractionCo
 							.setFooter(randomFooterTip())
 							.setTimestamp()
 					],
-					ephemeral: true
+					flags: [MessageFlags.Ephemeral]
 				});
 			})
 		}

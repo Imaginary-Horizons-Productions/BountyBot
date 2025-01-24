@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { extractUserIdsFromMentions, textsHaveAutoModInfraction } = require('../util/textUtil');
 const { raiseToast } = require('../logic/toasts.js');
@@ -9,7 +9,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 	async (interaction, database, runMode) => {
 		const toasterHunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 		if (toasterHunter?.isBanned) {
-			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, ephemeral: true });
+			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -46,13 +46,13 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		// Early-out if any errors
 		if (errors.length > 0) {
-			interaction.reply({ content: `The following errors were encountered while raising your toast:\n- ${errors.join("\n- ")}`, ephemeral: true });
+			interaction.reply({ content: `The following errors were encountered while raising your toast:\n- ${errors.join("\n- ")}`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
 		const toastText = interaction.options.getString("message");
 		if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")) {
-			interaction.reply({ content: "Your toast was blocked by AutoMod.", ephemeral: true });
+			interaction.reply({ content: "Your toast was blocked by AutoMod.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 

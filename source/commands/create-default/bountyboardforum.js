@@ -1,4 +1,4 @@
-const { CommandInteraction, PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { CommandInteraction, PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 const { Company } = require("../../models/companies/Company");
@@ -90,7 +90,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 	});
 
 	company.save();
-	interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, ephemeral: true });
+	interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

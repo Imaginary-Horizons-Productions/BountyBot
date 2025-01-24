@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { updateScoreboard } = require("../../util/embedUtil");
 
@@ -10,7 +10,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });
-	interaction.reply({ content: "Resetting bounty hunter stats has begun.", ephemeral: true });
+	interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
 	const company = await database.models.Company.findByPk(interaction.guildId);
 	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	if (season) {

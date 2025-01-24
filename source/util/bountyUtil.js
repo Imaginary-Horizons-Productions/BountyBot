@@ -1,4 +1,4 @@
-const { Interaction, TextChannel, PermissionFlagsBits } = require("discord.js");
+const { Interaction, TextChannel, PermissionFlagsBits, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
 /**
@@ -10,18 +10,18 @@ const { Sequelize } = require("sequelize");
  */
 async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShowcase, database) {
 	if (!showcaseChannel.members.has(interaction.client.user.id)) {
-		interaction.reply({ content: "BountyBot is not in the selected channel.", ephemeral: true });
+		interaction.reply({ content: "BountyBot is not in the selected channel.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
 	if (!showcaseChannel.permissionsFor(interaction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
-		interaction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", ephemeral: true });
+		interaction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
 	const bounty = await database.models.Bounty.findByPk(bountyId);
 	if (bounty?.state !== "open") {
-		collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", ephemeral: true });
+		collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 

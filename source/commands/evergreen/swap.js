@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
@@ -14,7 +14,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 	if (existingBounties.length < 2) {
-		interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", ephemeral: true });
+		interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -28,10 +28,10 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					.setOptions(bountiesToSelectOptions(existingBounties))
 			)
 		],
-		ephemeral: true,
-		fetchReply: true
-	}).then(reply => {
-		const collector = reply.createMessageComponentCollector({ max: 2 });
+		flags: [MessageFlags.Ephemeral],
+		withResponse: true
+	}).then(response => {
+		const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 		collector.on("collect", async (collectedInteraction) => {
 			if (collectedInteraction.customId.endsWith("evergreen")) {
 				database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
@@ -68,7 +68,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 									.setOptions(slotOptions)
 							)
 						],
-						ephemeral: true
+						flags: [MessageFlags.Ephemeral]
 					})
 				})
 			} else {

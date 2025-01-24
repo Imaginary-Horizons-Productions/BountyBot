@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
@@ -7,7 +7,7 @@ const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
 		database.models.Bounty.findByPk(bountyId).then(async bounty => {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (bounty.userId !== interaction.user.id) {
 				interaction.editReply({ content: "Only the bounty poster can take down their bounty." });
 				return;
@@ -44,7 +44,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						getRankUpdates(interaction.guild, database);
 					})
 
-					collectedInteraction.reply({ content: "Your bounty has been taken down.", ephemeral: true });
+					collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
 				})
 			});
 		})

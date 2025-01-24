@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
 /**
@@ -23,7 +23,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		},
 		{ where: { id: interaction.guildId } }
 	);
-	interaction.reply({ content: "Server settings have been reset.", ephemeral: true });
+	interaction.reply({ content: "Server settings have been reset.", flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

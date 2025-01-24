@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../constants");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
@@ -9,7 +9,7 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 	async (interaction, database) => {
 		const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.user.id, state: "open" } });
 		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", ephemeral: true });
+			interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: [MessageFlags.Ephemeral] });
 			return true;
 		}
 		interaction.showModal(
@@ -30,7 +30,7 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 				try {
 					new URL(imageURL);
 				} catch (error) {
-					interaction.reply({ content: `${imageURL} is not usable as a URL for a bounty thumbnail.`, ephemeral: true });
+					interaction.reply({ content: `${imageURL} is not usable as a URL for a bounty thumbnail.`, flags: [MessageFlags.Ephemeral] });
 					return true;
 				}
 			}
@@ -44,14 +44,14 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 							.setOptions(bountiesToSelectOptions(openBounties))
 					)
 				],
-				ephemeral: true,
-				fetchReply: true
-			}).then(reply => {
-				const collector = reply.createMessageComponentCollector({ max: 1 });
+				flags: [MessageFlags.Ephemeral],
+				withResponse: true
+			}).then(response => {
+				const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 				collector.on("collect", async collectedInteraction => {
 					const bounty = await database.models.Bounty.findByPk(collectedInteraction.values[0]);
 					if (bounty?.state !== "open") {
-						collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", ephemeral: true });
+						collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
 						return;
 					}
 					bounty.thumbnailURL = imageURL;
@@ -60,7 +60,7 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 						const company = await database.models.Company.findByPk(interaction.guildId);
 						bounty.updatePosting(interaction.guild, company, database);
 					});
-					collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, ephemeral: true });
+					collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
 				})
 
 				collector.on("end", interactionCollection => {

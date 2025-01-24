@@ -11,13 +11,13 @@ console.error = function () {
 }
 
 //#region Imports
-const { Client, ActivityType, IntentsBitField, Events, Routes, REST } = require("discord.js");
+const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
 const { readFile, writeFile } = require("fs").promises;
 
 const { getCommand, slashData, setLogic: setCommandLogic } = require("./commands/_commandDictionary.js");
-const { getButton, setLogic: setButtonLogic  } = require("./buttons/_buttonDictionary.js");
-const { getSelect, setLogic: setSelectLogic  } = require("./selects/_selectDictionary.js");
-const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic  } = require("./context_menus/_contextMenuDictionary.js");
+const { getButton, setLogic: setButtonLogic } = require("./buttons/_buttonDictionary.js");
+const { getSelect, setLogic: setSelectLogic } = require("./selects/_selectDictionary.js");
+const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic } = require("./context_menus/_contextMenuDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { connectToDatabase } = require("../database.js");
@@ -63,7 +63,7 @@ client.on(Events.ClientReady, () => {
 			try {
 				new REST({ version: 10 }).setToken(require(authPath).token).put(
 					Routes.applicationCommands(client.user.id),
-					{ body: [ ...slashData, ...contextMenuData ] }
+					{ body: [...slashData, ...contextMenuData] }
 				).then(commands => {
 					for (const command of commands) {
 						commandIds[command.name] = command.id;
@@ -125,13 +125,13 @@ client.on(Events.InteractionCreate, interaction => {
 		} else if (interaction.isContextMenuCommand()) {
 			const contextMenu = getContextMenu(interaction.commandName);
 			if (contextMenu.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-				interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, ephemeral: true });
+				interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 
 			const cooldownTimestamp = contextMenu.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 			if (cooldownTimestamp) {
-				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, ephemeral: true });
+				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 
@@ -139,13 +139,13 @@ client.on(Events.InteractionCreate, interaction => {
 		} else if (interaction.isCommand()) {
 			const command = getCommand(interaction.commandName);
 			if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, ephemeral: true });
+				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 
 			const cooldownTimestamp = command.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 			if (cooldownTimestamp) {
-				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, ephemeral: true });
+				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 			command.execute(interaction, database, runMode);
@@ -163,7 +163,7 @@ client.on(Events.InteractionCreate, interaction => {
 			const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 
 			if (cooldownTimestamp) {
-				interaction.reply({ content: `Please wait, this interaction is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, ephemeral: true });
+				interaction.reply({ content: `Please wait, this interaction is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 

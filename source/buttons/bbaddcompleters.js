@@ -1,4 +1,4 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
@@ -32,7 +32,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
 		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
 			if (bounty.userId !== interaction.user.id) {
-				interaction.reply({ content: "Only the bounty poster can add completers.", ephemeral: true });
+				interaction.reply({ content: "Only the bounty poster can add completers.", flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 
@@ -45,9 +45,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							.setMaxValues(5)
 					)
 				],
-				fetchReply: true,
-				ephemeral: true
-			}).then(message => message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
+				flags: [MessageFlags.Ephemeral],
+				withResponse: true
+			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 				const validatedCompleterIds = [];
 				const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: collectedInteraction.guildId } });
 				const existingCompleterIds = existingCompletions.map(completion => completion.userId);
@@ -66,7 +66,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 
 				if (validatedCompleterIds.length < 1) {
-					collectedInteraction.reply({ content: "Could not find any new non-bot completers.", ephemeral: true });
+					collectedInteraction.reply({ content: "Could not find any new non-bot completers.", flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 

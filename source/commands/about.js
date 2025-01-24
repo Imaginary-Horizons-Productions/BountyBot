@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { BOUNTYBOT_INVITE_URL } = require('../constants');
 
@@ -26,7 +26,7 @@ module.exports = new CommandWrapper(mainId, "Get BountyBot's description and con
 						.setFooter({ text: "Click \"About BountyBot\" to add BountyBot to your own server! Click \"Imaginary Horizons Productions\" to go to the BountyBot announcements channel!", iconURL: avatarURL })
 						.setTimestamp(stats.mtime)
 				],
-				ephemeral: true
+				flags: [MessageFlags.Ephemeral]
 			})
 		});
 	}

@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { GLOBAL_MAX_BOUNTY_SLOTS } = require('../constants');
 
@@ -19,7 +19,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			const slots = interaction.options.getInteger("bounty-slots");
 			if (slots !== null) {
 				if (slots < 1 || slots > GLOBAL_MAX_BOUNTY_SLOTS) {
-					interaction.reply({ content: `Your settings were not set because ${slots} is an invalid value for bounty slots (must be between 1 and 10 inclusive).`, ephemeral: true });
+					interaction.reply({ content: `Your settings were not set because ${slots} is an invalid value for bounty slots (must be between 1 and 10 inclusive).`, flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 				updatePayload.maxSimBounties = slots;
@@ -85,7 +85,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			if (errors.length > 0) {
 				content += `\n\nThe following errors were encountered:\n- ${errors.join("\n- ")}`;
 			}
-			interaction.reply({ content, ephemeral: true });
+			interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
 		});
 	}
 ).setOptions(

@@ -1,3 +1,4 @@
+const { MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 const { rollItemDrop } = require("../util/itemUtil");
 const { commandMention } = require("../util/textUtil");
@@ -10,6 +11,6 @@ module.exports = new Item(itemName, "Rolls as a random item!", 3000,
 		if (!itemWasCreated) {
 			itemRow.increment("count");
 		}
-		interaction.reply({ content: `The unidentified item was a **${rolledItem}**! Use it with ${commandMention("item")}?`, ephemeral: true });
+		interaction.reply({ content: `The unidentified item was a **${rolledItem}**! Use it with ${commandMention("item")}?`, flags: [MessageFlags.Ephemeral] });
 	}
 );

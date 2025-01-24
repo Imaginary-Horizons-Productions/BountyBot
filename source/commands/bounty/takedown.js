@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -23,10 +23,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			ephemeral: true,
-			fetchReply: true
-		}).then(reply => {
-			const collector = reply.createMessageComponentCollector({ max: 1 });
+			flags: [MessageFlags.Ephemeral],
+			withResponse: true
+		}).then(response => {
+			const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", async (collectedInteraction) => {
 				const [bountyId] = collectedInteraction.values;
 				const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
@@ -50,7 +50,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					getRankUpdates(interaction.guild, database);
 				})
 
-				collectedInteraction.reply({ content: "Your bounty has been taken down.", ephemeral: true });
+				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
 			})
 
 			collector.on("end", () => {

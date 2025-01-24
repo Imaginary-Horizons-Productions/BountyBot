@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 
 const mainId = "config-server";
@@ -15,7 +15,7 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			}
 
 			company.update(updatePayload);
-			interaction.reply({ content, ephemeral: true });
+			interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
 		});
 	}
 ).setOptions(

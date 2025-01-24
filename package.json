@@ -6,8 +6,8 @@
 		"initialize": "npm ci && node source/scripts/initialize"
 	},
 	"dependencies": {
-		"discord.js": "^14.16.3",
-		"sequelize": "^6.37.3",
+		"discord.js": "^14.17.3",
+		"sequelize": "^6.37.5",
 		"sqlite3": "^5.1.7"
 	}
 }

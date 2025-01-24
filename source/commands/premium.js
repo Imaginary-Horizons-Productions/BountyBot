@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 
@@ -23,7 +23,7 @@ module.exports = new CommandWrapper(mainId, "List perks for supporting IHP devel
 						.setFooter(randomFooterTip())
 						.setTimestamp(stats.mtime)
 				],
-				ephemeral: true
+				flags: [MessageFlags.Ephemeral]
 			});
 		})
 	}

@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
@@ -14,7 +14,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
 		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", ephemeral: true });
+			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -28,16 +28,16 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			ephemeral: true,
-			fetchReply: true
-		}).then(reply => {
-			const collector = reply.createMessageComponentCollector({ max: 2 });
+			flags: [MessageFlags.Ephemeral],
+			withResponse: true
+		}).then(response => {
+			const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 			collector.on("collect", async (collectedInteraction) => {
 				if (collectedInteraction.customId.endsWith("bounty")) {
 					database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
 						const company = await database.models.Company.findByPk(interaction.guildId);
 						if (hunter.maxSlots(company.maxSimBounties) < 2) {
-							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", ephemeral: true });
+							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: [MessageFlags.Ephemeral] });
 							return;
 						}
 
@@ -74,7 +74,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 										.setOptions(slotOptions)
 								)
 							],
-							ephemeral: true
+							flags: [MessageFlags.Ephemeral]
 						})
 					})
 				} else {

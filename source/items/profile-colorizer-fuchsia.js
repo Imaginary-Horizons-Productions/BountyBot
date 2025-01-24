@@ -1,3 +1,4 @@
+const { MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 
 const color = "Fuchsia";
@@ -9,6 +10,6 @@ module.exports = new Item(itemName, `Changes the color of your stats profile emb
 			hunter.profileColor = color;
 			hunter.save();
 		})
-		interaction.reply({ content: `Your profile color has been set to ${color} in this server.`, ephemeral: true });
+		interaction.reply({ content: `Your profile color has been set to ${color} in this server.`, flags: [MessageFlags.Ephemeral] });
 	}
 );

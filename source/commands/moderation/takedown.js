@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
@@ -14,7 +14,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const poster = interaction.options.getUser("poster");
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
-		interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, ephemeral: true });
+		interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -28,10 +28,10 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					.setOptions(bountiesToSelectOptions(openBounties))
 			)
 		],
-		ephemeral: true,
-		fetchReply: true
-	}).then(reply => {
-		const collector = reply.createMessageComponentCollector({ max: 1 });
+		flags: [MessageFlags.Ephemeral],
+		withResponse: true
+	}).then(response => {
+		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", (collectedInteraction) => {
 			const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
 			const [bountyId] = collectedInteraction.values;

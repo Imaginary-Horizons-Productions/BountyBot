@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil");
 
@@ -12,13 +12,13 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 		if (!bounty) {
-			interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", ephemeral: true });
+			interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
 		const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 		if (mentionedIds.length < 1) {
-			interaction.reply({ content: "Could not find any user mentions in `hunters`.", ephemeral: true });
+			interaction.reply({ content: "Could not find any user mentions in `hunters`.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -33,10 +33,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			});
 		}
 
-		interaction.reply({ //TODO #95 make sure acknowledging interactions is sharding safe
-			content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`,
-			ephemeral: true
-		});
+		//TODO #95 make sure acknowledging interactions is sharding safe
+		interaction.reply({ content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`, flags: [MessageFlags.Ephemeral] });
 	})
 };
 

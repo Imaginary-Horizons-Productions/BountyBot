@@ -1,4 +1,4 @@
-const { CommandInteraction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const { CommandInteraction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { textsHaveAutoModInfraction, timeConversion, commandMention } = require("../../util/textUtil");
@@ -21,7 +21,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 
 	if (slotNumber === null) {
-		interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", ephemeral: true });
+		interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -56,7 +56,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const description = interaction.fields.getTextInputValue("description");
 
 		if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [title, description], "evergreen post")) {
-			interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", ephemeral: true });
+			interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -78,7 +78,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				rawBounty.attachmentURL = imageURL;
 			} catch (error) {
 				interaction.message.edit({ components: [] });
-				interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${error.message}`, ephemeral: true });
+				interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${error.message}`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 		}
@@ -107,7 +107,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					bounty.save()
 				});
 			} else {
-				interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, ephemeral: true });
+				interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: [MessageFlags.Ephemeral] });
 			}
 		});
 	}).catch(console.error)
