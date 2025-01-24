@@ -1,3 +1,4 @@
+const { MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 
 const itemName = "Goal Initializer";
@@ -6,7 +7,7 @@ module.exports = new Item(itemName, "Begin a Server Goal if there isn't already 
 		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		const existingGoals = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: "ongoing" } });
 		if (existingGoals.length > 0) {
-			interaction.reply({ content: "This server already has a Server Goal running.", ephemeral: true });
+			interaction.reply({ content: "This server already has a Server Goal running.", flags: [MessageFlags.Ephemeral] });
 			return true;
 		}
 

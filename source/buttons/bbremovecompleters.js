@@ -1,4 +1,4 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, DiscordjsErrorCodes, ComponentType } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { Op } = require('sequelize');
@@ -9,7 +9,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
 		database.models.Bounty.findByPk(bountyId).then(async bounty => {
 			if (bounty.userId !== interaction.user.id) {
-				interaction.reply({ content: "Only the bounty poster can remove completers.", ephemeral: true });
+				interaction.reply({ content: "Only the bounty poster can remove completers.", flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 
@@ -22,9 +22,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							.setMaxValues(5)
 					)
 				],
-				fetchReply: true,
-				ephemeral: true
-			}).then(message => message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
+				flags: [MessageFlags.Ephemeral],
+				withResponse: true
+			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 				const removedIds = collectedInteraction.members.map((_, key) => key);
 				database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: removedIds } } });
 				const poster = await database.models.Hunter.findOne({ where: { companyId: collectedInteraction.guildId, userId: collectedInteraction.user.id } });
@@ -37,10 +37,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				});
 
 				collectedInteraction.channel.send({ content: `${listifyEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
-				return collectedInteraction.reply({
-					content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`,
-					ephemeral: true
-				});
+				return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: [MessageFlags.Ephemeral] });
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

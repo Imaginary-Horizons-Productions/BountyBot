@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -13,7 +13,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
-		interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", ephemeral: true });
+		interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -27,10 +27,10 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					.setOptions(bountiesToSelectOptions(openBounties))
 			)
 		],
-		ephemeral: true,
-		fetchReply: true
-	}).then(reply => {
-		const collector = reply.createMessageComponentCollector({ max: 1 });
+		flags: [MessageFlags.Ephemeral],
+		withResponse: true
+	}).then(response => {
+		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", async (collectedInteraction) => {
 			const [bountyId] = collectedInteraction.values;
 			// Verify bounty exists
@@ -89,7 +89,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				}
 
 				if (errors.length > 0) {
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
@@ -116,7 +116,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					});
 				}
 
-				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], ephemeral: true });
+				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
 			}).catch(console.error);
 		})
 	})

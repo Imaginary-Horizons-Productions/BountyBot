@@ -1,4 +1,4 @@
-const { CommandInteraction, ChannelType, PermissionFlagsBits, OverwriteType } = require("discord.js");
+const { CommandInteraction, ChannelType, PermissionFlagsBits, OverwriteType, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require("../../util/embedUtil");
 
@@ -36,7 +36,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 		company.scoreboardIsSeasonal = isSeasonal;
 		company.save();
 	});
-	interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, ephemeral: true });
+	interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

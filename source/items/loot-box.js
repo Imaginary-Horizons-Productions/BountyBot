@@ -1,3 +1,4 @@
+const { MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 const { rollItemDrop } = require("../util/itemUtil");
 const { commandMention } = require("../util/textUtil");
@@ -12,6 +13,6 @@ module.exports = new Item(itemName, "Unboxes into 2 random items!", 3000,
 				itemRow.increment("count");
 			}
 		}
-		interaction.reply({ content: `Inside the Loot Box was a **${rolledItems[0]}** and a **${rolledItems[1]}**! Use one with ${commandMention("item")}?`, ephemeral: true });
+		interaction.reply({ content: `Inside the Loot Box was a **${rolledItems[0]}** and a **${rolledItems[1]}**! Use one with ${commandMention("item")}?`, flags: [MessageFlags.Ephemeral] });
 	}
 );

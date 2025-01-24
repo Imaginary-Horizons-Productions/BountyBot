@@ -1,4 +1,4 @@
-const { StringSelectMenuBuilder, ActionRowBuilder } = require("discord.js");
+const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 const { timeConversion, commandMention } = require("../util/textUtil");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
@@ -10,7 +10,7 @@ module.exports = new Item(itemName, "Showcase one of your bounties and increase 
 	async (interaction, database) => {
 		const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.user.id, state: "open" } });
 		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't have any open bounties on this server to showcase.", ephemeral: true });
+			interaction.reply({ content: "You don't have any open bounties on this server to showcase.", flags: [MessageFlags.Ephemeral] });
 			return true;
 		}
 
@@ -23,10 +23,10 @@ module.exports = new Item(itemName, "Showcase one of your bounties and increase 
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			ephemeral: true,
-			fetchReply: true
-		}).then(reply => {
-			const collector = reply.createMessageComponentCollector({ max: 1 });
+			flags: [MessageFlags.Ephemeral],
+			withResponse: true
+		}).then(response => {
+			const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", async collectedInteraction => {
 				showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, database);
 			})

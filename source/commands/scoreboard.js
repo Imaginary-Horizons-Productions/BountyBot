@@ -1,4 +1,4 @@
-const { InteractionContextType } = require('discord.js');
+const { InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../util/embedUtil');
 
@@ -10,14 +10,14 @@ module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, fals
 			buildSeasonalScoreboardEmbed(interaction.guild, database).then(embed => {
 				interaction.reply({
 					embeds: [embed],
-					ephemeral: true
+					flags: [MessageFlags.Ephemeral]
 				});
 			})
 		} else {
 			buildOverallScoreboardEmbed(interaction.guild, database).then(embed => {
 				interaction.reply({
 					embeds: [embed],
-					ephemeral: true
+					flags: [MessageFlags.Ephemeral]
 				});
 			})
 		}

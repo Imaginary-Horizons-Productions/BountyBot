@@ -14,19 +14,19 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
 		const [seconder] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 		if (seconder.isBanned) {
-			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, ephemeral: true });
+			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
 		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
 		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
-			interaction.reply({ content: "You cannot second your own toast.", ephemeral: true });
+			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
 		const secondReciept = await database.models.Seconding.findOne({ where: { toastId, seconderId: interaction.user.id } });
 		if (secondReciept) {
-			interaction.reply({ content: "You've already seconded this toast.", ephemeral: true });
+			interaction.reply({ content: "You've already seconded this toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 

@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
 
@@ -8,7 +8,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 	async (interaction, database, runMode) => {
 		const company = await database.models.Company.findByPk(interaction.guildId);
 		if (!company) {
-			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", ephemeral: true });
+			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 

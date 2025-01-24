@@ -1,4 +1,4 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
@@ -6,11 +6,11 @@ const { commandMention, listifyEN, congratulationBuilder } = require('../util/te
 
 /**
  * Updates the board posting for the bounty after adding the completers
- * @param {Bounty} bounty 
- * @param {Company} company 
- * @param {Hunter} poster 
- * @param {UserId[]} numCompleters 
- * @param {Guild} guild 
+ * @param {Bounty} bounty
+ * @param {Company} company
+ * @param {Hunter} poster
+ * @param {UserId[]} numCompleters
+ * @param {Guild} guild
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild) {
 	let boardId = company.bountyBoardId;
@@ -36,19 +36,19 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
 	async (interaction, database, runMode) => {
 		if (interaction.targetId === interaction.user.id) {
-			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", ephemeral: true });
+			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
 		if (runMode === "prod" && interaction.targetUser.bot) {
-			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", ephemeral: true });
+			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
 		await database.models.User.findOrCreate({ where: { id: interaction.targetId } });
 		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.targetId, companyId: interaction.guildId } });
 		if (hunter.isBanned) {
-			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, ephemeral: true });
+			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -67,16 +67,13 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			const slotNumber = modalSubmission.fields.getTextInputValue("slot-number");
 			const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber: slotNumber, state: "open" }, include: database.models.Bounty.Company });
 			if (!bounty) {
-				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, ephemeral: true });
+				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 
-			let {bounty: returnedBounty, allCompleters, poster, company} = await addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
+			let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
 			updateBoardPosting(returnedBounty, company, poster, [interaction.targetId], allCompleters, modalSubmission.guild);
-			modalSubmission.reply({
-				content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`,
-				ephemeral: true
-			});
+			modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
 		})
 	}
 );

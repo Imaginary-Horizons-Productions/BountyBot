@@ -1,4 +1,4 @@
-const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
@@ -16,14 +16,14 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				buildCompanyStatsEmbed(interaction.guild, database).then(embed => {
 					interaction.reply({
 						embeds: [embed],
-						ephemeral: true
+						flags: [MessageFlags.Ephemeral]
 					});
 				})
 			} else {
 				// Other Hunter
 				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId } }).then(async hunter => {
 					if (!hunter) {
-						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", ephemeral: true });
+						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
 						return;
 					}
 
@@ -55,7 +55,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								.setFooter(randomFooterTip())
 								.setTimestamp()
 						],
-						ephemeral: true
+						flags: [MessageFlags.Ephemeral]
 					});
 				})
 			}
@@ -63,7 +63,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			// Self
 			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
 				if (!hunter) {
-					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", ephemeral: true });
+					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
@@ -101,7 +101,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							.setFooter(randomFooterTip())
 							.setTimestamp()
 					],
-					ephemeral: true
+					flags: [MessageFlags.Ephemeral]
 				});
 			})
 		}

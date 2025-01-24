@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, InteractionContextType } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil');
 const { BOUNTYBOT_INVITE_URL } = require('../constants');
@@ -39,7 +39,7 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 					break;
 			}
 
-			interaction.reply({ embeds: [embed], ephemeral: true });
+			interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
 		})
 	}
 ).setOptions(

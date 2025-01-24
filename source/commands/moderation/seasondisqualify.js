@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
 
@@ -22,7 +22,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		participation.increment("dqCount");
 	}
 	getRankUpdates(interaction.guild, database);
-	interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, ephemeral: true });
+	interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, flags: [MessageFlags.Ephemeral] });
 	if (!member.bot) {
 		member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 	}

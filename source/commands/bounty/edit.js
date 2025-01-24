@@ -13,7 +13,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
-		interaction.reply({ content: "You don't seem to have any open bounties at the moment.", ephemeral: true });
+		interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -27,10 +27,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 					.setOptions(bountiesToSelectOptions(openBounties))
 			)
 		],
-		ephemeral: true,
-		fetchReply: true
-	}).then(reply => {
-		const collector = reply.createMessageComponentCollector({ max: 1 });
+		flags: [MessageFlags.Ephemeral],
+		withResponse: true
+	}).then(response => {
+		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", async (collectedInteraction) => {
 			const [bountyId] = collectedInteraction.values;
 			// Verify bounty exists
@@ -143,7 +143,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 				if (errors.length > 0) {
 					interaction.deleteReply();
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 

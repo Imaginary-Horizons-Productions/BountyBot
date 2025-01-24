@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { createSubcommandMappings } = require('../../util/fileUtil.js');
 
@@ -21,7 +21,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 		await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
 		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId, companyId: interaction.guildId } });
 		if (hunter.isBanned) {
-			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, ephemeral: true });
+			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 

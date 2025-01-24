@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
@@ -11,7 +11,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] });
 	if (ranks.length < 1) {
-		interaction.reply({ content: "This server doesn't have any ranks configured.", ephemeral: true });
+		interaction.reply({ content: "This server doesn't have any ranks configured.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	const guildRoles = await interaction.guild.roles.fetch();
@@ -34,10 +34,10 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					}))
 			)
 		],
-		ephemeral: true,
-		fetchReply: true
-	}).then(reply => {
-		const collector = reply.createMessageComponentCollector({ max: 1 });
+		flags: [MessageFlags.Ephemeral],
+		withResponse: true
+	}).then(response => {
+		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", (collectedInteraction) => {
 			const rankIndex = Number(collectedInteraction.values[0]);
 			database.models.Hunter.findAll({ where: { companyId: interaction.guildId, rank: { [Op.gte]: rankIndex } } }).then(unvalidatedHunters => {
@@ -48,7 +48,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				if (eligibleMembers.size < 1) {
 					database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
 						const rank = ranks[rankIndex];
-						collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${rankIndex + 1}`}).`, ephemeral: true });
+						collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${rankIndex + 1}`}).`, flags: [MessageFlags.Ephemeral] });
 					});
 					return;
 				}
@@ -65,7 +65,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		})
 	}).catch(error => {
 		if (Object.values(error.rawError.errors.data.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
-			interaction.reply({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji.", ephemeral: true });
+			interaction.reply({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji.", flags: [MessageFlags.Ephemeral] });
 		} else {
 			console.error(error);
 		}

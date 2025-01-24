@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, AttachmentBuilder, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, AttachmentBuilder, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
 const { Op } = require('sequelize');
 const { commandMention } = require('../util/textUtil.js');
@@ -15,11 +15,11 @@ module.exports = new CommandWrapper(mainId, "Show your inventory of usable items
 				content += "(None yet, do some bounties to find some!)";
 			}
 			if (content.length < MAX_MESSAGE_CONTENT_LENGTH) {
-				interaction.reply({ content, ephemeral: true });
+				interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
 			} else {
 				interaction.reply({
 					files: [new AttachmentBuilder(Buffer.from(content), { name: "inventory.txt" })],
-					ephemeral: true
+					flags: [MessageFlags.Ephemeral]
 				});
 			}
 		});

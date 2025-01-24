@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
 /**
@@ -11,12 +11,12 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const varianceThreshold = interaction.options.getNumber("variance-threshold");
 	const rank = await database.models.Rank.findOne({ where: { companyId: interaction.guildId, varianceThreshold } });
 	if (!rank) {
-		interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, ephemeral: true });
+		interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
 	rank.destroy();
-	interaction.reply({ content: "The rank has been removed.", ephemeral: true });
+	interaction.reply({ content: "The rank has been removed.", flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

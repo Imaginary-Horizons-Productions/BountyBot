@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_EMBED_FIELD_COUNT } = require("../../constants");
@@ -15,12 +15,12 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const newThreshold = interaction.options.getNumber("variance-threshold");
 	const existingThresholds = ranks.map(rank => rank.varianceThreshold);
 	if (existingThresholds.includes(newThreshold)) {
-		interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use ${commandMention("rank edit")}.`, ephemeral: true });
+		interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use ${commandMention("rank edit")}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
 	if (ranks.length >= MAX_EMBED_FIELD_COUNT) {
-		interaction.reply({ content: "A server can only have 25 seasonal ranks at a time.", ephemeral: true });
+		interaction.reply({ content: "A server can only have 25 seasonal ranks at a time.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -42,7 +42,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		database.models.Rank.create(rawRank);
 	})
 	getRankUpdates(interaction.guild, database);
-	interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, ephemeral: true });
+	interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

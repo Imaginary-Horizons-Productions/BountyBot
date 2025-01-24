@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { Hunter } = require("../../models/users/Hunter");
@@ -31,7 +31,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 	}
 
 	if (slotOptions.length < 1) {
-		interaction.reply({ content: "You don't seem to have any open bounty slots at the moment.", ephemeral: true });
+		interaction.reply({ content: "You don't seem to have any open bounty slots at the moment.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -45,10 +45,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 					.setOptions(slotOptions)
 			)
 		],
-		ephemeral: true,
-		fetchReply: true
-	}).then((reply) => {
-		const collector = reply.createMessageComponentCollector({ max: 1 });
+		flags: [MessageFlags.Ephemeral],
+		withResponse: true
+	}).then(response => {
+		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", async collectedInteraction => {
 			const [slotNumber] = collectedInteraction.values;
 			// Check user actually has slot
@@ -112,7 +112,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				const description = modalSubmission.fields.getTextInputValue("description");
 
 				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post")) {
-					modalSubmission.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", ephemeral: true });
+					modalSubmission.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
@@ -174,7 +174,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				}
 
 				if (errors.length > 0) {
-					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, ephemeral: true });
+					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
@@ -246,7 +246,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 							bounty.save()
 						});
 					} else {
-						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, ephemeral: true });
+						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: [MessageFlags.Ephemeral] });
 					}
 				});
 			}).catch(console.error);

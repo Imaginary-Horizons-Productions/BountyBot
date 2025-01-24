@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { timeConversion } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -15,13 +15,13 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async hunter => {
 		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (Date.now() < nextShowcaseInMS) {
-			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, ephemeral: true });
+			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
 		const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 		if (existingBounties.length < 1) {
-			interaction.reply({ content: "You doesn't have any open bounties posted.", ephemeral: true });
+			interaction.reply({ content: "You doesn't have any open bounties posted.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -35,10 +35,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 						.setOptions(bountiesToSelectOptions(existingBounties))
 				)
 			],
-			ephemeral: true,
-			fetchReply: true
-		}).then(reply => {
-			const collector = reply.createMessageComponentCollector({ max: 1 });
+			flags: [MessageFlags.Ephemeral],
+			withResponse: true
+		}).then(response => {
+			const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", (collectedInteraction) => {
 				showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database);
 			})

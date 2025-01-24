@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
 
@@ -12,7 +12,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const varianceThreshold = interaction.options.getNumber("variance-threshold");
 	const rank = await database.models.Rank.findOne({ where: { companyId: interaction.guildId, varianceThreshold } });
 	if (!rank) {
-		interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, ephemeral: true });
+		interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -29,7 +29,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 	rank.update(updateOptions);
 	getRankUpdates(interaction.guild, database);
-	interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, ephemeral: true });
+	interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

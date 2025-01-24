@@ -1,4 +1,4 @@
-const { EmbedBuilder, userMention } = require("discord.js");
+const { EmbedBuilder, userMention, MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 const { progressGoal } = require("../logic/goals");
 const { congratulationBuilder, listifyEN } = require("../util/textUtil");
@@ -8,7 +8,7 @@ module.exports = new Item(itemName, "Add a contribution to the currently running
 	async (interaction, database) => {
 		const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
 		if (!goal) {
-			interaction.reply({ content: "There isn't currently a Server Goal running.", ephemeral: true });
+			interaction.reply({ content: "There isn't currently a Server Goal running.", flags: [MessageFlags.Ephemeral] });
 			return true;
 		}
 		const progressData = await progressGoal(interaction.guildId, goal.type, interaction.user.id, database);

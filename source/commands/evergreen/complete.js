@@ -16,7 +16,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	const bounty = await database.models.Bounty.findOne({ where: { isEvergreen: true, companyId: interaction.guildId, slotNumber, state: "open" } });
 	if (!bounty) {
-		interaction.reply({ content: "There isn't an evergreen bounty in the `bounty-slot` provided.", ephemeral: true });
+		interaction.reply({ content: "There isn't an evergreen bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -26,7 +26,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 
 	if (mentionedIds.length < 1) {
-		interaction.reply({ content: "Could not find any bounty hunter ids in `hunters`.", ephemeral: true })
+		interaction.reply({ content: "Could not find any bounty hunter ids in `hunters`.", flags: [MessageFlags.Ephemeral] })
 		return;
 	}
 
@@ -52,7 +52,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 
 	if (validatedCompleterIds.length < 1) {
-		interaction.reply({ content: "There aren't any eligible bounty hunters to credit with completing this evergreen bounty.", ephemeral: true })
+		interaction.reply({ content: "There aren't any eligible bounty hunters to credit with completing this evergreen bounty.", flags: [MessageFlags.Ephemeral] })
 		return;
 	}
 
@@ -87,10 +87,10 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 
 	bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), true, database).then(embed => {
-		return interaction.reply({ embeds: [embed], fetchReply: true });
-	}).then(replyMessage => {
+		return interaction.reply({ embeds: [embed], withResponse: true });
+	}).then(response => {
 		getRankUpdates(interaction.guild, database).then(rankUpdates => {
-			replyMessage.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
+			response.resource.message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 				const multiplierString = company.festivalMultiplierString();
 				let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}`;
 				if (rankUpdates.length > 0) {

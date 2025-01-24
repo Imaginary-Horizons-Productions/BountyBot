@@ -12,11 +12,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
 		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
 			if (!bounty) {
-				interaction.reply({ content: "This bounty could not be found.", ephemeral: true });
+				interaction.reply({ content: "This bounty could not be found.", flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (bounty.userId !== interaction.user.id) {
 				interaction.editReply({ content: "Only the bounty poster can mark a bounty completed." });
 				return;

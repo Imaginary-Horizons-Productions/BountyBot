@@ -1,4 +1,4 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Company } = require("../../models/companies/Company");
 
@@ -11,7 +11,7 @@ const { Company } = require("../../models/companies/Company");
 async function executeSubcommand(interaction, database, runMode, ...[company]) {
 	const multiplier = interaction.options.getInteger("multiplier");
 	if (multiplier < 2) {
-		interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, ephemeral: true })
+		interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, flags: [MessageFlags.Ephemeral] })
 		return;
 	}
 	company.update({ "festivalMultiplier": multiplier });

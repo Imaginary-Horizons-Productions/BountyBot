@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
@@ -12,7 +12,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 	if (existingBounties.length < 1) {
-		interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", ephemeral: true });
+		interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
@@ -26,15 +26,15 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 					.setOptions(bountiesToSelectOptions(existingBounties))
 			)
 		],
-		ephemeral: true,
-		fetchReply: true
-	}).then(reply => {
-		const collector = reply.createMessageComponentCollector({ max: 1 });
+		flags: [MessageFlags.Ephemeral],
+		withResponse: true
+	}).then(response => {
+		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
 		collector.on("collect", (collectedInteraction) => {
 			const [bountyId] = collectedInteraction.values;
 			database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
 				if (bounty?.state !== "open") {
-					collectedInteraction.reply({ content: "The selected bounty seems to have been deleted.", ephemeral: true });
+					collectedInteraction.reply({ content: "The selected bounty seems to have been deleted.", flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
