@@ -5,6 +5,7 @@ Server Goals are BountyBot objectives everyone on the server contributes to. A g
 
 ### Other Changes
 - New items: Goal Initializer, Progress-in-a-Can
+- New commands: `/moderation revoke-contributions`, `/moderation revoke-goal-bonus`
 - Added Festival and Raffle indicators to the scoreboard, removed /server-bonuses
 - Fixed crashes when toasting, completing bounties, or seconding toasts in threads
 ## BountyBot Version 2.8.0:

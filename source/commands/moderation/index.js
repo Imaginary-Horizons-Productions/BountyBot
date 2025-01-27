@@ -4,11 +4,13 @@ const { createSubcommandMappings } = require('../../util/fileUtil.js');
 
 const mainId = "moderation";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, [
-	"userreport.js",
-	"takedown.js",
+	"bountybotban.js",
+	"gppenalty.js",
+	"revokegoalbonus.js",
 	"seasondisqualify.js",
-	"xppenalty.js",
-	"bountybotban.js"
+	"takedown.js",
+	"userreport.js",
+	"xppenalty.js"
 ]);
 module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
