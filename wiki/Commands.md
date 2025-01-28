@@ -162,16 +162,20 @@ The item to look up details on
 
 > Permission Level: ManageRoles
 
-#### /moderation user-report
-Get the BountyBot moderation stats for a user
-#### /moderation take-down
-Take down another user's bounty
-#### /moderation season-disqualify
-Toggle disqualification from ranking for a bounty hunter in the current season
-#### /moderation xp-penalty
-Reduce a bounty hunter's XP
 #### /moderation bountybot-ban
 Toggle whether the provided user can interact with bounties or toasts
+#### /moderation gp-penalty
+Reduce the GP of the open Server Goal
+#### /moderation revoke-goal-bonus
+Revoke Goal contribution item find bonus
+#### /moderation season-disqualify
+Toggle disqualification from ranking for a bounty hunter in the current season
+#### /moderation take-down
+Take down another user's bounty
+#### /moderation user-report
+Get the BountyBot moderation stats for a user
+#### /moderation xp-penalty
+Reduce a bounty hunter's XP
 ### /premium
 > Usable in: DMs, Servers, and Group DMs
 
