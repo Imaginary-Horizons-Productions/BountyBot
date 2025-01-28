@@ -9,8 +9,8 @@ const { commandMention } = require("../../util/textUtil");
  * @param {...unknown} args
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
-	const penaltyValue = Math.abs(interaction.options.get("penalty", true));
-	const goal = await database.models.Goal.findOne({ where: { companyId, state: "ongoing" } });
+	const penaltyValue = Math.abs(interaction.options.get("penalty", true).value);
+	const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
 	if (!goal) {
 		interaction.reply({ content: `There isn't an open Server Goal to penalize. You can use ${commandMention("moderation revoke-goal-bonus")} to revoke Goal Completion Item Find Bonus for bounty hunters.`, flags: [MessageFlags.Ephemeral] });
 		return;

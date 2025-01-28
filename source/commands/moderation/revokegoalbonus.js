@@ -8,14 +8,19 @@ const { Sequelize } = require("sequelize");
  * @param {...unknown} args
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
-	const user = interaction.options.get("revokee", true);
-	const hunter = await database.models.Hunter.findOne({ where: { userId: user.id, companyId: interaction.guildId } });
+	const revokeOption = interaction.options.get("revokee", true);
+	const hunter = await database.models.Hunter.findOne({ where: { userId: revokeOption.value, companyId: interaction.guildId } });
 	if (!hunter) {
-		interaction.reply({ content: `${user} hasn't interacted with BountyBot yet.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `${userMention(revokeOption.value)} hasn't interacted with BountyBot yet.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
-	hunter.update("itemFindBoost", false);
-	interaction.reply({ content: `${user}'s Goal Contribution item find boost has been revoked.`, flags: [MessageFlags.Ephemeral] });
+	if (hunter.itemFindBoost) {
+		hunter.update({ "itemFindBoost": false });
+		interaction.reply({ content: `${userMention(revokeOption.value)}'s Goal Contribution item find boost has been revoked.`, flags: [MessageFlags.Ephemeral] });
+		revokeOption.user.send({ content: `Your Item Find Bonus in ${interaction.guild} was revoked by ${interaction.user}.` });
+	} else {
+		interaction.reply({ content: `${userMention(revokeOption.value)} doesn't have Goal Contribution item find boost.`, flags: [MessageFlags.Ephemeral] });
+	}
 };
 
 module.exports = {
