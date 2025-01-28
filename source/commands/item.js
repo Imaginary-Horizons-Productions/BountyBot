@@ -40,7 +40,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 		}).then(reply => {
 			const collector = reply.createMessageComponentCollector({ max: 1 });
 			collector.on("collect", (collectedInteration) => {
-				if (Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
+				if (runMode === "prod" && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
 					collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: [MessageFlags.Ephemeral] });
 					return;
 				}
