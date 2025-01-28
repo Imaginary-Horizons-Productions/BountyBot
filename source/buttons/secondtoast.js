@@ -118,7 +118,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal");
 		if (goalProgressFieldIndex !== -1) {
 			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
-			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 		}
 		interaction.update({ embeds: [embed] });

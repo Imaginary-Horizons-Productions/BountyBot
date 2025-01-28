@@ -123,7 +123,7 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 	const fields = [];
 	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
 	if (goal) {
-		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
 	}
 	if (company.festivalMultiplier !== 1) {
@@ -183,7 +183,7 @@ async function buildOverallScoreboardEmbed(guild, database) {
 	const fields = [];
 	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
 	if (goal) {
-		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
 	}
 	if (company.festivalMultiplier !== 1) {

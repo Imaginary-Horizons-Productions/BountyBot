@@ -85,7 +85,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					bounty.asEmbed(collectedInteraction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
 						if (goalProgress.gpContributed > 0) {
 							const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
-							const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } });
+							const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 							embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 						}
 						interaction.message.edit({ embeds: [embed], components: [] });
