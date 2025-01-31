@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
@@ -28,25 +28,24 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		],
 		flags: [MessageFlags.Ephemeral],
 		withResponse: true
-	}).then(response => {
-		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-		collector.on("collect", (collectedInteraction) => {
-			const [bountyId] = collectedInteraction.values;
-			database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
-				if (bounty?.state !== "open") {
-					collectedInteraction.reply({ content: "The selected bounty seems to have been deleted.", flags: [MessageFlags.Ephemeral] });
-					return;
-				}
+	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
+		const [bountyId] = collectedInteraction.values;
+		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
+			if (bounty?.state !== "open") {
+				collectedInteraction.reply({ content: "The selected bounty seems to have been deleted.", flags: [MessageFlags.Ephemeral] });
+				return;
+			}
 
-				bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
-					collectedInteraction.reply({ embeds: [embed] });
-				});
+			bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
+				collectedInteraction.reply({ embeds: [embed] });
 			});
-		})
-
-		collector.on("end", () => {
-			interaction.deleteReply();
-		})
+		});
+	}).catch(error => {
+		if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+			console.error(error);
+		}
+	}).finally(() => {
+		interaction.deleteReply();
 	})
 };
 

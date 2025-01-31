@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -25,37 +25,36 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			],
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
-		}).then(response => {
-			const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-			collector.on("collect", async (collectedInteraction) => {
-				const [bountyId] = collectedInteraction.values;
-				const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
-				bounty.state = "deleted";
-				bounty.save();
-				database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-				if (bounty.Company.bountyBoardId) {
-					const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
-					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
-					postingThread.delete("Bounty taken down by poster");
+		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			const [bountyId] = collectedInteraction.values;
+			const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+			bounty.state = "deleted";
+			bounty.save();
+			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+			if (bounty.Company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
+				postingThread.delete("Bounty taken down by poster");
+			}
+			bounty.destroy();
+
+			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
+				hunter.decrement("xp");
+				const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
+				if (!participationCreated) {
+					participation.decrement("xp");
 				}
-				bounty.destroy();
-
-				database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
-					hunter.decrement("xp");
-					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
-					if (!participationCreated) {
-						participation.decrement("xp");
-					}
-					getRankUpdates(interaction.guild, database);
-				})
-
-				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
+				getRankUpdates(interaction.guild, database);
 			})
 
-			collector.on("end", () => {
-				interaction.deleteReply();
-			})
+			collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
+		}).catch(error => {
+			if (error.codes !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
+			}
+		}).finally(() => {
+			interaction.deleteReply();
 		})
 	})
 };

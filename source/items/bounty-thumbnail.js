@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Item } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../constants");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
@@ -46,26 +46,24 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 				],
 				flags: [MessageFlags.Ephemeral],
 				withResponse: true
-			}).then(response => {
-				const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-				collector.on("collect", async collectedInteraction => {
-					const bounty = await database.models.Bounty.findByPk(collectedInteraction.values[0]);
-					if (bounty?.state !== "open") {
-						collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
-						return;
-					}
-					bounty.thumbnailURL = imageURL;
-					await bounty.save().then(async bounty => {
-						bounty.reload();
-						const company = await database.models.Company.findByPk(interaction.guildId);
-						bounty.updatePosting(interaction.guild, company, database);
-					});
-					collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
-				})
-
-				collector.on("end", interactionCollection => {
-					modalSubmission.deleteReply();
-				})
+			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+				const bounty = await database.models.Bounty.findByPk(collectedInteraction.values[0]);
+				if (bounty?.state !== "open") {
+					return collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
+				}
+				bounty.thumbnailURL = imageURL;
+				await bounty.save().then(async bounty => {
+					bounty.reload();
+					const company = await database.models.Company.findByPk(interaction.guildId);
+					bounty.updatePosting(interaction.guild, company, database);
+				});
+				return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
+			}).catch(error => {
+				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+					console.error(error);
+				}
+			}).finally(() => {
+				interaction.deleteReply();
 			})
 		})
 	}

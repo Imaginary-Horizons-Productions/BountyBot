@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { timeConversion } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -37,15 +37,14 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			],
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
-		}).then(response => {
-			const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-			collector.on("collect", (collectedInteraction) => {
-				showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database);
-			})
-
-			collector.on("end", () => {
-				interaction.deleteReply();
-			})
+		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
+			showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database);
+		}).catch(error => {
+			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
+			}
+		}).finally(() => {
+			interaction.deleteReply();
 		})
 	})
 };

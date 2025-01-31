@@ -1,4 +1,4 @@
-const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags } = require("discord.js");
+const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Item } = require("../classes");
 const { timeConversion, commandMention } = require("../util/textUtil");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
@@ -25,15 +25,14 @@ module.exports = new Item(itemName, "Showcase one of your bounties and increase 
 			],
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
-		}).then(response => {
-			const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-			collector.on("collect", async collectedInteraction => {
-				showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, database);
-			})
-
-			collector.on("end", interactionCollection => {
-				interaction.deleteReply();
-			})
+		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, database);
+		}).catch(error => {
+			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
+			}
+		}).finally(() => {
+			interaction.deleteReply();
 		})
 	}
 );
