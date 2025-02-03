@@ -63,7 +63,7 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 					console.error(error);
 				}
 			}).finally(() => {
-				interaction.deleteReply();
+				modalSubmission.deleteReply();
 			})
 		})
 	}
