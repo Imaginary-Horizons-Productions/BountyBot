@@ -54,7 +54,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				console.error(error);
 			}
 		}).finally(() => {
-			interaction.deleteReply();
+			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+			if (interaction.channel) {
+				interaction.deleteReply();
+			}
 		})
 	})
 };

@@ -14,7 +14,7 @@ const { showcaseBounty } = require("../../util/bountyUtil");
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async hunter => {
 		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-		if (Date.now() < nextShowcaseInMS) {
+		if (runMode === "prod" && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
@@ -44,7 +44,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				console.error(error);
 			}
 		}).finally(() => {
-			interaction.deleteReply();
+			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+			if (interaction.channel) {
+				interaction.deleteReply();
+			}
 		})
 	})
 };
