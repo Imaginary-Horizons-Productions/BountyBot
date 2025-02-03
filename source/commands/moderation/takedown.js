@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
@@ -30,38 +30,40 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		],
 		flags: [MessageFlags.Ephemeral],
 		withResponse: true
-	}).then(response => {
-		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-		collector.on("collect", (collectedInteraction) => {
-			const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
-			const [bountyId] = collectedInteraction.values;
-			database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
-				await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-				bounty.state = "deleted";
-				bounty.save();
-				if (bounty.Company.bountyBoardId) {
-					const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
-					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
-					postingThread.delete("Bounty taken down by moderator");
+	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
+		const [bountyId] = collectedInteraction.values;
+		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
+			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+			bounty.state = "deleted";
+			bounty.save();
+			if (bounty.Company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
+				postingThread.delete("Bounty taken down by moderator");
+			}
+			bounty.destroy();
+
+			database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async poster => {
+				poster.decrement("xp");
+				const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: posterId, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
+				if (!participationCreated) {
+					participation.decrement("xp");
 				}
-				bounty.destroy();
-
-				database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async poster => {
-					poster.decrement("xp");
-					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: posterId, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
-					if (!participationCreated) {
-						participation.decrement("xp");
-					}
-					getRankUpdates(interaction.guild, database);
-				})
-				collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
-			});
-		})
-
-		collector.on("end", () => {
+				getRankUpdates(interaction.guild, database);
+			})
+			collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
+		});
+	}).catch(error => {
+		if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+			console.error(error);
+		}
+	}).finally(() => {
+		// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+		if (interaction.channel) {
 			interaction.deleteReply();
-		})
+		}
 	})
 };
 

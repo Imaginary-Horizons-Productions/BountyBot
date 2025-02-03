@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -24,42 +24,44 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		],
 		flags: [MessageFlags.Ephemeral],
 		withResponse: true
-	}).then(response => {
-		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-		collector.on("collect", async (collectedInteraction) => {
-			const [bountyId] = collectedInteraction.values;
-			const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
-			bounty.state = "deleted";
-			bounty.save();
-			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-			const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
-			if (evergreenBounties.length > 0) {
-				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database)));
-				if (bounty.Company.bountyBoardId) {
-					const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
-					bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
-						const message = await thread.fetchStarterMessage();
-						message.edit({ embeds });
-					});
-				}
-			} else if (bounty.Company.bountyBoardId) {
+	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		const [bountyId] = collectedInteraction.values;
+		const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+		bounty.state = "deleted";
+		bounty.save();
+		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
+		if (evergreenBounties.length > 0) {
+			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database)));
+			if (bounty.Company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
-				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(thread => {
-					thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
-					return database.models.Company.findByPk(bounty.companyId);
-				}).then(company => {
-					company.evergreenThreadId = null;
-					company.save();
+				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
+					const message = await thread.fetchStarterMessage();
+					message.edit({ embeds });
 				});
 			}
-			bounty.destroy();
+		} else if (bounty.Company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+			bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(thread => {
+				thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
+				return database.models.Company.findByPk(bounty.companyId);
+			}).then(company => {
+				company.evergreenThreadId = null;
+				company.save();
+			});
+		}
+		bounty.destroy();
 
-			collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
-		})
-
-		collector.on("end", () => {
+		collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
+	}).catch(error => {
+		if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+			console.error(error);
+		}
+	}).finally(() => {
+		// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+		if (interaction.channel) {
 			interaction.deleteReply();
-		})
+		}
 	});
 };
 

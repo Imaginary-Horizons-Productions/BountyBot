@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
+const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
 const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../constants.js');
@@ -37,52 +37,54 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 					)
 				]
 			});
-		}).then(reply => {
-			const collector = reply.createMessageComponentCollector({ max: 1 });
-			collector.on("collect", (collectedInteration) => {
-				if (runMode === "prod" && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
-					collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: [MessageFlags.Ephemeral] });
+		}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(collectedInteration => {
+			if (runMode === "prod" && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
+				collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: [MessageFlags.Ephemeral] });
+				return;
+			}
+
+			database.models.Item.findOne({ where: { userId: collectedInteration.user.id, itemName } }).then(itemRow => {
+				if (runMode === "prod" && itemRow.count < 1) {
+					collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
-				database.models.Item.findOne({ where: { userId: collectedInteration.user.id, itemName } }).then(itemRow => {
-					if (runMode === "prod" && itemRow.count < 1) {
-						collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: [MessageFlags.Ephemeral] });
+				const now = Date.now();
+
+				if (!ITEM_COOLDOWNS.has(itemName)) {
+					ITEM_COOLDOWNS.set(itemName, new Map());
+				}
+
+				const timestamps = ITEM_COOLDOWNS.get(itemName);
+				if (timestamps.has(collectedInteration.user.id)) {
+					const expirationTime = timestamps.get(collectedInteration.user.id) + getItemCooldown(itemName);
+
+					if (now < expirationTime) {
+						collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.round(expirationTime / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 						return;
-					}
-
-					const now = Date.now();
-
-					if (!ITEM_COOLDOWNS.has(itemName)) {
-						ITEM_COOLDOWNS.set(itemName, new Map());
-					}
-
-					const timestamps = ITEM_COOLDOWNS.get(itemName);
-					if (timestamps.has(collectedInteration.user.id)) {
-						const expirationTime = timestamps.get(collectedInteration.user.id) + getItemCooldown(itemName);
-
-						if (now < expirationTime) {
-							collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.round(expirationTime / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
-							return;
-						} else {
-							timestamps.delete(collectedInteration.user.id);
-						}
 					} else {
-						timestamps.set(collectedInteration.user.id, now);
-						setTimeout(() => timestamps.delete(collectedInteration.user.id), getItemCooldown(itemName));
+						timestamps.delete(collectedInteration.user.id);
 					}
+				} else {
+					timestamps.set(collectedInteration.user.id, now);
+					setTimeout(() => timestamps.delete(collectedInteration.user.id), getItemCooldown(itemName));
+				}
 
-					useItem(itemName, collectedInteration, database).then(shouldSkipDecrement => {
-						if (!shouldSkipDecrement && runMode === "prod") {
-							itemRow.decrement("count");
-						}
-					});
-				})
+				return useItem(itemName, collectedInteration, database).then(shouldSkipDecrement => {
+					if (!shouldSkipDecrement && runMode === "prod") {
+						itemRow.decrement("count");
+					}
+				});
 			})
-
-			collector.on("end", () => {
-				interaction.deleteReply();
-			})
+		}).catch(error => {
+			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
+			}
+		}).finally(() => {
+				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+				if (interaction.channel) {
+					interaction.deleteReply();
+				}
 		});
 	}
 ).setOptions(

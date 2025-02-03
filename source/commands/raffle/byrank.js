@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
@@ -36,38 +36,36 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		],
 		flags: [MessageFlags.Ephemeral],
 		withResponse: true
-	}).then(response => {
-		const collector = response.resource.message.createMessageComponentCollector({ max: 1 });
-		collector.on("collect", (collectedInteraction) => {
-			const rankIndex = Number(collectedInteraction.values[0]);
-			database.models.Hunter.findAll({ where: { companyId: interaction.guildId, rank: { [Op.gte]: rankIndex } } }).then(unvalidatedHunters => {
-				const qualifiedHunters = unvalidatedHunters.filter(hunter => !hunter.isRankDisqualified);
-				return interaction.guild.members.fetch({ user: qualifiedHunters.map(hunter => hunter.userId) });
-			}).then((unvalidatedMembers) => {
-				const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
-				if (eligibleMembers.size < 1) {
-					database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
-						const rank = ranks[rankIndex];
-						collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${rankIndex + 1}`}).`, flags: [MessageFlags.Ephemeral] });
-					});
-					return;
-				}
-				const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
-				collectedInteraction.reply(`The winner of this raffle is: ${winner}`);
-				database.models.Company.findByPk(interaction.guildId).then(company => {
-					company.update("nextRaffleString", null);
+	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
+		const rankIndex = Number(collectedInteraction.values[0]);
+		database.models.Hunter.findAll({ where: { companyId: interaction.guildId, rank: { [Op.gte]: rankIndex } } }).then(unvalidatedHunters => {
+			const qualifiedHunters = unvalidatedHunters.filter(hunter => !hunter.isRankDisqualified);
+			return interaction.guild.members.fetch({ user: qualifiedHunters.map(hunter => hunter.userId) });
+		}).then((unvalidatedMembers) => {
+			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
+			if (eligibleMembers.size < 1) {
+				database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
+					const rank = ranks[rankIndex];
+					collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${rankIndex + 1}`}).`, flags: [MessageFlags.Ephemeral] });
 				});
-			})
-		})
-
-		collector.on("end", () => {
-			interaction.deleteReply();
+				return;
+			}
+			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
+			collectedInteraction.reply(`The winner of this raffle is: ${winner}`);
+			database.models.Company.findByPk(interaction.guildId).then(company => {
+				company.update("nextRaffleString", null);
+			});
 		})
 	}).catch(error => {
 		if (Object.values(error.rawError.errors.data.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
 			interaction.reply({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji.", flags: [MessageFlags.Ephemeral] });
-		} else {
+		} else if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 			console.error(error);
+		}
+	}).finally(() => {
+		// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+		if (interaction.channel) {
+			interaction.deleteReply();
 		}
 	});
 };

@@ -38,7 +38,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					console.error(error);
 				}
 			}).finally(() => {
-				interaction.deleteReply();
+				// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+				if (interaction.channel) {
+					interaction.deleteReply();
+				}
 			})
 		})
 	}
