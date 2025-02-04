@@ -1,9 +1,7 @@
 const { EmbedBuilder, userMention, Guild, GuildMember } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { timeConversion, listifyEN, congratulationBuilder, generateTextBar, commandMention } = require("../util/textUtil");
+const { timeConversion, listifyEN, congratulationBuilder, generateTextBar } = require("../util/textUtil");
 const { progressGoal } = require("./goals");
-const { getRankUpdates } = require("../util/scoreUtil");
-const { MAX_MESSAGE_CONTENT_LENGTH } = require("../constants");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { findOrCreateBountyHunter } = require("./hunters");
@@ -65,8 +63,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
 	}, []);
 
-	const rawRecipients = [];
-	let critValue = 0;
 	const [season] = await db.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
 	season.increment("toastsRaised");
 
@@ -90,12 +86,14 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 	}
 	senderHunter.increment("toastsRaised");
 	const toast = await db.models.Toast.create({ companyId: guild.id, senderId: sender.id, text: toastText, imageURL });
-	const rewardedRecipients = [];
+	const rawRecipients = [];
+	const rewardedHunterIds = [];
+	let critValue = 0;
 	for (const id of toasteeIds) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
 			const [hunter] = await findOrCreateBountyHunter(id, company.id);
-			rewardedRecipients.push(hunter);
+			rewardedHunterIds.push(hunter.id);
 			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, db));
 			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {
@@ -147,21 +145,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		participation.increment({ xp: critValue, toastsRaised: 1 });
 	}
 
-	if (rewardedRecipients.length > 0) {
-		const rankUpdates = await getRankUpdates(guild, db);
-		const multiplierString = company.festivalMultiplierString();
-		toastReceipt.rewardText = `__**XP Gained**__\n${rewardedRecipients.map(hunter => `<@${hunter.userId}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${sender} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
-		if (rankUpdates.length > 0) {
-			toastReceipt.rewardText += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
-		}
-		if (rewardTexts.length > 0) {
-			toastReceipt.rewardText += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
-		}
-		if (toastReceipt.rewardText.length > MAX_MESSAGE_CONTENT_LENGTH) {
-			toastReceipt.rewardText = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-		}
-	}
-	return { toastId: toast.id, rewardedRecipients, rewardTexts, embeds };
+	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue, embeds };
 }
 
 module.exports = {

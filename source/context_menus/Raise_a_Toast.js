@@ -1,11 +1,12 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
-const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require('../constants');
+const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { raiseToast } = require('../logic/toasts.js');
-const { textsHaveAutoModInfraction } = require('../util/textUtil');
+const { textsHaveAutoModInfraction, commandMention } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil.js');
 const { findOrCreateCompany } = require('../logic/companies.js');
 const { findOrCreateBountyHunter } = require('../logic/hunters.js');
+const { getRankUpdates } = require('../util/scoreUtil.js');
 
 const mainId = "Raise a Toast";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -52,7 +53,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			const { embeds, toastId, rewardText } = await raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
+			const { embeds, toastId, rewardedHunterIds, rewardTexts, critValue } = await raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
 			modalSubmission.reply({
 				embeds,
 				components: [
@@ -64,13 +65,29 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					)
 				],
 				withResponse: true
-			}).then(response => {
-				if (rewardText) {
+			}).then(async response => {
+				let content = "";
+				if (rewardedRecipients.length > 0) {
+					const rankUpdates = await getRankUpdates(interaction.guild, database);
+					const multiplierString = company.festivalMultiplierString();
+					content = `__**XP Gained**__\n${rewardedHunterIds.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${sender} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
+					if (rankUpdates.length > 0) {
+						content += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
+					}
+					if (rewardTexts.length > 0) {
+						content += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
+					}
+					if (content.length > MAX_MESSAGE_CONTENT_LENGTH) {
+						content = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+					}
+				}
+
+				if (content) {
 					if (modalSubmission.channel.isThread()) {
-						modalSubmission.channel.send({ content: rewardText, flags: MessageFlags.SuppressNotifications });
+						modalSubmission.channel.send({ content, flags: MessageFlags.SuppressNotifications });
 					} else {
 						response.resource.message.startThread({ name: "Rewards" }).then(thread => {
-							thread.send({ content: rewardText, flags: MessageFlags.SuppressNotifications });
+							thread.send({ content, flags: MessageFlags.SuppressNotifications });
 						})
 					}
 					updateScoreboard(company, modalSubmission.guild, database);
