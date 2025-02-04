@@ -6,6 +6,7 @@ const { Hunter } = require("../models/users/Hunter");
 const { progressGoal } = require("./goals");
 const { rollItemDrop } = require("../util/itemUtil");
 
+/** @type {Sequelize} */
 let db;
 
 /**

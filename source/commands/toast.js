@@ -1,14 +1,19 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { extractUserIdsFromMentions, textsHaveAutoModInfraction } = require('../util/textUtil');
 const { raiseToast } = require('../logic/toasts.js');
+const { updateScoreboard } = require('../util/embedUtil.js');
+const { SAFE_DELIMITER } = require('../constants.js');
+const { findOrCreateCompany } = require('../logic/companies.js');
+const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, database, runMode) => {
-		const toasterHunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
-		if (toasterHunter?.isBanned) {
+		const [company] = await findOrCreateCompany(interaction.guildId);
+		const [sender] = await findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		if (sender.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
@@ -56,7 +61,30 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		raiseToast(interaction, database, nonBotToasteeIds, toastText, imageURL);
+		const { toastId, rewardedRecipients, embeds } = await raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		interaction.reply({
+			embeds,
+			components: [
+				new ActionRowBuilder().addComponents(
+					new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
+						.setLabel("Hear, hear!")
+						.setEmoji("🥂")
+						.setStyle(ButtonStyle.Primary)
+				)
+			],
+			withResponse: true
+		}).then(response => {
+			if (rewardText) {
+				if (interaction.channel.isThread()) {
+					interaction.channel.send({ content: rewardText, flags: MessageFlags.SuppressNotifications });
+				} else {
+					response.resource.message.startThread({ name: "Rewards" }).then(thread => {
+						thread.send({ content: rewardText, flags: MessageFlags.SuppressNotifications });
+					})
+				}
+				updateScoreboard(company, interaction.guild, database);
+			}
+		});
 	}
 ).setOptions(
 	{
