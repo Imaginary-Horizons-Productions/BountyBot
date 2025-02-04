@@ -69,16 +69,16 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 	const rewardTexts = [];
 	if (rewardsAvailable > 0) {
 		const progressData = await progressGoal(guild.id, "toasts", sender.id, db);
-		rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
-		if (progressData.goalCompleted) {
-			embeds.push(new EmbedBuilder().setColor("e5b271")
-				.setTitle("Server Goal Completed")
-				.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-				.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-				.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
-			);
-		}
 		if (progressData.gpContributed > 0) {
+			rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
+			if (progressData.goalCompleted) {
+				embeds.push(new EmbedBuilder().setColor("e5b271")
+					.setTitle("Server Goal Completed")
+					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+					.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
+				);
+			}
 			const goal = await db.models.Goal.findOne({ where: { companyId: guild.id } });
 			const progress = await db.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
@@ -93,7 +93,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
 			const [hunter] = await findOrCreateBountyHunter(id, company.id);
-			rewardedHunterIds.push(hunter.id);
+			rewardedHunterIds.push(hunter.userId);
 			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, db));
 			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {

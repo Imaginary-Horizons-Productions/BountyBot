@@ -67,10 +67,10 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				withResponse: true
 			}).then(async response => {
 				let content = "";
-				if (rewardedRecipients.length > 0) {
+				if (rewardedHunterIds.length > 0) {
 					const rankUpdates = await getRankUpdates(interaction.guild, database);
 					const multiplierString = company.festivalMultiplierString();
-					content = `__**XP Gained**__\n${rewardedHunterIds.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${sender} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
+					content = `__**XP Gained**__\n${rewardedHunterIds.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
 					if (rankUpdates.length > 0) {
 						content += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
 					}
