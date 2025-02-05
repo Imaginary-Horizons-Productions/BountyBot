@@ -8,6 +8,7 @@ Server Goals are BountyBot objectives everyone on the server contributes to. A g
 - New commands: `/moderation revoke-contributions`, `/moderation revoke-goal-bonus`
 - Added Festival and Raffle indicators to the scoreboard, removed /server-bonuses
 - Fixed crashes when toasting, completing bounties, or seconding toasts in threads
+- Added an optional text input for `/evergreen showcase` to allow moderators to add text to the showcase message
 ## BountyBot Version 2.8.0:
 ### Context Menu Options
 - Added the following BountyBot functionality to the Apps dropdown when right-clicking on a User or Message:
