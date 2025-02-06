@@ -100,13 +100,13 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			} else if (bounty.attachmentURL) {
 				bounty.attachmentURL = null;
 			}
-			bounty.increment("editCount");
+			bounty.editCount++;
+			bounty.save();
 
 			// update bounty board
-			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database);
-			const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
-			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(modalSubmission.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database)));
 			if (bounty.Company.bountyBoardId) {
+				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
+				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(modalSubmission.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database)));
 				const bountyBoard = await modalSubmission.guild.channels.fetch(bounty.Company.bountyBoardId);
 				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
 					const message = await thread.fetchStarterMessage();
@@ -114,6 +114,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				});
 			}
 
+			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database);
 			modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
 		});
 	}).catch(error => {

@@ -181,22 +181,29 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId);
 				bounty.scheduledEventId = null;
 			}
-			bounty.increment("editCount");
+			bounty.editCount++;
+			bounty.save();
 
 			// update bounty board
 			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
 			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, bounty.Company.festivalMultiplierString(), false, database);
-
-			bounty.updatePosting(modalSubmission.guild, bounty.Company, database);
-			database.models.Company.findByPk(interaction.guildId).then(company => {
-				if (company.bountyBoardId) {
-					modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
-						return bountyBoard.threads.fetch(bounty.postingId);
-					}).then(posting => {
-						posting.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
+			if (bounty.Company.bountyBoardId) {
+				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
+					return bountyBoard.threads.fetch(bounty.postingId);
+				}).then(async thread => {
+					if (thread.archived) {
+						await thread.setArchived(false, "Unarchived to update posting");
+					}
+					thread.edit({ name: bounty.title });
+					thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
+					return thread.fetchStarterMessage();
+				}).then(posting => {
+					posting.edit({
+						embeds: [bountyEmbed],
+						components: bounty.generateBountyBoardButtons()
 					});
-				}
-			});
+				})
+			}
 
 			modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], components: [] });
 		});
