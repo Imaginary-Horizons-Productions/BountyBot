@@ -33,7 +33,6 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			});
 		}
 
-		//TODO #95 make sure acknowledging interactions is sharding safe
 		interaction.reply({ content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`, flags: [MessageFlags.Ephemeral] });
 	})
 };
