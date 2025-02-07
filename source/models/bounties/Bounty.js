@@ -43,10 +43,10 @@ exports.Bounty = class extends Model {
 			if (this.isEvergreen) {
 				embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
 			} else {
-				if (completions.length > 0) {
-					fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
-				}
 				embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+			}
+			if (completions.length > 0) {
+				fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
 			}
 
 			if (fields.length > 0) {
