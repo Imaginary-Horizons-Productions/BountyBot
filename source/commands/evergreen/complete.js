@@ -86,7 +86,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		}
 	}
 
-	bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), true, database).then(embed => {
+	bounty.embed(interaction.guild, company.level, true, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).then(embed => {
 		return interaction.reply({ embeds: [embed], withResponse: true });
 	}).then(response => {
 		getRankUpdates(interaction.guild, database).then(rankUpdates => {

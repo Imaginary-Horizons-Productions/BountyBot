@@ -92,7 +92,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 							return thread.fetchStarterMessage();
 						}).then(async message => {
 							evergreenBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
-							message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), false, database))) });
+							message.edit({ embeds: await Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })))) });
 						});
 					})
 				}

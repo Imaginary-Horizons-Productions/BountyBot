@@ -87,12 +87,12 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum
-		const bountyEmbed = await bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), false, database);
+		const bountyEmbed = await bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 		interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
 					const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-					const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), false, database)));
+					const embeds = await Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))));
 					if (company.evergreenThreadId) {
 						return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 							const message = await thread.fetchStarterMessage();

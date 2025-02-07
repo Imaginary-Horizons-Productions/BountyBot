@@ -186,7 +186,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 			// update bounty board
 			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, poster.level, bounty.Company.festivalMultiplierString(), false, database);
+			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, bounty.Company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 			if (bounty.Company.bountyBoardId) {
 				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.fetch(bounty.postingId);
