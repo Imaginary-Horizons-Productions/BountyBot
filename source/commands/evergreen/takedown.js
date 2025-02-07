@@ -32,7 +32,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
 		if (evergreenBounties.length > 0) {
-			const embeds = await Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, bounty.Company.level, false, bounty.Company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))));
+			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, bounty.Company.level, false, bounty.Company, [])));
 			if (bounty.Company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
 				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
