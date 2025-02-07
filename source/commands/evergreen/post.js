@@ -87,7 +87,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum
-		const bountyEmbed = await bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
+		const bountyEmbed = await bounty.embed(interaction.guild, company.level, false, company, []);
 		interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {

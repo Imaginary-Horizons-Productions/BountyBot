@@ -210,7 +210,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 			const bounty = await database.models.Bounty.create(rawBounty);
 
 			// post in bounty board forum
-			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
+			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, []);
 			modalSubmission.reply(company.sendAnnouncement({ content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 				if (company.bountyBoardId) {
 					modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
