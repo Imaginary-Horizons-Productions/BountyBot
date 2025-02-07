@@ -3,13 +3,15 @@ const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
+const { Completion } = require('../models/bounties/Completion.js');
 
 /**
  * Updates the board posting for the bounty after adding the completers
  * @param {Bounty} bounty
  * @param {Company} company
  * @param {Hunter} poster
- * @param {UserId[]} numCompleters
+ * @param {string[]} newCompleterIds
+ * @param {Completion[]} completers
  * @param {Guild} guild
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild) {
@@ -26,7 +28,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
 	let starterMessage = await post.fetchStarterMessage();
 	starterMessage.edit({
-		embeds: [await bounty.embed(guild, poster.level, company.festivalMultiplierString(), false, company, completers)],
+		embeds: [await bounty.embed(guild, poster.level, false, company, completers)],
 		components: bounty.generateBountyBoardButtons()
 	});
 }

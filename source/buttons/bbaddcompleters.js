@@ -3,13 +3,15 @@ const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
 const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
+const { Completion } = require('../models/bounties/Completion.js');
 
 /**
  * Updates the board posting for the bounty after adding the completers
  * @param {Bounty} bounty
  * @param {Company} company
  * @param {Hunter} poster
- * @param {UserId[]} numCompleters
+ * @param {string[]} newCompleterIds
+ * @param {Completion[]} completers
  * @param {Guild} guild
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
@@ -22,7 +24,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 	btnPost.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
 	let starterMessage = await btnPost.fetchStarterMessage();
 	starterMessage.edit({
-		embeds: [await bounty.embed(guild, poster.level, company.festivalMultiplierString(), false, company, completers)],
+		embeds: [await bounty.embed(guild, poster.level, false, company, completers)],
 		components: bounty.generateBountyBoardButtons()
 	});
 }
@@ -66,13 +68,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 
 				if (validatedCompleterIds.length < 1) {
-					collectedInteraction.reply({ content: "Could not find any new non-bot completers.", flags: [MessageFlags.Ephemeral] });
-					return;
+					return collectedInteraction.reply({ content: "Could not find any new non-bot completers.", flags: [MessageFlags.Ephemeral] });
 				}
 
 				let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
-				collectedInteraction.update({
+				return collectedInteraction.update({
 					components: []
 				});
 			}).catch(error => {

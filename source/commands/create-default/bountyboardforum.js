@@ -47,8 +47,8 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 				evergreenBounties.unshift(bounty);
 				continue;
 			}
-			database.models.Hunter.findOne({ where: { companyId: bounty.companyId, userId: bounty.userId } }).then(poster => {
-				return bounty.asEmbed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, company.festivalMultiplierString(), false, database);
+			database.models.Hunter.findOne({ where: { companyId: bounty.companyId, userId: bounty.userId } }).then(async poster => {
+				return bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({
 					name: bounty.title,
@@ -83,7 +83,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 
 		// make Evergreen Bounty list
 		if (evergreenBounties.length > 0) {
-			Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), false, database))).then(embeds => {
+			Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })))).then(embeds => {
 				generateBountyBoardThread(bountyBoard.threads, embeds, company);
 			})
 		}

@@ -35,7 +35,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				return collectedInteraction;
 			}
 
-			bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
+			bounty.embed(interaction.guild, bounty.Company.level, false, bounty.Company, []).then(embed => {
 				const payload = { embeds: [embed] };
 				const extraText = interaction.options.get("extra-text");
 				if (extraText) {

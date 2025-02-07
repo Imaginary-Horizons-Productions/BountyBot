@@ -74,7 +74,7 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 			);
 		}
 		if (progressData.gpContributed > 0) {
-			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
+			const [goal] = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: progressData.goalCompleted ? "completed" : "ongoing" }, order: [["createdAt", "DESC"]], limit: 1 });
 			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 		}

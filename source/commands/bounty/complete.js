@@ -29,7 +29,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	const allCompleterIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
+	const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+	const allCompleterIds = completions.map(reciept => reciept.userId);
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 	const completerIdsWithoutReciept = [];
 	for (const id of mentionedIds) {
@@ -74,9 +75,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 	}
 
-	bounty.asEmbed(interaction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
+	bounty.embed(interaction.guild, poster.level, true, bounty.Company, completions).then(async embed => {
 		if (goalProgress.gpContributed > 0) {
-			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
+			const [goal] = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: goalProgress.goalCompleted ? "completed" : "ongoing" }, order: [["createdAt", "DESC"]], limit: 1 });
 			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 			embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 		}

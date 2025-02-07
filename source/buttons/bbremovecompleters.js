@@ -29,12 +29,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: removedIds } } });
 				const poster = await database.models.Hunter.findOne({ where: { companyId: collectedInteraction.guildId, userId: collectedInteraction.user.id } });
 				const company = await database.models.Company.findByPk(collectedInteraction.guildId);
-				bounty.asEmbed(collectedInteraction.guild, poster.level, company.festivalMultiplierString(), false, database).then(async embed => {
-					if (collectedInteraction.channel.archived) {
-						await collectedInteraction.channel.setArchived(false, "completers removed from bounty");
-					}
-					interaction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
-				});
+				bounty.embed(collectedInteraction.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))
+					.then(async embed => {
+						if (collectedInteraction.channel.archived) {
+							await collectedInteraction.channel.setArchived(false, "completers removed from bounty");
+						}
+						interaction.message.edit({ embeds: [embed], components: bounty.generateBountyBoardButtons() })
+					});
 
 				collectedInteraction.channel.send({ content: `${listifyEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 				return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: [MessageFlags.Ephemeral] });
