@@ -59,19 +59,18 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	season.increment("bountiesCompleted");
 
 	const rawCompletions = [];
+	// Evergreen bounties are not eligible for showcase bonuses
+	const bountyBaseValue = Bounty.calculateCompleterReward(company.level, slotNumber, 0);
+	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	for (const userId of dedupedCompleterIds) {
 		rawCompletions.push({
 			bountyId: bounty.id,
 			userId,
-			companyId: interaction.guildId
+			companyId: interaction.guildId,
+			xpAwarded: bountyValue
 		});
 	}
-	await database.models.Completion.bulkCreate(rawCompletions);
-
-	// Evergreen bounties are not eligible for showcase bonuses
-	const bountyBaseValue = Bounty.calculateCompleterReward(company.level, slotNumber, 0);
-	const bountyValue = bountyBaseValue * company.festivalMultiplier;
-	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
+	const completions = await database.models.Completion.bulkCreate(rawCompletions);
 
 	for (const userId of validatedCompleterIds) {
 		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
@@ -86,7 +85,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		}
 	}
 
-	bounty.embed(interaction.guild, company.level, true, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).then(embed => {
+	bounty.embed(interaction.guild, company.level, true, company, completions).then(embed => {
 		return interaction.reply({ embeds: [embed], withResponse: true });
 	}).then(response => {
 		getRankUpdates(interaction.guild, database).then(rankUpdates => {
