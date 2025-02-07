@@ -26,7 +26,6 @@ exports.Hunter = class extends Model {
 	 * @param {number} points
 	 * @param {boolean} ignoreMultiplier
 	 * @param {Sequelize} database
-	 * @returns {string[]} level-up texts
 	 */
 	async addXP(guildName, points, ignoreMultiplier, database) {
 		const company = await database.models.Company.findByPk(this.companyId);
