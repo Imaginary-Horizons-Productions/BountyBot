@@ -68,13 +68,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 
 				if (validatedCompleterIds.length < 1) {
-					collectedInteraction.reply({ content: "Could not find any new non-bot completers.", flags: [MessageFlags.Ephemeral] });
-					return;
+					return collectedInteraction.reply({ content: "Could not find any new non-bot completers.", flags: [MessageFlags.Ephemeral] });
 				}
 
 				let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
-				collectedInteraction.update({
+				return collectedInteraction.update({
 					components: []
 				});
 			}).catch(error => {
