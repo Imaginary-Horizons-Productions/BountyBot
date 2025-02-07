@@ -77,7 +77,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 	bounty.embed(interaction.guild, poster.level, true, bounty.Company, completions).then(async embed => {
 		if (goalProgress.gpContributed > 0) {
-			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
+			const [goal] = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: goalProgress.goalCompleted ? "completed" : "ongoing" }, order: [["createdAt", "DESC"]], limit: 1 });
 			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
 			embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
 		}
