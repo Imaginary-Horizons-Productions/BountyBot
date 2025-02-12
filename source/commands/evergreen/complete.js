@@ -5,7 +5,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
-const { progressGoal } = require("../../logic/goals");
+const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
 
 /**
  * @param {CommandInteraction} interaction
@@ -82,7 +82,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
-		const { gpContributed, goalCompleted, contributorIds } = await progressGoal(interaction.guildId, "bounties", userId, database);
+		const { gpContributed, goalCompleted, contributorIds } = await progressGoal(interaction.guildId, "bounties", userId);
 		totalGP += gpContributed;
 		wasGoalCompleted ||= goalCompleted;
 		contributorIds.forEach(id => finalContributorIds.add(id));
@@ -92,9 +92,8 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const acknowledgeOptions = { embeds: [embed], withResponse: true };
 		if (totalGP > 0) {
 			levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);
-			const [goal] = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: wasGoalCompleted ? "completed" : "ongoing" }, order: [["createdAt", "DESC"]], limit: 1 });
-			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-			embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 		}
 		if (wasGoalCompleted) {
 			acknowledgeOptions.embeds.push(

@@ -5,6 +5,7 @@ const { Hunter } = require("../models/users/Hunter");
 const { Company } = require("../models/companies/Company");
 const { COMPANY_XP_COEFFICIENT, MAX_EMBED_DESCRIPTION_LENGTH } = require("../constants");
 const { generateTextBar } = require("./textUtil");
+const { findLatestGoalProgress } = require("../logic/goals");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
@@ -121,10 +122,9 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 	}
 
 	const fields = [];
-	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
-	if (goal) {
-		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
+	const { currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
+	if (requiredGP > 0) {
+		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
 	if (company.festivalMultiplier !== 1) {
 		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
@@ -181,10 +181,9 @@ async function buildOverallScoreboardEmbed(guild, database) {
 	}
 
 	const fields = [];
-	const goal = await database.models.Goal.findOne({ where: { companyId: guild.id, state: "ongoing" } });
-	if (goal) {
-		const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-		fields.push({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${progress}/${goal.requiredContributions} Goal Points` });
+	const { currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
+	if (requiredGP > 0) {
+		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
 	if (company.festivalMultiplier !== 1) {
 		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });

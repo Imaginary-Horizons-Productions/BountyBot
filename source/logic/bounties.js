@@ -65,7 +65,7 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 	const season = await database.models.Season.findOne({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
 	season.increment("bountiesCompleted");
 	const rewardTexts = [];
-	const progressData = await progressGoal(guild.id, "bounties", poster.userId, database);
+	const progressData = await progressGoal(guild.id, "bounties", poster.userId);
 	if (progressData.gpContributed > 0) {
 		rewardTexts.push(`This bounty contributed ${progressData.gpContributed} GP to the Server Goal!`);
 	}

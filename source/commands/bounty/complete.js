@@ -7,6 +7,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 const { completeBounty } = require("../../logic/bounties");
 const { Hunter } = require("../../models/users/Hunter");
+const { findLatestGoalProgress } = require("../../logic/goals");
 
 /**
  * @param {CommandInteraction} interaction
@@ -77,9 +78,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 	bounty.embed(interaction.guild, poster.level, true, bounty.Company, completions).then(async embed => {
 		if (goalProgress.gpContributed > 0) {
-			const [goal] = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: goalProgress.goalCompleted ? "completed" : "ongoing" }, order: [["createdAt", "DESC"]], limit: 1 });
-			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-			embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 		}
 		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 		if (goalProgress.goalCompleted) {
