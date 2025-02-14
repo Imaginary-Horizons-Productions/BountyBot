@@ -5,7 +5,7 @@ const { DataTypes } = require('sequelize');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 	async up(queryInterface, Sequelize) {
-		Sequelize.query(`ALTER TABLE Company DROP COLUMN serverBonusesThumbnailURL`);
+		queryInterface.sequelize.query(`ALTER TABLE Company DROP COLUMN serverBonusesThumbnailURL`);
 		queryInterface.addColumn("Hunter", "itemFindBoost", { type: DataTypes.BOOLEAN, defaultValue: false });
 		queryInterface.addColumn("Hunter", "goalsInitiated", { type: DataTypes.BIGINT, defaultValue: 0 });
 		queryInterface.addColumn("Hunter", "goalContributions", { type: DataTypes.BIGINT, defaultValue: 0 });
@@ -33,7 +33,7 @@ module.exports = {
 				allowNull: false
 			}
 		}, {
-			sequelize: database,
+			sequelize: queryInterface.sequelize,
 			modelName: "Goal",
 			freezeTableName: true
 		});
@@ -56,17 +56,17 @@ module.exports = {
 				allowNull: false
 			}
 		}, {
-			sequelize: database,
+			sequelize: queryInterface.sequelize,
 			modelName: "Contribution",
 			freezeTableName: true
 		});
 	},
 	async down(queryInterface, Sequelize) {
 		queryInterface.addColumn("Company", "serverBonusesThumbnailURL", { type: DataTypes.STRING });
-		Sequelize.query(`ALTER TABLE Hunter DROP COLUMN itemFindBoost`);
-		Sequelize.query(`ALTER TABLE Hunter DROP COLUMN goalsInitiated`);
-		Sequelize.query(`ALTER TABLE Hunter DROP COLUMN goalContributions`);
-		Sequelize.query(`ALTER TABLE Participation DROP COLUMN goalContributions`);
+		queryInterface.sequelize.query(`ALTER TABLE Hunter DROP COLUMN itemFindBoost`);
+		queryInterface.sequelize.query(`ALTER TABLE Hunter DROP COLUMN goalsInitiated`);
+		queryInterface.sequelize.query(`ALTER TABLE Hunter DROP COLUMN goalContributions`);
+		queryInterface.sequelize.query(`ALTER TABLE Participation DROP COLUMN goalContributions`);
 		queryInterface.dropTable("Goal");
 		queryInterface.dropTable("Contribution");
 	}
