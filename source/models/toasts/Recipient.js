@@ -1,11 +1,20 @@
-const { DataTypes, Model, Sequelize } = require('sequelize');
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
 /** This class stores receipts of toast transactions */
-exports.Recipient = class extends Model { }
+class Recipient extends Model {
+	static associate(models) {
+		models.Recipient.Toast = models.Recipient.belongsTo(models.Toast, {
+			foreignKey: "toastId"
+		});
+		models.Recipient.User = models.Recipient.belongsTo(models.User, {
+			foreignKey: "recipientId"
+		});
+	}
+}
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Recipient.init({
+function initModel(sequelize) {
+	Recipient.init({
 		toastId: {
 			primaryKey: true,
 			type: DataTypes.BIGINT
@@ -27,4 +36,7 @@ exports.initModel = function (sequelize) {
 		modelName: "Recipient",
 		freezeTableName: true
 	});
+	return Recipient;
 }
+
+module.exports = { Recipient, initModel };

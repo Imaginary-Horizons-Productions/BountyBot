@@ -1,12 +1,16 @@
 ﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { DataTypes, Model, Sequelize } = require('sequelize');
-const { ihpAuthorPayload } = require('../../util/embedUtil');
+const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Company } = require('../companies/Company');
 const { SAFE_DELIMITER } = require('../../constants');
 const { timeConversion } = require('../../util/textUtil');
 
 /** Bounties are user created objectives for other server members to complete */
-exports.Bounty = class extends Model {
+class Bounty extends Model {
+	static associate(models) {
+		models.Bounty.Completions = models.Bounty.hasMany(models.Completion, {
+			foreignKey: "bountyId"
+		});
+	}
 
 	/** Generate an embed for the given bounty, in addition to fetching prerequisite data
 	 * @param {Guild} guild
@@ -51,7 +55,7 @@ exports.Bounty = class extends Model {
 				fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 			}
 			if (!shouldOmitRewardsField) {
-				fields.push({ name: "Reward", value: `${exports.Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true });
+				fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true });
 			}
 
 			if (this.isEvergreen) {
@@ -138,8 +142,8 @@ exports.Bounty = class extends Model {
 }
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Bounty.init({
+function initModel(sequelize) {
+	Bounty.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -204,4 +208,7 @@ exports.initModel = function (sequelize) {
 		freezeTableName: true,
 		paranoid: true
 	});
-}
+	return Bounty;
+};
+
+module.exports = { Bounty, initModel };

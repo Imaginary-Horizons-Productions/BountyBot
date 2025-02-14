@@ -1,11 +1,17 @@
-const { Model, Sequelize, DataTypes } = require("sequelize");
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
 /** A Goal for which all bounty hunters in a company contribute to */
-exports.Goal = class extends Model { };
+class Goal extends Model {
+	static associate(models) {
+		models.Goal.Contributions = models.Goal.hasMany(models.Contribution, {
+			foreignKey: "goalId"
+		})
+	}
+}
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Goal.init({
+function initModel(sequelize) {
+	Goal.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -31,5 +37,8 @@ exports.initModel = function (sequelize) {
 		sequelize,
 		modelName: "Goal",
 		freezeTableName: true
-	})
-};
+	});
+	return Goal;
+}
+
+module.exports = { Goal, initModel };
