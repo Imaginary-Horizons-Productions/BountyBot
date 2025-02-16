@@ -1,4 +1,4 @@
-const { CommandInteraction, MessageFlags } = require("discord.js");
+const { CommandInteraction, MessageFlags, userMention } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil");
 
@@ -33,7 +33,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			});
 		}
 
-		interaction.reply({ content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `The following bounty hunters have been removed as completers from **${bounty.title}**: ${listifyEN(mentionedIds.map(id => userMention(id)))}`, flags: [MessageFlags.Ephemeral] });
 	})
 };
 

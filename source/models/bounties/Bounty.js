@@ -54,7 +54,7 @@ class Bounty extends Model {
 				fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 			}
 			if (!shouldOmitRewardsField) {
-				fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${festivalMultiplierString}`, inline: true });
+				fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
 			}
 
 			if (this.isEvergreen) {

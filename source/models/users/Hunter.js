@@ -1,4 +1,5 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
+const { congratulationBuilder } = require('../../util/textUtil');
 
 /** This class stores a user's information related to a specific company */
 class Hunter extends Model {
