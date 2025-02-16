@@ -122,8 +122,8 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
 	}
 
 	const fields = [];
-	const { currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
-	if (requiredGP > 0) {
+	const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
+	if (goalId !== null) {
 		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
 	if (company.festivalMultiplier !== 1) {
@@ -181,8 +181,8 @@ async function buildOverallScoreboardEmbed(guild, database) {
 	}
 
 	const fields = [];
-	const { currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
-	if (requiredGP > 0) {
+	const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
+	if (goalId !== null) {
 		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
 	if (company.festivalMultiplier !== 1) {

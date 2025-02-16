@@ -92,8 +92,12 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const acknowledgeOptions = { embeds: [embed], withResponse: true };
 		if (totalGP > 0) {
 			levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);
-			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
-			embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			if (goalId !== null) {
+				embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			} else {
+				embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+			}
 		}
 		if (wasGoalCompleted) {
 			acknowledgeOptions.embeds.push(

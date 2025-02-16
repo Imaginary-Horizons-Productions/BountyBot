@@ -78,8 +78,12 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 	bounty.embed(interaction.guild, poster.level, true, bounty.Company, completions).then(async embed => {
 		if (goalProgress.gpContributed > 0) {
-			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
-			embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			if (goalId !== null) {
+				embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			} else {
+				embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+			}
 		}
 		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 		if (goalProgress.goalCompleted) {

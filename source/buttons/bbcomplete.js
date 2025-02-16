@@ -83,8 +83,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				bounty.embed(collectedInteraction.guild, poster.level, true, bounty.Company, completions)
 					.then(async embed => {
 						if (goalProgress.gpContributed > 0) {
-							const { requiredGP, currentGP } = findLatestGoalProgress(interaction.guildId);
-							embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+							const { goalId, requiredGP, currentGP } = await findLatestGoalProgress(interaction.guildId);
+							if (goalId !== null) {
+								embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+							} else {
+								embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+							}
+
 						}
 						interaction.message.edit({ embeds: [embed], components: [] });
 						collectedInteraction.channel.setArchived(true, "bounty completed");

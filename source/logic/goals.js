@@ -15,8 +15,11 @@ function setDB(database) {
  */
 async function findLatestGoalProgress(companyId) {
 	const goal = await db.models.Goal.findOne({ where: { companyId }, order: [["createdAt", "DESC"]] });
+	if (!goal) {
+		return { goalId: null, requiredGP: 0, currentGP: 0 };
+	}
 	const currentGP = await db.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-	return { requiredGP: goal?.requiredContributions ?? 0, currentGP };
+	return { goalId: goal.id, requiredGP: goal.requiredContributions, currentGP };
 }
 
 const GOAL_POINT_MAP = {

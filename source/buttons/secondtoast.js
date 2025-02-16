@@ -117,8 +117,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal");
 		if (goalProgressFieldIndex !== -1) {
-			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
-			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			if (goalId !== null) {
+				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			} else {
+				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Complete!` });
+			}
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(async rankUpdates => {

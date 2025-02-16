@@ -74,8 +74,12 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 			);
 		}
 		if (progressData.gpContributed > 0) {
-			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
-			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			if (goalId !== null) {
+				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			} else {
+				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+			}
 		}
 	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
