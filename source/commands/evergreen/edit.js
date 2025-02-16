@@ -106,7 +106,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			// update bounty board
 			if (bounty.Company.bountyBoardId) {
 				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
-				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(modalSubmission.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database)));
+				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(modalSubmission.guild, bounty.Company.level, false, bounty.Company, [])));
 				const bountyBoard = await modalSubmission.guild.channels.fetch(bounty.Company.bountyBoardId);
 				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
 					const message = await thread.fetchStarterMessage();
@@ -114,7 +114,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				});
 			}
 
-			const bountyEmbed = await bounty.asEmbed(modalSubmission.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database);
+			const bountyEmbed = await bounty.embed(modalSubmission.guild, bounty.Company.level, false, bounty.Company, []);
 			modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
 		});
 	}).catch(error => {

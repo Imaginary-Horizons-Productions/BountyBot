@@ -5,5 +5,6 @@
  * files to commands/controllers
  */
 module.exports = {
-    bounties: require('./bounties.js')
+    bounties: require('./bounties.js'),
+	goals: require("./goals.js"),
 };

@@ -27,12 +27,11 @@ class Bounty extends Model {
 	/** Generate an embed for the given bounty
 	 * @param {Guild} guild
 	 * @param {number} posterLevel
-	 * @param {string} festivalMultiplierString
 	 * @param {boolean} shouldOmitRewardsField
 	 * @param {Company} company
 	 * @param {Completion[]} completions
 	 */
-	embed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, company, completions) {
+	embed(guild, posterLevel, shouldOmitRewardsField, company, completions) {
 		return guild.members.fetch(this.userId).then(async author => {
 			const thumbnails = {
 				open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
@@ -61,10 +60,10 @@ class Bounty extends Model {
 			if (this.isEvergreen) {
 				embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
 			} else {
-				if (completions.length > 0) {
-					fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
-				}
 				embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+			}
+			if (completions.length > 0) {
+				fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
 			}
 
 			if (fields.length > 0) {
@@ -91,8 +90,8 @@ class Bounty extends Model {
 				}
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
-			}).then(posting => {
-				this.asEmbed(guild, poster.level, company.festivalMultiplierString(), false, database).then(embed => {
+			}).then(async posting => {
+				this.embed(guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: this.id } })).then(embed => {
 					posting.edit({
 						embeds: [embed],
 						components: this.generateBountyBoardButtons()
