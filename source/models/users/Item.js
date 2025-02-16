@@ -1,11 +1,13 @@
-const { DataTypes, Model, Sequelize } = require('sequelize');
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
 /** This class stores global information for user items */
-exports.Item = class extends Model { }
+class Item extends Model {
+	static associate(models) { }
+}
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Item.init({
+function initModel(sequelize) {
+	Item.init({
 		userId: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -23,4 +25,7 @@ exports.initModel = function (sequelize) {
 		modelName: "Item",
 		freezeTableName: true
 	});
-}
+	return Item;
+};
+
+module.exports = { Item, initModel };

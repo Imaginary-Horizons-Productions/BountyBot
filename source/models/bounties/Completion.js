@@ -1,11 +1,23 @@
-﻿const { DataTypes, Model, Sequelize } = require('sequelize');
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
 /** Store receipt information of a bounty completion and relevant stats of that bounty */
-exports.Completion = class extends Model { }
+class Completion extends Model {
+	static associate(models) {
+		models.Completion.Bounty = models.Completion.belongsTo(models.Bounty, {
+			foreignKey: "bountyId"
+		});
+		models.Completion.User = models.Completion.belongsTo(models.User, {
+			foreignKey: "userId"
+		});
+		models.Completion.Company = models.Completion.belongsTo(models.Company, {
+			foreignKey: "companyId"
+		});
+	}
+}
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Completion.init({
+function initModel(sequelize) {
+	Completion.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -28,4 +40,7 @@ exports.initModel = function (sequelize) {
 		modelName: "Completion",
 		freezeTableName: true
 	});
-}
+	return Completion;
+};
+
+module.exports = { Completion, initModel };

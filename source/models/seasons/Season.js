@@ -1,10 +1,16 @@
-const { Model, DataTypes, Sequelize } = require("sequelize");
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
-exports.Season = class extends Model { }
+class Season extends Model {
+	static associate(models) {
+		models.Season.Participations = models.Season.hasMany(models.Participation, {
+			foreignKey: "seasonId"
+		})
+	}
+}
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Season.init({
+function initModel(sequelize) {
+	Season.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -41,5 +47,8 @@ exports.initModel = function (sequelize) {
 		modelName: "Season",
 		freezeTableName: true,
 		paranoid: true
-	})
+	});
+	return Season;
 }
+
+module.exports = { Season, initModel };

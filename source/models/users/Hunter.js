@@ -1,8 +1,13 @@
-const { DataTypes, Model, Sequelize } = require('sequelize');
-const { congratulationBuilder } = require('../../util/textUtil');
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
 /** This class stores a user's information related to a specific company */
-exports.Hunter = class extends Model {
+class Hunter extends Model {
+	static associate(models) {
+		models.Hunter.User = models.Hunter.belongsTo(models.User, {
+			foreignKey: "userId"
+		});
+	}
+
 	static xpThreshold(level, xpCoefficient) {
 		// xp = xpCoefficient*(level - 1)^2
 		return xpCoefficient * (level - 1) ** 2;
@@ -76,8 +81,8 @@ exports.Hunter = class extends Model {
 }
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Hunter.init({
+function initModel(sequelize) {
+	Hunter.init({
 		userId: {
 			primaryKey: true,
 			type: DataTypes.STRING,
@@ -165,4 +170,7 @@ exports.initModel = function (sequelize) {
 		modelName: "Hunter",
 		freezeTableName: true
 	});
-}
+	return Hunter;
+};
+
+module.exports = { Hunter, initModel };

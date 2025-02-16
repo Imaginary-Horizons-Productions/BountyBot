@@ -20,9 +20,9 @@ const { getSelect, setLogic: setSelectLogic } = require("./selects/_selectDictio
 const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic } = require("./context_menus/_contextMenuDictionary.js");
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
-const { connectToDatabase } = require("../database.js");
 const { commandMention } = require("./util/textUtil.js");
 const logicBlob = require("./logic");
+const { sequelize } = require("./models/index.js");
 //#endregion
 
 //#region Executing Code
@@ -40,16 +40,15 @@ const client = new Client({
 const interactionCooldowns = new Map();
 
 const runMode = process.argv[4];
-const databasePromise = connectToDatabase(runMode).then(database => {
+sequelize.then(db => {
 	for (logicFile in logicBlob) { // Set the database for the logic files that store it
-		logicBlob[logicFile].setDB?.(database);
+		logicBlob[logicFile].setDB?.(db);
 	}
 	setCommandLogic(logicBlob);
 	setButtonLogic(logicBlob);
 	setSelectLogic(logicBlob);
 	setContextMenuLogic(logicBlob);
-	return database; // Pass the database through
-});
+})
 
 client.login(require(authPath).token)
 	.catch(console.error);
@@ -110,72 +109,69 @@ client.on(Events.ClientReady, () => {
 	}
 });
 
-client.on(Events.InteractionCreate, interaction => {
-	databasePromise.then(database => {
-		if (interaction.isAutocomplete()) {
-			const command = getCommand(interaction.commandName);
-			const focusedOption = interaction.options.getFocused(true);
-			const unfilteredChoices = command.autocomplete?.[focusedOption.name] ?? [];
-			if (unfilteredChoices.length < 1) {
-				console.error(`Attempted autocomplete on misconfigured command ${interaction.commandName} ${focusedOption.name}`);
-			}
-			const choices = unfilteredChoices.filter(choice => choice.value.toLowerCase().includes(focusedOption.value.toLowerCase()))
-				.slice(0, 25);
-			interaction.respond(choices);
-		} else if (interaction.isContextMenuCommand()) {
-			const contextMenu = getContextMenu(interaction.commandName);
-			if (contextMenu.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-				interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
-				return;
-			}
-
-			const cooldownTimestamp = contextMenu.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
-			if (cooldownTimestamp) {
-				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
-				return;
-			}
-
-			contextMenu.execute(interaction, database, runMode);
-		} else if (interaction.isCommand()) {
-			const command = getCommand(interaction.commandName);
-			if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-				interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
-				return;
-			}
-
-			const cooldownTimestamp = command.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
-			if (cooldownTimestamp) {
-				interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
-				return;
-			}
-			command.execute(interaction, database, runMode);
-		} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
-			return;
-		} else {
-			const [mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
-			let getter;
-			if (interaction.isButton()) {
-				getter = getButton;
-			} else if (interaction.isAnySelectMenu()) {
-				getter = getSelect;
-			}
-			const interactionWrapper = getter(mainId);
-			const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
-
-			if (cooldownTimestamp) {
-				interaction.reply({ content: `Please wait, this interaction is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
-				return;
-			}
-
-			interactionWrapper.execute(interaction, args, database, runMode);
+client.on(Events.InteractionCreate, async interaction => {
+	const db = await sequelize;
+	if (interaction.isAutocomplete()) {
+		const command = getCommand(interaction.commandName);
+		const focusedOption = interaction.options.getFocused(true);
+		const unfilteredChoices = command.autocomplete?.[focusedOption.name] ?? [];
+		if (unfilteredChoices.length < 1) {
+			console.error(`Attempted autocomplete on misconfigured command ${interaction.commandName} ${focusedOption.name}`);
 		}
-	})
+		const choices = unfilteredChoices.filter(choice => choice.value.toLowerCase().includes(focusedOption.value.toLowerCase()))
+			.slice(0, 25);
+		interaction.respond(choices);
+	} else if (interaction.isContextMenuCommand()) {
+		const contextMenu = getContextMenu(interaction.commandName);
+		if (contextMenu.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+			interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+
+		const cooldownTimestamp = contextMenu.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
+		if (cooldownTimestamp) {
+			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+
+		contextMenu.execute(interaction, db, runMode);
+	} else if (interaction.isCommand()) {
+		const command = getCommand(interaction.commandName);
+		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+			interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+
+		const cooldownTimestamp = command.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
+		if (cooldownTimestamp) {
+			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+		command.execute(interaction, db, runMode);
+	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
+		return;
+	} else {
+		const [mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
+		let getter;
+		if (interaction.isButton()) {
+			getter = getButton;
+		} else if (interaction.isAnySelectMenu()) {
+			getter = getSelect;
+		}
+		const interactionWrapper = getter(mainId);
+		const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
+
+		if (cooldownTimestamp) {
+			interaction.reply({ content: `Please wait, this interaction is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+
+		interactionWrapper.execute(interaction, args, db, runMode);
+	}
 });
 
 client.on(Events.ChannelDelete, channel => {
-	databasePromise.then(database => {
-		return database.models.Company.findByPk(channel.guildId);
-	}).then(company => {
+	db.sequelize.models.Company.findByPk(channel.guildId).then(company => {
 		if (company) {
 			let shouldSaveCompany = false;
 			if (channel.id === company.bountyBoardId) {
@@ -192,10 +188,9 @@ client.on(Events.ChannelDelete, channel => {
 	})
 });
 
-client.on(Events.MessageDelete, message => {
-	databasePromise.then(database => {
-		return database.models.Company.findByPk(message.guildId);
-	}).then(company => {
+client.on(Events.MessageDelete, async message => {
+	const db = await sequelize;
+	db.models.Company.findByPk(message.guildId).then(company => {
 		if (message.id === company.scoreboardMessageId) {
 			company.scoreboardMessageId = null;
 			company.save();
@@ -203,10 +198,9 @@ client.on(Events.MessageDelete, message => {
 	})
 });
 
-client.on(Events.ThreadDelete, thread => {
-	databasePromise.then(database => {
-		return database.models.Company.findByPk(thread.guildId);
-	}).then(company => {
+client.on(Events.ThreadDelete, async thread => {
+	const db = await sequelize;
+	db.models.Company.findByPk(thread.guildId).then(company => {
 		if (thread.id === company.evergreenThreadId) {
 			company.evergreenThreadId = null;
 			company.save();
@@ -214,25 +208,24 @@ client.on(Events.ThreadDelete, thread => {
 	})
 })
 
-client.on(Events.GuildDelete, guild => {
-	databasePromise.then(database => {
-		database.models.Hunter.destroy({ where: { companyId: guild.id } });
-		database.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
-			toasts.forEach(toast => {
-				database.models.Recipient.destroy({ where: { toastId: toast.id } });
-				database.models.Seconding.destroy({ where: { toastId: toast.id } });
-				toast.destroy();
-			})
-		});
+client.on(Events.GuildDelete, async guild => {
+	const db = await sequelize;
+	db.models.Hunter.destroy({ where: { companyId: guild.id } });
+	db.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
+		toasts.forEach(toast => {
+			db.models.Recipient.destroy({ where: { toastId: toast.id } });
+			db.models.Seconding.destroy({ where: { toastId: toast.id } });
+			toast.destroy();
+		})
+	});
 
-		database.models.Bounty.destroy({ where: { companyId: guild.id } });
-		database.models.Completion.destroy({ where: { companyId: guild.id } });
+	db.models.Bounty.destroy({ where: { companyId: guild.id } });
+	db.models.Completion.destroy({ where: { companyId: guild.id } });
 
-		database.models.Participation.destroy({ where: { companyId: guild.id } });
-		database.models.Season.destroy({ where: { companyId: guild.id } });
+	db.models.Participation.destroy({ where: { companyId: guild.id } });
+	db.models.Season.destroy({ where: { companyId: guild.id } });
 
-		database.models.Rank.destroy({ where: { companyId: guild.id } });
-		database.models.Company.destroy({ where: { id: guild.id } });
-	})
+	db.models.Rank.destroy({ where: { companyId: guild.id } });
+	db.models.Company.destroy({ where: { id: guild.id } });
 });
 //#endregion

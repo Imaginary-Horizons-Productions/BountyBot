@@ -1,7 +1,7 @@
 const { EmbedBuilder, userMention, Guild, GuildMember } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { timeConversion, listifyEN, congratulationBuilder, generateTextBar } = require("../util/textUtil");
-const { progressGoal } = require("./goals");
+const { progressGoal, findLatestGoalProgress } = require("./goals");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { findOrCreateBountyHunter } = require("./hunters");
@@ -68,7 +68,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 
 	const rewardTexts = [];
 	if (rewardsAvailable > 0) {
-		const progressData = await progressGoal(guild.id, "toasts", sender.id, db);
+		const progressData = await progressGoal(interaction.guildId, "toasts", sender.id);
 		if (progressData.gpContributed > 0) {
 			rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
 			if (progressData.goalCompleted) {
@@ -79,9 +79,12 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 					.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
 				);
 			}
-			const goal = await db.models.Goal.findOne({ where: { companyId: guild.id } });
-			const progress = await db.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			if (goalId !== null) {
+				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+			} else {
+				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+			}
 		}
 	}
 	senderHunter.increment("toastsRaised");

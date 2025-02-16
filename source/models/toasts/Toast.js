@@ -1,11 +1,26 @@
-const { DataTypes, Model, Sequelize } = require('sequelize');
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
 /** This model represents a toast raised for a group of bounty hunters */
-exports.Toast = class extends Model { }
+class Toast extends Model {
+	static associate(models) {
+		models.Toast.Company = models.Toast.belongsTo(models.Company, {
+			foreignKey: "companyId"
+		});
+		models.Toast.User = models.Toast.belongsTo(models.User, {
+			foreignKey: "senderId"
+		});
+		models.Toast.Recipients = models.Toast.hasMany(models.Recipient, {
+			foreignKey: "toastId"
+		});
+		models.Toast.Secondings = models.Toast.hasMany(models.Seconding, {
+			foreignKey: "toastId"
+		});
+	}
+}
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Toast.init({
+function initModel(sequelize) {
+	Toast.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -35,4 +50,7 @@ exports.initModel = function (sequelize) {
 		modelName: "Toast",
 		freezeTableName: true
 	});
+	return Toast;
 }
+
+module.exports = { Toast, initModel };

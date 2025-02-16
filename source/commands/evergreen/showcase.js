@@ -1,4 +1,4 @@
-const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, PermissionFlagsBits } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
@@ -30,16 +30,26 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		withResponse: true
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
-		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
+		return database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
 			if (bounty?.state !== "open") {
-				collectedInteraction.reply({ content: "The selected bounty seems to have been deleted.", flags: [MessageFlags.Ephemeral] });
-				return;
+				return collectedInteraction;
 			}
 
-			bounty.asEmbed(interaction.guild, bounty.Company.level, bounty.Company.festivalMultiplierString(), false, database).then(embed => {
-				collectedInteraction.reply({ embeds: [embed] });
+			bounty.embed(interaction.guild, bounty.Company.level, false, bounty.Company, []).then(embed => {
+				const payload = { embeds: [embed] };
+				const extraText = interaction.options.get("extra-text");
+				if (extraText) {
+					payload.content = extraText.value;
+				}
+				if (!interaction.memberPermissions?.has(PermissionFlagsBits.MentionEveryone)) {
+					payload.allowedMentions = { parse: [] };
+				}
+				collectedInteraction.channel.send(payload);
 			});
+			return collectedInteraction;
 		});
+	}).then(interactionToAcknowledge => {
+		return interactionToAcknowledge.update({ components: [] });
 	}).catch(error => {
 		if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 			console.error(error);
@@ -55,7 +65,15 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 module.exports = {
 	data: {
 		name: "showcase",
-		description: "Show the embed for an evergreen bounty"
+		description: "Show the embed for an evergreen bounty",
+		optionsInput: [
+			{
+				type: "String",
+				name: "extra-text",
+				description: "Text to show in the showcase message",
+				required: false
+			}
+		]
 	},
 	executeSubcommand
 };
