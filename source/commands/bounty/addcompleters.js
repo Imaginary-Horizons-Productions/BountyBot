@@ -40,11 +40,6 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
  */
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
-	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" }, include: database.models.Bounty.Company });
-	if (!bounty) {
-		interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
-		return;
-	}
 
 	const completerIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), [posterId]);
 	if (completerIds.length < 1) {
@@ -52,17 +47,21 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 	
-	const completerMembers = (await interaction.guild.members.fetch({ user: completerIds })).values();
+	const completerMembers = Array.from((await interaction.guild.members.fetch({ user: completerIds })).values());
 
 	try {
-		let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(interaction.guild, bounty, completerMembers, runMode);
+		let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await addCompleters({slotNumber, posterId}, interaction.guild, completerMembers, runMode);
 		updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 		interaction.reply({
-			content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
+			content: `The following bounty hunters have been added as completers to ${bold(returnedBounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 			flags: [MessageFlags.Ephemeral]
 		});
 	} catch (e) {
-		interaction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
+		if (typeof e !== 'string') {
+			console.error(e);
+		} else {
+			interaction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
+		}
 		return;
 	}
 };

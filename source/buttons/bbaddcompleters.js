@@ -32,12 +32,6 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
-		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
-			if (bounty.userId !== interaction.user.id) {
-				interaction.reply({ content: "Only the bounty poster can add completers.", flags: [MessageFlags.Ephemeral] });
-				return;
-			}
-
 			interaction.reply({
 				content: "Which bounty hunters should be credited with completing the bounty?",
 				components: [
@@ -51,13 +45,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 				try {
-					let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(collectedInteraction.guild, bounty, collectedInteraction.members.values(), runMode);
+					let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters({bountyId, posterId: interaction.user.id}, collectedInteraction.guild, Array.from(collectedInteraction.members.values()), runMode);
 					updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
 					return collectedInteraction.update({
 						components: []
 					});
 				} catch (e) {
-					interaction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
+					if (typeof e !== 'string') {
+						console.error(e);
+					} else {
+						collectedInteraction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
+					}
 					return;
 				}
 			}).catch(error => {
@@ -70,7 +68,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					interaction.deleteReply();
 				}
 			});
-		})
 	}
 );
 

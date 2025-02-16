@@ -24,17 +24,31 @@ function setDB(database) {
  * @param {GuildMember[]} completerMembers
  * @param {string} runMode
  */
-async function addCompleters(guild, bounty, completerMembers, runMode) {
+async function addCompleters({slotNumber, posterId, bountyId}, guild, completerMembers, runMode) {
+	// Validate bounty
+	let bounty = null;
+	if (bountyId) {
+		bounty = await db.models.Bounty.findByPk(bountyId,  { include: db.models.Bounty.Company });
+	} else {
+		bounty = await db.models.Bounty.findOne({ where: { userId: posterId, companyId: guild.id, slotNumber, state: "open" }, include: db.models.Bounty.Company });
+	}
+	if (!bounty) {
+		throw `You don't have a bounty in slot ${slotNumber}.`;
+	}
+	if (bounty.userId !== posterId) {
+		throw "Only the bounty poster can add completers.";
+	}
+
 	// Validate completer IDs
 	const validatedCompleterIds = [];
-	const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: interaction.guildId } });
+	const existingCompletions = await db.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: guild.id } });
 	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 	const bannedIds = [];
 	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
 		if (runMode === "prod" && member.user.bot) continue;
 		const memberId = member.id;
-		await database.models.User.findOrCreate({ where: { id: memberId } });
-		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+		await db.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: guild.id } });
 		if (hunter.isBanned) {
 			bannedIds.push(memberId);
 			continue;
@@ -44,7 +58,7 @@ async function addCompleters(guild, bounty, completerMembers, runMode) {
 	}
 
 	if (validatedCompleterIds.length < 1) {
-		throw "Could not find any new non-bot mentions in `hunters`.";
+		throw `Could not find any new non-bot mentions in \`hunters\`.${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
 	}
 
 	const rawCompletions = [];
@@ -73,7 +87,8 @@ async function addCompleters(guild, bounty, completerMembers, runMode) {
 		allCompleters,
 		poster,
 		company,
-		validatedCompleterIds
+		validatedCompleterIds,
+		bannedIds
 	};
 }
 
