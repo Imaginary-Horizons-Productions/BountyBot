@@ -22,7 +22,7 @@ const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPoste
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { commandMention } = require("./util/textUtil.js");
 const logicBlob = require("./logic");
-const db = require("./models/index.js");
+const { sequelize } = require("./models/index.js");
 //#endregion
 
 //#region Executing Code
@@ -40,13 +40,15 @@ const client = new Client({
 const interactionCooldowns = new Map();
 
 const runMode = process.argv[4];
-for (logicFile in logicBlob) { // Set the database for the logic files that store it
-	logicBlob[logicFile].setDB?.(db.sequelize);
-}
-setCommandLogic(logicBlob);
-setButtonLogic(logicBlob);
-setSelectLogic(logicBlob);
-setContextMenuLogic(logicBlob);
+sequelize.then(db => {
+	for (logicFile in logicBlob) { // Set the database for the logic files that store it
+		logicBlob[logicFile].setDB?.(db);
+	}
+	setCommandLogic(logicBlob);
+	setButtonLogic(logicBlob);
+	setSelectLogic(logicBlob);
+	setContextMenuLogic(logicBlob);
+})
 
 client.login(require(authPath).token)
 	.catch(console.error);
@@ -107,7 +109,8 @@ client.on(Events.ClientReady, () => {
 	}
 });
 
-client.on(Events.InteractionCreate, interaction => {
+client.on(Events.InteractionCreate, async interaction => {
+	const db = await sequelize;
 	if (interaction.isAutocomplete()) {
 		const command = getCommand(interaction.commandName);
 		const focusedOption = interaction.options.getFocused(true);
@@ -131,7 +134,7 @@ client.on(Events.InteractionCreate, interaction => {
 			return;
 		}
 
-		contextMenu.execute(interaction, db.sequelize, runMode);
+		contextMenu.execute(interaction, db, runMode);
 	} else if (interaction.isCommand()) {
 		const command = getCommand(interaction.commandName);
 		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
@@ -144,7 +147,7 @@ client.on(Events.InteractionCreate, interaction => {
 			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
-		command.execute(interaction, db.sequelize, runMode);
+		command.execute(interaction, db, runMode);
 	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
 		return;
 	} else {
@@ -163,7 +166,7 @@ client.on(Events.InteractionCreate, interaction => {
 			return;
 		}
 
-		interactionWrapper.execute(interaction, args, db.sequelize, runMode);
+		interactionWrapper.execute(interaction, args, db, runMode);
 	}
 });
 
@@ -185,8 +188,9 @@ client.on(Events.ChannelDelete, channel => {
 	})
 });
 
-client.on(Events.MessageDelete, message => {
-	db.sequelize.models.Company.findByPk(message.guildId).then(company => {
+client.on(Events.MessageDelete, async message => {
+	const db = await sequelize;
+	db.models.Company.findByPk(message.guildId).then(company => {
 		if (message.id === company.scoreboardMessageId) {
 			company.scoreboardMessageId = null;
 			company.save();
@@ -194,8 +198,9 @@ client.on(Events.MessageDelete, message => {
 	})
 });
 
-client.on(Events.ThreadDelete, thread => {
-	db.sequelize.models.Company.findByPk(thread.guildId).then(company => {
+client.on(Events.ThreadDelete, async thread => {
+	const db = await sequelize;
+	db.models.Company.findByPk(thread.guildId).then(company => {
 		if (thread.id === company.evergreenThreadId) {
 			company.evergreenThreadId = null;
 			company.save();
@@ -203,23 +208,24 @@ client.on(Events.ThreadDelete, thread => {
 	})
 })
 
-client.on(Events.GuildDelete, guild => {
-	db.sequelize.models.Hunter.destroy({ where: { companyId: guild.id } });
-	db.sequelize.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
+client.on(Events.GuildDelete, async guild => {
+	const db = await sequelize;
+	db.models.Hunter.destroy({ where: { companyId: guild.id } });
+	db.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
 		toasts.forEach(toast => {
-			db.sequelize.models.Recipient.destroy({ where: { toastId: toast.id } });
-			db.sequelize.models.Seconding.destroy({ where: { toastId: toast.id } });
+			db.models.Recipient.destroy({ where: { toastId: toast.id } });
+			db.models.Seconding.destroy({ where: { toastId: toast.id } });
 			toast.destroy();
 		})
 	});
 
-	db.sequelize.models.Bounty.destroy({ where: { companyId: guild.id } });
-	db.sequelize.models.Completion.destroy({ where: { companyId: guild.id } });
+	db.models.Bounty.destroy({ where: { companyId: guild.id } });
+	db.models.Completion.destroy({ where: { companyId: guild.id } });
 
-	db.sequelize.models.Participation.destroy({ where: { companyId: guild.id } });
-	db.sequelize.models.Season.destroy({ where: { companyId: guild.id } });
+	db.models.Participation.destroy({ where: { companyId: guild.id } });
+	db.models.Season.destroy({ where: { companyId: guild.id } });
 
-	db.sequelize.models.Rank.destroy({ where: { companyId: guild.id } });
-	db.sequelize.models.Company.destroy({ where: { id: guild.id } });
+	db.models.Rank.destroy({ where: { companyId: guild.id } });
+	db.models.Company.destroy({ where: { id: guild.id } });
 });
 //#endregion
