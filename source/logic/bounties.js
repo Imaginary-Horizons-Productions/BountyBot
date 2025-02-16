@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-const { userMention, Guild } = require("discord.js");
+const { userMention, Guild, GuildMember } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
@@ -21,11 +21,34 @@ function setDB(database) {
  * @param {Guild} guild
  * @param {Bounty} bounty
  * @param {Company} company
- * @param {string[]} completerIds
+ * @param {GuildMember[]} completerMembers
+ * @param {string} runMode
  */
-async function addCompleters(guild, bounty, completerIds) {
+async function addCompleters(guild, bounty, completerMembers, runMode) {
+	// Validate completer IDs
+	const validatedCompleterIds = [];
+	const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: interaction.guildId } });
+	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
+	const bannedIds = [];
+	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
+		if (runMode === "prod" && member.user.bot) continue;
+		const memberId = member.id;
+		await database.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+		if (hunter.isBanned) {
+			bannedIds.push(memberId);
+			continue;
+		}
+		existingCompleterIds.push(memberId);
+		validatedCompleterIds.push(memberId);
+	}
+
+	if (validatedCompleterIds.length < 1) {
+		throw "Could not find any new non-bot mentions in `hunters`.";
+	}
+
 	const rawCompletions = [];
-	for (const userId of completerIds) {
+	for (const userId of validatedCompleterIds) {
 		rawCompletions.push({
 			bountyId: bounty.id,
 			userId,
@@ -49,7 +72,8 @@ async function addCompleters(guild, bounty, completerIds) {
 		bounty,
 		allCompleters,
 		poster,
-		company
+		company,
+		validatedCompleterIds
 	};
 }
 

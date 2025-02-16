@@ -73,9 +73,14 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
-			updateBoardPosting(returnedBounty, company, poster, [interaction.targetId], allCompleters, modalSubmission.guild);
-			modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
+			try {
+				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(modalSubmission.guild, bounty, [interaction.targetUser], runMode);
+				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, modalSubmission.guild);
+				modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
+			} catch (e) {
+				interaction.reply({ content: e, flags: [MessageFlags.Ephemeral] });
+				return;
+			}
 		})
 	}
 );

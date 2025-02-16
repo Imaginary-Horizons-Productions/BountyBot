@@ -50,32 +50,16 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				flags: [MessageFlags.Ephemeral],
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
-				const validatedCompleterIds = [];
-				const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: collectedInteraction.guildId } });
-				const existingCompleterIds = existingCompletions.map(completion => completion.userId);
-				const bannedIds = [];
-				for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
-					const memberId = member.id;
-					if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
-					await database.models.User.findOrCreate({ where: { id: memberId } });
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
-					if (hunter.isBanned) {
-						bannedIds.push(memberId);
-						continue;
-					}
-					existingCompleterIds.push(memberId);
-					validatedCompleterIds.push(memberId);
+				try {
+					let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(collectedInteraction.guild, bounty, collectedInteraction.members.values(), runMode);
+					updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
+					return collectedInteraction.update({
+						components: []
+					});
+				} catch (e) {
+					interaction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
+					return;
 				}
-
-				if (validatedCompleterIds.length < 1) {
-					return collectedInteraction.reply({ content: "Could not find any new non-bot completers.", flags: [MessageFlags.Ephemeral] });
-				}
-
-				let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
-				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
-				return collectedInteraction.update({
-					components: []
-				});
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);
