@@ -1,10 +1,19 @@
-const { Model, DataTypes, Sequelize } = require("sequelize");
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
-exports.Participation = class extends Model { }
+class Participation extends Model {
+	static associate(models) {
+		models.Participation.User = models.Participation.belongsTo(models.User, {
+			foreignKey: "userId"
+		})
+		models.Participation.Company = models.Participation.belongsTo(models.Company, {
+			foreignKey: "companyId"
+		})
+	}
+}
 
 /** @param {Sequelize} sequelize */
-exports.initModel = function (sequelize) {
-	exports.Participation.init({
+function initModel(sequelize) {
+	Participation.init({
 		userId: {
 			primaryKey: true,
 			type: DataTypes.STRING,
@@ -58,5 +67,8 @@ exports.initModel = function (sequelize) {
 		sequelize,
 		modelName: "Participation",
 		freezeTableName: true
-	})
+	});
+	return Participation;
 }
+
+module.exports = { Participation, initModel };
