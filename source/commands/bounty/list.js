@@ -16,7 +16,7 @@ async function executeSubcommand(interaction, database, runMode, ...[userId]) {
 		}
 		const hunter = await database.models.Hunter.findOne({ where: { userId: listUserId, companyId: interaction.guildId } });
 		const company = await database.models.Company.findByPk(interaction.guildId);
-		interaction.reply({ embeds: await Promise.all(existingBounties.map(bounty => bounty.asEmbed(interaction.guild, hunter?.level ?? company.level, company.festivalMultiplierString(), false, database))), flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter?.level ?? company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })))), flags: [MessageFlags.Ephemeral] });
 	});
 };
 

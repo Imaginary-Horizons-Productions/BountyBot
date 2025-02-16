@@ -1,10 +1,11 @@
-const { CommandInteraction, MessageFlags } = require("discord.js");
+const { CommandInteraction, MessageFlags, EmbedBuilder, userMention } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
-const { extractUserIdsFromMentions, commandMention } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
+const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
 
 /**
  * @param {CommandInteraction} interaction
@@ -24,7 +25,6 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
-
 	if (mentionedIds.length < 1) {
 		interaction.reply({ content: "Could not find any bounty hunter ids in `hunters`.", flags: [MessageFlags.Ephemeral] })
 		return;
@@ -38,9 +38,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 
 	const validatedCompleterIds = [];
-	const completerMembers = dedupedCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values() : [];
-	let levelTexts = [];
-	for (const member of completerMembers) {
+	for (const member of (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values()) {
 		if (runMode !== "prod" || !member.user.bot) {
 			const memberId = member.id;
 			await database.models.User.findOrCreate({ where: { id: memberId } });
@@ -59,35 +57,54 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	season.increment("bountiesCompleted");
 
 	const rawCompletions = [];
+	// Evergreen bounties are not eligible for showcase bonuses
+	const bountyBaseValue = Bounty.calculateCompleterReward(company.level, slotNumber, 0);
+	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	for (const userId of dedupedCompleterIds) {
 		rawCompletions.push({
 			bountyId: bounty.id,
 			userId,
-			companyId: interaction.guildId
+			companyId: interaction.guildId,
+			xpAwarded: bountyValue
 		});
 	}
-	await database.models.Completion.bulkCreate(rawCompletions);
+	const completions = await database.models.Completion.bulkCreate(rawCompletions);
 
-	// Evergreen bounties are not eligible for showcase bonuses
-	const bountyBaseValue = Bounty.calculateCompleterReward(company.level, slotNumber, 0);
-	const bountyValue = bountyBaseValue * company.festivalMultiplier;
-	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
-
+	const levelTexts = [];
+	let totalGP = 0;
+	let wasGoalCompleted = false;
+	const finalContributorIds = new Set(validatedCompleterIds);
 	for (const userId of validatedCompleterIds) {
 		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
-		const completerLevelTexts = await hunter.addXP(interaction.guild.name, bountyValue, true, database);
-		if (completerLevelTexts.length > 0) {
-			levelTexts = levelTexts.concat(completerLevelTexts);
-		}
+		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, database));
 		hunter.increment("othersFinished");
 		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
+		const { gpContributed, goalCompleted, contributorIds } = await progressGoal(interaction.guildId, "bounties", userId);
+		totalGP += gpContributed;
+		wasGoalCompleted ||= goalCompleted;
+		contributorIds.forEach(id => finalContributorIds.add(id));
 	}
 
-	bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), true, database).then(embed => {
-		return interaction.reply({ embeds: [embed], withResponse: true });
+	bounty.embed(interaction.guild, company.level, true, company, completions).then(async embed => {
+		const acknowledgeOptions = { embeds: [embed], withResponse: true };
+		if (totalGP > 0) {
+			levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);
+			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+		}
+		if (wasGoalCompleted) {
+			acknowledgeOptions.embeds.push(
+				new EmbedBuilder().setColor("e5b271")
+					.setTitle("Server Goal Completed")
+					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+					.addFields({ name: "Contributors", value: listifyEN([...finalContributorIds.keys()].map(id => userMention(id))) })
+			);
+		}
+		return interaction.reply(acknowledgeOptions);
 	}).then(response => {
 		getRankUpdates(interaction.guild, database).then(rankUpdates => {
 			response.resource.message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {

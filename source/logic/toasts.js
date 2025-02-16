@@ -4,7 +4,7 @@ const { timeConversion, commandMention, listifyEN, congratulationBuilder, genera
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require("../constants");
 const { getRankUpdates } = require("../util/scoreUtil");
 const { updateScoreboard } = require("../util/embedUtil");
-const { progressGoal } = require("./goals");
+const { progressGoal, findLatestGoalProgress } = require("./goals");
 
 /**
  * @param {import("discord.js").Interaction} interaction note this is the interaction that is awaiting a reply, not necessarily the interaction named "interaction" in the controller
@@ -63,7 +63,7 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 
 	let rewardTexts = [];
 	if (rewardsAvailable > 0) {
-		const progressData = await progressGoal(interaction.guildId, "toasts", interaction.user.id, database);
+		const progressData = await progressGoal(interaction.guildId, "toasts", interaction.user.id);
 		rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
 		if (progressData.goalCompleted) {
 			embeds.push(new EmbedBuilder().setColor("e5b271")
@@ -74,9 +74,8 @@ async function raiseToast(interaction, database, toasteeIds, toastText, imageURL
 			);
 		}
 		if (progressData.gpContributed > 0) {
-			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
-			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 		}
 	}
 	await database.models.User.findOrCreate({ where: { id: interaction.user.id } });

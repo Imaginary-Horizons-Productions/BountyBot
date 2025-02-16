@@ -15,7 +15,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 			const poster = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
 			const nextShowcaseInMS = new Date(poster.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-			if (Date.now() < nextShowcaseInMS) {
+			if (runMode === "prod" && Date.now() < nextShowcaseInMS) {
 				interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}

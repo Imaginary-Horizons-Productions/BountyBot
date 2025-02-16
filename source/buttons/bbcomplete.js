@@ -6,6 +6,7 @@ const { getRankUpdates } = require('../util/scoreUtil');
 const { commandMention, timeConversion, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
 const { completeBounty } = require('../logic/bounties');
 const { Hunter } = require('../models/users/Hunter');
+const { findLatestGoalProgress } = require('../logic/goals');
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -23,8 +24,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 
 			// Early-out if no completers
-			const completerIds = (await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).map(reciept => reciept.userId);
-			const completerMembers = (await interaction.guild.members.fetch({ user: completerIds })).values();
+			const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+			const completerMembers = (await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) })).values();
 			const validatedHunterIds = [];
 			const validatedHunters = [];
 			for (const member of completerMembers) {
@@ -79,15 +80,15 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 				collectedInteraction.channel.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
 				collectedInteraction.reply({ content: text, flags: MessageFlags.SuppressNotifications });
-				bounty.asEmbed(collectedInteraction.guild, poster.level, bounty.Company.festivalMultiplierString(), true, database).then(async embed => {
-					if (goalProgress.gpContributed > 0) {
-						const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId } });
-						const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-						embed.addFields({ name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
-					}
-					interaction.message.edit({ embeds: [embed], components: [] });
-					collectedInteraction.channel.setArchived(true, "bounty completed");
-				})
+				bounty.embed(collectedInteraction.guild, poster.level, true, bounty.Company, completions)
+					.then(async embed => {
+						if (goalProgress.gpContributed > 0) {
+							const { requiredGP, currentGP } = findLatestGoalProgress(interaction.guildId);
+							embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+						}
+						interaction.message.edit({ embeds: [embed], components: [] });
+						collectedInteraction.channel.setArchived(true, "bounty completed");
+					})
 				const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
 				if (goalProgress.goalCompleted) {
 					announcementOptions.embeds = [

@@ -92,13 +92,13 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 							return thread.fetchStarterMessage();
 						}).then(async message => {
 							evergreenBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
-							message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.asEmbed(interaction.guild, company.level, company.festivalMultiplierString(), false, database))) });
+							message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, []))) });
 						});
 					})
 				}
 
 				// Evergreen bounties are not eligible for showcase bonuses
-				interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, destinationSlot, 0)} XP and **${destinationBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, sourceSlot, 0, 0).completerReward} XP.`);
+				interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, destinationSlot, 0)} XP and **${destinationBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, sourceSlot, 0)} XP.`);
 			}
 		})
 

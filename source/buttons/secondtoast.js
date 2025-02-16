@@ -5,7 +5,7 @@ const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { timeConversion, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
-const { progressGoal } = require('../logic/goals');
+const { progressGoal, findLatestGoalProgress } = require('../logic/goals');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -32,7 +32,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
-		const progressData = await progressGoal(interaction.guildId, "secondings", interaction.user.id, database);
+		const progressData = await progressGoal(interaction.guildId, "secondings", interaction.user.id);
 		const rewardTexts = [`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`];
 
 		const recipientIds = [];
@@ -117,9 +117,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal");
 		if (goalProgressFieldIndex !== -1) {
-			const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
-			const progress = await database.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(progress, goal.requiredContributions, 15)} ${Math.min(progress, goal.requiredContributions)}/${goal.requiredContributions} GP` });
+			const { currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(async rankUpdates => {
