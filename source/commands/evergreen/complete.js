@@ -3,8 +3,7 @@ const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
-const { extractUserIdsFromMentions, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
-const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
+const { extractUserIdsFromMentions, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
 
 /**
@@ -112,18 +111,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}).then(response => {
 		getRankUpdates(interaction.guild, database).then(rankUpdates => {
 			response.resource.message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
-				const multiplierString = company.festivalMultiplierString();
-				let text = `__**XP Gained**__\n${validatedCompleterIds.map(id => `<@${id}> + ${bountyBaseValue} XP${multiplierString}`).join("\n")}`;
-				if (rankUpdates.length > 0) {
-					text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
-				}
-				if (levelTexts.length > 0) {
-					text += `\n\n__**Rewards**__\n- ${levelTexts.join("\n- ")}`;
-				}
-				if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-					text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-				}
-				thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				thread.send({ content: Bounty.generateRewardString(validatedCompleterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), rankUpdates, levelTexts), flags: MessageFlags.SuppressNotifications });
 			})
 			updateScoreboard(company, interaction.guild, database);
 		});

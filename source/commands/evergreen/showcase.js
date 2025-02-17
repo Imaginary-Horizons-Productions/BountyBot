@@ -2,6 +2,7 @@ const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFl
 const { Sequelize } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -30,12 +31,13 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		withResponse: true
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
-		return database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
+		return database.models.Bounty.findByPk(bountyId).then(async bounty => {
 			if (bounty?.state !== "open") {
 				return collectedInteraction;
 			}
 
-			bounty.embed(interaction.guild, bounty.Company.level, false, bounty.Company, []).then(embed => {
+			const [company] = await findOrCreateCompany(collectedInteraction.guildId);
+			bounty.embed(interaction.guild, company.level, false, company, []).then(embed => {
 				const payload = { embeds: [embed] };
 				const extraText = interaction.options.get("extra-text");
 				if (extraText) {

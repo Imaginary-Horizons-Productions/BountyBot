@@ -1,8 +1,8 @@
-﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Company } = require('../companies/Company');
-const { SAFE_DELIMITER } = require('../../constants');
-const { timeConversion } = require('../../util/textUtil');
+const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../../constants');
+const { timeConversion, commandMention } = require('../../util/textUtil');
 
 /** Bounties are user created objectives for other server members to complete */
 class Bounty extends Model {
@@ -10,18 +10,6 @@ class Bounty extends Model {
 		models.Bounty.Completions = models.Bounty.hasMany(models.Completion, {
 			foreignKey: "bountyId"
 		});
-	}
-
-	/** Generate an embed for the given bounty, in addition to fetching prerequisite data
-	 * @param {Guild} guild
-	 * @param {number} posterLevel
-	 * @param {string} festivalMultiplierString
-	 * @param {boolean} shouldOmitRewardsField
-	 * @param {Sequelize} database
-	 */
-	async asEmbed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, database) {
-		const [company, completions] = await Promise.all([database.models.Company.findByPk(guild.id), database.models.Completion.findAll({ where: { bountyId: this.id } })]);
-		return this.embed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, company, completions);
 	}
 
 	/** Generate an embed for the given bounty
@@ -74,6 +62,32 @@ class Bounty extends Model {
 		});
 	}
 
+	/**
+	 * @param {string[]} completerIds
+	 * @param {number} completerReward
+	 * @param {string?} posterId null for evergreen bounties
+	 * @param {number?} posterReward null for evergreen bounties
+	 * @param {string} multiplierString
+	 * @param {string[]} rankUpdates
+	 * @param {string[]} rewardTexts
+	 */
+	static generateRewardString(completerIds, completerReward, posterId, posterReward, multiplierString, rankUpdates, rewardTexts) {
+		let text = `${heading("XP Gained", 2)}\n${completerIds.map(id => `${userMention(id)} +${completerReward} XP${multiplierString}`).join("\n")}`;
+		if (posterId && posterReward) {
+			text += `\n${userMention(posterId)} +${posterReward} XP${multiplierString}`;
+		}
+		if (rankUpdates.length > 0) {
+			text += `\n${heading("Rank Ups", 2)}\n- ${rankUpdates.join("\n- ")}`;
+		}
+		if (rewardTexts.length > 0) {
+			text += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
+		}
+		if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
+			return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+		}
+		return text;
+	}
+
 	/** Update the bounty's embed in the bounty board
 	 * @param {Guild} guild
 	 * @param {Company} company
@@ -124,11 +138,17 @@ class Bounty extends Model {
 		]
 	}
 
+	/**
+	 * @param {number} posterLevel
+	 * @param {number} slotNumber
+	 * @param {number} showcaseCount
+	 */
 	static calculateCompleterReward(posterLevel, slotNumber, showcaseCount) {
 		const showcaseMultiplier = 0.25 * showcaseCount + 1;
 		return Math.max(2, Math.floor((6 + 0.5 * posterLevel - 3 * slotNumber + 0.5 * slotNumber % 2) * showcaseMultiplier));
 	}
 
+	/** @param {number} hunterCount */
 	calculatePosterReward(hunterCount) {
 		let posterXP = Math.ceil(hunterCount / 2);
 		for (const property of ["description", "thumbnailURL", "attachmentURL", "scheduledEventId"]) {
