@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters } = require('../logic/bounties.js');
+const { addCompleters, findBounty } = require('../logic/bounties.js');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
 
@@ -47,13 +47,6 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		await database.models.User.findOrCreate({ where: { id: interaction.targetId } });
-		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.targetId, companyId: interaction.guildId } });
-		if (hunter.isBanned) {
-			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-
 		const modalId = `${SKIP_INTERACTION_HANDLING}${interaction.id}`;
 		interaction.showModal(new ModalBuilder().setCustomId(modalId)
 			.setTitle("Select a Bounty")
@@ -67,15 +60,23 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		);
 		interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
 			const slotNumber = modalSubmission.fields.getTextInputValue("slot-number");
-			const bounty = await database.models.Bounty.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber: slotNumber, state: "open" }, include: database.models.Bounty.Company });
+			const bounty = await findBounty({slotNumber, posterId: interaction.user.id, guildId: modalSubmission.guild.id});
 			if (!bounty) {
 				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
-
-			let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
-			updateBoardPosting(returnedBounty, company, poster, [interaction.targetId], allCompleters, modalSubmission.guild);
-			modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
+			try {
+				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(bounty, modalSubmission.guild, [interaction.targetUser], runMode);
+				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, modalSubmission.guild);
+				modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(returnedBounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
+			} catch (e) {
+				if (typeof e !== 'string') {
+					console.error(e);
+				} else {
+					modalSubmission.reply({ content: e, flags: [MessageFlags.Ephemeral] });
+				}
+				return;
+			}
 		})
 	}
 );
