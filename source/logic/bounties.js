@@ -19,15 +19,14 @@ function setDB(database) {
 }
 
 /**
- * @param {{slotNumber: number, posterId: string} | string} bountyInfo
- * @param {Guild | undefined} guild
- * @returns {Bounty | null} the bounty, if it exists
+ * @param {{slotNumber: number, posterId: string, guildId: string} | string} bountyInfo
+ * @returns {Bounty?} the bounty, if it exists
  */
-async function findBounty(bountyInfo, guild) {
+async function findBounty(bountyInfo) {
 	if (typeof bountyInfo === 'string') {
 		return await db.models.Bounty.findByPk(bountyInfo,  { include: db.models.Bounty.Company });
 	} else {
-		return await db.models.Bounty.findOne({ where: { userId: bountyInfo.posterId, companyId: guild.id, slotNumber: bountyInfo.slotNumber, state: "open" }, include: db.models.Bounty.Company });
+		return await db.models.Bounty.findOne({ where: { userId: bountyInfo.posterId, companyId: guildId, slotNumber: bountyInfo.slotNumber, state: "open" }, include: db.models.Bounty.Company });
 	}
 }
 

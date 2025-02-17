@@ -41,7 +41,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 
-	const bounty = await findBounty({slotNumber, posterId}, interaction.guild);
+	const bounty = await findBounty({slotNumber, posterId, guildId: interaction.guild.id});
 	if (!bounty) {
 		interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 		return;
