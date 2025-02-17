@@ -15,16 +15,16 @@ class Seconding extends Model {
 	}
 
 	/**
-	 * @param {string} seconderId
+	 * @param {string} seconderDisplayName
 	 * @param {string[]} recipientIds
 	 * @param {string[]} rankUpdates
 	 * @param {string[]} rewardTexts
 	 */
-	static generateRewardString(seconderId, recipientIds, rankUpdates, rewardTexts) {
-		let text = `${userMention(seconderId)} seconded this toast!\n${heading("XP Gained", 2)}`;
+	static generateRewardString(seconderDisplayName, recipientIds, rankUpdates, rewardTexts) {
+		let text = `${seconderDisplayName} seconded this toast!\n${heading("XP Gained", 2)}`;
 		for (const id of recipientIds) {
 			text += `\n${userMention(id)} +1 XP`;
-			if (id === seconderId) {
+			if (id === seconderDisplayName) {
 				text += ` ${italic("Critical Toast!")}`;
 			}
 		}
