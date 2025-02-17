@@ -109,13 +109,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		database.models.Seconding.create({ toastId: originalToast.id, seconderId: interaction.user.id, wasCrit });
 
 		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
-		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by");
+		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by") ?? -1;
 		if (secondedFieldIndex === -1) {
 			embed.addFields({ name: "Seconded by", value: interaction.member.toString() });
 		} else {
 			embed.spliceFields(secondedFieldIndex, 1, { name: "Seconded by", value: `${interaction.message.embeds[0].data.fields[secondedFieldIndex].value}, ${interaction.member.toString()}` });
 		}
-		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal");
+		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal") ?? -1;
 		if (goalProgressFieldIndex !== -1) {
 			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
 			if (goalId !== null) {
