@@ -1,11 +1,11 @@
 const { EmbedBuilder, MessageFlags, userMention } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { Op } = require('sequelize');
-const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { timeConversion, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
+const { timeConversion, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 const { progressGoal, findLatestGoalProgress } = require('../logic/goals');
+const { Seconding } = require('../models/toasts/Seconding');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -126,23 +126,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, database).then(async rankUpdates => {
-			let text = `${interaction.member.displayName} seconded this toast!\n__**XP Gained**__\n${recipientIds.map(id => `<@${id}> + 1 XP${id === interaction.user.id ? " *Critical Toast!*" : ""}`).join("\n")}`;
-			if (rankUpdates.length > 0) {
-				text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
-			}
-			if (rewardTexts.length > 0) {
-				text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
-			}
-			if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-				text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-			}
+			const content = Seconding.generateRewardString(interaction.user.id, recipientIds, rankUpdates, rewardTexts);
 			if (interaction.channel.isThread()) {
-				interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });
 			} else if (interaction.message.thread !== null) {
-				interaction.message.thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				interaction.message.thread.send({ content, flags: MessageFlags.SuppressNotifications });
 			} else {
 				interaction.message.startThread({ name: "Rewards" }).then(thread => {
-					thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+					thread.send({ content, flags: MessageFlags.SuppressNotifications });
 				})
 			}
 			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
