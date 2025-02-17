@@ -1,7 +1,7 @@
 const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters } = require('../logic/bounties.js');
+const { addCompleters, findBounty } = require('../logic/bounties.js');
 const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
 
@@ -31,43 +31,52 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, [bountyId], database, runMode) => {
-			interaction.reply({
-				content: "Which bounty hunters should be credited with completing the bounty?",
-				components: [
-					new ActionRowBuilder().addComponents(
-						new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-							.setPlaceholder("Select bounty hunters...")
-							.setMaxValues(5)
-					)
-				],
-				flags: [MessageFlags.Ephemeral],
-				withResponse: true
-			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
-				try {
-					let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters({bountyId, posterId: interaction.user.id}, collectedInteraction.guild, Array.from(collectedInteraction.members.values()), runMode);
-					updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
-					return collectedInteraction.update({
-						components: []
-					});
-				} catch (e) {
-					if (typeof e !== 'string') {
-						console.error(e);
-					} else {
-						collectedInteraction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
-					}
-					return;
+	async (interaction, [bountyId], database, runMode) => {
+		const bounty = await findBounty(bountyId);
+		if (!bounty) {
+			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: [MessageFlags.Ephemeral]})
+		}
+		if (bounty.userId !== interaction.user.id) {
+			interaction.reply({ content: "Only the bounty poster can add completers.", flags: [MessageFlags.Ephemeral]});
+			return;
+		}
+
+		interaction.reply({
+			content: "Which bounty hunters should be credited with completing the bounty?",
+			components: [
+				new ActionRowBuilder().addComponents(
+					new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+						.setPlaceholder("Select bounty hunters...")
+						.setMaxValues(5)
+				)
+			],
+			flags: [MessageFlags.Ephemeral],
+			withResponse: true
+		}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
+			try {
+				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(bounty, collectedInteraction.guild, Array.from(collectedInteraction.members.values()), runMode);
+				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
+				return collectedInteraction.update({
+					components: []
+				});
+			} catch (e) {
+				if (typeof e !== 'string') {
+					console.error(e);
+				} else {
+					collectedInteraction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
 				}
-			}).catch(error => {
-				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-					console.error(error);
-				}
-			}).finally(() => {
-				// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-				if (interaction.channel) {
-					interaction.deleteReply();
-				}
-			});
+				return;
+			}
+		}).catch(error => {
+			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
+			}
+		}).finally(() => {
+			// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
+			if (interaction.channel) {
+				interaction.deleteReply();
+			}
+		});
 	}
 );
 

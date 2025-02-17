@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters } = require('../logic/bounties.js');
+const { addCompleters, findBounty } = require('../logic/bounties.js');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
 
@@ -60,9 +60,13 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		);
 		interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
 			const slotNumber = modalSubmission.fields.getTextInputValue("slot-number");
-
+			const bounty = await findBounty({slotNumber, posterId: interaction.user.id}, modalSubmission.guild);
+			if (!bounty) {
+				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, flags: [MessageFlags.Ephemeral] });
+				return;
+			}
 			try {
-				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters({slotNumber, posterId: interaction.user.id}, modalSubmission.guild, [interaction.targetUser], runMode);
+				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(bounty, modalSubmission.guild, [interaction.targetUser], runMode);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, modalSubmission.guild);
 				modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(returnedBounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
 			} catch (e) {

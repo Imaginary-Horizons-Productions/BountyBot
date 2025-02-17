@@ -3,6 +3,7 @@ const { userMention, Guild, GuildMember } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
+const { findOrCreateBountyHunter } = require('./hunters');
 const { progressGoal } = require("./goals");
 const { rollItemDrop } = require("../util/itemUtil");
 
@@ -18,27 +19,26 @@ function setDB(database) {
 }
 
 /**
- * @param {Guild} guild
+ * @param {{slotNumber: number, posterId: string} | string} bountyInfo
+ * @param {Guild | undefined} guild
+ * @returns {Bounty | null} the bounty, if it exists
+ */
+async function findBounty(bountyInfo, guild) {
+	if (typeof bountyInfo === 'string') {
+		return await db.models.Bounty.findByPk(bountyInfo,  { include: db.models.Bounty.Company });
+	} else {
+		return await db.models.Bounty.findOne({ where: { userId: bountyInfo.posterId, companyId: guild.id, slotNumber: bountyInfo.slotNumber, state: "open" }, include: db.models.Bounty.Company });
+	}
+}
+
+/**
  * @param {Bounty} bounty
+ * @param {Guild} guild
  * @param {Company} company
  * @param {GuildMember[]} completerMembers
  * @param {string} runMode
  */
-async function addCompleters({slotNumber, posterId, bountyId}, guild, completerMembers, runMode) {
-	// Validate bounty
-	let bounty = null;
-	if (bountyId) {
-		bounty = await db.models.Bounty.findByPk(bountyId,  { include: db.models.Bounty.Company });
-	} else {
-		bounty = await db.models.Bounty.findOne({ where: { userId: posterId, companyId: guild.id, slotNumber, state: "open" }, include: db.models.Bounty.Company });
-	}
-	if (!bounty) {
-		throw `You don't have a bounty in slot ${slotNumber}.`;
-	}
-	if (bounty.userId !== posterId) {
-		throw "Only the bounty poster can add completers.";
-	}
-
+async function addCompleters(bounty, guild, completerMembers, runMode) {
 	// Validate completer IDs
 	const validatedCompleterIds = [];
 	const existingCompletions = await db.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: guild.id } });
@@ -47,8 +47,7 @@ async function addCompleters({slotNumber, posterId, bountyId}, guild, completerM
 	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
 		if (runMode === "prod" && member.user.bot) continue;
 		const memberId = member.id;
-		await db.models.User.findOrCreate({ where: { id: memberId } });
-		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: guild.id } });
+		const [hunter] = await findOrCreateBountyHunter(memberId, guild.id);
 		if (hunter.isBanned) {
 			bannedIds.push(memberId);
 			continue;
@@ -174,5 +173,6 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 module.exports = {
 	setDB,
 	addCompleters,
-	completeBounty
+	completeBounty,
+	findBounty
 }
