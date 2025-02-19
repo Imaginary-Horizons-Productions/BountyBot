@@ -1,5 +1,6 @@
 const { Interaction, TextChannel, PermissionFlagsBits, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
+const { findOneHunter } = require("../logic/hunters");
 
 /**
  * @param {Interaction} interaction
@@ -28,7 +29,7 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
 	bounty.increment("showcaseCount");
 	await bounty.save().then(bounty => bounty.reload());
 	const company = await database.models.Company.findByPk(interaction.guildId);
-	const poster = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } });
+	const poster = await findOneHunter(interaction.user.id, interaction.guild.id);
 	if (!isItemShowcase) {
 		poster.lastShowcaseTimestamp = new Date();
 		poster.save();

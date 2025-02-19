@@ -4,6 +4,7 @@ const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
+const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -47,8 +48,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		await database.models.User.findOrCreate({ where: { id: interaction.targetId } });
-		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.targetId, companyId: interaction.guildId } });
+		const [hunter] = await findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
 		if (hunter.isBanned) {
 			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 			return;

@@ -6,6 +6,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, generateTextBar } = require("../../util/textUtil");
 const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
 const { Goal } = require("../../models/companies/Goal");
+const { findOrCreateBountyHunter, findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -41,8 +42,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	for (const member of (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values()) {
 		if (runMode !== "prod" || !member.user.bot) {
 			const memberId = member.id;
-			await database.models.User.findOrCreate({ where: { id: memberId } });
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+			const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
 			if (!hunter.isBanned) {
 				validatedCompleterIds.push(memberId);
 			}
@@ -75,7 +75,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	let wasGoalCompleted = false;
 	const finalContributorIds = new Set(validatedCompleterIds);
 	for (const userId of validatedCompleterIds) {
-		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
+		const hunter = await findOneHunter(userId, interaction.guild.id);
 		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, database));
 		hunter.increment("othersFinished");
 		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });
