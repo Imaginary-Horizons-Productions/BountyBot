@@ -2,6 +2,7 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ComponentTyp
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
+const { findOneHunter } = require('../logic/hunters');
 
 const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -30,7 +31,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 				bounty.destroy();
 
-				database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
+				findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 					hunter.decrement("xp");
 					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });

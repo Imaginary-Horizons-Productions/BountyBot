@@ -9,6 +9,7 @@ const { Hunter } = require('../models/users/Hunter');
 const { findLatestGoalProgress } = require('../logic/goals');
 const { Bounty } = require('../models/bounties/Bounty');
 const { findOrCreateCompany } = require('../logic/companies');
+const { findOrCreateBountyHunter, findOneHunter } = require('../logic/hunters');
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -33,8 +34,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			for (const member of completerMembers) {
 				if (runMode !== "prod" || !member.user.bot) {
 					const memberId = member.id;
-					await database.models.User.findOrCreate({ where: { id: memberId } });
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+					const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
 					if (!hunter.isBanned) {
 						validatedHunterIds.push(memberId);
 						validatedHunters.push(hunter);
@@ -63,8 +63,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					)
 				]
 			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
-				/** @type {Hunter} */
-				const poster = await database.models.Hunter.findOne({ where: { userId: bounty.userId, companyId: bounty.companyId } });
+				const poster = await findOneHunter(bounty.userId, bounty.companyId);
 				const { completerXP, posterXP, rewardTexts, goalUpdate } = await completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild);
 				const rankUpdates = await getRankUpdates(collectedInteraction.guild, database);
 

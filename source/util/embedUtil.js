@@ -6,6 +6,7 @@ const { Company } = require("../models/companies/Company");
 const { COMPANY_XP_COEFFICIENT, MAX_EMBED_DESCRIPTION_LENGTH } = require("../constants");
 const { generateTextBar } = require("./textUtil");
 const { findLatestGoalProgress } = require("../logic/goals");
+const { findOrCreateCompany } = require("../logic/companies");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
@@ -50,7 +51,7 @@ function randomFooterTip() {
  * @param {Sequelize} database
  */
 async function buildCompanyStatsEmbed(guild, database) {
-	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
+	const [company] = await findOrCreateCompany(guild.id);
 	const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
 	const lastSeason = await database.models.Season.findOne({ where: { companyId: guild.id, isPreviousSeason: true } });
 	const participantCount = await database.models.Participation.count({ where: { seasonId: currentSeason.id } });
@@ -83,7 +84,7 @@ async function buildCompanyStatsEmbed(guild, database) {
  * @param {Sequelize} database
  */
 async function buildSeasonalScoreboardEmbed(guild, database) {
-	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
+	const [company] = await findOrCreateCompany(guild.id);
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: company.id, isCurrentSeason: true } });
 	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 
@@ -145,7 +146,7 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
  */
 async function buildOverallScoreboardEmbed(guild, database) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
-	const [company] = await database.models.Company.findOrCreate({ where: { id: guild.id } });
+	const [company] = await findOrCreateCompany(guild.id);
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);

@@ -1,6 +1,7 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
+const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -10,7 +11,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const member = interaction.options.getMember("bounty-hunter");
-	const hunter = await database.models.Hunter.findOne({ where: { userId: member.id, companyId: interaction.guildId } });
+	const hunter = await findOneHunter(member.id, interaction.guild.id);
 	if (!hunter) {
 		interaction.reply({ content: `${member} hasn't interacted with BountyBot yet.`, flags: [MessageFlags.Ephemeral] });
 		return;

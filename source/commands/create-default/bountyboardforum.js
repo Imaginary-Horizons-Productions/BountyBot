@@ -4,6 +4,7 @@ const { generateBountyBoardThread } = require("../../util/scoreUtil");
 const { Company } = require("../../models/companies/Company");
 const { SAFE_DELIMITER } = require("../../constants");
 const { timeConversion } = require("../../util/textUtil");
+const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -47,7 +48,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 				evergreenBounties.unshift(bounty);
 				continue;
 			}
-			database.models.Hunter.findOne({ where: { companyId: bounty.companyId, userId: bounty.userId } }).then(async poster => {
+			findOneHunter(bounty.userId, bounty.companyId).then(async poster => {
 				return bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({

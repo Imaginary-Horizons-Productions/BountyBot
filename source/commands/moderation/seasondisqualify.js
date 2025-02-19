@@ -1,6 +1,7 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -10,7 +11,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const member = interaction.options.getMember("bounty-hunter");
-	await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+	await findOrCreateCompany(interaction.guild.id);
 	const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	await database.models.User.findOrCreate({ where: { id: member.id } });
 	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { isRankDisqualified: true } });

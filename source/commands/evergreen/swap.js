@@ -4,6 +4,7 @@ const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -34,7 +35,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 		collector.on("collect", async (collectedInteraction) => {
 			if (collectedInteraction.customId.endsWith("evergreen")) {
-				database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
+				findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 					const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
 					const previousBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 					const previousBountySlot = previousBounty.slotNumber;

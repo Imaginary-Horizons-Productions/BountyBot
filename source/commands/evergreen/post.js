@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { textsHaveAutoModInfraction, timeConversion, commandMention } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -83,7 +84,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 		}
 
-		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+		const [company] = await findOrCreateCompany(interaction.guild.id);
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum
