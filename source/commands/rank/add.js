@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_EMBED_FIELD_COUNT } = require("../../constants");
 const { commandMention } = require("../../util/textUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -38,7 +39,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	if (newRankmoji) {
 		rawRank.rankmoji = newRankmoji;
 	}
-	database.models.Company.findOrCreate({ where: { id: interaction.guildId } }).then(() => {
+	findOrCreateCompany(interaction.guild.id).then(() => {
 		database.models.Rank.create(rawRank);
 	})
 	getRankUpdates(interaction.guild, database);

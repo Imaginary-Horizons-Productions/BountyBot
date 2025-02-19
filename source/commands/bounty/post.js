@@ -6,6 +6,7 @@ const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction, commandMenti
 const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, SAFE_DELIMITER } = require("../../constants");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -14,7 +15,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  * @param {[string, Hunter]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[posterId, hunter]) {
-	const [{ maxSimBounties }] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+	const [{ maxSimBounties }] = await findOrCreateCompany(interaction.guild.id);
 	const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
 	const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 	const bountySlots = hunter.maxSlots(maxSimBounties);
