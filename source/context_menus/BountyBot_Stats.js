@@ -5,6 +5,7 @@ const { generateTextBar } = require('../util/textUtil');
 const { UserContextMenuWrapper } = require('../classes');
 const { Op } = require('sequelize');
 const { findOneHunter } = require('../logic/hunters');
+const { findOrCreateCurrentSeason } = require('../logic/seasons');
 
 const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
@@ -31,7 +32,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-				const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				const [currentSeason] = findOrCreateCurrentSeason(interaction.guildId);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });

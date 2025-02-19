@@ -1,6 +1,7 @@
 const { MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
 const { findOrCreateCompany } = require("../logic/companies");
+const { findOneSeason } = require("../logic/seasons");
 
 const itemName = "Goal Initializer";
 module.exports = new Item(itemName, "Begin a Server Goal if there isn't already one running", 3000,
@@ -14,7 +15,7 @@ module.exports = new Item(itemName, "Begin a Server Goal if there isn't already 
 
 		const eligibleTypes = ["bounties", "toasts", "secondings"];
 		const goalType = eligibleTypes[Math.floor(Math.random() * eligibleTypes.length)];
-		const previousSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isPreviousSeason: true } });
+		const previousSeason = await findOneSeason(interaction.guildId, "previous");
 		const activeHunters = previousSeason ? (await database.models.Participation.findOne({ where: { seasonId: season.id }, order: [["placement", "DESC"]] })).placement : 3;
 		const requiredGP = activeHunters * 20;
 		await findOrCreateCompany(interaction.guild.id);

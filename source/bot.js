@@ -23,6 +23,7 @@ const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { commandMention } = require("./util/textUtil.js");
 const logicBlob = require("./logic");
 const { sequelize } = require("./models/index.js");
+const { deleteCompanySeasons } = require("./logic/seasons.js");
 //#endregion
 
 //#region Executing Code
@@ -223,7 +224,7 @@ client.on(Events.GuildDelete, async guild => {
 	db.models.Completion.destroy({ where: { companyId: guild.id } });
 
 	db.models.Participation.destroy({ where: { companyId: guild.id } });
-	db.models.Season.destroy({ where: { companyId: guild.id } });
+	deleteCompanySeasons(guild.id);
 
 	db.models.Rank.destroy({ where: { companyId: guild.id } });
 	db.models.Company.destroy({ where: { id: guild.id } });

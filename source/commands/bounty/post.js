@@ -8,6 +8,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { findOrCreateCompany } = require("../../logic/companies");
 const { findOneHunter } = require("../../logic/hunters");
+const { findOrCreateCurrentSeason } = require("../../logic/seasons");
 
 /**
  * @param {CommandInteraction} interaction
@@ -178,7 +179,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				return;
 			}
 
-			const [season] = await database.models.Season.findOrCreate({ where: { companyId: modalSubmission.guildId, isCurrentSeason: true } });
+			const [season] = await findOrCreateCurrentSeason(modalSubmission.guild.id);
 			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.user.id, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {
 				participation.increment({ xp: 1 });

@@ -6,6 +6,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 const { findOrCreateCompany } = require("../../logic/companies");
 const { findOneHunter } = require("../../logic/hunters");
+const { findOrCreateCurrentSeason } = require("../../logic/seasons");
 
 /**
  * @param {CommandInteraction} interaction
@@ -43,7 +44,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 			findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				hunter.decrement("xp");
-				const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				const [season] = await findOrCreateCurrentSeason(interaction.guild.id);
 				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
 				if (!participationCreated) {
 					participation.decrement("xp");

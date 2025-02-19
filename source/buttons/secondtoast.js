@@ -7,6 +7,7 @@ const { updateScoreboard } = require('../util/embedUtil');
 const { progressGoal, findLatestGoalProgress } = require('../logic/goals');
 const { Seconding } = require('../models/toasts/Seconding');
 const { findOrCreateBountyHunter, findOneHunter } = require('../logic/hunters');
+const { findOrCreateCurrentSeason } = require('../logic/seasons');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -41,7 +42,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+		const [season] = await findOrCreateCurrentSeason(interaction.guild.id);
 		for (const userId of recipientIds) {
 			const hunter = await findOneHunter(userId, interaction.guild.id);
 			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, database);

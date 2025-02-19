@@ -2,6 +2,7 @@ const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { findOneHunter } = require("../../logic/hunters");
+const { findOrCreateCurrentSeason } = require("../../logic/seasons");
 
 /**
  * @param {CommandInteraction} interaction
@@ -19,7 +20,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
 	hunter.decrement({ xp: penaltyValue });
 	hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
-	const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+	const [season] = await findOrCreateCurrentSeason(interaction.guildId);
 	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 * penaltyValue } });
 	if (!participationCreated) {
 		participation.decrement("xp", { by: penaltyValue });

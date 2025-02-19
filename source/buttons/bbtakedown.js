@@ -3,6 +3,7 @@ const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { findOneHunter } = require('../logic/hunters');
+const { findOrCreateCurrentSeason } = require('../logic/seasons');
 
 const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -33,7 +34,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 				findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 					hunter.decrement("xp");
-					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+					const [season] = await findOrCreateCurrentSeason(interaction.guild.id);
 					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
 					if (!participationCreated) {
 						participation.decrement("xp");

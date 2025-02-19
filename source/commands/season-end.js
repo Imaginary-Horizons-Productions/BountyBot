@@ -1,6 +1,7 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
+const { findOneSeason, createSeason } = require('../logic/seasons');
 
 const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
@@ -13,12 +14,12 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 		}
 
 		buildCompanyStatsEmbed(interaction.guild, database).then(async embed => {
-			const seasonBeforeEndingSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isPreviousSeason: true } });
+			const seasonBeforeEndingSeason = await findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
 				seasonBeforeEndingSeason.save();
 			}
-			const endingSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+			const endingSeason = await findOneSeason(interaction.guildId, "current");
 			const shoutouts = [];
 			if (endingSeason) {
 				const firstPlace = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id, placement: 1 } });
@@ -41,7 +42,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				endingSeason.isPreviousSeason = true;
 				endingSeason.save();
 			}
-			await database.models.Season.create({ companyId: interaction.guildId });
+			await createSeason(interaction.guildId);
 			const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guild.id }, order: [["varianceThreshold", "DESC"]] });
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {

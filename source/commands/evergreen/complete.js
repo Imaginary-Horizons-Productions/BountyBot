@@ -6,6 +6,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
 const { findOrCreateBountyHunter, findOneHunter } = require("../../logic/hunters");
+const { findOrCreateCurrentSeason } = require("../../logic/seasons");
 
 /**
  * @param {CommandInteraction} interaction
@@ -22,7 +23,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 
 	const company = await database.models.Company.findByPk(interaction.guildId);
-	const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+	const [season] = await findOrCreateCurrentSeason(interaction.guildId);
 
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 	if (mentionedIds.length < 1) {

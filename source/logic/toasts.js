@@ -5,6 +5,7 @@ const { progressGoal, findLatestGoalProgress } = require("./goals");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { findOrCreateBountyHunter } = require("./hunters");
+const { findOrCreateCurrentSeason } = require("./seasons");
 
 /** @type {Sequelize} */
 let db;
@@ -63,7 +64,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
 	}, []);
 
-	const [season] = await db.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
+	const [season] = await findOrCreateCurrentSeason(guild.id);
 	season.increment("toastsRaised");
 
 	const rewardTexts = [];
