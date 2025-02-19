@@ -1,13 +1,14 @@
-const { CommandInteraction, MessageFlags, EmbedBuilder, userMention, channelMention, bold } = require("discord.js");
+const { CommandInteraction, MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { updateScoreboard } = require("../../util/embedUtil");
-const { extractUserIdsFromMentions, timeConversion, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, timeConversion, commandMention, generateTextBar } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { completeBounty } = require("../../logic/bounties");
 const { Hunter } = require("../../models/users/Hunter");
 const { findLatestGoalProgress } = require("../../logic/goals");
 const { findOrCreateCompany } = require("../../logic/companies");
+const { Goal } = require("../../models/companies/Goal");
 
 /**
  * @param {CommandInteraction} interaction
@@ -80,13 +81,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		}
 		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 		if (goalUpdate.goalCompleted) {
-			acknowledgeOptions.embeds = [
-				new EmbedBuilder().setColor("e5b271")
-					.setTitle("Server Goal Completed")
-					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-					.addFields({ name: "Contributors", value: listifyEN(goalUpdate.contributorIds.map(id => userMention(id))) })
-			];
+			acknowledgeOptions.embeds = [Goal.generateCompletionEmbed(goalUpdate.contributorIds)];
 		}
 
 		if (company.bountyBoardId) {
