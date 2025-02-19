@@ -1,6 +1,6 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, userMention } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { extractUserIdsFromMentions, textsHaveAutoModInfraction } = require('../util/textUtil');
+const { extractUserIdsFromMentions, textsHaveAutoModInfraction, listifyEN, congratulationBuilder, generateTextBar } = require('../util/textUtil');
 const { raiseToast } = require('../logic/toasts.js');
 const { updateScoreboard } = require('../util/embedUtil.js');
 const { SAFE_DELIMITER } = require('../constants.js');
@@ -8,6 +8,7 @@ const { findOrCreateCompany } = require('../logic/companies.js');
 const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
+const { progressGoal, findLatestGoalProgress } = require('../logic/goals.js');
 
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
@@ -63,7 +64,39 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue, embeds } = await raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		const embeds = [
+			new EmbedBuilder().setColor("e5b271")
+				.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
+				.setTitle(toastText)
+				.setDescription(`A toast to ${listifyEN(nonBotToasteeIds.map(id => userMention(id)))}!`)
+				.setFooter({ text: interaction.member.displayName, iconURL: interaction.user.avatarURL() })
+		];
+		if (imageURL) {
+			embeds[0].setImage(imageURL);
+		}
+
+		if (rewardedHunterIds.length > 0) {
+			const goalUpdate = await progressGoal(interaction.guild.id, "toasts", interaction.user.id);
+			if (goalUpdate.gpContributed > 0) {
+				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
+				if (goalUpdate.goalCompleted) {
+					embeds.push(new EmbedBuilder().setColor("e5b271")
+						.setTitle("Server Goal Completed")
+						.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+						.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+						.addFields({ name: "Contributors", value: listifyEN(goalUpdate.contributorIds.map(id => userMention(id))) })
+					);
+				}
+				const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guild.id);
+				if (goalId !== null) {
+					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+				} else {
+					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+				}
+			}
+		}
+
 		interaction.reply({
 			embeds,
 			components: [
