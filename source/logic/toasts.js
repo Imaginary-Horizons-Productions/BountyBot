@@ -68,7 +68,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 
 	const rewardTexts = [];
 	if (rewardsAvailable > 0) {
-		const progressData = await progressGoal(guild.id, "toasts", sender.id);
+		const progressData = await progressGoal(interaction.guildId, "toasts", sender.id);
 		if (progressData.gpContributed > 0) {
 			rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
 			if (progressData.goalCompleted) {
@@ -79,7 +79,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 					.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
 				);
 			}
-			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
+			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
 			if (goalId !== null) {
 				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 			} else {

@@ -1,13 +1,12 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { extractUserIdsFromMentions, textsHaveAutoModInfraction } = require('../util/textUtil');
 const { raiseToast } = require('../logic/toasts.js');
 const { updateScoreboard } = require('../util/embedUtil.js');
-const { SAFE_DELIMITER } = require('../constants.js');
+const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants.js');
 const { findOrCreateCompany } = require('../logic/companies.js');
 const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 const { getRankUpdates } = require('../util/scoreUtil.js');
-const { Toast } = require('../models/toasts/Toast.js');
 
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
@@ -79,7 +78,17 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			let content = "";
 			if (rewardedHunterIds.length > 0) {
 				const rankUpdates = await getRankUpdates(interaction.guild, database);
-				content = Toast.generateRewardString(rewardedHunterIds, rankUpdates, rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
+				const multiplierString = company.festivalMultiplierString();
+				content = `__**XP Gained**__\n${rewardedHunterIds.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
+				if (rankUpdates.length > 0) {
+					content += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
+				}
+				if (rewardTexts.length > 0) {
+					content += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
+				}
+				if (content.length > MAX_MESSAGE_CONTENT_LENGTH) {
+					content = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+				}
 			}
 
 			if (content) {
