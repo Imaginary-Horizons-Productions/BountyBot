@@ -4,6 +4,7 @@ const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters } = require('../logic/bounties.js');
 const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
+const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -57,8 +58,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
 					const memberId = member.id;
 					if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
-					await database.models.User.findOrCreate({ where: { id: memberId } });
-					const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: collectedInteraction.guildId } });
+					const [hunter] = await findOrCreateBountyHunter(memberId, collectedInteraction.guild.id);
 					if (hunter.isBanned) {
 						bannedIds.push(memberId);
 						continue;

@@ -1,4 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
+const { findOrCreateBountyHunter } = require("./hunters");
 
 /** @type {Sequelize} */
 let db;
@@ -45,9 +46,8 @@ async function progressGoal(companyId, progressType, userId) {
 		if (goal.type === progressType) {
 			returnData.gpContributed *= 2;
 		}
-		await db.models.User.findOrCreate({ where: { id: userId } });
 		await db.models.Contribution.create({ goalId: goal.id, userId, value: returnData.gpContributed });
-		const [hunter] = await db.models.Hunter.findOrCreate({ where: { companyId, userId } });
+		const [hunter] = await findOrCreateBountyHunter(userId, companyId);
 		hunter.increment("goalContributions");
 		const [season] = await db.models.Season.findOrCreate({ where: { companyId, isCurrentSeason: true } });
 		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId, seasonId: season.id } });

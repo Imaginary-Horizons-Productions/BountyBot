@@ -5,6 +5,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
+const { findOrCreateBountyHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -40,8 +41,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	for (const member of (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values()) {
 		if (runMode !== "prod" || !member.user.bot) {
 			const memberId = member.id;
-			await database.models.User.findOrCreate({ where: { id: memberId } });
-			const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+			const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
 			if (!hunter.isBanned) {
 				validatedCompleterIds.push(memberId);
 			}

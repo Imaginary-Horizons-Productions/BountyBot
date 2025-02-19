@@ -6,13 +6,13 @@ const { timeConversion, congratulationBuilder, listifyEN, generateTextBar } = re
 const { updateScoreboard } = require('../util/embedUtil');
 const { progressGoal, findLatestGoalProgress } = require('../logic/goals');
 const { Seconding } = require('../models/toasts/Seconding');
+const { findOrCreateBountyHunter } = require('../logic/hunters');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, [toastId], database, runMode) => {
-		await database.models.User.findOrCreate({ where: { id: interaction.user.id } });
-		const [seconder] = await database.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
+		const [seconder] = await findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 		if (seconder.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;

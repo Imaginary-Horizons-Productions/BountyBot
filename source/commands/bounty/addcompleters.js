@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { addCompleters } = require("../../logic/bounties.js");
 const { Completion } = require("../../models/bounties/Completion.js");
+const { findOrCreateBountyHunter } = require("../../logic/hunters.js");
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -60,8 +61,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
 		if (runMode === "prod" && member.user.bot) continue;
 		const memberId = member.id;
-		await database.models.User.findOrCreate({ where: { id: memberId } });
-		const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: interaction.guildId } });
+		const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
 		if (hunter.isBanned) {
 			bannedIds.push(memberId);
 			continue;
