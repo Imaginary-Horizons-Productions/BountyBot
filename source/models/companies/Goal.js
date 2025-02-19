@@ -29,7 +29,7 @@ function initModel(sequelize) {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		requiredContributions: {
+		requiredGP: {
 			type: DataTypes.BIGINT,
 			allowNull: false
 		}

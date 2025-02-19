@@ -19,7 +19,7 @@ async function findLatestGoalProgress(companyId) {
 		return { goalId: null, requiredGP: 0, currentGP: 0 };
 	}
 	const currentGP = await db.models.Contribution.sum("value", { where: { goalId: goal.id } }) ?? 0;
-	return { goalId: goal.id, requiredGP: goal.requiredContributions, currentGP };
+	return { goalId: goal.id, requiredGP: goal.requiredGP, currentGP };
 }
 
 const GOAL_POINT_MAP = {
@@ -53,7 +53,7 @@ async function progressGoal(companyId, progressType, userId) {
 		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId, seasonId: season.id } });
 		participation.increment("goalContributions");
 		const contributions = await db.models.Contribution.findAll({ where: { goalId: goal.id } });
-		returnData.goalCompleted = goal.requiredContributions <= contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
+		returnData.goalCompleted = goal.requiredGP <= contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
 		if (returnData.goalCompleted) {
 			returnData.contributorIds = [...new Set(contributions.map(contribution => contribution.userId))];
 			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: returnData.contributorIds } } });
