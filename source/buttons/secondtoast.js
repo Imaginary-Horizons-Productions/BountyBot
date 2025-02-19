@@ -6,7 +6,7 @@ const { timeConversion, congratulationBuilder, listifyEN, generateTextBar } = re
 const { updateScoreboard } = require('../util/embedUtil');
 const { progressGoal, findLatestGoalProgress } = require('../logic/goals');
 const { Seconding } = require('../models/toasts/Seconding');
-const { findOrCreateBountyHunter } = require('../logic/hunters');
+const { findOrCreateBountyHunter, findOneHunter } = require('../logic/hunters');
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -43,7 +43,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		});
 		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 		for (const userId of recipientIds) {
-			const hunter = await database.models.Hunter.findOne({ where: { userId, companyId: interaction.guildId } });
+			const hunter = await findOneHunter(userId, interaction.guild.id);
 			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, database);
 			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {

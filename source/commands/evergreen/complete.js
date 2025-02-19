@@ -5,7 +5,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
-const { findOrCreateBountyHunter } = require("../../logic/hunters");
+const { findOrCreateBountyHunter, findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -74,7 +74,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	let wasGoalCompleted = false;
 	const finalContributorIds = new Set(validatedCompleterIds);
 	for (const userId of validatedCompleterIds) {
-		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId } });
+		const hunter = await findOneHunter(userId, interaction.guild.id);
 		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, database));
 		hunter.increment("othersFinished");
 		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });

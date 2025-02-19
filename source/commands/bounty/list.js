@@ -1,5 +1,6 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
+const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -14,7 +15,7 @@ async function executeSubcommand(interaction, database, runMode, ...[userId]) {
 			interaction.reply({ content: `<@${listUserId}> doesn't have any open bounties posted.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
-		const hunter = await database.models.Hunter.findOne({ where: { userId: listUserId, companyId: interaction.guildId } });
+		const hunter = await findOneHunter(listUserId, interaction.guild.id);
 		const company = await database.models.Company.findByPk(interaction.guildId);
 		interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter?.level ?? company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })))), flags: [MessageFlags.Ephemeral] });
 	});

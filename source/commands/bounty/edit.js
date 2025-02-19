@@ -4,6 +4,7 @@ const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle, commandMe
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 const { findOrCreateCompany } = require("../../logic/companies");
+const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -186,7 +187,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			bounty.save();
 
 			// update bounty board
-			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
+			const poster = await findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
 			const [company] = await findOrCreateCompany(modalSubmission.guildId);
 			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 			if (company.bountyBoardId) {

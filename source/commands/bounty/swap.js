@@ -4,6 +4,7 @@ const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -34,7 +35,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 			collector.on("collect", async (collectedInteraction) => {
 				if (collectedInteraction.customId.endsWith("bounty")) {
-					database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
+					findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 						const company = await database.models.Company.findByPk(interaction.guildId);
 						if (hunter.maxSlots(company.maxSimBounties) < 2) {
 							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: [MessageFlags.Ephemeral] });
@@ -97,7 +98,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 						destinationBounty.updatePosting(interaction.guild, company, database);
 					}
 
-					const hunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
+					const hunter = await findOneHunter(interaction.user.id, interaction.guild.id);
 					interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(hunter.level, destinationSlot, sourceBounty.showcaseCount)} XP.` }));
 				}
 			})

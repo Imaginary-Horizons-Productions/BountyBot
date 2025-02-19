@@ -7,6 +7,7 @@ const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, SAFE_DELI
 const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { findOrCreateCompany } = require("../../logic/companies");
+const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
@@ -52,7 +53,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 		const [slotNumber] = collectedInteraction.values;
 		// Check user actually has slot
 		const company = await database.models.Company.findByPk(interaction.guildId);
-		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } });
+		const hunter = await findOneHunter(interaction.user.id, interaction.guild.id);
 		if (parseInt(slotNumber) > hunter.maxSlots(company.maxSimBounties)) {
 			interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 			return;
@@ -183,7 +184,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				participation.increment({ xp: 1 });
 			}
 			const company = await database.models.Company.findByPk(modalSubmission.guildId);
-			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
+			const poster = await findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
 			poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
 				getRankUpdates(modalSubmission.guild, database);
 				updateScoreboard(company, interaction.guild, database);
