@@ -1,10 +1,11 @@
-const { CommandInteraction, MessageFlags, EmbedBuilder, userMention } = require("discord.js");
+const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
-const { extractUserIdsFromMentions, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
+const { extractUserIdsFromMentions, generateTextBar } = require("../../util/textUtil");
 const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
+const { Goal } = require("../../models/companies/Goal");
 const { findOrCreateBountyHunter, findOneHunter } = require("../../logic/hunters");
 
 /**
@@ -99,13 +100,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 		}
 		if (wasGoalCompleted) {
-			acknowledgeOptions.embeds.push(
-				new EmbedBuilder().setColor("e5b271")
-					.setTitle("Server Goal Completed")
-					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-					.addFields({ name: "Contributors", value: listifyEN([...finalContributorIds.keys()].map(id => userMention(id))) })
-			);
+			acknowledgeOptions.embeds.push(Goal.generateCompletionEmbed([...finalContributorIds.keys()]));
 		}
 		return interaction.reply(acknowledgeOptions);
 	}).then(response => {
