@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -37,8 +38,9 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 			bounty.state = "deleted";
 			bounty.save();
-			if (bounty.Company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+			const [company] = await findOrCreateCompany(interaction.guildId);
+			if (company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 				postingThread.delete("Bounty taken down by moderator");
 			}

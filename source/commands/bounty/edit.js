@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle, commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -32,7 +33,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
 		// Verify bounty exists
-		const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+		const bounty = await database.models.Bounty.findByPk(bountyId);
 		if (bounty?.state !== "open") {
 			interaction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
 			return;
@@ -186,9 +187,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 
 			// update bounty board
 			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, bounty.Company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
-			if (bounty.Company.bountyBoardId) {
-				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
+			const [company] = await findOrCreateCompany(modalSubmission.guildId);
+			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
+			if (company.bountyBoardId) {
+				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.fetch(bounty.postingId);
 				}).then(async thread => {
 					if (thread.archived) {

@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -32,7 +33,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
 		// Verify bounty exists
-		const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+		const bounty = await database.models.Bounty.findByPk(bountyId);
 		if (bounty?.state !== "open") {
 			interaction.update({ content: `There is no evergreen bounty #${bounty.slotNumber}.`, components: [] });
 			return;
@@ -104,17 +105,18 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			bounty.save();
 
 			// update bounty board
-			if (bounty.Company.bountyBoardId) {
+			const [company] = await findOrCreateCompany(modalSubmission.guildId);
+			if (company.bountyBoardId) {
 				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
-				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(modalSubmission.guild, bounty.Company.level, false, bounty.Company, [])));
-				const bountyBoard = await modalSubmission.guild.channels.fetch(bounty.Company.bountyBoardId);
-				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
+				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(modalSubmission.guild, company.level, false, company, [])));
+				const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
+				bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 					const message = await thread.fetchStarterMessage();
 					message.edit({ embeds });
 				});
 			}
 
-			const bountyEmbed = await bounty.embed(modalSubmission.guild, bounty.Company.level, false, bounty.Company, []);
+			const bountyEmbed = await bounty.embed(modalSubmission.guild, company.level, false, company, []);
 			modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
 		});
 	}).catch(error => {

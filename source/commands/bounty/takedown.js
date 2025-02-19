@@ -4,6 +4,7 @@ const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -27,12 +28,13 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
-			const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+			const bounty = await database.models.Bounty.findByPk(bountyId);
 			bounty.state = "deleted";
 			bounty.save();
 			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-			if (bounty.Company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+			const [company] = await findOrCreateCompany(collectedInteraction.guildId);
+			if (company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 				postingThread.delete("Bounty taken down by poster");
 			}

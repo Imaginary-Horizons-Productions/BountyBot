@@ -4,10 +4,10 @@ const { Bounty } = require("../../models/bounties/Bounty");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, timeConversion, commandMention, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
-const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 const { completeBounty } = require("../../logic/bounties");
 const { Hunter } = require("../../models/users/Hunter");
 const { findLatestGoalProgress } = require("../../logic/goals");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -18,7 +18,7 @@ const { findLatestGoalProgress } = require("../../logic/goals");
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	/** @type {Bounty | null} */
-	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" }, include: database.models.Bounty.Company });
+	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } });
 	if (!bounty) {
 		interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -64,20 +64,13 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	await interaction.deferReply();
 	/** @type {Hunter} */
 	const poster = await database.models.Hunter.findOne({ where: { userId: bounty.userId, companyId: bounty.companyId } });
-	let [text, rewardTexts, goalProgress] = await completeBounty(bounty, poster, validatedHunters, interaction.guild, database);
+	const { completerXP, posterXP, rewardTexts, goalUpdate } = await completeBounty(bounty, poster, validatedHunters, interaction.guild);
 	const rankUpdates = await getRankUpdates(interaction.guild, database);
-	if (rankUpdates.length > 0) {
-		text += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
-	}
-	if (rewardTexts.length > 0) {
-		text += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
-	}
-	if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
-		text = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-	}
+	const [company] = await findOrCreateCompany(interaction.guildId);
+	const content = Bounty.generateRewardString(validatedCompleterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
-	bounty.embed(interaction.guild, poster.level, true, bounty.Company, completions).then(async embed => {
-		if (goalProgress.gpContributed > 0) {
+	bounty.embed(interaction.guild, poster.level, true, company, completions).then(async embed => {
+		if (goalUpdate.gpContributed > 0) {
 			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
 			if (goalId !== null) {
 				embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
@@ -86,24 +79,24 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			}
 		}
 		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
-		if (goalProgress.goalCompleted) {
+		if (goalUpdate.goalCompleted) {
 			acknowledgeOptions.embeds = [
 				new EmbedBuilder().setColor("e5b271")
 					.setTitle("Server Goal Completed")
 					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
 					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-					.addFields({ name: "Contributors", value: listifyEN(goalProgress.contributorIds.map(id => userMention(id))) })
+					.addFields({ name: "Contributors", value: listifyEN(goalUpdate.contributorIds.map(id => userMention(id))) })
 			];
 		}
 
-		if (bounty.Company.bountyBoardId) {
-			const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+		if (company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 			bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
 				if (thread.archived) {
 					await thread.setArchived(false, "bounty completed");
 				}
-				thread.setAppliedTags([bounty.Company.bountyBoardCompletedTagId]);
-				thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+				thread.setAppliedTags([company.bountyBoardCompletedTagId]);
+				thread.send({ content, flags: MessageFlags.SuppressNotifications });
 				return thread.fetchStarterMessage();
 			}).then(posting => {
 				posting.edit({ embeds: [embed], components: [] }).then(() => {
@@ -116,16 +109,16 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
 			interaction.editReply(acknowledgeOptions).then(message => {
 				if (interaction.channel.isThread()) {
-					interaction.channel.send({ content: text, flags: MessageFlags.SuppressNotifications });
+					interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });
 				} else {
 					message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
-						thread.send({ content: text, flags: MessageFlags.SuppressNotifications });
+						thread.send({ content, flags: MessageFlags.SuppressNotifications });
 					})
 				}
 			})
 		}
 
-		updateScoreboard(bounty.Company, interaction.guild, database);
+		updateScoreboard(company, interaction.guild, database);
 	});
 };
 

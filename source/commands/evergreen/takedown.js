@@ -3,6 +3,7 @@ const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
+const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
@@ -30,19 +31,20 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		bounty.state = "deleted";
 		bounty.save();
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
+		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
+		const [company] = await findOrCreateCompany(interaction.guildId);
 		if (evergreenBounties.length > 0) {
-			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, bounty.Company.level, false, bounty.Company, [])));
-			if (bounty.Company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
-				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
+			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, [])));
+			if (company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+				bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 					const message = await thread.fetchStarterMessage();
 					message.edit({ embeds });
 				});
 			}
-		} else if (bounty.Company.bountyBoardId) {
-			const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
-			bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(thread => {
+		} else if (company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+			bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
 				thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
 				return database.models.Company.findByPk(bounty.companyId);
 			}).then(company => {
