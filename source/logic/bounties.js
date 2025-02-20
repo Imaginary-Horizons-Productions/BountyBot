@@ -33,7 +33,6 @@ async function findBounty(bountyInfo) {
 /**
  * @param {Bounty} bounty
  * @param {Guild} guild
- * @param {Company} company
  * @param {GuildMember[]} completerMembers
  * @param {string} runMode
  */
