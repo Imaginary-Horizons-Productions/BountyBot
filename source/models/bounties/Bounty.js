@@ -2,7 +2,7 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Company } = require('../companies/Company');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../../constants');
-const { timeConversion, commandMention } = require('../../util/textUtil');
+const { timeConversion, commandMention, listifyEN } = require('../../util/textUtil');
 
 /** Bounties are user created objectives for other server members to complete */
 class Bounty extends Model {
@@ -51,7 +51,8 @@ class Bounty extends Model {
 				embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
 			}
 			if (completions.length > 0) {
-				fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
+				const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
+				fields.push({ name: "Completers", value: listifyEN([...uniqueCompleters].map(id => userMention(id))) });
 			}
 
 			if (fields.length > 0) {
