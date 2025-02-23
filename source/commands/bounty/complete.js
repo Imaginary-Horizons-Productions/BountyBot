@@ -6,16 +6,13 @@ const { extractUserIdsFromMentions, timeConversion, commandMention, generateText
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { Goal } = require("../../models/companies/Goal");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	/** @type {Bounty | null} */
 	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } });
@@ -133,8 +130,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

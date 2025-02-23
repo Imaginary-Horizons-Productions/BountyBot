@@ -4,16 +4,13 @@ const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../constants")
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const poster = interaction.options.getUser("poster");
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
@@ -84,8 +81,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

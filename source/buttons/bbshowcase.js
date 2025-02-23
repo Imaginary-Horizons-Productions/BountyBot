@@ -48,8 +48,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			})
 		})
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
-	logicLayer = logicBlob;
-}
+).setLogicLinker(logicBundle => {
+	logicLayer = logicBundle;
+});

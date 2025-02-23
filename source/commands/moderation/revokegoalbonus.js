@@ -1,16 +1,13 @@
 const { CommandInteraction, MessageFlags, userMention } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const revokeOption = interaction.options.get("revokee", true);
 	const hunter = await logicLayer.hunters.findOneHunter(revokeOption.value, interaction.guild.id);
 	if (!hunter) {
@@ -39,8 +36,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

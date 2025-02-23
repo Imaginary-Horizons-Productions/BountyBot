@@ -5,16 +5,13 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: posterId, state: "open" } }).then(openBounties => {
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
@@ -71,8 +68,5 @@ module.exports = {
 		name: "take-down",
 		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

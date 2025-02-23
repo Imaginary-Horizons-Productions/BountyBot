@@ -3,16 +3,13 @@ const { Sequelize } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 	if (existingBounties.length < 1) {
 		interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", flags: [MessageFlags.Ephemeral] });
@@ -79,8 +76,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

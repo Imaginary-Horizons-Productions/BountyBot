@@ -6,9 +6,9 @@ const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require(".
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[Company]} args
+ * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[company]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
 	const scoreboard = await interaction.guild.channels.create({
 		parent: interaction.channel.parentId,
 		name: "bountybot-scoreboard",

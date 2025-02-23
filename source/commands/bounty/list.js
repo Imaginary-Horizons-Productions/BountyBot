@@ -1,16 +1,13 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[userId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, userId]) {
 	const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? userId;
 	database.models.Bounty.findAll({ where: { userId: listUserId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(async existingBounties => {
 		if (existingBounties.length < 1) {
@@ -36,8 +33,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

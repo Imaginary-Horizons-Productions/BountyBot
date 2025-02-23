@@ -1,16 +1,13 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const member = interaction.options.getUser("user");
 	await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 	const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(member.id, interaction.guild.id);
@@ -44,8 +41,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

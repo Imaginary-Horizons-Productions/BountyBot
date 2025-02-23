@@ -9,8 +9,6 @@ module.exports = new Item(itemName, "description", 3000,
 	async (interaction, database) => {
 
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

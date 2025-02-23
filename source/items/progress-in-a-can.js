@@ -20,8 +20,6 @@ module.exports = new Item(itemName, "Add a contribution to the currently running
 		}
 		interaction.channel.send(resultPayload);
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

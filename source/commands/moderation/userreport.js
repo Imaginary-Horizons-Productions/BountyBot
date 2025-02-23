@@ -2,16 +2,13 @@ const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { buildModStatsEmbed } = require("../../util/embedUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const member = interaction.options.getMember("user");
 	const hunter = await logicLayer.hunters.findOneHunter(member.id, interaction.guild.id);
 	if (!hunter) {
@@ -36,8 +33,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

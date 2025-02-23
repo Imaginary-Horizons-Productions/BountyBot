@@ -6,9 +6,9 @@ const { Company } = require("../../models/companies/Company");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[Company]} args
+ * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[company]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
 	const multiplier = interaction.options.getInteger("multiplier");
 	if (multiplier < 2) {
 		interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, flags: [MessageFlags.Ephemeral] })

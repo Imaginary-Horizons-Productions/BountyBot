@@ -27,8 +27,6 @@ module.exports = new Item(itemName, `Gain ${xpValue} XP in the used server (unaf
 			});
 		})
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

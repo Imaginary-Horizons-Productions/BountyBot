@@ -23,8 +23,6 @@ module.exports = new Item(itemName, "Begin a Server Goal if there isn't already 
 		await database.models.Goal.create({ companyId: interaction.guildId, type: goalType, requiredGP });
 		interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member} has started a Server Goal! This time **${goalType} are worth double GP**!` }));
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

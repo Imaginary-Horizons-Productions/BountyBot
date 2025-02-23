@@ -6,9 +6,9 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const varianceThreshold = interaction.options.getNumber("variance-threshold");
 	const rank = await database.models.Rank.findOne({ where: { companyId: interaction.guildId, varianceThreshold } });
 	if (!rank) {

@@ -4,16 +4,13 @@ const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLIN
 const { textsHaveAutoModInfraction, timeConversion, commandMention } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
 	let slotNumber = null;
 	for (let slotCandidate = 1; slotCandidate <= MAX_EMBEDS_PER_MESSAGE; slotCandidate++) {
@@ -121,8 +118,5 @@ module.exports = {
 		name: "post",
 		description: "Post an evergreen bounty, limit 10"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

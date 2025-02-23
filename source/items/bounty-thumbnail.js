@@ -4,6 +4,9 @@ const { SKIP_INTERACTION_HANDLING } = require("../constants");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
 const { timeConversion } = require("../util/textUtil");
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const itemName = "Bounty Thumbnail";
 module.exports = new Item(itemName, "Adds an image (via URL) to one of your open bounties!", 3000,
 	async (interaction, database) => {
@@ -67,4 +70,6 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 			})
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

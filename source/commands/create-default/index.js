@@ -14,11 +14,10 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 module.exports = new CommandWrapper(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, [InteractionContextType.Guild], 30000,
 	(interaction, database, runMode) => {
 		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(([company]) => {
-			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, company);
+			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer, company);
 		});
 	}
-).setSubcommands(subcommandSlashData);
-
-module.exports.setLogic = (logicBlob) => {
-	logicLayer = logicBlob;
-}
+).setSubcommands(subcommandSlashData)
+	.setLogicLinker(logicBlob => {
+		logicLayer = logicBlob;
+	});

@@ -6,16 +6,13 @@ const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, generateTextBar } = require("../../util/textUtil");
 const { Goal } = require("../../models/companies/Goal");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	const bounty = await database.models.Bounty.findOne({ where: { isEvergreen: true, companyId: interaction.guildId, slotNumber, state: "open" } });
 	if (!bounty) {
@@ -133,8 +130,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

@@ -5,16 +5,13 @@ const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants")
 const { Bounty } = require("../../models/bounties/Bounty");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 	if (existingBounties.length < 2) {
 		interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", flags: [MessageFlags.Ephemeral] });
@@ -116,8 +113,5 @@ module.exports = {
 		name: "swap",
 		description: "Swap the rewards of two evergreen bounties"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

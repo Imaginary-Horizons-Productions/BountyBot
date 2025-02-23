@@ -9,8 +9,6 @@ module.exports = new SelectWrapper(mainId, 3000,
 	(interaction, args, database, runMode) => {
 
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

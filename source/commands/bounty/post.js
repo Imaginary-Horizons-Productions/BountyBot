@@ -7,16 +7,13 @@ const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, SAFE_DELI
 const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string, Hunter]} args
+ * @param {[typeof import("../../logic"), string, Hunter]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId, hunter]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId, hunter]) {
 	const [{ maxSimBounties }] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 	const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
 	const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
@@ -268,8 +265,5 @@ module.exports = {
 		name: "post",
 		description: "Post your own bounty (+1 XP)"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

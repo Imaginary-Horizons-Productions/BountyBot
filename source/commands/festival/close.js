@@ -6,9 +6,9 @@ const { Company } = require("../../models/companies/Company");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[Company]} args
+ * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[company]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
 	company.update({ "festivalMultiplier": 1 });
 	interaction.guild.members.fetchMe().then(bountyBot => {
 		bountyBot.setNickname(null);

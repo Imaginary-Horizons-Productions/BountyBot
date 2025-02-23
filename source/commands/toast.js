@@ -127,8 +127,6 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		description: "The URL to the image to add to the toast",
 		required: false
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

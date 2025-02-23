@@ -1,6 +1,3 @@
-/**
- * The baseline structure for logic files.
- */
 const { Sequelize } = require("sequelize");
 
 /** @type {Sequelize} */

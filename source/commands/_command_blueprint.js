@@ -21,8 +21,7 @@ module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.V
 		autocomplete: [{ name: "", value: "" }], // optional
 		choices: [{ name: "", value: "" }] // optional
 	}
-).setSubcommands(subcommandSlashData);
-
-module.exports.setLogic = (logicBlob) => {
+).setSubcommands(subcommandSlashData)
+.setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

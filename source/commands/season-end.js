@@ -66,8 +66,6 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			interaction.reply(company.sendAnnouncement({ content: announcementText, embeds: [embed] }));
 		})
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

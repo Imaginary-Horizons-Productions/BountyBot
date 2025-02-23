@@ -5,16 +5,13 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 const { showcaseBounty } = require("../../util/bountyUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	logicLayer.hunters.findOneHunter(posterId, interaction.guild.id).then(async hunter => {
 		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (runMode === "prod" && Date.now() < nextShowcaseInMS) {
@@ -60,8 +57,5 @@ module.exports = {
 		name: "showcase",
 		description: "Show the embed for one of your existing bounties and increase the reward"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

@@ -6,9 +6,9 @@ const { updateScoreboard } = require("../../util/embedUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });
 	interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
 	const company = await database.models.Company.findByPk(interaction.guildId);

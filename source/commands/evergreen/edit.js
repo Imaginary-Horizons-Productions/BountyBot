@@ -4,16 +4,13 @@ const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = requir
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
 		interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: [MessageFlags.Ephemeral] });
@@ -133,8 +130,5 @@ module.exports = {
 		name: "edit",
 		description: "Change the name, description, or image of an evergreen bounty"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

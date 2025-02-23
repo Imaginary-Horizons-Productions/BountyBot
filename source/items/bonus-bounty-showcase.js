@@ -5,6 +5,9 @@ const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../constants");
 const { showcaseBounty } = require("../util/bountyUtil");
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const itemName = "Bonus Bounty Showcase";
 module.exports = new Item(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
 	async (interaction, database) => {
@@ -38,4 +41,6 @@ module.exports = new Item(itemName, "Showcase one of your bounties and increase 
 			}
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

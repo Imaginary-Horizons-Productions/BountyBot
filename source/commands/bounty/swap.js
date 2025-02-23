@@ -5,16 +5,13 @@ const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants")
 const { Bounty } = require("../../models/bounties/Bounty");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
@@ -117,8 +114,5 @@ module.exports = {
 		name: "swap",
 		description: "Move one of your bounties to another slot to change its reward"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

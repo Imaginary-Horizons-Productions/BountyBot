@@ -5,16 +5,13 @@ const { Company } = require("../../models/companies/Company");
 const { SAFE_DELIMITER } = require("../../constants");
 const { timeConversion } = require("../../util/textUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[Company]} args
+ * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[company]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
 	const bountyBoard = await interaction.guild.channels.create({
 		parent: interaction.channel.parentId,
 		name: "the-bounty-board",
@@ -101,8 +98,5 @@ module.exports = {
 		name: "bounty-board-forum",
 		description: "Create a new bounty board forum channel sibling to this channel"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

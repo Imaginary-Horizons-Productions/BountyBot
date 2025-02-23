@@ -14,11 +14,10 @@ module.exports = new CommandWrapper(mainId, "Manage a server-wide festival to mu
 	/** Allow users to manage an XP multiplier festival */
 	(interaction, database, runMode) => {
 		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(([company]) => {
-			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, company);
+			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer, company);
 		});
 	}
-).setSubcommands(subcommandSlashData);
-
-module.exports.setLogic = (logicBlob) => {
-	logicLayer = logicBlob;
-}
+).setSubcommands(subcommandSlashData)
+	.setLogicLinker(logicBlob => {
+		logicLayer = logicBlob;
+	});

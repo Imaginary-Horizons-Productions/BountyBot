@@ -34,8 +34,6 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			{ name: "Suppress notifications (@silent)", value: "@silent" }
 		]
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

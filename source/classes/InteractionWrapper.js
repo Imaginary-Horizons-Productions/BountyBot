@@ -18,6 +18,12 @@ class InteractionWrapper {
 		this.execute = executeFunction;
 	}
 
+	/** @param {(logicBlob: typeof import("../logic")) => void} setLogicFunction */
+	setLogicLinker(setLogicFunction) {
+		this.setLogic = setLogicFunction;
+		return this;
+	}
+
 	/** returns Unix Timestamp when cooldown will expire or null in case of expired or missing cooldown
 	 * @param {string} userId
 	 * @param {Map<string, Map<string, number>>} cooldownMap

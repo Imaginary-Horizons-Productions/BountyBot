@@ -4,16 +4,13 @@ const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle, commandMe
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
 		interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
@@ -223,8 +220,5 @@ module.exports = {
 		name: "edit",
 		description: "Edit the title, description, image, or time of one of your bounties"
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

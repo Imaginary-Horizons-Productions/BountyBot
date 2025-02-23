@@ -10,8 +10,6 @@ module.exports = new MessageContextMenuWrapper(mainId, null, false, [Interaction
 	(interaction, database, runMode) => {
 
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

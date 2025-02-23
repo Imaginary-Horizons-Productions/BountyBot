@@ -3,9 +3,6 @@ const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { Completion } = require("../../models/bounties/Completion.js");
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 /**
  * Updates the board posting for the bounty after adding the completers
  * @param {Bounty} bounty
@@ -38,9 +35,9 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" }, include: database.models.Bounty.Company });
 	if (!bounty) {
@@ -103,8 +100,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBlob) => {
-		logicLayer = logicBlob;
-	}
+	executeSubcommand
 };

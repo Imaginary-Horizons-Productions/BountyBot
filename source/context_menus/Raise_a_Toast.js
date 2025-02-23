@@ -98,8 +98,6 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			});
 		})
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

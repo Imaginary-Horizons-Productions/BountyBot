@@ -27,10 +27,9 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 			return;
 		}
 
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, userId, hunter);
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer, userId, hunter);
 	}
-).setSubcommands(subcommandSlashData);
-
-module.exports.setLogic = (logicBlob) => {
-	logicLayer = logicBlob;
-}
+).setSubcommands(subcommandSlashData)
+	.setLogicLinker(logicBlob => {
+		logicLayer = logicBlob;
+	});

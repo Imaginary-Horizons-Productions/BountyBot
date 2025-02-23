@@ -116,8 +116,6 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 		description: "Whose stats to check; BountyBot for the server stats, empty for yourself",
 		required: false
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

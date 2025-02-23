@@ -10,8 +10,6 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 	(interaction, database, runMode) => {
 
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});

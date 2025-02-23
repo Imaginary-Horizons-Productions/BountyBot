@@ -134,8 +134,6 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 		description: "Configure the image shown in the thumbnail of the server bonuses message",
 		required: false
 	}
-);
-
-module.exports.setLogic = (logicBlob) => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}
+});
