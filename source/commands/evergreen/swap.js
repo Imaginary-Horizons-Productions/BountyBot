@@ -4,7 +4,9 @@ const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOneHunter } = require("../../logic/hunters");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -35,7 +37,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 		collector.on("collect", async (collectedInteraction) => {
 			if (collectedInteraction.customId.endsWith("evergreen")) {
-				findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 					const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
 					const previousBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 					const previousBountySlot = previousBounty.slotNumber;
@@ -114,5 +116,8 @@ module.exports = {
 		name: "swap",
 		description: "Swap the rewards of two evergreen bounties"
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

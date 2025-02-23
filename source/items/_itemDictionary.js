@@ -77,3 +77,9 @@ exports.getItemCooldown = function (itemName) {
 exports.useItem = function (itemName, interaction, database) {
 	return ITEMS[itemName].effect(interaction, database);
 }
+
+exports.setLogic = function (logicBlob) {
+	for (const itemKey in ITEMS) {
+		ITEMS[itemKey].setLogic?.(logicBlob);
+	}
+}

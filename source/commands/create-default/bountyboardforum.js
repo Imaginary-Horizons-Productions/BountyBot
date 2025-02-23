@@ -4,7 +4,9 @@ const { generateBountyBoardThread } = require("../../util/scoreUtil");
 const { Company } = require("../../models/companies/Company");
 const { SAFE_DELIMITER } = require("../../constants");
 const { timeConversion } = require("../../util/textUtil");
-const { findOneHunter } = require("../../logic/hunters");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -48,7 +50,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 				evergreenBounties.unshift(bounty);
 				continue;
 			}
-			findOneHunter(bounty.userId, bounty.companyId).then(async poster => {
+			logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId).then(async poster => {
 				return bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({
@@ -99,5 +101,8 @@ module.exports = {
 		name: "bounty-board-forum",
 		description: "Create a new bounty board forum channel sibling to this channel"
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

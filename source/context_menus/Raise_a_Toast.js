@@ -1,13 +1,13 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require('../constants');
-const { raiseToast } = require('../logic/toasts.js');
 const { textsHaveAutoModInfraction } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil.js');
-const { findOrCreateCompany } = require('../logic/companies.js');
-const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "Raise a Toast";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -23,14 +23,14 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		const [company] = await findOrCreateCompany(interaction.guildId);
-		const [sender] = await findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
+		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 		if (sender.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const [toastee] = await findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
+		const [toastee] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
 		if (toastee.isBanned) {
 			interaction.reply({ content: `${userMention(interaction.targetId)} cannot receive toasts because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -54,7 +54,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			const { embeds, toastId, rewardedHunterIds, rewardTexts, critValue } = await raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
+			const { embeds, toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
 			modalSubmission.reply({
 				embeds,
 				components: [
@@ -87,3 +87,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		})
 	}
 );
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

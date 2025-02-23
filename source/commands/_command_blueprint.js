@@ -2,6 +2,9 @@ const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { createSubcommandMappings } = require('../util/fileUtil.js');
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const mainId = "";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, []);
 module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
@@ -19,3 +22,7 @@ module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.V
 		choices: [{ name: "", value: "" }] // optional
 	}
 ).setSubcommands(subcommandSlashData);
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

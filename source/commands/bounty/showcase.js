@@ -4,7 +4,9 @@ const { timeConversion } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 const { showcaseBounty } = require("../../util/bountyUtil");
-const { findOneHunter } = require("../../logic/hunters");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -13,7 +15,7 @@ const { findOneHunter } = require("../../logic/hunters");
  * @param {[string]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
-	findOneHunter(posterId, interaction.guild.id).then(async hunter => {
+	logicLayer.hunters.findOneHunter(posterId, interaction.guild.id).then(async hunter => {
 		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (runMode === "prod" && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
@@ -58,5 +60,8 @@ module.exports = {
 		name: "showcase",
 		description: "Show the embed for one of your existing bounties and increase the reward"
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

@@ -1,20 +1,20 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { extractUserIdsFromMentions, textsHaveAutoModInfraction } = require('../util/textUtil');
-const { raiseToast } = require('../logic/toasts.js');
 const { updateScoreboard } = require('../util/embedUtil.js');
 const { SAFE_DELIMITER } = require('../constants.js');
-const { findOrCreateCompany } = require('../logic/companies.js');
-const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, database, runMode) => {
-		const [company] = await findOrCreateCompany(interaction.guildId);
-		const [sender] = await findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
+		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 		if (sender.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -63,7 +63,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue, embeds } = await raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		const { toastId, rewardedHunterIds, rewardTexts, critValue, embeds } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
 		interaction.reply({
 			embeds,
 			components: [
@@ -114,3 +114,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		required: false
 	}
 );
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

@@ -3,9 +3,9 @@ const { Sequelize } = require("sequelize");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
-const { findOneHunter } = require("../../logic/hunters");
-const { findOrCreateCurrentSeason } = require("../../logic/seasons");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -40,7 +40,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 			bounty.state = "deleted";
 			bounty.save();
-			const [company] = await findOrCreateCompany(interaction.guildId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 			if (company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
@@ -48,9 +48,9 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 			bounty.destroy();
 
-			findOneHunter(posterId, interaction.guild.id).then(async poster => {
+			logicLayer.hunters.findOneHunter(posterId, interaction.guild.id).then(async poster => {
 				poster.decrement("xp");
-				const [season] = await findOrCreateCurrentSeason(interaction.guildId);
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: posterId, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
 				if (!participationCreated) {
 					participation.decrement("xp");
@@ -84,5 +84,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

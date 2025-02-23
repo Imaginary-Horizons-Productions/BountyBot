@@ -1,8 +1,9 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
-const { findOrCreateCurrentSeason } = require("../../logic/seasons");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -12,8 +13,8 @@ const { findOrCreateCurrentSeason } = require("../../logic/seasons");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const member = interaction.options.getMember("bounty-hunter");
-	await findOrCreateCompany(interaction.guild.id);
-	const [season] = await findOrCreateCurrentSeason(interaction.guildId);
+	await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 	await database.models.User.findOrCreate({ where: { id: member.id } });
 	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { isRankDisqualified: true } });
 	if (!participationCreated) {
@@ -49,5 +50,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

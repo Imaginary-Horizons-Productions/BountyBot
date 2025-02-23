@@ -3,7 +3,9 @@ const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -32,7 +34,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		bounty.save();
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-		const [company] = await findOrCreateCompany(interaction.guildId);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 		if (evergreenBounties.length > 0) {
 			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, [])));
 			if (company.bountyBoardId) {
@@ -72,5 +74,8 @@ module.exports = {
 		name: "take-down",
 		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

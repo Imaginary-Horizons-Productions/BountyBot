@@ -2,7 +2,9 @@ const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFl
 const { Sequelize } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -36,7 +38,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 				return collectedInteraction;
 			}
 
-			const [company] = await findOrCreateCompany(collectedInteraction.guildId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 			bounty.embed(interaction.guild, company.level, false, company, []).then(embed => {
 				const payload = { embeds: [embed] };
 				const extraText = interaction.options.get("extra-text");
@@ -77,5 +79,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

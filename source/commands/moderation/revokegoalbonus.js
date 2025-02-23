@@ -1,6 +1,8 @@
 const { CommandInteraction, MessageFlags, userMention } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { findOneHunter } = require("../../logic/hunters");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -10,7 +12,7 @@ const { findOneHunter } = require("../../logic/hunters");
  */
 async function executeSubcommand(interaction, database, runMode, ...args) {
 	const revokeOption = interaction.options.get("revokee", true);
-	const hunter = await findOneHunter(revokeOption.value, interaction.guild.id);
+	const hunter = await logicLayer.hunters.findOneHunter(revokeOption.value, interaction.guild.id);
 	if (!hunter) {
 		interaction.reply({ content: `${userMention(revokeOption.value)} hasn't interacted with BountyBot yet.`, flags: [MessageFlags.Ephemeral] });
 		return;
@@ -37,5 +39,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

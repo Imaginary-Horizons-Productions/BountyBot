@@ -3,7 +3,9 @@ const { Sequelize } = require("sequelize");
 const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -105,7 +107,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			bounty.save();
 
 			// update bounty board
-			const [company] = await findOrCreateCompany(modalSubmission.guildId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
 			if (company.bountyBoardId) {
 				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
 				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(modalSubmission.guild, company.level, false, company, [])));
@@ -131,5 +133,8 @@ module.exports = {
 		name: "edit",
 		description: "Change the name, description, or image of an evergreen bounty"
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

@@ -4,12 +4,10 @@ const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { commandMention, timeConversion, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
-const { completeBounty } = require('../logic/bounties');
-const { Hunter } = require('../models/users/Hunter');
-const { findLatestGoalProgress } = require('../logic/goals');
 const { Bounty } = require('../models/bounties/Bounty');
-const { findOrCreateCompany } = require('../logic/companies');
-const { findOrCreateBountyHunter, findOneHunter } = require('../logic/hunters');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -34,7 +32,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			for (const member of completerMembers) {
 				if (runMode !== "prod" || !member.user.bot) {
 					const memberId = member.id;
-					const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
+					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 					if (!hunter.isBanned) {
 						validatedHunterIds.push(memberId);
 						validatedHunters.push(hunter);
@@ -63,20 +61,20 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					)
 				]
 			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
-				const poster = await findOneHunter(bounty.userId, bounty.companyId);
-				const { completerXP, posterXP, rewardTexts, goalUpdate } = await completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild);
+				const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
+				const { completerXP, posterXP, rewardTexts, goalUpdate } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild);
 				const rankUpdates = await getRankUpdates(collectedInteraction.guild, database);
 
 				if (collectedInteraction.channel.archived) {
 					await collectedInteraction.channel.setArchived(false, "bounty complete");
 				}
-				const [company] = await findOrCreateCompany(collectedInteraction.guildId);
+				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 				collectedInteraction.reply({ content: Bounty.generateRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts), flags: MessageFlags.SuppressNotifications });
 				bounty.embed(collectedInteraction.guild, poster.level, true, company, completions)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
-							const { goalId, requiredGP, currentGP } = await findLatestGoalProgress(interaction.guildId);
+							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 							if (goalId !== null) {
 								embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 							} else {
@@ -117,3 +115,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		})
 	}
 );
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

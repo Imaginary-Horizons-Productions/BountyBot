@@ -4,9 +4,9 @@ const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, congratulationBuilder, listifyEN, generateTextBar } = require("../../util/textUtil");
-const { progressGoal, findLatestGoalProgress } = require("../../logic/goals");
-const { findOrCreateBountyHunter, findOneHunter } = require("../../logic/hunters");
-const { findOrCreateCurrentSeason } = require("../../logic/seasons");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -23,7 +23,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 
 	const company = await database.models.Company.findByPk(interaction.guildId);
-	const [season] = await findOrCreateCurrentSeason(interaction.guildId);
+	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 	if (mentionedIds.length < 1) {
@@ -42,7 +42,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	for (const member of (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values()) {
 		if (runMode !== "prod" || !member.user.bot) {
 			const memberId = member.id;
-			const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
+			const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 			if (!hunter.isBanned) {
 				validatedCompleterIds.push(memberId);
 			}
@@ -75,14 +75,14 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	let wasGoalCompleted = false;
 	const finalContributorIds = new Set(validatedCompleterIds);
 	for (const userId of validatedCompleterIds) {
-		const hunter = await findOneHunter(userId, interaction.guild.id);
+		const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, database));
 		hunter.increment("othersFinished");
 		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
-		const { gpContributed, goalCompleted, contributorIds } = await progressGoal(interaction.guildId, "bounties", userId);
+		const { gpContributed, goalCompleted, contributorIds } = await logicLayer.goals.progressGoal(interaction.guildId, "bounties", userId);
 		totalGP += gpContributed;
 		wasGoalCompleted ||= goalCompleted;
 		contributorIds.forEach(id => finalContributorIds.add(id));
@@ -92,7 +92,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const acknowledgeOptions = { embeds: [embed], withResponse: true };
 		if (totalGP > 0) {
 			levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);
-			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 			if (goalId !== null) {
 				embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 			} else {
@@ -138,5 +138,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

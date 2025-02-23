@@ -1,8 +1,9 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { createSubcommandMappings } = require('../../util/fileUtil.js');
-const { findOrCreateBountyHunter } = require('../../logic/hunters.js');
-const { findOrCreateCompany } = require('../../logic/companies.js');
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 const mainId = "bounty";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, [
@@ -19,8 +20,8 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, database, runMode) => {
 		const userId = interaction.user.id;
-		await findOrCreateCompany(interaction.guild.id);
-		const [hunter] = await findOrCreateBountyHunter(userId, interaction.guild.id);
+		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(userId, interaction.guild.id);
 		if (hunter.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -29,3 +30,7 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, userId, hunter);
 	}
 ).setSubcommands(subcommandSlashData);
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

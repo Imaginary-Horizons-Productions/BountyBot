@@ -4,9 +4,9 @@ const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
-const { findOneHunter } = require("../../logic/hunters");
-const { findOrCreateCurrentSeason } = require("../../logic/seasons");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -34,7 +34,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			bounty.state = "deleted";
 			bounty.save();
 			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-			const [company] = await findOrCreateCompany(collectedInteraction.guildId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 			if (company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
@@ -42,9 +42,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			}
 			bounty.destroy();
 
-			findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				hunter.decrement("xp");
-				const [season] = await findOrCreateCurrentSeason(interaction.guild.id);
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
 				if (!participationCreated) {
 					participation.decrement("xp");
@@ -71,5 +71,8 @@ module.exports = {
 		name: "take-down",
 		description: "Take down one of your bounties without awarding XP (forfeit posting XP)"
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

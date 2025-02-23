@@ -3,7 +3,9 @@ const { Sequelize } = require("sequelize");
 const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { textsHaveAutoModInfraction, timeConversion, commandMention } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
 
 /**
  * @param {CommandInteraction} interaction
@@ -84,7 +86,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 		}
 
-		const [company] = await findOrCreateCompany(interaction.guild.id);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum
@@ -119,5 +121,8 @@ module.exports = {
 		name: "post",
 		description: "Post an evergreen bounty, limit 10"
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

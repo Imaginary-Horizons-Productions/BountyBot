@@ -4,8 +4,9 @@ const { Hunter } = require('../models/users/Hunter');
 const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
 const { Op } = require('sequelize');
-const { findOneHunter } = require('../logic/hunters');
-const { findOrCreateCurrentSeason } = require('../logic/seasons');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "stats";
 module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
@@ -23,7 +24,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				})
 			} else {
 				// Other Hunter
-				findOneHunter(target.id, interaction.guild.id).then(async hunter => {
+				logicLayer.hunters.findOneHunter(target.id, interaction.guild.id).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
 						return;
@@ -33,7 +34,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 					const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-					const [currentSeason] = await findOrCreateCurrentSeason(interaction.guild.id);
+					const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 					const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
@@ -63,7 +64,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			}
 		} else {
 			// Self
-			findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				if (!hunter) {
 					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", flags: [MessageFlags.Ephemeral] });
 					return;
@@ -74,7 +75,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
 				const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-				const [currentSeason] = await findOrCreateCurrentSeason(interaction.guild.id);
+				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
@@ -116,3 +117,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 		required: false
 	}
 );
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

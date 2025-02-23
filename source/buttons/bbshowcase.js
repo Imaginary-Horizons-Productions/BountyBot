@@ -3,7 +3,9 @@ const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { timeConversion } = require('../util/textUtil');
 const { showcaseBounty } = require('../util/bountyUtil');
-const { findOneHunter } = require('../logic/hunters');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "bbshowcase";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -14,7 +16,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				return;
 			}
 
-			const poster = await findOneHunter(interaction.user.id, interaction.guild.id);
+			const poster = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 			const nextShowcaseInMS = new Date(poster.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 			if (runMode === "prod" && Date.now() < nextShowcaseInMS) {
 				interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
@@ -47,3 +49,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		})
 	}
 );
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

@@ -1,7 +1,9 @@
 const { EmbedBuilder, userMention, MessageFlags } = require("discord.js");
 const { Item } = require("../classes");
-const { progressGoal } = require("../logic/goals");
 const { congratulationBuilder, listifyEN } = require("../util/textUtil");
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const itemName = "Progress-in-a-Can";
 module.exports = new Item(itemName, "Add a contribution to the currently running Server Goal", 3000,
@@ -11,7 +13,7 @@ module.exports = new Item(itemName, "Add a contribution to the currently running
 			interaction.reply({ content: "There isn't currently a Server Goal running.", flags: [MessageFlags.Ephemeral] });
 			return true;
 		}
-		const progressData = await progressGoal(interaction.guildId, goal.type, interaction.user.id);
+		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, goal.type, interaction.user.id);
 		const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${progressData.gpContributed} GP the Server Goal!` };
 		if (progressData.goalCompleted) {
 			resultPayload.embeds = [
@@ -25,3 +27,7 @@ module.exports = new Item(itemName, "Add a contribution to the currently running
 		interaction.channel.send(resultPayload);
 	}
 );
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

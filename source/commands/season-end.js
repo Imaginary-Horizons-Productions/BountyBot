@@ -1,7 +1,9 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
-const { findOneSeason, createSeason } = require('../logic/seasons');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
@@ -14,12 +16,12 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 		}
 
 		buildCompanyStatsEmbed(interaction.guild, database).then(async embed => {
-			const seasonBeforeEndingSeason = await findOneSeason(interaction.guildId, "previous");
+			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
 				seasonBeforeEndingSeason.save();
 			}
-			const endingSeason = await findOneSeason(interaction.guildId, "current");
+			const endingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "current");
 			const shoutouts = [];
 			if (endingSeason) {
 				const firstPlace = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id, placement: 1 } });
@@ -42,7 +44,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				endingSeason.isPreviousSeason = true;
 				endingSeason.save();
 			}
-			await createSeason(interaction.guildId);
+			await logicLayer.seasons.createSeason(interaction.guildId);
 			const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guild.id }, order: [["varianceThreshold", "DESC"]] });
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {
@@ -65,3 +67,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 		})
 	}
 );
+
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
+}

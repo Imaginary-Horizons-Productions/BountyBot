@@ -1,6 +1,9 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
+/** @type {typeof import("../../logic")} */
+let logicLayer;
+
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
@@ -26,5 +29,8 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand
+	executeSubcommand,
+	setLogic: (logicBlob) => {
+		logicLayer = logicBlob;
+	}
 };

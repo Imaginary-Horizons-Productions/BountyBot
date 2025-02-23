@@ -1,10 +1,11 @@
 const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters } = require('../logic/bounties.js');
 const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
-const { findOrCreateBountyHunter } = require('../logic/hunters.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -58,7 +59,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
 					const memberId = member.id;
 					if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
-					const [hunter] = await findOrCreateBountyHunter(memberId, collectedInteraction.guild.id);
+					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, collectedInteraction.guild.id);
 					if (hunter.isBanned) {
 						bannedIds.push(memberId);
 						continue;
@@ -71,7 +72,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					return collectedInteraction.reply({ content: "Could not find any new non-bot completers.", flags: [MessageFlags.Ephemeral] });
 				}
 
-				let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
+				let { bounty: returnedBounty, allCompleters, poster, company } = await logicLayer.bounties.addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
 				return collectedInteraction.update({
 					components: []
@@ -90,6 +91,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	}
 );
 
-module.exports.setLogic = (logicBundle) => {
-	bounties = logicBundle.bounties;
+module.exports.setLogic = (logicBlob) => {
+	logicLayer = logicBlob;
 }
