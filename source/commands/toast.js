@@ -1,10 +1,10 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { extractUserIdsFromMentions, textsHaveAutoModInfraction } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil.js');
-const { SAFE_DELIMITER } = require('../constants.js');
+const { extractUserIdsFromMentions, textsHaveAutoModInfraction, generateTextBar } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
+const { Goal } = require('../models/companies/Goal.js');
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
@@ -63,17 +63,31 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue, embeds } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, nonBotToasteeIds, interaction.member)];
+		if (imageURL) {
+			embeds[0].setImage(imageURL);
+		}
+
+		if (rewardedHunterIds.length > 0) {
+			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", interaction.user.id);
+			if (goalUpdate.gpContributed > 0) {
+				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
+				if (goalUpdate.goalCompleted) {
+					embeds.push(Goal.generateCompletionEmbed(goalUpdate.contributorIds));
+				}
+				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
+				if (goalId !== null) {
+					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+				} else {
+					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+				}
+			}
+		}
+
 		interaction.reply({
 			embeds,
-			components: [
-				new ActionRowBuilder().addComponents(
-					new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
-						.setLabel("Hear, hear!")
-						.setEmoji("🥂")
-						.setStyle(ButtonStyle.Primary)
-				)
-			],
+			components: [Toast.generateSecondingActionRow(toastId)],
 			withResponse: true
 		}).then(async response => {
 			let content = "";

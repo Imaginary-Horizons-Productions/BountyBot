@@ -1,13 +1,11 @@
-const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, EmbedBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { commandMention, timeConversion, congratulationBuilder, listifyEN, generateTextBar } = require('../util/textUtil');
+const { commandMention, timeConversion, generateTextBar } = require('../util/textUtil');
 const { Bounty } = require('../models/bounties/Bounty');
-
-/** @type {typeof import("../logic")} */
-let logicLayer;
+const { Goal } = require('../models/companies/Goal');
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -87,13 +85,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					})
 				const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
 				if (goalUpdate.goalCompleted) {
-					announcementOptions.embeds = [
-						new EmbedBuilder().setColor("e5b271")
-							.setTitle("Server Goal Completed")
-							.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-							.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-							.addFields({ name: "Contributors", value: listifyEN(goalUpdate.contributorIds.map(id => userMention(id))) })
-					];
+					announcementOptions.embeds = [Goal.generateCompletionEmbed(goalUpdate.contributorIds)];
 				}
 				collectedInteraction.channels.first().send(announcementOptions).catch(error => {
 					//Ignore Missing Permissions errors, user selected channel bot cannot post in

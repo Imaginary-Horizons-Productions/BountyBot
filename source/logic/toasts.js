@@ -1,7 +1,6 @@
-const { EmbedBuilder, userMention, Guild, GuildMember } = require("discord.js");
+const { Guild, GuildMember } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { timeConversion, listifyEN, congratulationBuilder, generateTextBar } = require("../util/textUtil");
-const { progressGoal, findLatestGoalProgress } = require("./goals");
+const { timeConversion } = require("../util/textUtil");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { findOrCreateBountyHunter } = require("./hunters");
@@ -24,17 +23,6 @@ function setDB(database) {
  * @param {string | null} imageURL
  */
 async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toastText, imageURL = null) {
-	const embeds = [
-		new EmbedBuilder().setColor("e5b271")
-			.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
-			.setTitle(toastText)
-			.setDescription(`A toast to ${listifyEN(toasteeIds.map(id => userMention(id)))}!`)
-			.setFooter({ text: sender.displayName, iconURL: sender.user.avatarURL() })
-	];
-	if (imageURL) {
-		embeds[0].setImage(imageURL);
-	}
-
 	// Make database entities
 	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } }, include: db.models.Toast.Recipients });
 	let rewardsAvailable = 10;
@@ -68,26 +56,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 	season.increment("toastsRaised");
 
 	const rewardTexts = [];
-	if (rewardsAvailable > 0) {
-		const progressData = await progressGoal(guild.id, "toasts", sender.id);
-		if (progressData.gpContributed > 0) {
-			rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
-			if (progressData.goalCompleted) {
-				embeds.push(new EmbedBuilder().setColor("e5b271")
-					.setTitle("Server Goal Completed")
-					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-					.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
-				);
-			}
-			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(guild.id);
-			if (goalId !== null) {
-				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
-			} else {
-				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
-			}
-		}
-	}
 	senderHunter.increment("toastsRaised");
 	const toast = await db.models.Toast.create({ companyId: guild.id, senderId: sender.id, text: toastText, imageURL });
 	const rawRecipients = [];
@@ -149,7 +117,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		participation.increment({ xp: critValue, toastsRaised: 1 });
 	}
 
-	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue, embeds };
+	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue };
 }
 
 module.exports = {
