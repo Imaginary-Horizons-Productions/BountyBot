@@ -7,6 +7,7 @@ const { COMPANY_XP_COEFFICIENT, MAX_EMBED_DESCRIPTION_LENGTH } = require("../con
 const { generateTextBar } = require("./textUtil");
 const { findLatestGoalProgress } = require("../logic/goals");
 const { findOrCreateCompany } = require("../logic/companies");
+const { findOrCreateCurrentSeason, findOneSeason } = require("../logic/seasons");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
@@ -52,8 +53,8 @@ function randomFooterTip() {
  */
 async function buildCompanyStatsEmbed(guild, database) {
 	const [company] = await findOrCreateCompany(guild.id);
-	const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
-	const lastSeason = await database.models.Season.findOne({ where: { companyId: guild.id, isPreviousSeason: true } });
+	const [currentSeason] = await findOrCreateCurrentSeason(guild.id);
+	const lastSeason = await findOneSeason(guild.id, "previous");
 	const participantCount = await database.models.Participation.count({ where: { seasonId: currentSeason.id } });
 	const companyXP = await company.xp;
 	const currentSeasonXP = await currentSeason.totalXP;
@@ -85,7 +86,7 @@ async function buildCompanyStatsEmbed(guild, database) {
  */
 async function buildSeasonalScoreboardEmbed(guild, database) {
 	const [company] = await findOrCreateCompany(guild.id);
-	const [season] = await database.models.Season.findOrCreate({ where: { companyId: company.id, isCurrentSeason: true } });
+	const [season] = await findOrCreateCurrentSeason(company.id);
 	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });

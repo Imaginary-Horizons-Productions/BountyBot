@@ -3,15 +3,14 @@ const { Sequelize } = require("sequelize");
 const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { textsHaveAutoModInfraction, timeConversion, commandMention } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
 	let slotNumber = null;
 	for (let slotCandidate = 1; slotCandidate <= MAX_EMBEDS_PER_MESSAGE; slotCandidate++) {
@@ -84,7 +83,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 		}
 
-		const [company] = await findOrCreateCompany(interaction.guild.id);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const bounty = await database.models.Bounty.create(rawBounty);
 
 		// post in bounty board forum

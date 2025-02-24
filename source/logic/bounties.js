@@ -5,6 +5,7 @@ const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { progressGoal } = require("./goals");
 const { rollItemDrop } = require("../util/itemUtil");
+const { findOneSeason } = require("./seasons");
 
 /** @type {Sequelize} */
 let db;
@@ -61,7 +62,7 @@ async function addCompleters(guild, bounty, completerIds) {
  */
 async function completeBounty(bounty, poster, validatedHunters, guild) {
 	bounty.update({ state: "completed", completedAt: new Date() });
-	const season = await db.models.Season.findOne({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
+	const season = await findOneSeason(bounty.companyId, "current");
 	season.increment("bountiesCompleted");
 	const rewardTexts = [];
 	const goalUpdate = await progressGoal(guild.id, "bounties", poster.userId);

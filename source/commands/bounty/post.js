@@ -6,17 +6,15 @@ const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction, commandMenti
 const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, SAFE_DELIMITER } = require("../../constants");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
-const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string, Hunter]} args
+ * @param {[typeof import("../../logic"), string, Hunter]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId, hunter]) {
-	const [{ maxSimBounties }] = await findOrCreateCompany(interaction.guild.id);
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId, hunter]) {
+	const [{ maxSimBounties }] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 	const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
 	const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 	const bountySlots = hunter.maxSlots(maxSimBounties);
@@ -53,7 +51,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 		const [slotNumber] = collectedInteraction.values;
 		// Check user actually has slot
 		const company = await database.models.Company.findByPk(interaction.guildId);
-		const hunter = await findOneHunter(interaction.user.id, interaction.guild.id);
+		const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 		if (parseInt(slotNumber) > hunter.maxSlots(company.maxSimBounties)) {
 			interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 			return;
@@ -178,13 +176,13 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				return;
 			}
 
-			const [season] = await database.models.Season.findOrCreate({ where: { companyId: modalSubmission.guildId, isCurrentSeason: true } });
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(modalSubmission.guild.id);
 			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.user.id, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {
 				participation.increment({ xp: 1 });
 			}
 			const company = await database.models.Company.findByPk(modalSubmission.guildId);
-			const poster = await findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
+			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
 			poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
 				getRankUpdates(modalSubmission.guild, database);
 				updateScoreboard(company, interaction.guild, database);

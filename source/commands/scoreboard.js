@@ -2,6 +2,9 @@ const { InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../util/embedUtil');
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const mainId = "scoreboard";
 module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** View the XP scoreboard */
@@ -33,4 +36,6 @@ module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, fals
 			{ name: "Overall Scoreboard", value: "overall" }
 		]
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

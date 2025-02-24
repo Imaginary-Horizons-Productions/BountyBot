@@ -4,15 +4,14 @@ const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 	if (existingBounties.length < 2) {
 		interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", flags: [MessageFlags.Ephemeral] });
@@ -35,7 +34,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 		collector.on("collect", async (collectedInteraction) => {
 			if (collectedInteraction.customId.endsWith("evergreen")) {
-				findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 					const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
 					const previousBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 					const previousBountySlot = previousBounty.slotNumber;

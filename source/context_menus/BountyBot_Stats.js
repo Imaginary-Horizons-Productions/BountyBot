@@ -4,7 +4,9 @@ const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('.
 const { generateTextBar } = require('../util/textUtil');
 const { UserContextMenuWrapper } = require('../classes');
 const { Op } = require('sequelize');
-const { findOneHunter } = require('../logic/hunters');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
@@ -21,7 +23,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 			})
 		} else {
 			// Other Hunter
-			findOneHunter(target.id, interaction.guild.id).then(async hunter => {
+			logicLayer.hunters.findOneHunter(target.id, interaction.guild.id).then(async hunter => {
 				if (!hunter) {
 					interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
 					return;
@@ -31,7 +33,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-				const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
@@ -60,4 +62,6 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 			})
 		}
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

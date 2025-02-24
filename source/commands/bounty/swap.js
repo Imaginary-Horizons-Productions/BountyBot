@@ -4,15 +4,14 @@ const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
@@ -35,7 +34,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 			collector.on("collect", async (collectedInteraction) => {
 				if (collectedInteraction.customId.endsWith("bounty")) {
-					findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+					logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 						const company = await database.models.Company.findByPk(interaction.guildId);
 						if (hunter.maxSlots(company.maxSimBounties) < 2) {
 							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: [MessageFlags.Ephemeral] });
@@ -98,7 +97,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 						destinationBounty.updatePosting(interaction.guild, company, database);
 					}
 
-					const hunter = await findOneHunter(interaction.user.id, interaction.guild.id);
+					const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 					interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(hunter.level, destinationSlot, sourceBounty.showcaseCount)} XP.` }));
 				}
 			})

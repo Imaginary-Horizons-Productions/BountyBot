@@ -1,10 +1,11 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters } = require('../logic/bounties.js');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
-const { findOrCreateBountyHunter } = require('../logic/hunters.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -48,7 +49,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		const [hunter] = await findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
+		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
 		if (hunter.isBanned) {
 			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -73,13 +74,11 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
+			let { bounty: returnedBounty, allCompleters, poster, company } = await logicLayer.bounties.addCompleters(modalSubmission.guild, bounty, [interaction.targetId]);
 			updateBoardPosting(returnedBounty, company, poster, [interaction.targetId], allCompleters, modalSubmission.guild);
 			modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(bounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
 		})
 	}
-);
-
-module.exports.setLogic = (logicBundle) => {
-	bounties = logicBundle.bounties;
-}
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

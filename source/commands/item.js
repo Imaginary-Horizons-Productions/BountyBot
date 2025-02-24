@@ -5,6 +5,8 @@ const { SKIP_INTERACTION_HANDLING } = require('../constants.js');
 const { ihpAuthorPayload, randomFooterTip } = require('../util/embedUtil.js');
 const { timeConversion } = require('../util/textUtil.js');
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
 const ITEM_COOLDOWNS = new Map();
 
 const mainId = "item";
@@ -95,4 +97,6 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 		required: true,
 		autocomplete: getItemNames([]).map(name => ({ name, value: name }))
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

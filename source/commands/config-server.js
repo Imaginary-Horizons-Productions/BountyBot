@@ -1,11 +1,13 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { findOrCreateCompany } = require('../logic/companies');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "config-server";
 module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
-		findOrCreateCompany(interaction.guild.id).then(([company]) => {
+		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(([company]) => {
 			const updatePayload = {};
 			let content = "The following server settings have been configured:";
 
@@ -32,4 +34,6 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			{ name: "Suppress notifications (@silent)", value: "@silent" }
 		]
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

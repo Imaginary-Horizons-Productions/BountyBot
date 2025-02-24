@@ -1,15 +1,14 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { raiseToast } = require('../logic/toasts.js');
 const { textsHaveAutoModInfraction, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil.js');
-const { findOrCreateCompany } = require('../logic/companies.js');
-const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
-const { progressGoal, findLatestGoalProgress } = require('../logic/goals.js');
 const { Goal } = require('../models/companies/Goal.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "Raise a Toast";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -25,14 +24,14 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		const [company] = await findOrCreateCompany(interaction.guildId);
-		const [sender] = await findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
+		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 		if (sender.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const [toastee] = await findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
+		const [toastee] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
 		if (toastee.isBanned) {
 			interaction.reply({ content: `${userMention(interaction.targetId)} cannot receive toasts because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -56,17 +55,17 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
+			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
 			const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, [interaction.targetId], modalSubmission.member)];
 
 			if (rewardedHunterIds.length > 0) {
-				const goalUpdate = await progressGoal(modalSubmission.guild.id, "toasts", modalSubmission.user.id);
+				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", modalSubmission.user.id);
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 					if (goalUpdate.goalCompleted) {
 						embeds.push(Goal.generateCompletionEmbed(goalUpdate.contributorIds));
 					}
-					const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guild.id);
+					const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (goalId !== null) {
 						embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 					} else {
@@ -99,4 +98,6 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			});
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

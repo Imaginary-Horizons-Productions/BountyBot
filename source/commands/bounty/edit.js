@@ -3,16 +3,14 @@ const { Sequelize } = require("sequelize");
 const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle, commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
-const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
 		interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
@@ -187,8 +185,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			bounty.save();
 
 			// update bounty board
-			const poster = await findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
-			const [company] = await findOrCreateCompany(modalSubmission.guildId);
+			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
+			const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
 			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {

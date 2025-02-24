@@ -14,6 +14,12 @@ class Item {
 		this.cooldown = cooldownInMS;
 		this.effect = effectFunction;
 	}
+
+	/** @param {(logicBlob: typeof import("../logic")) => void} setLogicFunction */
+	setLogicLinker(setLogicFunction) {
+		this.setLogic = setLogicFunction;
+		return this;
+	}
 }
 
 module.exports = {

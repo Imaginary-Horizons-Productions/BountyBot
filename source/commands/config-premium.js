@@ -1,12 +1,14 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { GLOBAL_MAX_BOUNTY_SLOTS } = require('../constants');
-const { findOrCreateCompany } = require('../logic/companies');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "config-premium";
 module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
-		findOrCreateCompany(interaction.guild.id).then(([company]) => {
+		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(([company]) => {
 			const updatePayload = {};
 			let content = "The following server settings have been configured:";
 			const errors = [];
@@ -132,4 +134,6 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 		description: "Configure the image shown in the thumbnail of the server bonuses message",
 		required: false
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

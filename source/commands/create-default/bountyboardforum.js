@@ -4,15 +4,14 @@ const { generateBountyBoardThread } = require("../../util/scoreUtil");
 const { Company } = require("../../models/companies/Company");
 const { SAFE_DELIMITER } = require("../../constants");
 const { timeConversion } = require("../../util/textUtil");
-const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[Company]} args
+ * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[company]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
 	const bountyBoard = await interaction.guild.channels.create({
 		parent: interaction.channel.parentId,
 		name: "the-bounty-board",
@@ -48,7 +47,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 				evergreenBounties.unshift(bounty);
 				continue;
 			}
-			findOneHunter(bounty.userId, bounty.companyId).then(async poster => {
+			logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId).then(async poster => {
 				return bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({

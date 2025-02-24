@@ -4,16 +4,17 @@ const { Op } = require('sequelize');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { timeConversion, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
-const { progressGoal, findLatestGoalProgress } = require('../logic/goals');
 const { Seconding } = require('../models/toasts/Seconding');
 const { Goal } = require('../models/companies/Goal');
-const { findOrCreateBountyHunter, findOneHunter } = require('../logic/hunters');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, [toastId], database, runMode) => {
-		const [seconder] = await findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
+		const [seconder] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 		if (seconder.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -33,7 +34,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
-		const progressData = await progressGoal(interaction.guildId, "secondings", interaction.user.id);
+		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", interaction.user.id);
 		const rewardTexts = [`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`];
 
 		const recipientIds = [];
@@ -42,9 +43,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		for (const userId of recipientIds) {
-			const hunter = await findOneHunter(userId, interaction.guild.id);
+			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, database);
 			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {
@@ -118,7 +119,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal") ?? -1;
 		if (goalProgressFieldIndex !== -1) {
-			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 			if (goalId !== null) {
 				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 			} else {
@@ -146,4 +147,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			});
 		}
 	}
-);
+).setLogicLinker(logicBundle => {
+	logicLayer = logicBundle;
+});

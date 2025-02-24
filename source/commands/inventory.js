@@ -4,6 +4,9 @@ const { Op } = require('sequelize');
 const { commandMention } = require('../util/textUtil.js');
 const { MAX_MESSAGE_CONTENT_LENGTH } = require('../constants.js');
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const mainId = "inventory";
 module.exports = new CommandWrapper(mainId, "Show your inventory of usable items", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	(interaction, database, runMode) => {
@@ -24,4 +27,6 @@ module.exports = new CommandWrapper(mainId, "Show your inventory of usable items
 			}
 		});
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

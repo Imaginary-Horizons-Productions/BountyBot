@@ -1,21 +1,20 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { extractUserIdsFromMentions, textsHaveAutoModInfraction, generateTextBar } = require('../util/textUtil');
-const { raiseToast } = require('../logic/toasts.js');
 const { updateScoreboard } = require('../util/embedUtil.js');
-const { findOrCreateCompany } = require('../logic/companies.js');
-const { findOrCreateBountyHunter } = require('../logic/hunters.js');
+const { extractUserIdsFromMentions, textsHaveAutoModInfraction, generateTextBar } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
-const { progressGoal, findLatestGoalProgress } = require('../logic/goals.js');
 const { Goal } = require('../models/companies/Goal.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, database, runMode) => {
-		const [company] = await findOrCreateCompany(interaction.guildId);
-		const [sender] = await findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
+		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 		if (sender.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -64,20 +63,20 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
 		const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, nonBotToasteeIds, interaction.member)];
 		if (imageURL) {
 			embeds[0].setImage(imageURL);
 		}
 
 		if (rewardedHunterIds.length > 0) {
-			const goalUpdate = await progressGoal(interaction.guild.id, "toasts", interaction.user.id);
+			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", interaction.user.id);
 			if (goalUpdate.gpContributed > 0) {
 				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				if (goalUpdate.goalCompleted) {
 					embeds.push(Goal.generateCompletionEmbed(goalUpdate.contributorIds));
 				}
-				const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guild.id);
+				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (goalId !== null) {
 					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 				} else {
@@ -128,4 +127,6 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		description: "The URL to the image to add to the toast",
 		required: false
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

@@ -1,9 +1,7 @@
 const { CommandInteraction, userMention, bold, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
-const { addCompleters } = require("../../logic/bounties.js");
 const { Completion } = require("../../models/bounties/Completion.js");
-const { findOrCreateBountyHunter } = require("../../logic/hunters.js");
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -37,9 +35,9 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" }, include: database.models.Bounty.Company });
 	if (!bounty) {
@@ -61,7 +59,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
 		if (runMode === "prod" && member.user.bot) continue;
 		const memberId = member.id;
-		const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
+		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 		if (hunter.isBanned) {
 			bannedIds.push(memberId);
 			continue;
@@ -75,7 +73,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		return;
 	}
 
-	let { bounty: returnedBounty, allCompleters, poster, company } = await addCompleters(interaction.guild, bounty, validatedCompleterIds);
+	let { bounty: returnedBounty, allCompleters, poster, company } = await logicLayer.bounties.addCompleters(interaction.guild, bounty, validatedCompleterIds);
 	updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 	interaction.reply({
 		content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
@@ -102,8 +100,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBundle) => {
-		bounties = logicBundle.bounties;
-	}
+	executeSubcommand
 };

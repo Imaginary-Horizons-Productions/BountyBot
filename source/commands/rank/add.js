@@ -3,15 +3,14 @@ const { Sequelize } = require("sequelize");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { MAX_EMBED_FIELD_COUNT } = require("../../constants");
 const { commandMention } = require("../../util/textUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
 	const newThreshold = interaction.options.getNumber("variance-threshold");
 	const existingThresholds = ranks.map(rank => rank.varianceThreshold);
@@ -39,7 +38,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	if (newRankmoji) {
 		rawRank.rankmoji = newRankmoji;
 	}
-	findOrCreateCompany(interaction.guild.id).then(() => {
+	logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(() => {
 		database.models.Rank.create(rawRank);
 	})
 	getRankUpdates(interaction.guild, database);

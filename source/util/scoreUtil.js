@@ -5,6 +5,7 @@ const { Rank } = require("../models/companies/Rank");
 const { Season } = require("../models/seasons/Season");
 const { Hunter } = require("../models/users/Hunter");
 const { congratulationBuilder } = require("./textUtil");
+const { findOrCreateCurrentSeason } = require("../logic/seasons");
 
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
  * @param {Season} season
@@ -91,7 +92,7 @@ async function calculateRanks(season, allHunters, ranks, database) {
  * @returns an array of rank and placement update strings
  */
 async function getRankUpdates(guild, database) {
-	const [season] = await database.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
+	const [season] = await findOrCreateCurrentSeason(guild.id);
 	const ranks = await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
 

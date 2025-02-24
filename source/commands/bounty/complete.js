@@ -4,20 +4,15 @@ const { Bounty } = require("../../models/bounties/Bounty");
 const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, timeConversion, commandMention, generateTextBar } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
-const { completeBounty } = require("../../logic/bounties");
-const { Hunter } = require("../../models/users/Hunter");
-const { findLatestGoalProgress } = require("../../logic/goals");
-const { findOrCreateCompany } = require("../../logic/companies");
 const { Goal } = require("../../models/companies/Goal");
-const { findOrCreateBountyHunter, findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	/** @type {Bounty | null} */
 	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } });
@@ -49,7 +44,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	for (const member of completerMembers) {
 		if (runMode !== "prod" || !member.user.bot) {
 			const memberId = member.id;
-			const [hunter] = await findOrCreateBountyHunter(memberId, interaction.guild.id);
+			const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 			if (!hunter.isBanned) {
 				validatedCompleterIds.push(memberId);
 				validatedHunters.push(hunter);
@@ -63,15 +58,15 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}
 
 	await interaction.deferReply();
-	const poster = await findOneHunter(bounty.userId, bounty.companyId);
-	const { completerXP, posterXP, rewardTexts, goalUpdate } = await completeBounty(bounty, poster, validatedHunters, interaction.guild);
+	const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
+	const { completerXP, posterXP, rewardTexts, goalUpdate } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, interaction.guild);
 	const rankUpdates = await getRankUpdates(interaction.guild, database);
-	const [company] = await findOrCreateCompany(interaction.guildId);
+	const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 	const content = Bounty.generateRewardString(validatedCompleterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
 	bounty.embed(interaction.guild, poster.level, true, company, completions).then(async embed => {
 		if (goalUpdate.gpContributed > 0) {
-			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
+			const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 			if (goalId !== null) {
 				embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
 			} else {

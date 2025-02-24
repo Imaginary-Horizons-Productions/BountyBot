@@ -4,16 +4,14 @@ const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
-const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: posterId, state: "open" } }).then(openBounties => {
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
@@ -33,7 +31,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			bounty.state = "deleted";
 			bounty.save();
 			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-			const [company] = await findOrCreateCompany(collectedInteraction.guildId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 			if (company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
@@ -41,9 +39,9 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			}
 			bounty.destroy();
 
-			findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				hunter.decrement("xp");
-				const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
 				if (!participationCreated) {
 					participation.decrement("xp");

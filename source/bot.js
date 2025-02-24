@@ -18,6 +18,7 @@ const { getCommand, slashData, setLogic: setCommandLogic } = require("./commands
 const { getButton, setLogic: setButtonLogic } = require("./buttons/_buttonDictionary.js");
 const { getSelect, setLogic: setSelectLogic } = require("./selects/_selectDictionary.js");
 const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic } = require("./context_menus/_contextMenuDictionary.js");
+const { setLogic: setItemLogic } = require("./items/_itemDictionary.js")
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { commandMention } = require("./util/textUtil.js");
@@ -48,6 +49,7 @@ sequelize.then(db => {
 	setButtonLogic(logicBlob);
 	setSelectLogic(logicBlob);
 	setContextMenuLogic(logicBlob);
+	setItemLogic(logicBlob);
 })
 
 client.login(require(authPath).token)
@@ -223,7 +225,7 @@ client.on(Events.GuildDelete, async guild => {
 	db.models.Completion.destroy({ where: { companyId: guild.id } });
 
 	db.models.Participation.destroy({ where: { companyId: guild.id } });
-	db.models.Season.destroy({ where: { companyId: guild.id } });
+	logicBlob.seasons.deleteCompanySeasons(guild.id);
 
 	db.models.Rank.destroy({ where: { companyId: guild.id } });
 	db.models.Company.destroy({ where: { id: guild.id } });

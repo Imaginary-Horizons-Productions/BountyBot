@@ -6,9 +6,9 @@ const { commandMention } = require("../../util/textUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const penaltyValue = Math.abs(interaction.options.get("penalty", true).value);
 	const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
 	if (!goal) {

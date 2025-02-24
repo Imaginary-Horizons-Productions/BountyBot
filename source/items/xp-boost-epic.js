@@ -1,13 +1,15 @@
 const { Item } = require("../classes");
-const { findOneHunter } = require("../logic/hunters");
 const { getRankUpdates } = require("../util/scoreUtil");
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const itemName = "Epic XP Boost";
 const xpValue = 25;
 module.exports = new Item(itemName, `Gain ${xpValue} XP in the used server (unaffected by festivals)`, 60000,
 	async (interaction, database) => {
-		findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
-			const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+		logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: xpValue } });
 			if (!participationCreated) {
 				participation.increment({ xp: xpValue });
@@ -25,4 +27,6 @@ module.exports = new Item(itemName, `Gain ${xpValue} XP in the used server (unaf
 			});
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

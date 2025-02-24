@@ -4,16 +4,15 @@ const { timeConversion } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 const { showcaseBounty } = require("../../util/bountyUtil");
-const { findOneHunter } = require("../../logic/hunters");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
-	findOneHunter(posterId, interaction.guild.id).then(async hunter => {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+	logicLayer.hunters.findOneHunter(posterId, interaction.guild.id).then(async hunter => {
 		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (runMode === "prod" && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });

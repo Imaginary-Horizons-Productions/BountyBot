@@ -3,15 +3,14 @@ const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
 	interaction.reply({
 		content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,
@@ -32,7 +31,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		bounty.save();
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-		const [company] = await findOrCreateCompany(interaction.guildId);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 		if (evergreenBounties.length > 0) {
 			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, [])));
 			if (company.bountyBoardId) {

@@ -3,15 +3,14 @@ const { Sequelize } = require("sequelize");
 const { timeConversion, textsHaveAutoModInfraction, trimForModalTitle } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
-const { findOrCreateCompany } = require("../../logic/companies");
 
 /**
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const openBounties = await database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } });
 	if (openBounties.length < 1) {
 		interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: [MessageFlags.Ephemeral] });
@@ -105,7 +104,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			bounty.save();
 
 			// update bounty board
-			const [company] = await findOrCreateCompany(modalSubmission.guildId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
 			if (company.bountyBoardId) {
 				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
 				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(modalSubmission.guild, company.level, false, company, [])));
