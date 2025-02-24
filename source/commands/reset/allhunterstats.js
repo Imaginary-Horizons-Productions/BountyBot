@@ -11,7 +11,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });
 	interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
-	const company = await database.models.Company.findByPk(interaction.guildId);
+	const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
 	if (season) {
 		await database.models.Participation.destroy({ where: { seasonId: season.id } });

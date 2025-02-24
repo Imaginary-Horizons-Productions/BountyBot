@@ -13,11 +13,19 @@ function setDB(database) {
 /** *Queries for a Company*
  * @param {string} guildId
  */
-async function findOrCreateCompany(guildId) {
-	return await db.models.Company.findOrCreate({ where: { id: guildId } });
+function findOrCreateCompany(guildId) {
+	return db.models.Company.findOrCreate({ where: { id: guildId } });
+}
+
+/** *Queries for a Company by primary key*
+ * @param {string} guildId
+ */
+function findCompanyByPK(guildId) {
+	return db.models.Company.findByPk(guildId);
 }
 
 module.exports = {
 	setDB,
-	findOrCreateCompany
+	findOrCreateCompany,
+	findCompanyByPK
 }

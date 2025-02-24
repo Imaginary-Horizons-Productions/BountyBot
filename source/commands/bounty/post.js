@@ -50,8 +50,8 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [slotNumber] = collectedInteraction.values;
 		// Check user actually has slot
-		const company = await database.models.Company.findByPk(interaction.guildId);
-		const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
+		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+		const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guildId);
 		if (parseInt(slotNumber) > hunter.maxSlots(company.maxSimBounties)) {
 			interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 			return;
@@ -181,9 +181,9 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			if (!participationCreated) {
 				participation.increment({ xp: 1 });
 			}
-			const company = await database.models.Company.findByPk(modalSubmission.guildId);
-			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
-			poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
+			const company = await logicLayer.companies.findCompanyByPK(modalSubmission.guild.id);
+			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guildId);
+			poster.addXP(modalSubmission.guild.name, 1, true, company).then(() => {
 				getRankUpdates(modalSubmission.guild, database);
 				updateScoreboard(company, interaction.guild, database);
 			});

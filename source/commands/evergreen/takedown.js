@@ -45,7 +45,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 			const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 			bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
 				thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
-				return database.models.Company.findByPk(bounty.companyId);
+				return logicLayer.companies.findCompanyByPK(bounty.companyId);
 			}).then(company => {
 				company.evergreenThreadId = null;
 				company.save();
