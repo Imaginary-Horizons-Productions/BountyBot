@@ -93,7 +93,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						console.error(error);
 					}
 				});
-				updateScoreboard(company, collectedInteraction.guild, database);
+				updateScoreboard(collectedInteraction.guild, database);
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

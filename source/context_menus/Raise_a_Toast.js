@@ -93,7 +93,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 							thread.send({ content, flags: MessageFlags.SuppressNotifications });
 						})
 					}
-					updateScoreboard(company, modalSubmission.guild, database);
+					updateScoreboard(modalSubmission.guild, database);
 				}
 			});
 		})

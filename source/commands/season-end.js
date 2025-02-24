@@ -1,6 +1,8 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
+const { updateScoreboard } = require('../util/embedUtil');
+const { Hunter } = require('../models/users/Hunter');
+const { COMPANY_XP_COEFFICIENT } = require('../constants');
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
@@ -15,7 +17,11 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			return;
 		}
 
-		buildCompanyStatsEmbed(interaction.guild, database).then(async embed => {
+		const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
+		const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
+		const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
+		company.statsEmbed(interaction.guild, database, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
 			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
@@ -58,7 +64,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				})
 			}
 			await database.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId: company.id } });
-			updateScoreboard(company, interaction.guild, database);
+			updateScoreboard(interaction.guild, database);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;

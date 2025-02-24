@@ -185,7 +185,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
 			poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
 				getRankUpdates(modalSubmission.guild, database);
-				updateScoreboard(company, interaction.guild, database);
+				updateScoreboard(interaction.guild, database);
 			});
 
 			if (shouldMakeEvent) {

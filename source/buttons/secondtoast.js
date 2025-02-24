@@ -138,7 +138,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					thread.send({ content, flags: MessageFlags.SuppressNotifications });
 				})
 			}
-			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
+			updateScoreboard(interaction.guild, database);
 		})
 
 		if (progressData.goalCompleted) {
