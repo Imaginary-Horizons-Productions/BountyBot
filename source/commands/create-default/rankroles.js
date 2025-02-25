@@ -8,6 +8,20 @@ const { Sequelize } = require("sequelize");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+	await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+	const previousRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id, "descending");
+	const previousRoleIds = [];
+	for (const rank of previousRanks) {
+		if (rank.roleId) {
+			previousRoleIds.push(rank.roleId);
+		}
+	}
+	await Promise.all(previousRoleIds.map(id => interaction.guild.roles.delete(id, "/create-default rank-roles"))).catch(error => {
+		if (error.code !== 10011) { // Ignore "Unknown Role" errors as we have no way to check if our stored role ids are stale
+			console.error(error);
+		}
+	});
+	const deletedCount = await logicLayer.ranks.deleteRanks(interaction.guild.id);
 	const roles = await interaction.guild.roles.fetch().then(existingGuildRoles => {
 		return Promise.all(
 			[
@@ -48,14 +62,14 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		)
 	});
 
-	const ranks = await logicLayer.ranks.createDefaultRanks(interaction.guild.id, roles);
-	interaction.reply({ content: `Created roles: ${roles.map((role, index) => `${ranks[index].rankmoji} ${role} at ${ranks[index].varianceThreshold} standard deviations`).join(", ")}`, flags: [MessageFlags.Ephemeral] });
+	const ranks = await logicLayer.ranks.createDefaultRanks(interaction.guildId, roles.map(role => role.id));
+	interaction.editReply({ content: `Created roles: ${roles.map((role, index) => `${ranks[index].rankmoji} ${role} at ${ranks[index].varianceThreshold} standard deviations`).join(", ")}${deletedCount > 0 ? `\n\nThe previous ${deletedCount} ranks and their roles were deleted.` : ""}` });
 };
 
 module.exports = {
 	data: {
 		name: "rank-roles",
-		description: "Create Discord roles and set them as this server's ranks at default variance thresholds"
+		description: "Create the default ranks for this server including Discord roles (and delete old ranks)"
 	},
 	executeSubcommand
 };

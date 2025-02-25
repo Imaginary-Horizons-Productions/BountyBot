@@ -10,6 +10,7 @@ Server Goals are BountyBot objectives everyone on the server contributes to. A g
 - Fixed crashes when toasting, completing bounties, or seconding toasts in threads
 - Added an optional text input for `/evergreen showcase` to allow moderators to add text to the showcase message
 - Fixed `/bounty edit` and `/evergreen edit` not saving modifications
+- Fixed crash when using `/create-default rank-roles` twice in a row
 ## BountyBot Version 2.8.0:
 ### Context Menu Options
 - Added the following BountyBot functionality to the Apps dropdown when right-clicking on a User or Message:
