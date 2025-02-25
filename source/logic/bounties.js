@@ -19,6 +19,19 @@ function setDB(database) {
 }
 
 /**
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function findOpenBounties(userId, companyId) {
+	return db.models.Bounty.findAll({ where: { userId, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
+}
+
+/** @param {string} companyId */
+function findEvergreenBounties(companyId) {
+	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
+}
+
+/**
  * @param {Guild} guild
  * @param {Bounty} bounty
  * @param {Company} company
@@ -133,6 +146,8 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 
 module.exports = {
 	setDB,
+	findOpenBounties,
+	findEvergreenBounties,
 	addCompleters,
 	completeBounty
 }

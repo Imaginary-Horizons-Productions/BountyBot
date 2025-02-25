@@ -9,7 +9,7 @@ const { Sequelize } = require("sequelize");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, userId]) {
 	const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? userId;
-	database.models.Bounty.findAll({ where: { userId: listUserId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(async existingBounties => {
+	logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id).then(async existingBounties => {
 		if (existingBounties.length < 1) {
 			interaction.reply({ content: `<@${listUserId}> doesn't have any open bounties posted.`, flags: [MessageFlags.Ephemeral] });
 			return;
