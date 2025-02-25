@@ -10,7 +10,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const varianceThreshold = interaction.options.getNumber("variance-threshold");
-	const rank = await database.models.Rank.findOne({ where: { companyId: interaction.guildId, varianceThreshold } });
+	const rank = await logicLayer.ranks.findOneRank(interaction.guild.id, varianceThreshold);
 	if (!rank) {
 		interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: [MessageFlags.Ephemeral] });
 		return;
@@ -28,7 +28,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		updateOptions.rankmoji = newRankmoji;
 	}
 	rank.update(updateOptions);
-	getRankUpdates(interaction.guild, database);
+	getRankUpdates(interaction.guild, database, logicLayer);
 	interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
 };
 

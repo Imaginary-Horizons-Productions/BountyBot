@@ -81,7 +81,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}).then(async response => {
 				let content = "";
 				if (rewardedHunterIds.length > 0) {
-					const rankUpdates = await getRankUpdates(interaction.guild, database);
+					const rankUpdates = await getRankUpdates(interaction.guild, database, logicLayer);
 					content = Toast.generateRewardString(rewardedHunterIds, rankUpdates, rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
 				}
 
@@ -93,7 +93,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 							thread.send({ content, flags: MessageFlags.SuppressNotifications });
 						})
 					}
-					updateScoreboard(company, modalSubmission.guild, database);
+					updateScoreboard(company, modalSubmission.guild, database, logicLayer);
 				}
 			});
 		})

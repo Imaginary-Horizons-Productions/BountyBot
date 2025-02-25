@@ -60,7 +60,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	await interaction.deferReply();
 	const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
 	const { completerXP, posterXP, rewardTexts, goalUpdate } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, interaction.guild);
-	const rankUpdates = await getRankUpdates(interaction.guild, database);
+	const rankUpdates = await getRankUpdates(interaction.guild, database, logicLayer);
 	const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 	const content = Bounty.generateRewardString(validatedCompleterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
@@ -107,7 +107,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			})
 		}
 
-		updateScoreboard(company, interaction.guild, database);
+		updateScoreboard(company, interaction.guild, database, logicLayer);
 	});
 };
 

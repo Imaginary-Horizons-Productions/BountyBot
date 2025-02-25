@@ -11,7 +11,7 @@ const { commandMention } = require("../../util/textUtil");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
+	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id, "descending");
 	const newThreshold = interaction.options.getNumber("variance-threshold");
 	const existingThresholds = ranks.map(rank => rank.varianceThreshold);
 	if (existingThresholds.includes(newThreshold)) {
@@ -39,9 +39,9 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		rawRank.rankmoji = newRankmoji;
 	}
 	logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(() => {
-		database.models.Rank.create(rawRank);
+		logicLayer.ranks.createCustomRank(rawRank);
 	})
-	getRankUpdates(interaction.guild, database);
+	getRankUpdates(interaction.guild, database, logicLayer);
 	interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
 };
 

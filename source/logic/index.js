@@ -9,6 +9,7 @@ module.exports = {
 	companies: require("./companies.js"),
 	goals: require("./goals.js"),
 	hunters: require("./hunters.js"),
+	ranks: require("./ranks.js"),
 	seasons: require("./seasons.js"),
 	toasts: require("./toasts.js")
 };

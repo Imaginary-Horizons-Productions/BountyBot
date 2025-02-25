@@ -5,7 +5,7 @@ const { Sequelize } = require("sequelize");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...[typeof import("../../logic")]} args
+ * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const roles = await interaction.guild.roles.fetch().then(existingGuildRoles => {
@@ -47,16 +47,9 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 			})
 		)
 	});
-	const varianceThresholds = [2.5, 1, 0, -3];
-	const rankmojis = ["🏆", "🥇", "🥈", "🥉"];
 
-	database.models.Rank.bulkCreate(roles.map((role, index) => ({
-		companyId: interaction.guildId,
-		varianceThreshold: varianceThresholds[index],
-		roleId: role.id,
-		rankmoji: rankmojis[index]
-	})));
-	interaction.reply({ content: `Created roles: ${roles.map((role, index) => `${rankmojis[index]} ${role} at ${varianceThresholds[index]} standard deviations`).join(", ")}`, flags: [MessageFlags.Ephemeral] });
+	const ranks = await logicLayer.ranks.createDefaultRanks(interaction.guild.id, roles);
+	interaction.reply({ content: `Created roles: ${roles.map((role, index) => `${ranks[index].rankmoji} ${role} at ${ranks[index].varianceThreshold} standard deviations`).join(", ")}`, flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

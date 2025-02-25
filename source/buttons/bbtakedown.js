@@ -40,7 +40,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					if (!participationCreated) {
 						participation.decrement("xp");
 					}
-					getRankUpdates(interaction.guild, database);
+					getRankUpdates(interaction.guild, database, logicLayer);
 				})
 
 				return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });

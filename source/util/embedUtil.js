@@ -84,13 +84,13 @@ async function buildCompanyStatsEmbed(guild, database) {
  * @param {Guild} guild
  * @param {Sequelize} database
  */
-async function buildSeasonalScoreboardEmbed(guild, database) {
+async function buildSeasonalScoreboardEmbed(guild, database, logicLayer) {
 	const [company] = await findOrCreateCompany(guild.id);
 	const [season] = await findOrCreateCurrentSeason(company.id);
 	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
-	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
+	const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const participation of participations) {
@@ -145,12 +145,12 @@ async function buildSeasonalScoreboardEmbed(guild, database) {
  * @param {Guild} guild
  * @param {Sequelize} database
  */
-async function buildOverallScoreboardEmbed(guild, database) {
+async function buildOverallScoreboardEmbed(guild, database, logicLayer) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
 	const [company] = await findOrCreateCompany(guild.id);
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
+	const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const hunter of hunters) {
@@ -264,12 +264,12 @@ async function buildVersionEmbed() {
  * @param {Guild} guild
  * @param {Sequelize} database
  */
-function updateScoreboard(company, guild, database) {
+function updateScoreboard(company, guild, database, logicLayer) {
 	if (company.scoreboardChannelId && company.scoreboardMessageId) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
 		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, database) : await buildOverallScoreboardEmbed(guild, database)] });
+			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, database, logicLayer) : await buildOverallScoreboardEmbed(guild, database, logicLayer)] });
 		});
 	}
 }
