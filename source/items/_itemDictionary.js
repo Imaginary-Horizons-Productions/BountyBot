@@ -1,5 +1,5 @@
 const { CommandInteraction } = require("discord.js");
-const { Item } = require("../classes");
+const { Item, Colorizer } = require("../classes");
 const { Sequelize } = require("sequelize");
 
 /** @type {Record<string, Item>} */
@@ -12,35 +12,6 @@ for (const file of [
 	"bounty-thumbnail.js",
 	"goal-initializer.js",
 	"loot-box.js",
-	"profile-colorizer-aqua.js",
-	"profile-colorizer-blue.js",
-	"profile-colorizer-blurple.js",
-	"profile-colorizer-darkaqua.js",
-	"profile-colorizer-darkblue.js",
-	"profile-colorizer-darkbutnotblack.js",
-	"profile-colorizer-darkergrey.js",
-	"profile-colorizer-darkgold.js",
-	"profile-colorizer-darkgreen.js",
-	"profile-colorizer-darkgrey.js",
-	"profile-colorizer-darknavy.js",
-	"profile-colorizer-darkorange.js",
-	"profile-colorizer-darkpurple.js",
-	"profile-colorizer-darkred.js",
-	"profile-colorizer-darkvividpink.js",
-	"profile-colorizer-default.js",
-	"profile-colorizer-fuchsia.js",
-	"profile-colorizer-gold.js",
-	"profile-colorizer-green.js",
-	"profile-colorizer-grey.js",
-	"profile-colorizer-lightgrey.js",
-	"profile-colorizer-luminousvividpink.js",
-	"profile-colorizer-navy.js",
-	"profile-colorizer-notquiteblack.js",
-	"profile-colorizer-orange.js",
-	"profile-colorizer-purple.js",
-	"profile-colorizer-red.js",
-	"profile-colorizer-white.js",
-	"profile-colorizer-yellow.js",
 	"progress-in-a-can.js",
 	"unidentified-item.js",
 	"xp-boost-epic.js",
@@ -52,6 +23,45 @@ for (const file of [
 	ITEMS[item.name] = item;
 	ITEM_NAMES.push(item.name);
 }
+
+const colors = [
+	'Aqua',
+	'Blue',
+	'Blurple',
+	'Dark Aqua',
+	'Dark Blue',
+	'Dark But Not Black',
+	'Darker Grey',
+	'Dark Gold',
+	'Dark Green',
+	'Dark Grey',
+	'Dark Navy',
+	'Dark Orange',
+	'Dark Purple',
+	'Dark Red',
+	'Dark Vivid Pink',
+	'Default',
+	'Fuchsia',
+	'Gold',
+	'Green',
+	'Grey',
+	'Greyple',
+	'Light Grey',
+	'Luminous Vivid Pink',
+	'Navy',
+	'Not Quite Black',
+	'Orange',
+	'Purple',
+	'Red',
+	'White',
+	'Yellow'
+];
+
+const colorizerItems = colors.map(color => new Colorizer(color));
+colorizerItems.forEach(colorizer => {
+	ITEMS[colorizer.name] = colorizer;
+	ITEM_NAMES.push(colorizer.name);
+});
 
 /** @param {string[]} exclusions */
 exports.getItemNames = function (exclusions) {
