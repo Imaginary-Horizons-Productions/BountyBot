@@ -6,7 +6,6 @@ const { Colorizer } = require("./Colorizer");
 module.exports = {
 	BuildError,
 	Item,
-	Colorizer,
 	ButtonWrapper,
 	CommandWrapper,
 	SelectWrapper,

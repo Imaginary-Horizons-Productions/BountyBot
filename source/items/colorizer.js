@@ -1,13 +1,10 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { Item } = require("./Item")
+const { Item } = require("../classes");
 
 class Colorizer extends Item {
 	/**
 	 * @param {string} color
-	 * @param {string} descriptionInput
-	 * @param {number} cooldownInMS
-	 * @param {(interaction: CommandInteraction, database: Sequelize) => Promise<boolean>} effectFunction
 	 */
 	constructor(color) {
 		const itemName = `${color} Profile Colorizer`;
@@ -24,6 +21,37 @@ class Colorizer extends Item {
 	}
 }
 
-module.exports = {
-	Colorizer
-};
+const colors = [
+	'Aqua',
+	'Blue',
+	'Blurple',
+	'Dark Aqua',
+	'Dark Blue',
+	'Dark But Not Black',
+	'Darker Grey',
+	'Dark Gold',
+	'Dark Green',
+	'Dark Grey',
+	'Dark Navy',
+	'Dark Orange',
+	'Dark Purple',
+	'Dark Red',
+	'Dark Vivid Pink',
+	'Default',
+	'Fuchsia',
+	'Gold',
+	'Green',
+	'Grey',
+	'Greyple',
+	'Light Grey',
+	'Luminous Vivid Pink',
+	'Navy',
+	'Not Quite Black',
+	'Orange',
+	'Purple',
+	'Red',
+	'White',
+	'Yellow'
+];
+
+module.exports = colors.map(color => new Colorizer(color));

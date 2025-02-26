@@ -10,6 +10,7 @@ const ITEM_NAMES = [];
 for (const file of [
 	"bonus-bounty-showcase.js",
 	"bounty-thumbnail.js",
+	"colorizer.js",
 	"goal-initializer.js",
 	"loot-box.js",
 	"progress-in-a-can.js",
@@ -19,49 +20,12 @@ for (const file of [
 	"xp-boost.js"
 ]) {
 	/** @type {Item} */
-	const item = require(`./${file}`);
-	ITEMS[item.name] = item;
-	ITEM_NAMES.push(item.name);
+	const items = [ require(`./${file}`) ].flat();
+	for (item of items) {
+		ITEMS[item.name] = item;
+		ITEM_NAMES.push(item.name);
+	}
 }
-
-const colors = [
-	'Aqua',
-	'Blue',
-	'Blurple',
-	'Dark Aqua',
-	'Dark Blue',
-	'Dark But Not Black',
-	'Darker Grey',
-	'Dark Gold',
-	'Dark Green',
-	'Dark Grey',
-	'Dark Navy',
-	'Dark Orange',
-	'Dark Purple',
-	'Dark Red',
-	'Dark Vivid Pink',
-	'Default',
-	'Fuchsia',
-	'Gold',
-	'Green',
-	'Grey',
-	'Greyple',
-	'Light Grey',
-	'Luminous Vivid Pink',
-	'Navy',
-	'Not Quite Black',
-	'Orange',
-	'Purple',
-	'Red',
-	'White',
-	'Yellow'
-];
-
-const colorizerItems = colors.map(color => new Colorizer(color));
-colorizerItems.forEach(colorizer => {
-	ITEMS[colorizer.name] = colorizer;
-	ITEM_NAMES.push(colorizer.name);
-});
 
 /** @param {string[]} exclusions */
 exports.getItemNames = function (exclusions) {
