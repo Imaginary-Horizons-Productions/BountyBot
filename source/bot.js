@@ -173,7 +173,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.ChannelDelete, channel => {
-	db.sequelize.models.Company.findByPk(channel.guildId).then(company => {
+	logicBlob.companies.findCompanyByPK(channel.guild.id).then(company => {
 		if (company) {
 			let shouldSaveCompany = false;
 			if (channel.id === company.bountyBoardId) {
@@ -192,7 +192,7 @@ client.on(Events.ChannelDelete, channel => {
 
 client.on(Events.MessageDelete, async message => {
 	const db = await sequelize;
-	db.models.Company.findByPk(message.guildId).then(company => {
+	logicBlob.companies.findCompanyByPK(message.guild.id).then(company => {
 		if (message.id === company.scoreboardMessageId) {
 			company.scoreboardMessageId = null;
 			company.save();
@@ -202,7 +202,7 @@ client.on(Events.MessageDelete, async message => {
 
 client.on(Events.ThreadDelete, async thread => {
 	const db = await sequelize;
-	db.models.Company.findByPk(thread.guildId).then(company => {
+	logicBlob.companies.findCompanyByPK(thread.guild.id).then(company => {
 		if (thread.id === company.evergreenThreadId) {
 			company.evergreenThreadId = null;
 			company.save();

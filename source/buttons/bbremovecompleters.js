@@ -31,7 +31,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const removedIds = collectedInteraction.members.map((_, key) => key);
 				database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: removedIds } } });
 				const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guild.id);
-				const company = await database.models.Company.findByPk(collectedInteraction.guildId);
+				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guildId);
 				bounty.embed(collectedInteraction.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))
 					.then(async embed => {
 						if (collectedInteraction.channel.archived) {

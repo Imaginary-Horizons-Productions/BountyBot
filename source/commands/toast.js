@@ -104,7 +104,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 						thread.send({ content, flags: MessageFlags.SuppressNotifications });
 					})
 				}
-				updateScoreboard(company, interaction.guild, database, logicLayer);
+				updateScoreboard(interaction.guild, database, logicLayer);
 			}
 		});
 	}

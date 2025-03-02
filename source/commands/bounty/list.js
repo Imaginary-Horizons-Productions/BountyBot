@@ -15,7 +15,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			return;
 		}
 		const hunter = await logicLayer.hunters.findOneHunter(listUserId, interaction.guild.id);
-		const company = await database.models.Company.findByPk(interaction.guildId);
+		const company = await logicLayer.companies.findByPk(interaction.guildId);
 		interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter?.level ?? company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })))), flags: [MessageFlags.Ephemeral] });
 	});
 };

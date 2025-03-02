@@ -8,7 +8,7 @@ const { Sequelize } = require("sequelize");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	const company = await database.models.Company.findByPk(interaction.guildId);
+	const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 	const announcement = interaction.options.getString("announcement");
 	company.update({ nextRaffleString: announcement });
 	interaction.reply(company.sendAnnouncement({ content: announcement }));

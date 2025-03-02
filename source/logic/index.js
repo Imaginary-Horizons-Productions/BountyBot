@@ -10,6 +10,7 @@ module.exports = {
 	goals: require("./goals.js"),
 	hunters: require("./hunters.js"),
 	ranks: require("./ranks.js"),
+	items: require("./items.js"),
 	seasons: require("./seasons.js"),
 	toasts: require("./toasts.js")
 };

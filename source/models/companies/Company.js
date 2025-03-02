@@ -1,5 +1,8 @@
-const { MessageFlags } = require('discord.js');
+const { MessageFlags, EmbedBuilder, Colors } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
+const { ihpAuthorPayload, randomFooterTip } = require('../../util/embedUtil');
+const { generateTextBar } = require('../../util/textUtil');
+const { Season } = require('../seasons/Season');
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
 class Company extends Model {
@@ -52,6 +55,38 @@ class Company extends Model {
 			messageOptions.content = `${this.announcementPrefix} ${messageOptions.content}`;
 		}
 		return messageOptions;
+	}
+
+	/**
+	 * @param {Guild} guild
+	 * @param {Sequelize} database
+	 * @param {number} currentLevelThreshold
+	 * @param {number} nextLevelThreshold
+	 * @param {Season} currentSeason
+	 * @param {Season} lastSeason
+	 */
+	async statsEmbed(guild, database, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason) {
+		const participantCount = await database.models.Participation.count({ where: { seasonId: currentSeason.id } });
+		const companyXP = await this.xp;
+		const currentSeasonXP = await currentSeason.totalXP;
+		const lastSeasonXP = await lastSeason?.totalXP ?? 0;
+
+		const particpantPercentage = participantCount / guild.memberCount * 100;
+		const seasonXPDifference = currentSeasonXP - lastSeasonXP;
+		const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
+		const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
+		return new EmbedBuilder().setColor(Colors.Blurple)
+			.setAuthor(ihpAuthorPayload)
+			.setTitle(`${guild.name} is __Level ${this.level}__`)
+			.setThumbnail(guild.iconURL())
+			.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
+			.addFields(
+				{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
+				{ name: "Participation", value: `${participantCount} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
+				{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
+			)
+			.setFooter(randomFooterTip())
+			.setTimestamp()
 	}
 }
 

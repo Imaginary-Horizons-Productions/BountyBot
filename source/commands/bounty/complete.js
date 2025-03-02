@@ -107,7 +107,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			})
 		}
 
-		updateScoreboard(company, interaction.guild, database, logicLayer);
+		updateScoreboard(interaction.guild, database, logicLayer);
 	});
 };
 
