@@ -12,7 +12,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {[typeof import("../../logic"), string]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
-	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: posterId, state: "open" } }).then(openBounties => {
+	logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id).then(openBounties => {
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
 			components: [

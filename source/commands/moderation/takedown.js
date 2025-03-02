@@ -12,7 +12,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const poster = interaction.options.getUser("poster");
-	const openBounties = await database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } });
+	const openBounties = await logicLayer.bounties.findOpenBounties(poster.id, interaction.guild.id);
 	if (openBounties.length < 1) {
 		interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, flags: [MessageFlags.Ephemeral] });
 		return;

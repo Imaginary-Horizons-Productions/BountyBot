@@ -10,7 +10,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
+	const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 	if (existingBounties.length < 1) {
 		interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", flags: [MessageFlags.Ephemeral] });
 		return;
