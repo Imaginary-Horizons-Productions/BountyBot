@@ -64,7 +64,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
 				const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
 				const { completerXP, posterXP, rewardTexts, goalUpdate } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild);
-				const rankUpdates = await getRankUpdates(collectedInteraction.guild, database);
+				const rankUpdates = await getRankUpdates(collectedInteraction.guild, database, logicLayer);
 
 				if (collectedInteraction.channel.archived) {
 					await collectedInteraction.channel.setArchived(false, "bounty complete");

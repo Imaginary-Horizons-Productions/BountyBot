@@ -91,9 +91,9 @@ async function calculateRanks(season, allHunters, ranks, database) {
  * @param {Sequelize} database
  * @returns an array of rank and placement update strings
  */
-async function getRankUpdates(guild, database) {
+async function getRankUpdates(guild, database, logicLayer) {
 	const [season] = await findOrCreateCurrentSeason(guild.id);
-	const ranks = await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] });
+	const ranks = await logicLayer.ranks.findAllRanks(guild.id, "descending");
 	const allHunters = await database.models.Hunter.findAll({ where: { companyId: guild.id } });
 
 	return calculateRanks(season, allHunters, ranks, database).then(async (firstPlaceMessage) => {

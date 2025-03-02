@@ -15,7 +15,7 @@ module.exports = new Item(itemName, `Gain ${xpValue} XP in the used server (unaf
 				participation.increment({ xp: xpValue });
 			}
 			hunter.addXP(interaction.guild.name, xpValue, true, await logicLayer.companies.findCompanyByPK(interaction.guildId)).then(levelTexts => {
-				getRankUpdates(interaction.guild, database).then(rankUpdates => {
+				getRankUpdates(interaction.guild, database, logicLayer).then(rankUpdates => {
 					hunter.save();
 					let result = `${interaction.member} used an XP Boost and gained ${xpValue} XP.`;
 					const allMessages = rankUpdates.concat(levelTexts);

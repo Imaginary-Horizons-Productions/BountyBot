@@ -51,7 +51,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				endingSeason.save();
 			}
 			await logicLayer.seasons.createSeason(interaction.guildId);
-			const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guild.id }, order: [["varianceThreshold", "DESC"]] });
+			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {
 				const allHunters = await database.models.Hunter.findAll({ where: { companyId: interaction.guildId } });

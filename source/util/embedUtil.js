@@ -52,7 +52,7 @@ async function buildSeasonalScoreboardEmbed(guild, database, logicLayer) {
 	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
 
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
-	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
+	const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const participation of participations) {
@@ -112,7 +112,7 @@ async function buildOverallScoreboardEmbed(guild, database, logicLayer) {
 	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-	const rankmojiArray = (await database.models.Rank.findAll({ where: { companyId: guild.id }, order: [["varianceThreshold", "DESC"]] })).map(rank => rank.rankmoji);
+	const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const hunter of hunters) {

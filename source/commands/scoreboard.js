@@ -17,7 +17,7 @@ module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, fals
 				});
 			})
 		} else {
-			buildOverallScoreboardEmbed(interaction.guild, database).then(embed => {
+			buildOverallScoreboardEmbed(interaction.guild, database, logicLayer).then(embed => {
 				interaction.reply({
 					embeds: [embed],
 					flags: [MessageFlags.Ephemeral]

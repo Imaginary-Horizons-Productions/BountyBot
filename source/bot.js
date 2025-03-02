@@ -227,7 +227,7 @@ client.on(Events.GuildDelete, async guild => {
 	db.models.Participation.destroy({ where: { companyId: guild.id } });
 	logicBlob.seasons.deleteCompanySeasons(guild.id);
 
-	db.models.Rank.destroy({ where: { companyId: guild.id } });
+	logicBlob.ranks.deleteRanks(guild.id);
 	db.models.Company.destroy({ where: { id: guild.id } });
 });
 //#endregion
