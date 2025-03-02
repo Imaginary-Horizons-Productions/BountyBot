@@ -38,7 +38,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 
 	const validatedCompleterIds = [];
 	for (const member of (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values()) {
-		if (runMode !== "prod" || !member.user.bot) {
+		if (runMode !== "production" || !member.user.bot) {
 			const memberId = member.id;
 			const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 			if (!hunter.isBanned) {
