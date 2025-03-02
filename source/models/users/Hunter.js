@@ -1,5 +1,9 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
-const { congratulationBuilder } = require('../../util/textUtil');
+const { congratulationBuilder, listifyEN } = require('../../util/textUtil');
+const { Bounty } = require('../bounties/Bounty');
+const { EmbedBuilder, userMention } = require('discord.js');
+const { randomFooterTip } = require('../../util/embedUtil');
+const { Completion } = require('../bounties/Completion');
 const { Company } = require('../companies/Company');
 
 /** This class stores a user's information related to a specific company */
@@ -10,11 +14,16 @@ class Hunter extends Model {
 		});
 	}
 
+	/**
+	 * @param {number} level
+	 * @param {number} xpCoefficient
+	 */
 	static xpThreshold(level, xpCoefficient) {
 		// xp = xpCoefficient*(level - 1)^2
 		return xpCoefficient * (level - 1) ** 2;
 	}
 
+	/** @param {number} maxSimBounties */
 	maxSlots(maxSimBounties) {
 		let slots = 1 + Math.floor(this.level / 12) * 2;
 		let remainder = this.level % 12;
@@ -64,6 +73,11 @@ class Hunter extends Model {
 		return levelTexts;
 	}
 
+	/**
+	 * @param {number} level
+	 * @param {number} maxSlots
+	 * @param {boolean} futureReward
+	 */
 	levelUpReward(level, maxSlots, futureReward = true) {
 		const texts = [];
 		if (level % 2) {
@@ -78,6 +92,38 @@ class Hunter extends Model {
 			};
 		}
 		return texts;
+	}
+
+	/**
+	* @param {Guild} guild
+	* @param {GuildMember} member
+	* @param {number} dqCount
+	* @param {(Bounty & {Completions: Completion[]})[]} lastFiveBounties
+	*/
+	modStatsEmbed(guild, member, dqCount, lastFiveBounties) {
+		const embed = new EmbedBuilder().setColor(member.displayColor)
+			.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+			.setTitle(`Moderation Stats: ${member.user.tag}`)
+			.setThumbnail(member.user.avatarURL())
+			.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
+			.addFields(
+				{ name: "Bans", value: `Currently Banned: ${this.isBanned ? "Yes" : "No"}\nHas Been Banned: ${this.hasBeenBanned ? "Yes" : "No"}`, inline: true },
+				{ name: "Disqualifications", value: `${dqCount} season DQs`, inline: true },
+				{ name: "Penalties", value: `${this.penaltyCount} penalties (${this.penaltyPointTotal} points total)`, inline: true }
+			)
+			.setFooter(randomFooterTip())
+			.setTimestamp();
+
+		let bountyHistory = "";
+		for (let i = 0; i < lastFiveBounties.length; i++) {
+			const bounty = lastFiveBounties[i];
+			bountyHistory += `__${bounty.title}__${bounty.description !== null ? ` ${bounty.description}` : ""}${listifyEN(bounty.Completions.map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
+		}
+
+		if (bountyHistory === "") {
+			bountyHistory = "No recent bounties";
+		}
+		return embed.addFields({ name: "Last 5 Completed Bounties Created by this User", value: bountyHistory });
 	}
 }
 

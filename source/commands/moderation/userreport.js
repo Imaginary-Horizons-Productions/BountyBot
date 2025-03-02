@@ -1,6 +1,5 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { buildModStatsEmbed } = require("../../util/embedUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -15,9 +14,10 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		interaction.reply({ content: `${member} has not interacted with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
-	buildModStatsEmbed(interaction.guild, member, hunter, database).then(embed => {
-		interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
-	});
+
+	const dqCount = await database.models.Participation.sum("dqCount", { where: { companyId: interaction.guild.id, userId: member.id } }) ?? 0;
+	const lastFiveBounties = await database.models.Bounty.findAll({ where: { userId: member.id, companyId: interaction.guild.id, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: database.models.Bounty.Completions });
+	interaction.reply({ embeds: [hunter.modStatsEmbed(interaction.guild, member, dqCount, lastFiveBounties)], flags: [MessageFlags.Ephemeral] });
 };
 
 module.exports = {

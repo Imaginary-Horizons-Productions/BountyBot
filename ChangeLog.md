@@ -10,6 +10,7 @@ Server Goals are BountyBot objectives everyone on the server contributes to. A g
 - Fixed crashes when toasting, completing bounties, or seconding toasts in threads
 - Added an optional text input for `/evergreen showcase` to allow moderators to add text to the showcase message
 - Fixed `/bounty edit` and `/evergreen edit` not saving modifications
+- Fixed `/moderation user-report` listing XP awarded for recent bounties as "undefined"
 - Fixed Dark Purple Profile Colorizer not dropping
 ## BountyBot Version 2.8.0:
 ### Context Menu Options

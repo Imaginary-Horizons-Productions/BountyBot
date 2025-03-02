@@ -106,7 +106,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 			response.resource.message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 				thread.send({ content: Bounty.generateRewardString(validatedCompleterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), rankUpdates, levelTexts), flags: MessageFlags.SuppressNotifications });
 			})
-			updateScoreboard(company, interaction.guild, database);
+			updateScoreboard(interaction.guild, database, logicLayer);
 		});
 	})
 };

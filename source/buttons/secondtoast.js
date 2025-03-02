@@ -139,7 +139,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					thread.send({ content, flags: MessageFlags.SuppressNotifications });
 				})
 			}
-			updateScoreboard(logicLayer.companies.findCompanyByPK(interaction.guildId), interaction.guild, database);
+			updateScoreboard(interaction.guild, database, logicLayer);
 		})
 
 		if (progressData.goalCompleted) {

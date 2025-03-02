@@ -10,7 +10,7 @@ module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, fals
 	/** View the XP scoreboard */
 	(interaction, database, runMode) => {
 		if (interaction.options.getString("scoreboard-type") === "season") {
-			buildSeasonalScoreboardEmbed(interaction.guild, database).then(embed => {
+			buildSeasonalScoreboardEmbed(interaction.guild, database, logicLayer).then(embed => {
 				interaction.reply({
 					embeds: [embed],
 					flags: [MessageFlags.Ephemeral]
