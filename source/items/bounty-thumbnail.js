@@ -57,7 +57,7 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 				bounty.thumbnailURL = imageURL;
 				await bounty.save().then(async bounty => {
 					bounty.reload();
-					const company = await database.models.Company.findByPk(interaction.guildId);
+					const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 					bounty.updatePosting(interaction.guild, company, database);
 				});
 				return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });

@@ -66,7 +66,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		if (rawToast.isRewarded) {
 			const [hunter] = await findOrCreateBountyHunter(id, company.id);
 			rewardedHunterIds.push(hunter.userId);
-			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, db));
+			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, company));
 			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {
 				participation.increment("xp");
@@ -111,7 +111,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 	db.models.Recipient.bulkCreate(rawRecipients);
 
 	// Add XP and update ranks
-	rewardTexts.push(...await senderHunter.addXP(guild.name, critValue, false, db));
+	rewardTexts.push(...await senderHunter.addXP(guild.name, critValue, false, company));
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId: season.id }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: critValue, toastsRaised: 1 });

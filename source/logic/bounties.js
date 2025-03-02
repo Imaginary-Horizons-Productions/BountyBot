@@ -75,7 +75,7 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	for (const hunter of validatedHunters) {
-		const completerLevelTexts = await hunter.addXP(guild.name, bountyValue, true, db);
+		const completerLevelTexts = await hunter.addXP(guild.name, bountyValue, true, company);
 		if (completerLevelTexts.length > 0) {
 			rewardTexts.push(...completerLevelTexts);
 		}
@@ -100,7 +100,7 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
-	const posterLevelTexts = await poster.addXP(guild.name, posterXP * company.festivalMultiplier, true, db);
+	const posterLevelTexts = await poster.addXP(guild.name, posterXP * company.festivalMultiplier, true, company);
 	if (posterLevelTexts.length > 0) {
 		rewardTexts.push(...posterLevelTexts);
 	}

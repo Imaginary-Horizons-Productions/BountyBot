@@ -44,9 +44,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		});
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 		for (const userId of recipientIds) {
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
-			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, database);
+			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, company);
 			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: 1 } });
 			if (!participationCreated) {
 				participation.increment({ xp: 1 });
@@ -97,7 +98,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			if (critRoll * critRoll * critRoll > 3375000 / lowestEffectiveToastLevel) {
 				wasCrit = true;
 				recipientIds.push(interaction.user.id);
-				const seconderLevelTexts = await seconder.addXP(interaction.guild.name, 1, true, database);
+				const seconderLevelTexts = await seconder.addXP(interaction.guild.name, 1, true, company);
 				if (seconderLevelTexts.length > 0) {
 					rewardTexts = rewardTexts.concat(seconderLevelTexts);
 				}
@@ -138,7 +139,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					thread.send({ content, flags: MessageFlags.SuppressNotifications });
 				})
 			}
-			updateScoreboard(await database.models.Company.findByPk(interaction.guildId), interaction.guild, database);
+			updateScoreboard(logicLayer.companies.findCompanyByPK(interaction.guildId), interaction.guild, database);
 		})
 
 		if (progressData.goalCompleted) {

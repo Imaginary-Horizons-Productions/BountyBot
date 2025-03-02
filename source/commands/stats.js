@@ -30,7 +30,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 						return;
 					}
 
-					const { xpCoefficient } = await database.models.Company.findByPk(interaction.guildId);
+					const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 					const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
@@ -70,7 +70,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					return;
 				}
 
-				const { xpCoefficient, maxSimBounties } = await database.models.Company.findByPk(interaction.guildId);
+				const { xpCoefficient, maxSimBounties } = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);

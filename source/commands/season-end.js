@@ -9,7 +9,7 @@ const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
 	async (interaction, database, runMode) => {
-		const company = await database.models.Company.findByPk(interaction.guildId);
+		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 		if (!company) {
 			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", flags: [MessageFlags.Ephemeral] });
 			return;
