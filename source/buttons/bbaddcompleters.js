@@ -1,8 +1,11 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags, Guild, ThreadChannel } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
+const { Bounty } = require('../models/bounties/Bounty.js');
+const { Company } = require('../models/companies/Company.js');
+const { Hunter } = require('../models/users/Hunter.js');
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
@@ -15,11 +18,12 @@ let logicLayer;
  * @param {string[]} newCompleterIds
  * @param {Completion[]} completers
  * @param {Guild} guild
+ * @param {ThreadChannel} btnPost
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
 	if (!btnPost) return;
 	if (btnPost.archived) {
-		await thread.setArchived(false, "Unarchived to update posting");
+		await btnPost.setArchived(false, "Unarchived to update posting");
 	}
 	btnPost.edit({ name: bounty.title });
 	let numCompleters = newCompleterIds.length;

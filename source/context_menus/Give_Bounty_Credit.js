@@ -1,8 +1,11 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, Guild } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
+const { Bounty } = require('../models/bounties/Bounty.js');
+const { Company } = require('../models/companies/Company.js');
+const { Hunter } = require('../models/users/Hunter.js');
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
