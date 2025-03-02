@@ -1,7 +1,10 @@
-const { CommandInteraction, userMention, bold, MessageFlags } = require("discord.js");
+const { CommandInteraction, userMention, bold, MessageFlags, Guild } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { Completion } = require("../../models/bounties/Completion.js");
+const { Bounty } = require("../../models/bounties/Bounty.js");
+const { Company } = require("../../models/companies/Company.js");
+const { Hunter } = require("../../models/users/Hunter.js");
 
 /**
  * Updates the board posting for the bounty after adding the completers
