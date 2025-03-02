@@ -35,7 +35,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 					return;
 				}
 
-				const { xpCoefficient } = await database.models.Company.findByPk(interaction.guildId);
+				const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });

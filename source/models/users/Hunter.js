@@ -4,6 +4,7 @@ const { Bounty } = require('../bounties/Bounty');
 const { EmbedBuilder, userMention } = require('discord.js');
 const { randomFooterTip } = require('../../util/embedUtil');
 const { Completion } = require('../bounties/Completion');
+const { Company } = require('../companies/Company');
 
 /** This class stores a user's information related to a specific company */
 class Hunter extends Model {
@@ -40,10 +41,9 @@ class Hunter extends Model {
 	 * @param {string} guildName
 	 * @param {number} points
 	 * @param {boolean} ignoreMultiplier
-	 * @param {Sequelize} database
+	 * @param {Company} company
 	 */
-	async addXP(guildName, points, ignoreMultiplier, database) {
-		const company = await database.models.Company.findByPk(this.companyId);
+	async addXP(guildName, points, ignoreMultiplier, company) {
 		const totalPoints = points * (!ignoreMultiplier ? company.festivalMultiplier : 1);
 
 		const previousLevel = this.level;

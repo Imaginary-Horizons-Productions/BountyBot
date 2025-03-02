@@ -29,7 +29,7 @@ module.exports = new Item(itemName, "Showcase one of your bounties and increase 
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-			showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, database);
+			showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, database, logicLayer);
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);

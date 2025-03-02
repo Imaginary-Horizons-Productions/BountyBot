@@ -20,7 +20,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		return;
 	}
 
-	const company = await database.models.Company.findByPk(interaction.guildId);
+	const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
@@ -74,7 +74,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	const finalContributorIds = new Set(validatedCompleterIds);
 	for (const userId of validatedCompleterIds) {
 		const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
-		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, database));
+		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, company));
 		hunter.increment("othersFinished");
 		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
@@ -106,7 +106,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 			response.resource.message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 				thread.send({ content: Bounty.generateRewardString(validatedCompleterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), rankUpdates, levelTexts), flags: MessageFlags.SuppressNotifications });
 			})
-			updateScoreboard(interaction.guild, database);
+			updateScoreboard(interaction.guild, database, logicLayer);
 		});
 	})
 };

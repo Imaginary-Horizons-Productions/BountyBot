@@ -7,6 +7,9 @@ const { commandMention, timeConversion, generateTextBar } = require('../util/tex
 const { Bounty } = require('../models/bounties/Bounty');
 const { Goal } = require('../models/companies/Goal');
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
@@ -93,7 +96,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						console.error(error);
 					}
 				});
-				updateScoreboard(collectedInteraction.guild, database);
+				updateScoreboard(collectedInteraction.guild, database, logicLayer);
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

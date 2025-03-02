@@ -73,7 +73,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 				})
 			} else {
 				const sourceBountyId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
-				const company = await database.models.Company.findByPk(interaction.guildId);
+				const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 
 				const evergreenBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
 				const sourceBounty = evergreenBounties.find(bounty => bounty.id === sourceBountyId);

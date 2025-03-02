@@ -38,7 +38,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
-			showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database);
+			showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database, logicLayer);
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);

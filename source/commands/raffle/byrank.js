@@ -52,7 +52,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
 			collectedInteraction.reply(`The winner of this raffle is: ${winner}`);
-			database.models.Company.findByPk(interaction.guildId).then(company => {
+			logicLayer.companies.findCompanyByPK(interaction.guild.id).then(company => {
 				company.update("nextRaffleString", null);
 			});
 		})
