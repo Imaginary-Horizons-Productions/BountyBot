@@ -1,7 +1,7 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
-class Item {
+class ItemTemplate {
 	/**
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
@@ -23,5 +23,5 @@ class Item {
 }
 
 module.exports = {
-	Item
+	ItemTemplate
 };
