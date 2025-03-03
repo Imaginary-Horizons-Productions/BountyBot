@@ -33,6 +33,13 @@ function findOneSeason(companyId, type) {
 	}
 }
 
+/** *Get the number of participating bounty hunters in the specified Season*
+ * @param {string} seasonId
+ */
+function getParticipantCount(seasonId) {
+	return db.models.Participation.count({ where: { seasonId } });
+}
+
 /** @param {string} companyId */
 function deleteCompanySeasons(companyId) {
 	return db.models.Season.destroy({ where: { companyId } });
@@ -43,5 +50,6 @@ module.exports = {
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
+	getParticipantCount,
 	deleteCompanySeasons
 }

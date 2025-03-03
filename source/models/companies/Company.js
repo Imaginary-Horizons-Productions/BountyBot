@@ -59,14 +59,13 @@ class Company extends Model {
 
 	/**
 	 * @param {Guild} guild
-	 * @param {Sequelize} database
+	 * @param {number} participantCount
 	 * @param {number} currentLevelThreshold
 	 * @param {number} nextLevelThreshold
 	 * @param {Season} currentSeason
 	 * @param {Season} lastSeason
 	 */
-	async statsEmbed(guild, database, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason) {
-		const participantCount = await database.models.Participation.count({ where: { seasonId: currentSeason.id } });
+	async statsEmbed(guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason) {
 		const companyXP = await this.xp;
 		const currentSeasonXP = await currentSeason.totalXP;
 		const lastSeasonXP = await lastSeason?.totalXP ?? 0;
