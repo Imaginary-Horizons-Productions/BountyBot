@@ -14,7 +14,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	await database.models.Company.findByPk(interaction.guildId);
 	const season = await logicLayer.seasons.findOneSeason(interaction.guild.id, "current");
 	if (season) {
-		await database.models.Participation.destroy({ where: { seasonId: season.id } });
+		await logicLayer.seasons.deleteSeasonParticipations(season.id);
 	}
 	updateScoreboard(interaction.guild, database, logicLayer);
 	interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);

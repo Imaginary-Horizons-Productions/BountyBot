@@ -38,10 +38,18 @@ function deleteCompanySeasons(companyId) {
 	return db.models.Season.destroy({ where: { companyId } });
 }
 
+/** *Delete all Participations associated with the specified Season*
+ * @param {string} seasonId
+ */
+function deleteSeasonParticipations(seasonId) {
+	return db.models.Participation.destroy({ where: { seasonId } });
+}
+
 module.exports = {
 	setDB,
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
-	deleteCompanySeasons
+	deleteCompanySeasons,
+	deleteSeasonParticipations
 }
