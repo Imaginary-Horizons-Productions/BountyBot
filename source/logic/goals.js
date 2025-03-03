@@ -12,6 +12,13 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Finds the most recent ongoing Goal for the specified Company*
+ * @param {string} companyId
+ */
+function findCurrentServerGoal(companyId) {
+	return db.models.Goal.findOne({ where: { companyId }, state: "ongoing", order: [["createdAt", "DESC"]] });
+}
+
 /** *Queries for a Company's most recent Goal and the GP contributed to it*
  * @param {string} companyId
  */
@@ -41,7 +48,7 @@ async function progressGoal(companyId, progressType, userId) {
 		goalCompleted: false,
 		contributorIds: []
 	};
-	const goal = await db.models.Goal.findOne({ where: { companyId, state: "ongoing" } });
+	const goal = await db.models.Goal.findOne({ where: { companyId, state: "ongoing" }, order: [["createdAt", "DESC"]] });
 	if (goal) {
 		returnData.gpContributed = GOAL_POINT_MAP[progressType];
 		if (goal.type === progressType) {
@@ -68,6 +75,7 @@ async function progressGoal(companyId, progressType, userId) {
 
 module.exports = {
 	setDB,
+	findCurrentServerGoal,
 	findLatestGoalProgress,
 	progressGoal
 };

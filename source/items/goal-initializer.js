@@ -8,8 +8,8 @@ const itemName = "Goal Initializer";
 module.exports = new Item(itemName, "Begin a Server Goal if there isn't already one running", 3000,
 	async (interaction, database) => {
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		const existingGoals = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: "ongoing" } });
-		if (existingGoals.length > 0) {
+		const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guildId);
+		if (!!goal) {
 			interaction.reply({ content: "This server already has a Server Goal running.", flags: [MessageFlags.Ephemeral] });
 			return true;
 		}
