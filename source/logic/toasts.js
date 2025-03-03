@@ -17,10 +17,11 @@ function setDB(database) {
  * @param {GuildMember} sender
  * @param {Hunter} senderHunter
  * @param {string[]} toasteeIds
+ * @param {string} seasonId
  * @param {string} toastText
  * @param {string | null} imageURL
  */
-async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toastText, imageURL = null) {
+async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seasonId, toastText, imageURL = null) {
 	// Make database entities
 	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } }, include: db.models.Toast.Recipients });
 	let rewardsAvailable = 10;
@@ -63,7 +64,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 			const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: id, companyId: company.id } });
 			rewardedHunterIds.push(hunter.userId);
 			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, company));
-			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId: season.id }, defaults: { xp: 1 } });
+			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId }, defaults: { xp: 1 } });
 			if (!participationCreated) {
 				participation.increment("xp");
 			}
@@ -108,7 +109,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 
 	// Add XP and update ranks
 	rewardTexts.push(...await senderHunter.addXP(guild.name, critValue, false, company));
-	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId: season.id }, defaults: { xp: critValue, toastsRaised: 1 } });
+	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: critValue, toastsRaised: 1 });
 	}
