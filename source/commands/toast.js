@@ -63,14 +63,16 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, toastText, imageURL);
+		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
+
+		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, season.id, toastText, imageURL);
 		const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, nonBotToasteeIds, interaction.member)];
 		if (imageURL) {
 			embeds[0].setImage(imageURL);
 		}
 
 		if (rewardedHunterIds.length > 0) {
-			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", interaction.user.id);
+			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", sender, season);
 			if (goalUpdate.gpContributed > 0) {
 				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				if (goalUpdate.goalCompleted) {

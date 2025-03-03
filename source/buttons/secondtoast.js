@@ -34,7 +34,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
-		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", interaction.user.id);
+		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", seconder, season);
 		const rewardTexts = [`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`];
 
 		const recipientIds = [];
@@ -43,7 +44,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 		for (const userId of recipientIds) {
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
