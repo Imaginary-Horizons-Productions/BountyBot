@@ -31,7 +31,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		} else {
 			const toasteeMembers = (await interaction.guild.members.fetch({ user: toasteeIds })).values();
 			for (const member of toasteeMembers) {
-				if (runMode !== "prod" || !member.user.bot) {
+				if (runMode !== "production" || !member.user.bot) {
 					nonBotToasteeIds.push(member.id);
 				}
 			}

@@ -62,7 +62,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const bannedIds = [];
 				for (const member of collectedInteraction.members.values().filter(member => !existingCompleterIds.includes(member.id))) {
 					const memberId = member.id;
-					if (memberId === interaction.user.id || (runMode === "prod" && member.user.bot)) continue;
+					if (memberId === interaction.user.id || (runMode === "production" && member.user.bot)) continue;
 					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, collectedInteraction.guild.id);
 					if (hunter.isBanned) {
 						bannedIds.push(memberId);
