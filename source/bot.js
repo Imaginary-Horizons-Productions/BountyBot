@@ -221,7 +221,7 @@ client.on(Events.GuildDelete, async guild => {
 		})
 	});
 
-	db.models.Bounty.destroy({ where: { companyId: guild.id } });
+	logicBlob.bounties.deleteCompanyBounties(guild.id);
 	db.models.Completion.destroy({ where: { companyId: guild.id } });
 
 	db.models.Participation.destroy({ where: { companyId: guild.id } });
