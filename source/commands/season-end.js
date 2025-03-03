@@ -54,7 +54,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {
-				const allHunters = await database.models.Hunter.findAll({ where: { companyId: interaction.guildId } });
+				const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
 				interaction.guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {
 						if (member.manageable) {
