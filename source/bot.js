@@ -136,7 +136,7 @@ sequelize.authenticate().then(async () => {
 		}
 	});
 
-	client.on(Events.InteractionCreate, async interaction => {
+	client.on(Events.InteractionCreate, interaction => {
 		if (interaction.isAutocomplete()) {
 			const command = getCommand(interaction.commandName);
 			const focusedOption = interaction.options.getFocused(true);
@@ -214,7 +214,7 @@ sequelize.authenticate().then(async () => {
 		})
 	});
 
-	client.on(Events.MessageDelete, async message => {
+	client.on(Events.MessageDelete, message => {
 		logicBlob.companies.findCompanyByPK(message.guild.id).then(company => {
 			if (message.id === company.scoreboardMessageId) {
 				company.scoreboardMessageId = null;
@@ -223,7 +223,7 @@ sequelize.authenticate().then(async () => {
 		})
 	});
 
-	client.on(Events.ThreadDelete, async thread => {
+	client.on(Events.ThreadDelete, thread => {
 		logicBlob.companies.findCompanyByPK(thread.guild.id).then(company => {
 			if (thread.id === company.evergreenThreadId) {
 				company.evergreenThreadId = null;
@@ -232,7 +232,7 @@ sequelize.authenticate().then(async () => {
 		})
 	})
 
-	client.on(Events.GuildDelete, async guild => {
+	client.on(Events.GuildDelete, guild => {
 		sequelize.models.Hunter.destroy({ where: { companyId: guild.id } });
 		sequelize.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
 			toasts.forEach(toast => {
