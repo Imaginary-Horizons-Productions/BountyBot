@@ -33,6 +33,20 @@ function findOneSeason(companyId, type) {
 	}
 }
 
+/** *Change the specified Hunter's Seasonal XP*
+ * @param {string} userId
+ * @param {string} companyId
+ * @param {string} seasonId
+ * @param {number} xp negative numbers allowed
+ */
+function changeSeasonXP(userId, companyId, seasonId, xp) {
+	db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } }).then(([participation, participationCreated]) => {
+		if (!participationCreated) {
+			participation.increment({ xp });
+		}
+	});
+}
+
 /** @param {string} companyId */
 function deleteCompanySeasons(companyId) {
 	return db.models.Season.destroy({ where: { companyId } });
@@ -43,5 +57,6 @@ module.exports = {
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
+	changeSeasonXP,
 	deleteCompanySeasons
 }

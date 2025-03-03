@@ -76,10 +76,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, company));
 		hunter.increment("othersFinished");
-		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });
-		if (!participationCreated) {
-			participation.increment({ xp: bountyValue });
-		}
+		logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, bountyValue);
 		const { gpContributed, goalCompleted, contributorIds } = await logicLayer.goals.progressGoal(interaction.guildId, "bounties", userId);
 		totalGP += gpContributed;
 		wasGoalCompleted ||= goalCompleted;
