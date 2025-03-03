@@ -3,8 +3,6 @@ const { Sequelize, Op } = require("sequelize");
 const { timeConversion } = require("../util/textUtil");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
-const { findOrCreateBountyHunter } = require("./hunters");
-const { findOrCreateCurrentSeason } = require("./seasons");
 
 /** @type {Sequelize} */
 let db;
@@ -52,9 +50,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
 	}, []);
 
-	const [season] = await findOrCreateCurrentSeason(guild.id);
-	season.increment("toastsRaised");
-
 	const rewardTexts = [];
 	senderHunter.increment("toastsRaised");
 	const toast = await db.models.Toast.create({ companyId: guild.id, senderId: sender.id, text: toastText, imageURL });
@@ -64,7 +59,8 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 	for (const id of toasteeIds) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
-			const [hunter] = await findOrCreateBountyHunter(id, company.id);
+			await db.models.User.findOrCreate({ where: { id } });
+			const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: id, companyId: company.id } });
 			rewardedHunterIds.push(hunter.userId);
 			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, company));
 			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId: season.id }, defaults: { xp: 1 } });
