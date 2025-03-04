@@ -15,7 +15,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		interaction.reply({ content: `There isn't an open Server Goal to penalize. You can use ${commandMention("moderation revoke-goal-bonus")} to revoke Goal Completion Item Find Bonus for bounty hunters.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
-	await database.models.Contribution.create({ goalId: goal.id, userId: interaction.user.id, value: -1 * penaltyValue });
+	await logicLayer.goals.createGoalContribution(goal.id, interaction.user.id, -1 * penaltyValue);
 	interaction.reply({ content: `The Server Goal's GP has been reduced by ${penaltyValue} GP.` });
 };
 
