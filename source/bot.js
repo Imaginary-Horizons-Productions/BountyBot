@@ -212,7 +212,7 @@ client.on(Events.ThreadDelete, async thread => {
 
 client.on(Events.GuildDelete, async guild => {
 	const db = await sequelize;
-	db.models.Hunter.destroy({ where: { companyId: guild.id } });
+	logicBlob.hunters.deleteCompanyHunters(guild.id);
 	db.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
 		toasts.forEach(toast => {
 			db.models.Recipient.destroy({ where: { toastId: toast.id } });
