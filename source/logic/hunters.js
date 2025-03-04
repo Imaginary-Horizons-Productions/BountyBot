@@ -50,10 +50,18 @@ function setHunterProfileColor(userId, companyId, color) {
 	return db.models.Hunter.update({ profileColor: color }, { where: { userId, companyId } });
 }
 
+/** *Destroys all of the specified Company's Hunters*
+ * @param {string} companyId
+ */
+function deleteCompanyHunters(companyId) {
+	return db.models.Hunter.destroy({ where: { companyId } });
+}
+
 module.exports = {
 	setDB,
 	findOrCreateBountyHunter,
 	findOneHunter,
 	findCompanyHunters,
-	setHunterProfileColor
+	setHunterProfileColor,
+	deleteCompanyHunters
 }

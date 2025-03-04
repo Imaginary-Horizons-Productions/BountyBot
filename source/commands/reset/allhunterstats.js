@@ -9,7 +9,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });
+	logicLayer.hunters.deleteCompanyHunters(interaction.guild.id);
 	interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
 	await database.models.Company.findByPk(interaction.guildId);
 	const season = await logicLayer.seasons.findOneSeason(interaction.guild.id, "current");
