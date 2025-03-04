@@ -34,6 +34,13 @@ function findOneHunter(userId, companyId) {
 	return db.models.Hunter.findOne({ where: { userId, companyId } });
 }
 
+/** *Find all Hunters in the specified Company*
+ * @param {string} companyId
+ */
+function findCompanyHunters(companyId) {
+	return db.models.Hunter.findAll({ where: { companyId } });
+}
+
 /** *Sets a Hunter's Profile Color*
  * @param {string} userId
  * @param {string} companyId
@@ -54,6 +61,7 @@ module.exports = {
 	setDB,
 	findOrCreateBountyHunter,
 	findOneHunter,
+	findCompanyHunters,
 	setHunterProfileColor,
 	deleteCompanyHunters
 }
