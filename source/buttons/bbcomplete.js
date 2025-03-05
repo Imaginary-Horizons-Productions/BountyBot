@@ -31,7 +31,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			const validatedHunterIds = [];
 			const validatedHunters = [];
 			for (const member of completerMembers) {
-				if (runMode !== "prod" || !member.user.bot) {
+				if (runMode !== "production" || !member.user.bot) {
 					const memberId = member.id;
 					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 					if (!hunter.isBanned) {
@@ -47,7 +47,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 
 			// disallow completion within 5 minutes of creating bounty
-			if (runMode === "prod" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
+			if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
 				interaction.editReply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.` });
 				return;
 			}

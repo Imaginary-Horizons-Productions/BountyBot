@@ -60,7 +60,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 	const bannedIds = [];
 	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
-		if (runMode === "prod" && member.user.bot) continue;
+		if (runMode === "production" && member.user.bot) continue;
 		const memberId = member.id;
 		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 		if (hunter.isBanned) {
