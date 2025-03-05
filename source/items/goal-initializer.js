@@ -1,11 +1,11 @@
 const { MessageFlags } = require("discord.js");
-const { Item } = require("../classes");
+const { ItemTemplate } = require("../classes");
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
 
 const itemName = "Goal Initializer";
-module.exports = new Item(itemName, "Begin a Server Goal if there isn't already one running", 3000,
+module.exports = new ItemTemplate(itemName, "Begin a Server Goal if there isn't already one running", 3000,
 	async (interaction, database) => {
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const existingGoals = await database.models.Goal.findAll({ where: { companyId: interaction.guildId, state: "ongoing" } });
