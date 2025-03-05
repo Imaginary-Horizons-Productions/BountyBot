@@ -33,6 +33,15 @@ function findOneSeason(companyId, type) {
 	}
 }
 
+/**
+ * @param {string} companyId
+ * @param {string} stat
+ */
+async function incrementSeasonStat(guildId, stat) {
+	const [season] = await findOrCreateCurrentSeason(guildId);
+	return season.increment(stat);
+}
+
 /** @param {string} companyId */
 function deleteCompanySeasons(companyId) {
 	return db.models.Season.destroy({ where: { companyId } });
@@ -50,6 +59,7 @@ module.exports = {
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
+	incrementSeasonStat,
 	deleteCompanySeasons,
 	deleteCompanyParticipations
 }
