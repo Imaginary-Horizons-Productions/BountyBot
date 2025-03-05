@@ -24,6 +24,27 @@ function findCompanyByPK(companyId) {
 	return db.models.Company.findByPk(companyId);
 }
 
+/** *Reset the specified Company's settings to the defaults*
+ * @param {string} id
+ */
+function resetCompanySettings(id) {
+	database.models.Company.update(
+		{
+			announcementPrefix: "@here",
+			maxSimBounties: 5,
+			backupTimer: 3600000,
+			festivalMultiplier: 1,
+			xpCoefficient: 3,
+			toastThumbnailURL: null,
+			openBountyThumbnailURL: null,
+			completedBountyThumbnailURL: null,
+			scoreboardThumbnailURL: null,
+			serverBonusesThumbnailURL: null
+		},
+		{ where: { id } }
+	);
+}
+
 /** *Sets the deletedAt of the selected Company (Companies are paranoid)*
  * @param {string} companyId
  */
@@ -35,5 +56,6 @@ module.exports = {
 	setDB,
 	findOrCreateCompany,
 	findCompanyByPK,
+	resetCompanySettings,
 	deleteCompany
 }

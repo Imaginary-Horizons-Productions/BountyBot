@@ -1,6 +1,6 @@
 const { Sequelize, Op } = require("sequelize");
-const { findOrCreateBountyHunter } = require("./hunters");
-const { findOrCreateCurrentSeason } = require("./seasons");
+const { Hunter } = require("../models/users/Hunter");
+const { Season } = require("../models/seasons/Season");
 
 /** @type {Sequelize} */
 let db;
@@ -42,9 +42,10 @@ const GOAL_POINT_MAP = {
 /**
  * @param {string} companyId
  * @param {"bounties" | "toasts" | "secondings"} progressType
- * @param {string} userId
+ * @param {Hunter} hunter
+ * @param {Season} season
  */
-async function progressGoal(companyId, progressType, userId) {
+async function progressGoal(companyId, progressType, hunter, season) {
 	const returnData = {
 		gpContributed: 0,
 		goalCompleted: false,
@@ -57,10 +58,8 @@ async function progressGoal(companyId, progressType, userId) {
 			returnData.gpContributed *= 2;
 		}
 		await createGoalContribution(goal.id, userId, returnData.gpContributed);
-		const [hunter] = await findOrCreateBountyHunter(userId, companyId);
 		hunter.increment("goalContributions");
-		const [season] = await findOrCreateCurrentSeason(companyId);
-		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId, seasonId: season.id } });
+		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId: hunter.userId, seasonId: season.id } });
 		participation.increment("goalContributions");
 		const contributions = await db.models.Contribution.findAll({ where: { goalId: goal.id } });
 		returnData.goalCompleted = goal.requiredGP <= contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
@@ -69,7 +68,7 @@ async function progressGoal(companyId, progressType, userId) {
 			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: returnData.contributorIds } } });
 			goal.update({ state: "completed" });
 		} else {
-			returnData.contributorIds.push(userId);
+			returnData.contributorIds.push(hunter.userId);
 		}
 	}
 	return returnData;

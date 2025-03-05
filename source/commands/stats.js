@@ -22,7 +22,8 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 				const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
-				company.statsEmbed(interaction.guild, database, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+				const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
+				company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
 					interaction.reply({
 						embeds: [embed],
 						flags: [MessageFlags.Ephemeral]

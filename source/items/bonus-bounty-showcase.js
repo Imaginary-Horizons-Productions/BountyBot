@@ -1,5 +1,5 @@
 const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
-const { Item } = require("../classes");
+const { ItemTemplate } = require("../classes");
 const { timeConversion, commandMention } = require("../util/textUtil");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../constants");
@@ -9,7 +9,7 @@ const { showcaseBounty } = require("../util/bountyUtil");
 let logicLayer;
 
 const itemName = "Bonus Bounty Showcase";
-module.exports = new Item(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
+module.exports = new ItemTemplate(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
 	async (interaction, database) => {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
