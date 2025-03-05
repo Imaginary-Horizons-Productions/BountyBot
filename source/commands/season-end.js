@@ -63,7 +63,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 					}
 				})
 			}
-			await database.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId: company.id } });
+			await logicLayer.hunters.resetCompanyRanks(company.id);
 			updateScoreboard(interaction.guild, database, logicLayer);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
