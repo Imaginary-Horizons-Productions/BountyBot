@@ -11,7 +11,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
+	const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 	interaction.reply({
 		content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,
 		components: [
@@ -26,14 +26,13 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		withResponse: true
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
-		const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+		const [bounty] = openBounties.splice(openBounties.findIndex(bounty => bounty.id === bountyId), 1);
 		bounty.state = "deleted";
 		bounty.save();
 		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-		const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
-		if (evergreenBounties.length > 0) {
-			const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, [])));
+		if (openBounties.length > 0) {
+			const embeds = await Promise.all(openBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, [])));
 			if (company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {

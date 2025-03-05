@@ -15,7 +15,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId, hunter]) {
 	const [{ maxSimBounties }] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-	const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
+	const existingBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guildId);
 	const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 	const bountySlots = hunter.maxSlots(maxSimBounties);
 	const slotOptions = [];

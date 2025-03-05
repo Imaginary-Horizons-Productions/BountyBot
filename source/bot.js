@@ -243,7 +243,7 @@ dAPIClient.on(Events.ThreadDelete, async thread => {
 
 dAPIClient.on(Events.GuildDelete, async guild => {
 	await dbReady;
-	dbConnection.models.Hunter.destroy({ where: { companyId: guild.id } });
+	logicBlob.hunters.deleteCompanyHunters(guild.id);
 	dbConnection.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
 		toasts.forEach(toast => {
 			dbConnection.models.Recipient.destroy({ where: { toastId: toast.id } });
@@ -252,13 +252,13 @@ dAPIClient.on(Events.GuildDelete, async guild => {
 		})
 	});
 
-	dbConnection.models.Bounty.destroy({ where: { companyId: guild.id } });
+	logicBlob.bounties.deleteCompanyBounties(guild.id);
 	dbConnection.models.Completion.destroy({ where: { companyId: guild.id } });
 
-	dbConnection.models.Participation.destroy({ where: { companyId: guild.id } });
+	logicBlob.seasons.deleteCompanyParticipations(guild.id);
 	logicBlob.seasons.deleteCompanySeasons(guild.id);
 
 	logicBlob.ranks.deleteRanks(guild.id);
-	dbConnection.models.Company.destroy({ where: { id: guild.id } });
+	logicBlob.companies.deleteCompany(guild.id);
 });
 //#endregion

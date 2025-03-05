@@ -21,7 +21,8 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 		const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
 		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 		const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
-		company.statsEmbed(interaction.guild, database, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
+		const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
+		company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
 			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
@@ -54,7 +55,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {
-				const allHunters = await database.models.Hunter.findAll({ where: { companyId: interaction.guildId } });
+				const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
 				interaction.guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {
 						if (member.manageable) {
@@ -63,7 +64,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 					}
 				})
 			}
-			await database.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId: company.id } });
+			await logicLayer.hunters.resetCompanyRanks(company.id);
 			updateScoreboard(interaction.guild, database, logicLayer);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {

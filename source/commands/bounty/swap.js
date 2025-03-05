@@ -12,7 +12,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {[typeof import("../../logic"), string]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
-	database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
+	logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id).then(openBounties => {
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 			return;
@@ -41,7 +41,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 							return;
 						}
 
-						const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" } });
+						const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
 						const previousBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 						const slotOptions = [];
 						for (let i = 1; i <= hunter.maxSlots(company.maxSimBounties); i++) {

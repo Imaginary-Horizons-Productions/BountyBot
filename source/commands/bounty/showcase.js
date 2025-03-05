@@ -19,7 +19,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			return;
 		}
 
-		const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
+		const existingBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guildId);
 		if (existingBounties.length < 1) {
 			interaction.reply({ content: "You doesn't have any open bounties posted.", flags: [MessageFlags.Ephemeral] });
 			return;

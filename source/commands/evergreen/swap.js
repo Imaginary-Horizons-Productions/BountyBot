@@ -12,7 +12,7 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
+	const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 	if (existingBounties.length < 2) {
 		interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -35,7 +35,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		collector.on("collect", async (collectedInteraction) => {
 			if (collectedInteraction.customId.endsWith("evergreen")) {
 				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
-					const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
+					await Promise.all(existingBounties.map(bounty => bounty.reload()));
 					const previousBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 					const previousBountySlot = previousBounty.slotNumber;
 					const slotOptions = [];
@@ -75,10 +75,9 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 				const sourceBountyId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
 				const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 
-				const evergreenBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
-				const sourceBounty = evergreenBounties.find(bounty => bounty.id === sourceBountyId);
+				const sourceBounty = existingBounties.find(bounty => bounty.id === sourceBountyId);
 				const sourceSlot = sourceBounty.slotNumber;
-				const destinationBounty = evergreenBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
+				const destinationBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 				const destinationSlot = destinationBounty.slotNumber;
 				sourceBounty.slotNumber = destinationSlot;
 				await sourceBounty.save();
@@ -91,8 +90,8 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 						bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
 							return thread.fetchStarterMessage();
 						}).then(async message => {
-							evergreenBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
-							message.edit({ embeds: await Promise.all(evergreenBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, []))) });
+							existingBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
+							message.edit({ embeds: await Promise.all(existingBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, []))) });
 						});
 					})
 				}

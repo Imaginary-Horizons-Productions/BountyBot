@@ -21,7 +21,6 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	}
 
 	const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
-	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 	if (mentionedIds.length < 1) {
@@ -52,7 +51,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		return;
 	}
 
-	season.increment("bountiesCompleted");
+	const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "bountiesCompleted");
 
 	const rawCompletions = [];
 	// Evergreen bounties are not eligible for showcase bonuses
@@ -80,7 +79,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
-		const { gpContributed, goalCompleted, contributorIds } = await logicLayer.goals.progressGoal(interaction.guildId, "bounties", userId);
+		const { gpContributed, goalCompleted, contributorIds } = await logicLayer.goals.progressGoal(interaction.guildId, "bounties", hunter, season);
 		totalGP += gpContributed;
 		wasGoalCompleted ||= goalCompleted;
 		contributorIds.forEach(id => finalContributorIds.add(id));
