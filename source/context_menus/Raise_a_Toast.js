@@ -55,11 +55,13 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
+			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
+
+			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], season.id, toastText);
 			const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, [interaction.targetId], modalSubmission.member)];
 
 			if (rewardedHunterIds.length > 0) {
-				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", modalSubmission.user.id);
+				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", sender, season);
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 					if (goalUpdate.goalCompleted) {
