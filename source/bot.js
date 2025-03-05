@@ -212,7 +212,7 @@ client.on(Events.ThreadDelete, async thread => {
 
 client.on(Events.GuildDelete, async guild => {
 	const db = await sequelize;
-	db.models.Hunter.destroy({ where: { companyId: guild.id } });
+	logicBlob.hunters.deleteCompanyHunters(guild.id);
 	db.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
 		toasts.forEach(toast => {
 			db.models.Recipient.destroy({ where: { toastId: toast.id } });
@@ -221,13 +221,13 @@ client.on(Events.GuildDelete, async guild => {
 		})
 	});
 
-	db.models.Bounty.destroy({ where: { companyId: guild.id } });
+	logicBlob.bounties.deleteCompanyBounties(guild.id);
 	db.models.Completion.destroy({ where: { companyId: guild.id } });
 
-	db.models.Participation.destroy({ where: { companyId: guild.id } });
+	logicBlob.seasons.deleteCompanyParticipations(guild.id);
 	logicBlob.seasons.deleteCompanySeasons(guild.id);
 
 	logicBlob.ranks.deleteRanks(guild.id);
-	db.models.Company.destroy({ where: { id: guild.id } });
+	logicBlob.companies.deleteCompany(guild.id);
 });
 //#endregion

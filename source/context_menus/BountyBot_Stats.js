@@ -11,7 +11,6 @@ let logicLayer;
 
 const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
-	/** Specs */
 	async (interaction, database, runMode) => {
 		const target = interaction.targetMember;
 		if (target.id == interaction.client.user.id) {
@@ -19,9 +18,11 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 			const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
 			const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
-			const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
-			const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
-			company.statsEmbed(interaction.guild, database, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+			const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+			const lastSeason = await logicLayer.seasons.findOneSeason(interaction.guild.id, "previous");
+			const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
+			company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+
 				interaction.reply({
 					embeds: [embed],
 					flags: [MessageFlags.Ephemeral]
