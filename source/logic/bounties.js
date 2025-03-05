@@ -135,10 +135,18 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	};
 }
 
+/** *Delete all Bounties associated with the given Company*
+ * @param {string} companyId
+ */
+function deleteCompanyBounties(companyId) {
+	return db.models.Bounty.destroy({ where: { companyId } });
+}
+
 module.exports = {
 	setDB,
 	findOpenBounties,
 	findEvergreenBounties,
 	addCompleters,
-	completeBounty
+	completeBounty,
+	deleteCompanyBounties
 }
