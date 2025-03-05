@@ -46,7 +46,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 				if (!participationCreated) {
 					participation.decrement("xp");
 				}
-				getRankUpdates(interaction.guild, database, logicLayer);
+				getRankUpdates(interaction.guild, logicLayer);
 			})
 
 			collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });

@@ -23,7 +23,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	if (!participationCreated) {
 		participation.decrement("xp", { by: penaltyValue });
 	}
-	getRankUpdates(interaction.guild, database, logicLayer);
+	getRankUpdates(interaction.guild, logicLayer);
 	interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, flags: [MessageFlags.Ephemeral] });
 	if (!member.bot) {
 		member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);

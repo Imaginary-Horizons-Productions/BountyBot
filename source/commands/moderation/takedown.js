@@ -52,7 +52,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 				if (!participationCreated) {
 					participation.decrement("xp");
 				}
-				getRankUpdates(interaction.guild, database, logicLayer);
+				getRankUpdates(interaction.guild, logicLayer);
 			})
 			collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
 		});

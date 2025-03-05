@@ -67,7 +67,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	if (goalUpdate.gpContributed > 0) {
 		rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 	}
-	const rankUpdates = await getRankUpdates(interaction.guild, database, logicLayer);
+	const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
 	const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 	const content = Bounty.generateRewardString(validatedCompleterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 

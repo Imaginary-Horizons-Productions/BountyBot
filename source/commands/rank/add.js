@@ -41,7 +41,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(() => {
 		logicLayer.ranks.createCustomRank(rawRank);
 	})
-	getRankUpdates(interaction.guild, database, logicLayer);
+	getRankUpdates(interaction.guild, logicLayer);
 	interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
 };
 

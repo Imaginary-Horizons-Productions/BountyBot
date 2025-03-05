@@ -94,7 +94,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}).then(async response => {
 			let content = "";
 			if (rewardedHunterIds.length > 0) {
-				const rankUpdates = await getRankUpdates(interaction.guild, database, logicLayer);
+				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
 				content = Toast.generateRewardString(rewardedHunterIds, rankUpdates, rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
 			}
 
