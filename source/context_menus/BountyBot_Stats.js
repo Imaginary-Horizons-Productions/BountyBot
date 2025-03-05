@@ -11,7 +11,6 @@ let logicLayer;
 
 const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
-	/** Specs */
 	async (interaction, database, runMode) => {
 		const target = interaction.targetMember;
 		if (target.id == interaction.client.user.id) {
@@ -23,6 +22,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 			const lastSeason = await logicLayer.seasons.findOneSeason(interaction.guild.id, "previous");
 			const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
 			company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+
 				interaction.reply({
 					embeds: [embed],
 					flags: [MessageFlags.Ephemeral]

@@ -1,10 +1,10 @@
 const { BuildError } = require("./BuildError");
 const { ButtonWrapper, CommandWrapper, SelectWrapper, ContextMenuWrapper, UserContextMenuWrapper, MessageContextMenuWrapper } = require("./InteractionWrapper");
-const { Item } = require("./Item");
+const { ItemTemplate } = require("./ItemTemplate");
 
 module.exports = {
 	BuildError,
-	Item,
+	ItemTemplate,
 	ButtonWrapper,
 	CommandWrapper,
 	SelectWrapper,

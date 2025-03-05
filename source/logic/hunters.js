@@ -34,6 +34,13 @@ function findOneHunter(userId, companyId) {
 	return db.models.Hunter.findOne({ where: { userId, companyId } });
 }
 
+/** *Find all Hunters in the specified Company*
+ * @param {string} companyId
+ */
+function findCompanyHunters(companyId) {
+	return db.models.Hunter.findAll({ where: { companyId } });
+}
+
 /** *Sets a Hunter's Profile Color*
  * @param {string} userId
  * @param {string} companyId
@@ -43,9 +50,26 @@ function setHunterProfileColor(userId, companyId, color) {
 	return db.models.Hunter.update({ profileColor: color }, { where: { userId, companyId } });
 }
 
+/** *Resets the ranks on all Hunters in the specified Company*
+ * @param {string} companyId
+ */
+function resetCompanyRanks(companyId) {
+	return db.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId } });
+}
+
+/** *Destroys all of the specified Company's Hunters*
+ * @param {string} companyId
+ */
+function deleteCompanyHunters(companyId) {
+	return db.models.Hunter.destroy({ where: { companyId } });
+}
+
 module.exports = {
 	setDB,
 	findOrCreateBountyHunter,
 	findOneHunter,
-	setHunterProfileColor
+	findCompanyHunters,
+	setHunterProfileColor,
+	resetCompanyRanks,
+	deleteCompanyHunters
 }

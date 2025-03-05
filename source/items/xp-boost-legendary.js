@@ -1,4 +1,4 @@
-const { Item } = require("../classes");
+const { ItemTemplate } = require("../classes");
 const { getRankUpdates } = require("../util/scoreUtil");
 
 /** @type {typeof import("../logic")} */
@@ -6,7 +6,7 @@ let logicLayer;
 
 const itemName = "Legendary XP Boost";
 const xpValue = 75;
-module.exports = new Item(itemName, `Gain ${xpValue} XP in the used server (unaffected by festivals)`, 60000,
+module.exports = new ItemTemplate(itemName, `Gain ${xpValue} XP in the used server (unaffected by festivals)`, 60000,
 	async (interaction, database) => {
 		logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);

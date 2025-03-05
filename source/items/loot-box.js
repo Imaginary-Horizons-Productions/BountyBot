@@ -1,5 +1,5 @@
 const { MessageFlags } = require("discord.js");
-const { Item } = require("../classes");
+const { ItemTemplate } = require("../classes");
 const { rollItemDrop } = require("../util/itemUtil");
 const { commandMention } = require("../util/textUtil");
 
@@ -7,7 +7,7 @@ const { commandMention } = require("../util/textUtil");
 let logicLayer;
 
 const itemName = "Loot Box";
-module.exports = new Item(itemName, "Unboxes into 2 random items!", 3000,
+module.exports = new ItemTemplate(itemName, "Unboxes into 2 random items!", 3000,
 	async (interaction, database) => {
 		const rolledItems = [rollItemDrop(1), rollItemDrop(1)];
 		for (const droppedItem of rolledItems) {
