@@ -47,7 +47,14 @@ function deleteCompanySeasons(companyId) {
 	return db.models.Season.destroy({ where: { companyId } });
 }
 
-/** *Deletes all Participations of the specified Company*
+/** *Delete all Participations associated with the specified Season*
+ * @param {string} seasonId
+ */
+function deleteSeasonParticipations(seasonId) {
+	return db.models.Participation.destroy({ where: { seasonId } });
+}
+
+ /** *Deletes all Participations of the specified Company*
  * @param {string} companyId
  */
 function deleteCompanyParticipations(companyId) {
@@ -61,5 +68,6 @@ module.exports = {
 	findOneSeason,
 	incrementSeasonStat,
 	deleteCompanySeasons,
+	deleteSeasonParticipations,
 	deleteCompanyParticipations
 }
