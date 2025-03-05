@@ -11,6 +11,7 @@ console.error = function () {
 }
 
 //#region Imports
+const { Sequelize } = require('sequelize');
 const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
 const { readFile, writeFile } = require("fs").promises;
 
@@ -23,11 +24,14 @@ const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPoste
 const { buildVersionEmbed } = require("./util/embedUtil.js");
 const { commandMention } = require("./util/textUtil.js");
 const logicBlob = require("./logic");
-const { sequelize } = require("./models/index.js");
+
+const runMode = process.argv[4] || 'development';
 //#endregion
 
-//#region Executing Code
-const client = new Client({
+//#region Shard Instances
+const dbConnection = new Sequelize(require(__dirname + '/../config/config.json')[runMode]);
+
+const dAPIClient = new Client({
 	retryLimit: 5,
 	presence: {
 		activities: [{
@@ -39,11 +43,12 @@ const client = new Client({
 });
 /** @type {Map<string, Map<string, number>>} */
 const interactionCooldowns = new Map();
+//#endregion
 
-const runMode = process.argv[4];
-sequelize.then(db => {
-	for (logicFile in logicBlob) { // Set the database for the logic files that store it
-		logicBlob[logicFile].setDB?.(db);
+//#region Authentication
+const dbReady = dbConnection.authenticate().then(() => {
+	for (const interface in logicBlob) { // Set the database for the logic files that store it
+		logicBlob[interface].setDB?.(dbConnection);
 	}
 	setCommandLogic(logicBlob);
 	setButtonLogic(logicBlob);
@@ -52,18 +57,18 @@ sequelize.then(db => {
 	setItemLogic(logicBlob);
 })
 
-client.login(require(authPath).token)
+dAPIClient.login(require(authPath).token)
 	.catch(console.error);
 //#endregion
 
 //#region Event Handlers
-client.on(Events.ClientReady, () => {
-	console.log(`Connected as ${client.user.tag}`);
-	if (runMode === "prod") {
+dAPIClient.on(Events.ClientReady, () => {
+	console.log(`Connected as ${dAPIClient.user.tag}`);
+	if (runMode === "production") {
 		(() => {
 			try {
 				new REST({ version: 10 }).setToken(require(authPath).token).put(
-					Routes.applicationCommands(client.user.id),
+					Routes.applicationCommands(dAPIClient.user.id),
 					{ body: [...slashData, ...contextMenuData] }
 				).then(commands => {
 					for (const command of commands) {
@@ -85,8 +90,8 @@ client.on(Events.ClientReady, () => {
 					return;
 				}
 
-				buildVersionEmbed(client.user.displayAvatarURL()).then(embed => {
-					client.guilds.fetch(testGuildId).then(guild => {
+				buildVersionEmbed(dAPIClient.user.displayAvatarURL()).then(embed => {
+					dAPIClient.guilds.fetch(testGuildId).then(guild => {
 						guild.channels.fetch(announcementsChannelId).then(announcementsChannel => {
 							announcementsChannel.send({ embeds: [embed] }).then(message => {
 								message.crosspost();
@@ -103,7 +108,7 @@ client.on(Events.ClientReady, () => {
 			console.error("Patch notes post skipped due to falsy announcementsChannelId");
 		}
 	} else {
-		client.application.commands.fetch({ guildId: testGuildId }).then(commands => {
+		dAPIClient.application.commands.fetch({ guildId: testGuildId }).then(commands => {
 			commands.each(command => {
 				commandIds[command.name] = command.id;
 			})
@@ -111,8 +116,8 @@ client.on(Events.ClientReady, () => {
 	}
 });
 
-client.on(Events.InteractionCreate, async interaction => {
-	const db = await sequelize;
+dAPIClient.on(Events.InteractionCreate, async interaction => {
+	await dbReady;
 	if (interaction.isAutocomplete()) {
 		const command = getCommand(interaction.commandName);
 		const focusedOption = interaction.options.getFocused(true);
@@ -136,7 +141,7 @@ client.on(Events.InteractionCreate, async interaction => {
 			return;
 		}
 
-		contextMenu.execute(interaction, db, runMode);
+		contextMenu.execute(interaction, dbConnection, runMode);
 	} else if (interaction.isCommand()) {
 		const command = getCommand(interaction.commandName);
 		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
@@ -149,7 +154,7 @@ client.on(Events.InteractionCreate, async interaction => {
 			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
-		command.execute(interaction, db, runMode);
+		command.execute(interaction, dbConnection, runMode);
 	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
 		return;
 	} else {
@@ -168,11 +173,12 @@ client.on(Events.InteractionCreate, async interaction => {
 			return;
 		}
 
-		interactionWrapper.execute(interaction, args, db, runMode);
+		interactionWrapper.execute(interaction, args, dbConnection, runMode);
 	}
 });
 
-client.on(Events.ChannelDelete, channel => {
+dAPIClient.on(Events.ChannelDelete, async channel => {
+	await dbReady;
 	logicBlob.companies.findCompanyByPK(channel.guild.id).then(company => {
 		if (company) {
 			let shouldSaveCompany = false;
@@ -190,8 +196,8 @@ client.on(Events.ChannelDelete, channel => {
 	})
 });
 
-client.on(Events.MessageDelete, async message => {
-	const db = await sequelize;
+dAPIClient.on(Events.MessageDelete, async message => {
+	await dbReady;
 	logicBlob.companies.findCompanyByPK(message.guild.id).then(company => {
 		if (message.id === company.scoreboardMessageId) {
 			company.scoreboardMessageId = null;
@@ -200,8 +206,8 @@ client.on(Events.MessageDelete, async message => {
 	})
 });
 
-client.on(Events.ThreadDelete, async thread => {
-	const db = await sequelize;
+dAPIClient.on(Events.ThreadDelete, async thread => {
+	await dbReady;
 	logicBlob.companies.findCompanyByPK(thread.guild.id).then(company => {
 		if (thread.id === company.evergreenThreadId) {
 			company.evergreenThreadId = null;
@@ -210,19 +216,19 @@ client.on(Events.ThreadDelete, async thread => {
 	})
 })
 
-client.on(Events.GuildDelete, async guild => {
-	const db = await sequelize;
+dAPIClient.on(Events.GuildDelete, async guild => {
+	await dbReady;
 	logicBlob.hunters.deleteCompanyHunters(guild.id);
-	db.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
+	dbConnection.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
 		toasts.forEach(toast => {
-			db.models.Recipient.destroy({ where: { toastId: toast.id } });
-			db.models.Seconding.destroy({ where: { toastId: toast.id } });
+			dbConnection.models.Recipient.destroy({ where: { toastId: toast.id } });
+			dbConnection.models.Seconding.destroy({ where: { toastId: toast.id } });
 			toast.destroy();
 		})
 	});
 
 	logicBlob.bounties.deleteCompanyBounties(guild.id);
-	db.models.Completion.destroy({ where: { companyId: guild.id } });
+	dbConnection.models.Completion.destroy({ where: { companyId: guild.id } });
 
 	logicBlob.seasons.deleteCompanyParticipations(guild.id);
 	logicBlob.seasons.deleteCompanySeasons(guild.id);

@@ -21,7 +21,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 
 		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
-		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
+		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
