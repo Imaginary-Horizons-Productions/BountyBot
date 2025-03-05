@@ -11,7 +11,7 @@ const { updateScoreboard } = require("../../util/embedUtil");
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	logicLayer.hunters.deleteCompanyHunters(interaction.guild.id);
 	interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
-	await database.models.Company.findByPk(interaction.guildId);
+	await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 	const season = await logicLayer.seasons.findOneSeason(interaction.guild.id, "current");
 	if (season) {
 		await logicLayer.seasons.deleteSeasonParticipations(season.id);
