@@ -33,6 +33,20 @@ function findOneSeason(companyId, type) {
 	}
 }
 
+/** *Change the specified Hunter's Seasonal XP*
+ * @param {string} userId
+ * @param {string} companyId
+ * @param {string} seasonId
+ * @param {number} xp negative numbers allowed
+ */
+function changeSeasonXP(userId, companyId, seasonId, xp) {
+	db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } }).then(([participation, participationCreated]) => {
+		if (!participationCreated) {
+			participation.increment({ xp });
+		}
+	});
+}
+
 /** *Get the number of participating bounty hunters in the specified Season*
  * @param {string} seasonId
  */
@@ -73,6 +87,7 @@ module.exports = {
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
+	changeSeasonXP,
 	getParticipantCount,
 	incrementSeasonStat,
 	deleteCompanySeasons,

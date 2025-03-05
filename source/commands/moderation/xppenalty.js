@@ -19,13 +19,10 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	hunter.decrement({ xp: penaltyValue });
 	hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
 	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
-	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 * penaltyValue } });
-	if (!participationCreated) {
-		participation.decrement("xp", { by: penaltyValue });
-	}
+	logicLayer.seasons.changeSeasonXP(member.id, interaction.guildId, season.id, penaltyValue * -1);
 	getRankUpdates(interaction.guild, database, logicLayer);
 	interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, flags: [MessageFlags.Ephemeral] });
-	if (!member.bot) {
+	if (!member.user.bot) {
 		member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
 	}
 };
