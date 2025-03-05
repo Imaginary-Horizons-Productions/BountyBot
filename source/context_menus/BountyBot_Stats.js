@@ -45,7 +45,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
-				const mostSecondedToast = await database.models.Toast.findOne({ where: { senderId: target.id, companyId: interaction.guildId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] })
+				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
 
 				interaction.reply({
 					embeds: [
