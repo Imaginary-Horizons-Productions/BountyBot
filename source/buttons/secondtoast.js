@@ -26,8 +26,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		const secondReciept = await database.models.Seconding.findOne({ where: { toastId, seconderId: interaction.user.id } });
-		if (secondReciept) {
+		if (await logicLayer.toasts.wasAlreadySeconded(toastId, interaction.user.id)) {
 			interaction.reply({ content: "You've already seconded this toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}

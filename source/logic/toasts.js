@@ -11,6 +11,14 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Checks if the specified seconder has already seconded the specified Toast*
+ * @param {string} toastId
+ * @param {string} seconderId
+ */
+async function wasAlreadySeconded(toastId, seconderId) {
+	return Boolean(await db.models.Seconding.findOne({ where: { toastId, seconderId } }));
+}
+
 /**
  * @param {Guild} guild
  * @param {Company} company
@@ -119,5 +127,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	wasAlreadySeconded,
 	raiseToast
 }
