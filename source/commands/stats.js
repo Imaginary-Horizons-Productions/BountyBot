@@ -46,7 +46,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 					const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
-					const mostSecondedToast = await database.models.Toast.findOne({ where: { senderId: target.id, companyId: interaction.guildId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] })
+					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
 
 					interaction.reply({
 						embeds: [
@@ -87,7 +87,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
-				const mostSecondedToast = await database.models.Toast.findOne({ where: { senderId: interaction.user.id, companyId: interaction.guildId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] })
+				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, interaction.guild.id);
 
 				interaction.reply({
 					embeds: [
