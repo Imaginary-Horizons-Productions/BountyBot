@@ -3,9 +3,7 @@ const { Guild } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
-const { progressGoal } = require("./goals");
 const { rollItemDrop } = require("../util/itemUtil");
-const { findOneSeason } = require("./seasons");
 
 /** @type {Sequelize} */
 let db;
@@ -75,13 +73,7 @@ async function addCompleters(guild, bounty, completerIds) {
  */
 async function completeBounty(bounty, poster, validatedHunters, guild) {
 	bounty.update({ state: "completed", completedAt: new Date() });
-	const season = await findOneSeason(bounty.companyId, "current");
-	season.increment("bountiesCompleted");
 	const rewardTexts = [];
-	const goalUpdate = await progressGoal(guild.id, "bounties", poster.userId);
-	if (goalUpdate.gpContributed > 0) {
-		rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
-	}
 
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
 	const company = await db.models.Company.findByPk(bounty.companyId);
@@ -139,9 +131,15 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	return {
 		completerXP: bountyBaseValue,
 		posterXP,
-		rewardTexts,
-		goalUpdate
+		rewardTexts
 	};
+}
+
+/** *Delete all Bounties associated with the given Company*
+ * @param {string} companyId
+ */
+function deleteCompanyBounties(companyId) {
+	return db.models.Bounty.destroy({ where: { companyId } });
 }
 
 module.exports = {
@@ -149,5 +147,6 @@ module.exports = {
 	findOpenBounties,
 	findEvergreenBounties,
 	addCompleters,
-	completeBounty
+	completeBounty,
+	deleteCompanyBounties
 }

@@ -33,9 +33,39 @@ function findOneSeason(companyId, type) {
 	}
 }
 
+/** *Get the number of participating bounty hunters in the specified Season*
+ * @param {string} seasonId
+ */
+function getParticipantCount(seasonId) {
+	return db.models.Participation.count({ where: { seasonId } });
+}
+
+/**
+ * @param {string} companyId
+ * @param {string} stat
+ */
+async function incrementSeasonStat(guildId, stat) {
+	const [season] = await findOrCreateCurrentSeason(guildId);
+	return season.increment(stat);
+}
+
 /** @param {string} companyId */
 function deleteCompanySeasons(companyId) {
 	return db.models.Season.destroy({ where: { companyId } });
+}
+
+/** *Delete all Participations associated with the specified Season*
+ * @param {string} seasonId
+ */
+function deleteSeasonParticipations(seasonId) {
+	return db.models.Participation.destroy({ where: { seasonId } });
+}
+
+ /** *Deletes all Participations of the specified Company*
+ * @param {string} companyId
+ */
+function deleteCompanyParticipations(companyId) {
+	return db.models.Participation.destroy({ where: { companyId } });
 }
 
 module.exports = {
@@ -43,5 +73,9 @@ module.exports = {
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
-	deleteCompanySeasons
+	getParticipantCount,
+	incrementSeasonStat,
+	deleteCompanySeasons,
+	deleteSeasonParticipations,
+	deleteCompanyParticipations
 }

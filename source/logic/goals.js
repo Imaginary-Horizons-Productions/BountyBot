@@ -1,6 +1,6 @@
 const { Sequelize, Op } = require("sequelize");
-const { findOrCreateBountyHunter } = require("./hunters");
-const { findOrCreateCurrentSeason } = require("./seasons");
+const { Hunter } = require("../models/users/Hunter");
+const { Season } = require("../models/seasons/Season");
 
 /** @type {Sequelize} */
 let db;
@@ -17,6 +17,15 @@ function setDB(database) {
  */
 function findCurrentServerGoal(companyId) {
 	return db.models.Goal.findOne({ where: { companyId }, state: "ongoing", order: [["createdAt", "DESC"]] });
+}
+
+/** *Create a Contribution for the specified contributor on the specified Goal*
+ * @param {string} goalId
+ * @param {string} contributorId
+ * @param {number} gpContributed negative values allowed
+ */
+function createGoalContribution(goalId, contributorId, gpContributed) {
+	return db.models.Contribution.create({ goalId, userId: contributorId, value: gpContributed });
 }
 
 /** *Queries for a Company's most recent Goal and the GP contributed to it*
@@ -40,9 +49,10 @@ const GOAL_POINT_MAP = {
 /**
  * @param {string} companyId
  * @param {"bounties" | "toasts" | "secondings"} progressType
- * @param {string} userId
+ * @param {Hunter} hunter
+ * @param {Season} season
  */
-async function progressGoal(companyId, progressType, userId) {
+async function progressGoal(companyId, progressType, hunter, season) {
 	const returnData = {
 		gpContributed: 0,
 		goalCompleted: false,
@@ -54,11 +64,9 @@ async function progressGoal(companyId, progressType, userId) {
 		if (goal.type === progressType) {
 			returnData.gpContributed *= 2;
 		}
-		await db.models.Contribution.create({ goalId: goal.id, userId, value: returnData.gpContributed });
-		const [hunter] = await findOrCreateBountyHunter(userId, companyId);
+		await createGoalContribution(goal.id, userId, returnData.gpContributed);
 		hunter.increment("goalContributions");
-		const [season] = await findOrCreateCurrentSeason(companyId);
-		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId, seasonId: season.id } });
+		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId: hunter.userId, seasonId: season.id } });
 		participation.increment("goalContributions");
 		const contributions = await db.models.Contribution.findAll({ where: { goalId: goal.id } });
 		returnData.goalCompleted = goal.requiredGP <= contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
@@ -67,7 +75,7 @@ async function progressGoal(companyId, progressType, userId) {
 			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: returnData.contributorIds } } });
 			goal.update({ state: "completed" });
 		} else {
-			returnData.contributorIds.push(userId);
+			returnData.contributorIds.push(hunter.userId);
 		}
 	}
 	return returnData;
@@ -76,6 +84,7 @@ async function progressGoal(companyId, progressType, userId) {
 module.exports = {
 	setDB,
 	findCurrentServerGoal,
+	createGoalContribution,
 	findLatestGoalProgress,
 	progressGoal
 };
