@@ -11,6 +11,13 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Find the Secondings of specified seconder for the purposes of Crit Toast and Rewarded Toast tracking*
+ * @param {string} seconderId
+ */
+function findRecentSecondings(seconderId) {
+	return db.models.Seconding.findAll({ where: { seconderId, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } } });
+}
+
 /**
  * @param {Guild} guild
  * @param {Company} company
@@ -119,5 +126,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	findRecentSecondings,
 	raiseToast
 }
