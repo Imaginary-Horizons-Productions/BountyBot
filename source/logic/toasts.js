@@ -11,6 +11,15 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Create a Seconding entity*
+ * @param {string} toastId
+ * @param {string} seconderId
+ * @param {boolean} wasCrit
+ */
+function createSeconding(toastId, seconderId, wasCrit) {
+	return db.models.Seconding.create({ toastId, seconderId, wasCrit });
+}
+
 /**
  * @param {Guild} guild
  * @param {Company} company
@@ -119,5 +128,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	createSeconding,
 	raiseToast
 }
