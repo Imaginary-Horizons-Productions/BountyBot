@@ -40,7 +40,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
-					const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+					const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
 					const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
@@ -81,7 +81,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
-				const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
+				const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);

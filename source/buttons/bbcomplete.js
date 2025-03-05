@@ -70,7 +70,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				}
-				const rankUpdates = await getRankUpdates(collectedInteraction.guild, database, logicLayer);
+				const rankUpdates = await getRankUpdates(collectedInteraction.guild, logicLayer);
 
 				if (collectedInteraction.channel.archived) {
 					await collectedInteraction.channel.setArchived(false, "bounty complete");
