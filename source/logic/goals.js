@@ -12,6 +12,15 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Create a Contribution for the specified contributor on the specified Goal*
+ * @param {string} goalId
+ * @param {string} contributorId
+ * @param {number} gpContributed negative values allowed
+ */
+function createGoalContribution(goalId, contributorId, gpContributed) {
+	return db.models.Contribution.create({ goalId, userId: contributorId, value: gpContributed });
+}
+
 /** *Queries for a Company's most recent Goal and the GP contributed to it*
  * @param {string} companyId
  */
@@ -48,7 +57,7 @@ async function progressGoal(companyId, progressType, hunter, season) {
 		if (goal.type === progressType) {
 			returnData.gpContributed *= 2;
 		}
-		await db.models.Contribution.create({ goalId: goal.id, userId: hunter.userId, value: returnData.gpContributed });
+		await createGoalContribution(goal.id, userId, returnData.gpContributed);
 		hunter.increment("goalContributions");
 		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId: hunter.userId, seasonId: season.id } });
 		participation.increment("goalContributions");
@@ -67,6 +76,7 @@ async function progressGoal(companyId, progressType, hunter, season) {
 
 module.exports = {
 	setDB,
+	createGoalContribution,
 	findLatestGoalProgress,
 	progressGoal
 };
