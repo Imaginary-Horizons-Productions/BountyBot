@@ -11,6 +11,17 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Get the ids of the rewarded Recipients on the sender's last 5 Toasts*
+ * @param {string} senderId
+ * @param {string} companyId
+ */
+async function findStaleToasteeIds(senderId, companyId) {
+	const lastFiveToasts = await db.models.Toast.findAll({ where: { senderId, companyId }, include: db.models.Toast.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
+	return lastFiveToasts.reduce((list, toast) => {
+		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
+	}, []);
+}
+
 /**
  * @param {Guild} guild
  * @param {Company} company
@@ -46,10 +57,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 		return idSet;
 	}, new Set());
 
-	const lastFiveToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id }, include: db.models.Toast.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
-	const staleToastees = lastFiveToasts.reduce((list, toast) => {
-		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
-	}, []);
+	const staleToastees = await findStaleToasteeIds(sender.id, guild.id);
 
 	const rewardTexts = [];
 	senderHunter.increment("toastsRaised");
@@ -119,5 +127,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	findStaleToasteeIds,
 	raiseToast
 }
