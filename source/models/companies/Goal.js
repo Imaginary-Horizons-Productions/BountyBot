@@ -22,7 +22,7 @@ class Goal extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Goal.init({
+	return Goal.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -49,7 +49,6 @@ function initModel(sequelize) {
 		modelName: "Goal",
 		freezeTableName: true
 	});
-	return Goal;
 }
 
 module.exports = { Goal, initModel };

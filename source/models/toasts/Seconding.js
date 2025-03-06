@@ -43,7 +43,7 @@ class Seconding extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Seconding.init({
+	return Seconding.init({
 		toastId: {
 			primaryKey: true,
 			type: DataTypes.BIGINT
@@ -61,7 +61,6 @@ function initModel(sequelize) {
 		modelName: "Seconding",
 		freezeTableName: true
 	});
-	return Seconding;
 }
 
 module.exports = { Seconding, initModel };

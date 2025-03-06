@@ -129,7 +129,7 @@ class Hunter extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Hunter.init({
+	return Hunter.init({
 		userId: {
 			primaryKey: true,
 			type: DataTypes.STRING,
@@ -217,7 +217,6 @@ function initModel(sequelize) {
 		modelName: "Hunter",
 		freezeTableName: true
 	});
-	return Hunter;
 };
 
 module.exports = { Hunter, initModel };
