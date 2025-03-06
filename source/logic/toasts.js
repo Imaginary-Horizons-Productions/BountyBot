@@ -13,6 +13,14 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Find a specified Hunter's most seconded Toast*
+ * @param {string} senderId
+ * @param {string} companyId
+ */
+function findMostSecondedToast(senderId, companyId) {
+	return db.models.Toast.findOne({ where: { senderId, companyId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] });
+}
+
 /** *Checks if the specified seconder has already seconded the specified Toast*
  * @param {string} toastId
  * @param {string} seconderId
@@ -137,6 +145,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	findMostSecondedToast,
 	wasAlreadySeconded,
 	findToastByPK,
 	raiseToast
