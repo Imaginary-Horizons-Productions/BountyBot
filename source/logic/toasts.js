@@ -3,12 +3,47 @@ const { Sequelize, Op } = require("sequelize");
 const { timeConversion } = require("../util/textUtil");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
+const { Toast } = require("../models/toasts/Toast");
+const { Recipient } = require("../models/toasts/Recipient");
 
 /** @type {Sequelize} */
 let db;
 
 function setDB(database) {
 	db = database;
+}
+
+/** *Create a Seconding entity*
+ * @param {string} toastId
+ * @param {string} seconderId
+ * @param {boolean} wasCrit
+ */
+function createSeconding(toastId, seconderId, wasCrit) {
+	return db.models.Seconding.create({ toastId, seconderId, wasCrit });
+}
+
+/** *Find a specified Hunter's most seconded Toast*
+ * @param {string} senderId
+ * @param {string} companyId
+ */
+function findMostSecondedToast(senderId, companyId) {
+	return db.models.Toast.findOne({ where: { senderId, companyId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] });
+}
+
+/** *Checks if the specified seconder has already seconded the specified Toast*
+ * @param {string} toastId
+ * @param {string} seconderId
+ */
+async function wasAlreadySeconded(toastId, seconderId) {
+	return Boolean(await db.models.Seconding.findOne({ where: { toastId, seconderId } }));
+}
+
+/** *Find the specified Toast*
+ * @param {string} toastId
+ * @returns {Promise<Toast & {Recipients: Recipient[]}>}
+ */
+function findToastByPK(toastId) {
+	return db.models.Toast.findByPk(toastId, { include: db.models.Toast.Recipients });
 }
 
 /**
@@ -119,5 +154,9 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	createSeconding,
+	findMostSecondedToast,
+	wasAlreadySeconded,
+	findToastByPK,
 	raiseToast
 }
