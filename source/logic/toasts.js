@@ -3,12 +3,22 @@ const { Sequelize, Op } = require("sequelize");
 const { timeConversion } = require("../util/textUtil");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
+const { Toast } = require("../models/toasts/Toast");
+const { Recipient } = require("../models/toasts/Recipient");
 
 /** @type {Sequelize} */
 let db;
 
 function setDB(database) {
 	db = database;
+}
+
+/** *Find the specified Toast*
+ * @param {string} toastId
+ * @returns {Promise<Toast & {Recipients: Recipient[]}>}
+ */
+function findToastByPK(toastId) {
+	return db.models.Toast.findByPk(toastId, { include: db.models.Toast.Recipients });
 }
 
 /**
@@ -119,5 +129,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	findToastByPK,
 	raiseToast
 }
