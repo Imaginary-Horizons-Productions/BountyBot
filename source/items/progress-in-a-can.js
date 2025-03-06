@@ -8,7 +8,7 @@ let logicLayer;
 const itemName = "Progress-in-a-Can";
 module.exports = new ItemTemplate(itemName, "Add a contribution to the currently running Server Goal", 3000,
 	async (interaction, database) => {
-		const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
+		const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 		if (!goal) {
 			interaction.reply({ content: "There isn't currently a Server Goal running.", flags: [MessageFlags.Ephemeral] });
 			return true;
