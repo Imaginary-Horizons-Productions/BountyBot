@@ -13,6 +13,15 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Create a Seconding entity*
+ * @param {string} toastId
+ * @param {string} seconderId
+ * @param {boolean} wasCrit
+ */
+function createSeconding(toastId, seconderId, wasCrit) {
+	return db.models.Seconding.create({ toastId, seconderId, wasCrit });
+}
+
 /** *Find a specified Hunter's most seconded Toast*
  * @param {string} senderId
  * @param {string} companyId
@@ -145,6 +154,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
+	createSeconding,
 	findMostSecondedToast,
 	wasAlreadySeconded,
 	findToastByPK,

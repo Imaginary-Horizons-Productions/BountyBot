@@ -108,7 +108,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 
-		database.models.Seconding.create({ toastId: originalToast.id, seconderId: interaction.user.id, wasCrit });
+		logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, wasCrit);
 
 		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
 		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by") ?? -1;
