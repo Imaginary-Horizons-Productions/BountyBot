@@ -20,14 +20,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
+		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
 		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const secondReciept = await database.models.Seconding.findOne({ where: { toastId, seconderId: interaction.user.id } });
-		if (secondReciept) {
+		if (await logicLayer.toasts.wasAlreadySeconded(toastId, interaction.user.id)) {
 			interaction.reply({ content: "You've already seconded this toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
@@ -105,7 +104,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 
-		database.models.Seconding.create({ toastId: originalToast.id, seconderId: interaction.user.id, wasCrit });
+		logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, wasCrit);
 
 		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
 		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by") ?? -1;
