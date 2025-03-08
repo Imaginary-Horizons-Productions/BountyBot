@@ -13,13 +13,6 @@ function setDB(database) {
 	db = database;
 }
 
-/** *Find the Secondings of specified seconder for the purposes of Crit Toast and Rewarded Toast tracking*
- * @param {string} seconderId
- */
-function findRecentSecondings(seconderId) {
-	return db.models.Seconding.findAll({ where: { seconderId, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } } });
-}
-
 /** *Get the ids of the rewarded Recipients on the sender's last 5 Toasts*
  *
  * Duplicated stale toastee ids are intended as a way of recording accumulating staleness
@@ -171,7 +164,6 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 
 module.exports = {
 	setDB,
-	findRecentSecondings,
 	findStaleToasteeIds,
 	createSeconding,
 	findMostSecondedToast,

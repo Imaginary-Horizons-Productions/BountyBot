@@ -1,7 +1,8 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
+const { Op } = require('sequelize');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { generateTextBar } = require('../util/textUtil');
+const { timeConversion, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 const { Seconding } = require('../models/toasts/Seconding');
 const { Goal } = require('../models/companies/Goal');
@@ -53,7 +54,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			hunter.increment("toastsReceived");
 		}
 
-		const recentToasts = await logicLayer.toasts.findRecentSecondings(interaction.user.id);
+		const recentToasts = await database.models.Seconding.findAll({ where: { seconderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } } });
 		let critSecondsAvailable = 2;
 		for (const seconding of recentToasts) {
 			if (seconding.wasCrit) {
