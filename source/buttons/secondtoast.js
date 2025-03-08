@@ -121,7 +121,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 		interaction.update({ embeds: [embed] });
-		getRankUpdates(interaction.guild, database, logicLayer).then(async rankUpdates => {
+		getRankUpdates(interaction.guild, logicLayer).then(async rankUpdates => {
 			const content = Seconding.generateRewardString(interaction.member.displayName, recipientIds, rankUpdates, rewardTexts);
 			if (interaction.channel.isThread()) {
 				interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });

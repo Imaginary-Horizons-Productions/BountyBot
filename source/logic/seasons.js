@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 
 /** @type {Sequelize} */
 let db;
@@ -54,6 +54,29 @@ function getParticipantCount(seasonId) {
 	return db.models.Participation.count({ where: { seasonId } });
 }
 
+/** *Get all of a Season's Participations*
+ * @param {string} seasonId
+ */
+function findSeasonParticipations(seasonId) {
+	return db.models.Participation.findAll({ where: { seasonId }, order: [["xp", "DESC"]] });
+}
+
+/** *Get Participations of the specified Users in the specified Season*
+ * @param {string} seasonId
+ * @param {string[]} userIds
+ */
+function bulkFindParticipations(seasonId, userIds) {
+	return db.models.Participation.findAll({ where: { seasonId, userId: { [Op.in]: userIds } } });
+}
+
+/** *Get all the Participations of a specified Hunter*
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function findHunterParticipations(userId, companyId) {
+	return db.models.Participation.findAll({ where: { userId, companyId }, order: [["createdAt", "DESC"]] });
+}
+
 /**
  * @param {string} companyId
  * @param {string} stat
@@ -75,9 +98,9 @@ function deleteSeasonParticipations(seasonId) {
 	return db.models.Participation.destroy({ where: { seasonId } });
 }
 
- /** *Deletes all Participations of the specified Company*
- * @param {string} companyId
- */
+/** *Deletes all Participations of the specified Company*
+* @param {string} companyId
+*/
 function deleteCompanyParticipations(companyId) {
 	return db.models.Participation.destroy({ where: { companyId } });
 }
@@ -89,6 +112,9 @@ module.exports = {
 	findOneSeason,
 	changeSeasonXP,
 	getParticipantCount,
+	findSeasonParticipations,
+	bulkFindParticipations,
+	findHunterParticipations,
 	incrementSeasonStat,
 	deleteCompanySeasons,
 	deleteSeasonParticipations,

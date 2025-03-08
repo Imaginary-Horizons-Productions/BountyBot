@@ -1,20 +1,19 @@
 const { Guild, EmbedBuilder, GuildTextThreadManager } = require("discord.js");
-const { Op, Sequelize } = require("sequelize");
 const { Company } = require("../models/companies/Company");
 const { Rank } = require("../models/companies/Rank");
 const { Season } = require("../models/seasons/Season");
 const { Hunter } = require("../models/users/Hunter");
 const { congratulationBuilder } = require("./textUtil");
+const { Participation } = require("../models/seasons/Participation");
 
 /** Recalculates the ranks (standard deviations from mean) and placements (ordinal) for the given participants
  * @param {Season} season
  * @param {Hunter[]} allHunters
  * @param {Rank[]} ranks
- * @param {Sequelize} database
+ * @param {Participation} participations
  * @returns Promise of the message congratulating the hunter reaching first place (or `null` if no change)
  */
-async function calculateRanks(season, allHunters, ranks, database) {
-	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
+async function calculateRanks(season, allHunters, ranks, participations) {
 	const particpationMap = participations.reduce((map, participation) => {
 		map[participation.userId] = participation;
 		return map;
@@ -86,16 +85,16 @@ async function calculateRanks(season, allHunters, ranks, database) {
 
 /** Update ranks for all hunters in the guild, then return rank up messages
  * @param {Guild} guild
- * @param {boolean} force
- * @param {Sequelize} database
+ * @param {typeof import("../logic")} logicLayer
  * @returns an array of rank and placement update strings
  */
-async function getRankUpdates(guild, database, logicLayer) {
+async function getRankUpdates(guild, logicLayer) {
 	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 	const ranks = await logicLayer.ranks.findAllRanks(guild.id, "descending");
 	const allHunters = await logicLayer.hunters.findCompanyHunters(guild.id);
+	const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
 
-	return calculateRanks(season, allHunters, ranks, database).then(async (firstPlaceMessage) => {
+	return calculateRanks(season, allHunters, ranks, participations).then(async (firstPlaceMessage) => {
 		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 		const outMessages = [];
 		if (firstPlaceMessage) {
@@ -108,7 +107,7 @@ async function getRankUpdates(guild, database, logicLayer) {
 			}
 		}
 		const updatedMembers = await guild.members.fetch({ user: userIdsWithChangedRanks });
-		const updatedParticipationsMap = (await database.models.Participation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: userIdsWithChangedRanks } } }))
+		const updatedParticipationsMap = (await logicLayer.seasons.bulkFindParticipations(season.id, userIdsWithChangedRanks))
 			.reduce((map, participation) => {
 				map[participation.userId] = participation;
 				return map;

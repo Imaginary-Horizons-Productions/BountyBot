@@ -21,7 +21,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	if (participationCreated || participation.isRankDisqualified) {
 		participation.increment("dqCount");
 	}
-	getRankUpdates(interaction.guild, database, logicLayer);
+	getRankUpdates(interaction.guild, logicLayer);
 	interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, flags: [MessageFlags.Ephemeral] });
 	if (!member.user.bot) {
 		member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);

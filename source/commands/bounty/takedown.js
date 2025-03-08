@@ -43,7 +43,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 				hunter.decrement("xp");
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
-				getRankUpdates(interaction.guild, database, logicLayer);
+				getRankUpdates(interaction.guild, logicLayer);
 			})
 
 			collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
