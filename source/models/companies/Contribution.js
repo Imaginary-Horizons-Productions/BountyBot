@@ -11,7 +11,7 @@ class Contribution extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Contribution.init({
+	return Contribution.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -34,7 +34,6 @@ function initModel(sequelize) {
 		modelName: "Contribution",
 		freezeTableName: true
 	});
-	return Contribution;
 }
 
 module.exports = { Contribution, initModel };

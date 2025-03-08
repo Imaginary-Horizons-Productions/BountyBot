@@ -72,7 +72,7 @@ class Toast extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Toast.init({
+	return Toast.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -102,7 +102,6 @@ function initModel(sequelize) {
 		modelName: "Toast",
 		freezeTableName: true
 	});
-	return Toast;
 }
 
 module.exports = { Toast, initModel };

@@ -7,7 +7,7 @@ class Rank extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Rank.init({
+	return Rank.init({
 		companyId: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -27,7 +27,6 @@ function initModel(sequelize) {
 		modelName: "Rank",
 		freezeTableName: true
 	});
-	return Rank;
 };
 
 module.exports = { Rank, initModel };

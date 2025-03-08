@@ -13,7 +13,7 @@ class Participation extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Participation.init({
+	return Participation.init({
 		userId: {
 			primaryKey: true,
 			type: DataTypes.STRING,
@@ -68,7 +68,6 @@ function initModel(sequelize) {
 		modelName: "Participation",
 		freezeTableName: true
 	});
-	return Participation;
 }
 
 module.exports = { Participation, initModel };
