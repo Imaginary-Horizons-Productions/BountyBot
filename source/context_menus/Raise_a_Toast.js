@@ -19,7 +19,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		if (runMode === "prod" && interaction.targetUser.bot) {
+		if (runMode === "production" && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot raist a toast to a bot.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}

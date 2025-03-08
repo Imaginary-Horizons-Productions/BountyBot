@@ -47,7 +47,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		if (runMode === "prod" && interaction.targetUser.bot) {
+		if (runMode === "production" && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}

@@ -21,7 +21,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 
 		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
-		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
+		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}

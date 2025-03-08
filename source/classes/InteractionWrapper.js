@@ -56,7 +56,7 @@ class ButtonWrapper extends InteractionWrapper {
 	/** IHP wrapper for button responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: ButtonInteraction, args: string[], database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: ButtonInteraction, args: string[], database: Sequelize, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -71,7 +71,7 @@ class CommandWrapper extends InteractionWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: CommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: CommandInteraction, database: Sequelize, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -139,7 +139,7 @@ class SelectWrapper extends InteractionWrapper {
 	/** IHP wrapper for any select responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: AnySelectMenuInteraction, args: string[], database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: AnySelectMenuInteraction, args: string[], database: Sequelize, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -154,7 +154,7 @@ class ContextMenuWrapper extends InteractionWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: ContextMenuCommandInteraction, database: Sequelize, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -176,7 +176,7 @@ class UserContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: UserContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: UserContextMenuCommandInteraction, database: Sequelize, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);
@@ -192,7 +192,7 @@ class MessageContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: MessageContextMenuCommandInteraction, database: Sequelize, runMode: "prod" | "migration" | undefined) => void} executeFunction
+	 * @param {(interaction: MessageContextMenuCommandInteraction, database: Sequelize, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);

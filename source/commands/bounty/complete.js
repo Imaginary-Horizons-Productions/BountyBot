@@ -22,7 +22,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	}
 
 	// disallow completion within 5 minutes of creating bounty
-	if (runMode === "prod" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
+	if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
 		interaction.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
@@ -42,7 +42,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	const validatedCompleterIds = [];
 	const validatedHunters = [];
 	for (const member of completerMembers) {
-		if (runMode !== "prod" || !member.user.bot) {
+		if (runMode !== "production" || !member.user.bot) {
 			const memberId = member.id;
 			const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 			if (!hunter.isBanned) {
