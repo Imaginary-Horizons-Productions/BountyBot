@@ -47,13 +47,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		for (const userId of recipientIds) {
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, company);
-			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: 1 } });
-			if (!participationCreated) {
-				participation.increment({ xp: 1 });
-			}
 			if (recipientLevelTexts.length > 0) {
 				rewardTexts.push(...recipientLevelTexts);
 			}
+			logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, 1);
 			hunter.increment("toastsReceived");
 		}
 
@@ -101,10 +98,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (seconderLevelTexts.length > 0) {
 					rewardTexts = rewardTexts.concat(seconderLevelTexts);
 				}
-				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: 1 } });
-				if (!participationCreated) {
-					participation.increment({ xp: 1 });
-				}
+				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, 1);
 			}
 		}
 
