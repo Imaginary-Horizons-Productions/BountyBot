@@ -8,7 +8,7 @@ const { Sequelize } = require("sequelize");
  * @param {boolean} isItemShowcase
  * @param {Sequelize} database
  */
-async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShowcase, database) {
+async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShowcase, database, logicLayer) {
 	if (!showcaseChannel.members.has(interaction.client.user.id)) {
 		interaction.reply({ content: "BountyBot is not in the selected channel.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -27,8 +27,8 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
 
 	bounty.increment("showcaseCount");
 	await bounty.save().then(bounty => bounty.reload());
-	const company = await database.models.Company.findByPk(interaction.guildId);
-	const poster = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } });
+	const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+	const poster = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guildId);
 	if (!isItemShowcase) {
 		poster.lastShowcaseTimestamp = new Date();
 		poster.save();

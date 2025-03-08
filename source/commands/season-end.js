@@ -1,24 +1,34 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { buildCompanyStatsEmbed, updateScoreboard } = require('../util/embedUtil');
+const { updateScoreboard } = require('../util/embedUtil');
+const { Hunter } = require('../models/users/Hunter');
+const { COMPANY_XP_COEFFICIENT } = require('../constants');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
 	async (interaction, database, runMode) => {
-		const company = await database.models.Company.findByPk(interaction.guildId);
+		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 		if (!company) {
 			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		buildCompanyStatsEmbed(interaction.guild, database).then(async embed => {
-			const seasonBeforeEndingSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isPreviousSeason: true } });
+		const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
+		const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
+		const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
+		const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
+		company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
+			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
 				seasonBeforeEndingSeason.save();
 			}
-			const endingSeason = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+			const endingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "current");
 			const shoutouts = [];
 			if (endingSeason) {
 				const firstPlace = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id, placement: 1 } });
@@ -41,11 +51,11 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				endingSeason.isPreviousSeason = true;
 				endingSeason.save();
 			}
-			await database.models.Season.create({ companyId: interaction.guildId });
-			const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guild.id }, order: [["varianceThreshold", "DESC"]] });
+			await logicLayer.seasons.createSeason(interaction.guildId);
+			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {
-				const allHunters = await database.models.Hunter.findAll({ where: { companyId: interaction.guildId } });
+				const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
 				interaction.guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {
 						if (member.manageable) {
@@ -54,8 +64,8 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 					}
 				})
 			}
-			await database.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId: company.id } });
-			updateScoreboard(company, interaction.guild, database);
+			await logicLayer.hunters.resetCompanyRanks(company.id);
+			updateScoreboard(interaction.guild, database, logicLayer);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;
@@ -63,4 +73,6 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			interaction.reply(company.sendAnnouncement({ content: announcementText, embeds: [embed] }));
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

@@ -1,8 +1,8 @@
 const { CommandInteraction } = require("discord.js");
-const { Item } = require("../classes");
+const { ItemTemplate } = require("../classes");
 const { Sequelize } = require("sequelize");
 
-/** @type {Record<string, Item>} */
+/** @type {Record<string, ItemTemplate>} */
 const ITEMS = {};
 /** @type {string[]} */
 const ITEM_NAMES = [];
@@ -47,7 +47,7 @@ for (const file of [
 	"xp-boost-legendary.js",
 	"xp-boost.js"
 ]) {
-	/** @type {Item} */
+	/** @type {ItemTemplate} */
 	const item = require(`./${file}`);
 	ITEMS[item.name] = item;
 	ITEM_NAMES.push(item.name);
@@ -76,4 +76,10 @@ exports.getItemCooldown = function (itemName) {
  */
 exports.useItem = function (itemName, interaction, database) {
 	return ITEMS[itemName].effect(interaction, database);
+}
+
+exports.setLogic = function (logicBlob) {
+	for (const itemKey in ITEMS) {
+		ITEMS[itemKey].setLogic?.(logicBlob);
+	}
 }

@@ -22,7 +22,7 @@ exports.getButton = function (mainId) {
 }
 
 exports.setLogic = function (logicBlob) {
-	for (button in buttonDictionary) {
-		button.setLogic?.(logicBlob);
+	for (const buttonKey in buttonDictionary) {
+		buttonDictionary[buttonKey].setLogic?.(logicBlob);
 	}
 }

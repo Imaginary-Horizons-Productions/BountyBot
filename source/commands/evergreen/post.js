@@ -8,10 +8,10 @@ const { generateBountyBoardThread } = require("../../util/scoreUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
-	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" } });
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+	const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 	let slotNumber = null;
 	for (let slotCandidate = 1; slotCandidate <= MAX_EMBEDS_PER_MESSAGE; slotCandidate++) {
 		if (!existingBounties.some(bounty => bounty.slotNumber === slotCandidate)) {
@@ -83,16 +83,16 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 		}
 
-		const [company] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const bounty = await database.models.Bounty.create(rawBounty);
+		existingBounties.push(bounty);
 
 		// post in bounty board forum
 		const bountyEmbed = await bounty.embed(interaction.guild, company.level, false, company, []);
 		interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
-					const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.client.user.id, state: "open" }, order: [["slotNumber", "ASC"]] });
-					const embeds = await Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))));
+					const embeds = await Promise.all(existingBounties.sort((a, b) => a.slotNumber - b.slotNumber).map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))));
 					if (company.evergreenThreadId) {
 						return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 							const message = await thread.fetchStarterMessage();

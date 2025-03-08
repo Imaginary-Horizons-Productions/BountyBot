@@ -6,9 +6,9 @@ const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require(".
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[Company]} args
+ * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[company]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
 	const scoreboard = await interaction.guild.channels.create({
 		parent: interaction.channel.parentId,
 		name: "bountybot-scoreboard",
@@ -29,7 +29,7 @@ async function executeSubcommand(interaction, database, runMode, ...[company]) {
 	});
 	const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 	scoreboard.send({
-		embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild, database) : await buildOverallScoreboardEmbed(interaction.guild, database)]
+		embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild, logicLayer) : await buildOverallScoreboardEmbed(interaction.guild, database, logicLayer)]
 	}).then(message => {
 		company.scoreboardChannelId = scoreboard.id;
 		company.scoreboardMessageId = message.id;

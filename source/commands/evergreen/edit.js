@@ -8,10 +8,10 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
-	const openBounties = await database.models.Bounty.findAll({ where: { userId: interaction.client.user.id, companyId: interaction.guildId, state: "open" } });
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+	const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 	if (openBounties.length < 1) {
 		interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -32,15 +32,15 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
 		// Verify bounty exists
-		const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
-		if (bounty?.state !== "open") {
-			interaction.update({ content: `There is no evergreen bounty #${bounty.slotNumber}.`, components: [] });
+		const selectedBounty = openBounties.find(bounty => bounty.id === bountyId);
+		if (selectedBounty?.state !== "open") {
+			interaction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
 			return;
 		}
 
 		collectedInteraction.showModal(
 			new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
-				.setTitle(trimForModalTitle(`Edit Bounty: ${bounty.title}`))
+				.setTitle(trimForModalTitle(`Edit Bounty: ${selectedBounty.title}`))
 				.addComponents(
 					new ActionRowBuilder().addComponents(
 						new TextInputBuilder().setCustomId("title")
@@ -48,7 +48,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 							.setRequired(false)
 							.setStyle(TextInputStyle.Short)
 							.setPlaceholder("Discord markdown allowed...")
-							.setValue(bounty.title)
+							.setValue(selectedBounty.title)
 					),
 					new ActionRowBuilder().addComponents(
 						new TextInputBuilder().setCustomId("description")
@@ -56,14 +56,14 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 							.setRequired(false)
 							.setStyle(TextInputStyle.Paragraph)
 							.setPlaceholder("Bounties with clear instructions are easier to complete...")
-							.setValue(bounty.description ?? "")
+							.setValue(selectedBounty.description ?? "")
 					),
 					new ActionRowBuilder().addComponents(
 						new TextInputBuilder().setCustomId("imageURL")
 							.setLabel("Image URL")
 							.setRequired(false)
 							.setStyle(TextInputStyle.Short)
-							.setValue(bounty.attachmentURL ?? "")
+							.setValue(selectedBounty.attachmentURL ?? "")
 					)
 				)
 		);
@@ -92,29 +92,29 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 
 			if (title) {
-				bounty.title = title;
+				selectedBounty.title = title;
 			}
-			bounty.description = description;
+			selectedBounty.description = description;
 			if (imageURL) {
-				bounty.attachmentURL = imageURL;
-			} else if (bounty.attachmentURL) {
-				bounty.attachmentURL = null;
+				selectedBounty.attachmentURL = imageURL;
+			} else if (selectedBounty.attachmentURL) {
+				selectedBounty.attachmentURL = null;
 			}
-			bounty.editCount++;
-			bounty.save();
+			selectedBounty.editCount++;
+			selectedBounty.save();
 
 			// update bounty board
-			if (bounty.Company.bountyBoardId) {
-				const evergreenBounties = await database.models.Bounty.findAll({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.client.user.id, state: "open" }, include: database.models.Bounty.Company, order: [["slotNumber", "ASC"]] });
-				const embeds = await Promise.all(evergreenBounties.map(bounty => bounty.embed(modalSubmission.guild, bounty.Company.level, false, bounty.Company, [])));
-				const bountyBoard = await modalSubmission.guild.channels.fetch(bounty.Company.bountyBoardId);
-				bountyBoard.threads.fetch(bounty.Company.evergreenThreadId).then(async thread => {
+			const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
+			if (company.bountyBoardId) {
+				const embeds = await Promise.all(openBounties.map(bounty => bounty.embed(modalSubmission.guild, company.level, false, company, [])));
+				const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
+				bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 					const message = await thread.fetchStarterMessage();
 					message.edit({ embeds });
 				});
 			}
 
-			const bountyEmbed = await bounty.embed(modalSubmission.guild, bounty.Company.level, false, bounty.Company, []);
+			const bountyEmbed = await selectedBounty.embed(modalSubmission.guild, company.level, false, company, []);
 			modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
 		});
 	}).catch(error => {

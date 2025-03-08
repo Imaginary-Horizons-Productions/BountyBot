@@ -5,11 +5,11 @@ const { Sequelize } = require("sequelize");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const varianceThreshold = interaction.options.getNumber("variance-threshold");
-	const rank = await database.models.Rank.findOne({ where: { companyId: interaction.guildId, varianceThreshold } });
+	const rank = await logicLayer.ranks.findOneRank(interaction.guild.id, varianceThreshold);
 	if (!rank) {
 		interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: [MessageFlags.Ephemeral] });
 		return;

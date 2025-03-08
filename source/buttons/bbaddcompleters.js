@@ -1,9 +1,15 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags, Guild, ThreadChannel } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters, findBounty } = require('../logic/bounties.js');
 const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
+const { Bounty } = require('../models/bounties/Bounty.js');
+const { Company } = require('../models/companies/Company.js');
+const { Hunter } = require('../models/users/Hunter.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -13,11 +19,12 @@ const { Completion } = require('../models/bounties/Completion.js');
  * @param {string[]} newCompleterIds
  * @param {Completion[]} completers
  * @param {Guild} guild
+ * @param {ThreadChannel} btnPost
  */
 async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
 	if (!btnPost) return;
 	if (btnPost.archived) {
-		await thread.setArchived(false, "Unarchived to update posting");
+		await btnPost.setArchived(false, "Unarchived to update posting");
 	}
 	btnPost.edit({ name: bounty.title });
 	let numCompleters = newCompleterIds.length;
@@ -32,7 +39,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
 	async (interaction, [bountyId], database, runMode) => {
-		const bounty = await findBounty(bountyId);
+		const bounty = await logicLayer.bounties.findBounty(bountyId);
 		if (!bounty) {
 			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: [MessageFlags.Ephemeral]})
 		}
@@ -54,7 +61,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 			try {
-				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(bounty, collectedInteraction.guild, Array.from(collectedInteraction.members.values()), runMode);
+			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
 				return collectedInteraction.update({
 					components: []
@@ -78,8 +85,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		});
 	}
-);
-
-module.exports.setLogic = (logicBundle) => {
-	bounties = logicBundle.bounties;
-}
+).setLogicLinker(logicBundle => {
+	logicLayer = logicBundle;
+});

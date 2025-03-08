@@ -6,10 +6,10 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
-	const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] });
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id, "ascending");
 	if (ranks.length < 1) {
 		interaction.reply({ content: "This server doesn't have any ranks configured.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -44,7 +44,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		}).then((unvalidatedMembers) => {
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
 			if (eligibleMembers.size < 1) {
-				database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "ASC"]] }).then(ranks => {
+				logicLayer.ranks.findAllRanks(interaction.guildId, "ascending").then(ranks => {
 					const rank = ranks[rankIndex];
 					collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${rankIndex + 1}`}).`, flags: [MessageFlags.Ephemeral] });
 				});
@@ -52,7 +52,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
 			collectedInteraction.reply(`The winner of this raffle is: ${winner}`);
-			database.models.Company.findByPk(interaction.guildId).then(company => {
+			logicLayer.companies.findCompanyByPK(interaction.guild.id).then(company => {
 				company.update("nextRaffleString", null);
 			});
 		})

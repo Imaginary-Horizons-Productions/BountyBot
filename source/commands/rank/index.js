@@ -11,6 +11,9 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 ]);
 module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty hunters who have above average season XP", PermissionFlagsBits.ManageRoles, true, [InteractionContextType.Guild], 3000,
 	(interaction, database, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode);
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer);
 	}
-).setSubcommands(subcommandSlashData);
+).setSubcommands(subcommandSlashData)
+	.setLogicLinker(logicBlob => {
+		logicLayer = logicBlob;
+	});

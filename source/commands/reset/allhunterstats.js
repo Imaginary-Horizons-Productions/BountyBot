@@ -6,17 +6,17 @@ const { updateScoreboard } = require("../../util/embedUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
-	database.models.Hunter.destroy({ where: { companyId: interaction.guildId } });
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+	logicLayer.hunters.deleteCompanyHunters(interaction.guild.id);
 	interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
-	const company = await database.models.Company.findByPk(interaction.guildId);
-	const season = await database.models.Season.findOne({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+	await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+	const season = await logicLayer.seasons.findOneSeason(interaction.guild.id, "current");
 	if (season) {
-		await database.models.Participation.destroy({ where: { seasonId: season.id } });
+		await logicLayer.seasons.deleteSeasonParticipations(season.id);
 	}
-	updateScoreboard(company, interaction.guild, database);
+	updateScoreboard(interaction.guild, database, logicLayer);
 	interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);
 };
 

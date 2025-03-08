@@ -5,24 +5,10 @@ const { Sequelize } = require("sequelize");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
-	database.models.Company.update(
-		{
-			announcementPrefix: "@here",
-			maxSimBounties: 5,
-			backupTimer: 3600000,
-			festivalMultiplier: 1,
-			xpCoefficient: 3,
-			toastThumbnailURL: null,
-			openBountyThumbnailURL: null,
-			completedBountyThumbnailURL: null,
-			scoreboardThumbnailURL: null,
-			serverBonusesThumbnailURL: null
-		},
-		{ where: { id: interaction.guildId } }
-	);
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+	logicLayer.companies.resetCompanySettings(interaction.guild.id);
 	interaction.reply({ content: "Server settings have been reset.", flags: [MessageFlags.Ephemeral] });
 };
 

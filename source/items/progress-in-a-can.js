@@ -1,27 +1,27 @@
-const { EmbedBuilder, userMention, MessageFlags } = require("discord.js");
-const { Item } = require("../classes");
-const { progressGoal } = require("../logic/goals");
-const { congratulationBuilder, listifyEN } = require("../util/textUtil");
+const { userMention, MessageFlags } = require("discord.js");
+const { ItemTemplate } = require("../classes");
+const { Goal } = require("../models/companies/Goal");
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const itemName = "Progress-in-a-Can";
-module.exports = new Item(itemName, "Add a contribution to the currently running Server Goal", 3000,
+module.exports = new ItemTemplate(itemName, "Add a contribution to the currently running Server Goal", 3000,
 	async (interaction, database) => {
-		const goal = await database.models.Goal.findOne({ where: { companyId: interaction.guildId, state: "ongoing" } });
+		const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 		if (!goal) {
 			interaction.reply({ content: "There isn't currently a Server Goal running.", flags: [MessageFlags.Ephemeral] });
 			return true;
 		}
-		const progressData = await progressGoal(interaction.guildId, goal.type, interaction.user.id);
+		const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
+		const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
+		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, goal.type, hunter, season);
 		const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${progressData.gpContributed} GP the Server Goal!` };
 		if (progressData.goalCompleted) {
-			resultPayload.embeds = [
-				new EmbedBuilder().setColor("e5b271")
-					.setTitle("Server Goal Completed")
-					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-					.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
-			];
+			resultPayload.embeds = [Goal.generateCompletionEmbed(progressData.contributorIds)];
 		}
 		interaction.channel.send(resultPayload);
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

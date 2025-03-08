@@ -8,10 +8,10 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
-	const openBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+	const openBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id);
 	if (openBounties.length < 1) {
 		interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -32,7 +32,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
 		// Verify bounty exists
-		const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+		const bounty = await database.models.Bounty.findByPk(bountyId);
 		if (bounty?.state !== "open") {
 			interaction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
 			return;
@@ -185,10 +185,11 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			bounty.save();
 
 			// update bounty board
-			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, bounty.Company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
-			if (bounty.Company.bountyBoardId) {
-				interaction.guild.channels.fetch(bounty.Company.bountyBoardId).then(bountyBoard => {
+			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
+			const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
+			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
+			if (company.bountyBoardId) {
+				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.fetch(bounty.postingId);
 				}).then(async thread => {
 					if (thread.archived) {

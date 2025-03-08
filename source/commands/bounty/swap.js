@@ -9,10 +9,10 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
-	database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] }).then(openBounties => {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+	logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id).then(openBounties => {
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 			return;
@@ -34,14 +34,14 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 			collector.on("collect", async (collectedInteraction) => {
 				if (collectedInteraction.customId.endsWith("bounty")) {
-					database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } }).then(async hunter => {
-						const company = await database.models.Company.findByPk(interaction.guildId);
+					logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+						const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 						if (hunter.maxSlots(company.maxSimBounties) < 2) {
 							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: [MessageFlags.Ephemeral] });
 							return;
 						}
 
-						const existingBounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, state: "open" } });
+						const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
 						const previousBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 						const slotOptions = [];
 						for (let i = 1; i <= hunter.maxSlots(company.maxSimBounties); i++) {
@@ -80,7 +80,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 				} else {
 					const sourceSlot = parseInt(collectedInteraction.customId.split(SAFE_DELIMITER)[1]);
 					const destinationSlot = parseInt(collectedInteraction.values[0]);
-					const company = await database.models.Company.findByPk(interaction.guildId);
+					const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
 
 					const bounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber: { [Op.in]: [sourceSlot, destinationSlot] }, state: "open" } });
 					const sourceBounty = bounties.find(bounty => bounty.slotNumber == sourceSlot);
@@ -97,7 +97,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 						destinationBounty.updatePosting(interaction.guild, company, database);
 					}
 
-					const hunter = await database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } });
+					const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 					interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(hunter.level, destinationSlot, sourceBounty.showcaseCount)} XP.` }));
 				}
 			})

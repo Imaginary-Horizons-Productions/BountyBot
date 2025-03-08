@@ -9,17 +9,17 @@ const { showcaseBounty } = require("../../util/bountyUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
-	database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async hunter => {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+	logicLayer.hunters.findOneHunter(posterId, interaction.guild.id).then(async hunter => {
 		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-		if (runMode === "prod" && Date.now() < nextShowcaseInMS) {
+		if (runMode === "production" && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
+		const existingBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guildId);
 		if (existingBounties.length < 1) {
 			interaction.reply({ content: "You doesn't have any open bounties posted.", flags: [MessageFlags.Ephemeral] });
 			return;
@@ -38,7 +38,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
-			showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database);
+			showcaseBounty(collectedInteraction, collectedInteraction.values[0], interaction.channel, false, database, logicLayer);
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);

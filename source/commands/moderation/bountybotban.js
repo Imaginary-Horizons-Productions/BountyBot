@@ -5,20 +5,19 @@ const { Sequelize } = require("sequelize");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const member = interaction.options.getUser("user");
-	await database.models.User.findOrCreate({ where: { id: member.id } });
-	await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
-	const [hunter] = await database.models.Hunter.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId } });
+	await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+	const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(member.id, interaction.guild.id);
 	hunter.isBanned = !hunter.isBanned;
 	if (hunter.isBanned) {
 		hunter.hasBeenBanned = true;
 	}
 	hunter.save();
 	interaction.reply({ content: `${member} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot.`, flags: [MessageFlags.Ephemeral] });
-	if (!member.bot) {
+	if (!member.user.bot) {
 		member.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`);
 	}
 };

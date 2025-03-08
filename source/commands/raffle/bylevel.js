@@ -5,9 +5,9 @@ const { Sequelize, Op } = require("sequelize");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const levelThreshold = interaction.options.getInteger("level");
 	const eligibleHunters = await database.models.Hunter.findAll({ where: { companyId: interaction.guildId, level: { [Op.gte]: levelThreshold } } });
 	const eligibleMembers = await interaction.guild.members.fetch({ user: eligibleHunters.map(hunter => hunter.userId) });
@@ -18,7 +18,7 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 	}
 	const winnerId = eligibleIds.at(Math.floor(Math.random() * eligibleIds.size));
 	interaction.reply(`The winner of this raffle is: <@${winnerId}>`);
-	database.models.Company.findByPk(interaction.guildId).then(company => {
+	logicLayer.companies.findCompanyByPK(interaction.guild.id).then(company => {
 		company.update("nextRaffleString", null);
 	});
 };

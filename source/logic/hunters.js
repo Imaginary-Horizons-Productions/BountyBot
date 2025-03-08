@@ -20,7 +20,7 @@ function setDB(database) {
  */
 async function findOrCreateBountyHunter(userId, companyId) {
 	await db.models.User.findOrCreate({ where: { id: userId } });
-	return await db.models.Hunter.findOrCreate({ where: { userId, companyId } });
+	return db.models.Hunter.findOrCreate({ where: { userId, companyId } });
 }
 
 /** *Queries directly for a Hunter*
@@ -30,12 +30,46 @@ async function findOrCreateBountyHunter(userId, companyId) {
  * @param {string} companyId
  * @returns {Promise<Hunter | null>}
  */
-async function findOneHunter(userId, companyId) {
-	return await db.models.Hunter.findOne({ where: { userId, companyId } });
+function findOneHunter(userId, companyId) {
+	return db.models.Hunter.findOne({ where: { userId, companyId } });
+}
+
+/** *Find all Hunters in the specified Company*
+ * @param {string} companyId
+ */
+function findCompanyHunters(companyId) {
+	return db.models.Hunter.findAll({ where: { companyId } });
+}
+
+/** *Sets a Hunter's Profile Color*
+ * @param {string} userId
+ * @param {string} companyId
+ * @param {string} color
+ */
+function setHunterProfileColor(userId, companyId, color) {
+	return db.models.Hunter.update({ profileColor: color }, { where: { userId, companyId } });
+}
+
+/** *Resets the ranks on all Hunters in the specified Company*
+ * @param {string} companyId
+ */
+function resetCompanyRanks(companyId) {
+	return db.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId } });
+}
+
+/** *Destroys all of the specified Company's Hunters*
+ * @param {string} companyId
+ */
+function deleteCompanyHunters(companyId) {
+	return db.models.Hunter.destroy({ where: { companyId } });
 }
 
 module.exports = {
 	setDB,
 	findOrCreateBountyHunter,
-	findOneHunter
+	findOneHunter,
+	findCompanyHunters,
+	setHunterProfileColor,
+	resetCompanyRanks,
+	deleteCompanyHunters
 }

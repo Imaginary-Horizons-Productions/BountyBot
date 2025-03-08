@@ -9,10 +9,10 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
-	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: posterId, state: "open" } }).then(openBounties => {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+	logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id).then(openBounties => {
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
 			components: [
@@ -27,25 +27,23 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
-			const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+			const bounty = await database.models.Bounty.findByPk(bountyId);
 			bounty.state = "deleted";
 			bounty.save();
 			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
-			if (bounty.Company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
+			if (company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 				postingThread.delete("Bounty taken down by poster");
 			}
 			bounty.destroy();
 
-			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
+			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				hunter.decrement("xp");
-				const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
-				if (!participationCreated) {
-					participation.decrement("xp");
-				}
-				getRankUpdates(interaction.guild, database);
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
+				getRankUpdates(interaction.guild, logicLayer);
 			})
 
 			collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });

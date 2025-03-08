@@ -1,19 +1,29 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
-const { buildCompanyStatsEmbed, randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
+const { randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
 const { Op } = require('sequelize');
+const { COMPANY_XP_COEFFICIENT } = require('../constants');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "stats";
 module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
 	/** Get the BountyBot stats for yourself or someone else */
-	(interaction, database, runMode) => {
+	async (interaction, database, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
 		if (target) {
 			if (target.id === interaction.client.user.id) {
 				// BountyBot
-				buildCompanyStatsEmbed(interaction.guild, database).then(embed => {
+				const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+				const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
+				const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
+				const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
+				const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
+				company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
 					interaction.reply({
 						embeds: [embed],
 						flags: [MessageFlags.Ephemeral]
@@ -21,22 +31,22 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				})
 			} else {
 				// Other Hunter
-				database.models.Hunter.findOne({ where: { userId: target.id, companyId: interaction.guildId } }).then(async hunter => {
+				logicLayer.hunters.findOneHunter(target.id, interaction.guild.id).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
 						return;
 					}
 
-					const { xpCoefficient } = await database.models.Company.findByPk(interaction.guildId);
+					const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
-					const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-					const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+					const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
+					const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
-					const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
+					const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
-					const mostSecondedToast = await database.models.Toast.findOne({ where: { senderId: target.id, companyId: interaction.guildId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] })
+					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
 
 					interaction.reply({
 						embeds: [
@@ -61,23 +71,23 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			}
 		} else {
 			// Self
-			database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
+			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				if (!hunter) {
 					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
-				const { xpCoefficient, maxSimBounties } = await database.models.Company.findByPk(interaction.guildId);
+				const { xpCoefficient, maxSimBounties } = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
-				const participations = await database.models.Participation.findAll({ where: { userId: hunter.userId, companyId: hunter.companyId }, order: [["createdAt", "DESC"]] });
-				const [currentSeason] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
+				const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
+				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
-				const ranks = await database.models.Rank.findAll({ where: { companyId: interaction.guildId }, order: [["varianceThreshold", "DESC"]] });
+				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
-				const mostSecondedToast = await database.models.Toast.findOne({ where: { senderId: interaction.user.id, companyId: interaction.guildId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] })
+				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, interaction.guild.id);
 
 				interaction.reply({
 					embeds: [
@@ -113,4 +123,6 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 		description: "Whose stats to check; BountyBot for the server stats, empty for yourself",
 		required: false
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

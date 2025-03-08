@@ -1,12 +1,14 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
-const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../constants');
-const { raiseToast } = require('../logic/toasts.js');
-const { textsHaveAutoModInfraction, commandMention } = require('../util/textUtil');
+const { SKIP_INTERACTION_HANDLING } = require('../constants');
+const { textsHaveAutoModInfraction, generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil.js');
-const { findOrCreateCompany } = require('../logic/companies.js');
-const { findOrCreateBountyHunter } = require('../logic/hunters.js');
 const { getRankUpdates } = require('../util/scoreUtil.js');
+const { Toast } = require('../models/toasts/Toast.js');
+const { Goal } = require('../models/companies/Goal.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 const mainId = "Raise a Toast";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -17,19 +19,19 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		if (runMode === "prod" && interaction.targetUser.bot) {
+		if (runMode === "production" && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot raist a toast to a bot.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const [company] = await findOrCreateCompany(interaction.guildId);
-		const [sender] = await findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
+		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 		if (sender.isBanned) {
 			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const [toastee] = await findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
+		const [toastee] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
 		if (toastee.isBanned) {
 			interaction.reply({ content: `${userMention(interaction.targetId)} cannot receive toasts because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 			return;
@@ -53,33 +55,36 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 
-			const { embeds, toastId, rewardedHunterIds, rewardTexts, critValue } = await raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], toastText);
+			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
+
+			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], season.id, toastText);
+			const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, [interaction.targetId], modalSubmission.member)];
+
+			if (rewardedHunterIds.length > 0) {
+				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", sender, season);
+				if (goalUpdate.gpContributed > 0) {
+					rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
+					if (goalUpdate.goalCompleted) {
+						embeds.push(Goal.generateCompletionEmbed(goalUpdate.contributorIds));
+					}
+					const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
+					if (goalId !== null) {
+						embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+					} else {
+						embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+					}
+				}
+			}
+
 			modalSubmission.reply({
 				embeds,
-				components: [
-					new ActionRowBuilder().addComponents(
-						new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
-							.setLabel("Hear, hear!")
-							.setEmoji("🥂")
-							.setStyle(ButtonStyle.Primary)
-					)
-				],
+				components: [Toast.generateSecondingActionRow(toastId)],
 				withResponse: true
 			}).then(async response => {
 				let content = "";
 				if (rewardedHunterIds.length > 0) {
-					const rankUpdates = await getRankUpdates(interaction.guild, database);
-					const multiplierString = company.festivalMultiplierString();
-					content = `__**XP Gained**__\n${rewardedHunterIds.map(id => `<@${id}> + 1 XP${multiplierString}`).join("\n")}${critValue > 0 ? `\n${interaction.member} + ${critValue} XP${multiplierString} *Critical Toast!*` : ""}`;
-					if (rankUpdates.length > 0) {
-						content += `\n\n__**Rank Ups**__\n- ${rankUpdates.join("\n- ")}`;
-					}
-					if (rewardTexts.length > 0) {
-						content += `\n\n__**Rewards**__\n- ${rewardTexts.join("\n- ")}`;
-					}
-					if (content.length > MAX_MESSAGE_CONTENT_LENGTH) {
-						content = `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-					}
+					const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
+					content = Toast.generateRewardString(rewardedHunterIds, rankUpdates, rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
 				}
 
 				if (content) {
@@ -90,9 +95,11 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 							thread.send({ content, flags: MessageFlags.SuppressNotifications });
 						})
 					}
-					updateScoreboard(company, modalSubmission.guild, database);
+					updateScoreboard(modalSubmission.guild, database, logicLayer);
 				}
 			});
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

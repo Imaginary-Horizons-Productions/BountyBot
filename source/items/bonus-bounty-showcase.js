@@ -1,14 +1,17 @@
 const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
-const { Item } = require("../classes");
+const { ItemTemplate } = require("../classes");
 const { timeConversion, commandMention } = require("../util/textUtil");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../constants");
 const { showcaseBounty } = require("../util/bountyUtil");
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const itemName = "Bonus Bounty Showcase";
-module.exports = new Item(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
+module.exports = new ItemTemplate(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
 	async (interaction, database) => {
-		const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.user.id, state: "open" } });
+		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't have any open bounties on this server to showcase.", flags: [MessageFlags.Ephemeral] });
 			return true;
@@ -26,7 +29,7 @@ module.exports = new Item(itemName, "Showcase one of your bounties and increase 
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-			showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, database);
+			showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, database, logicLayer);
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);
@@ -38,4 +41,6 @@ module.exports = new Item(itemName, "Showcase one of your bounties and increase 
 			}
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

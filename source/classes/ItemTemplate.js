@@ -1,7 +1,7 @@
 const { CommandInteraction } = require("discord.js");
 const { Sequelize } = require("sequelize");
 
-class Item {
+class ItemTemplate {
 	/**
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
@@ -14,8 +14,14 @@ class Item {
 		this.cooldown = cooldownInMS;
 		this.effect = effectFunction;
 	}
+
+	/** @param {(logicBlob: typeof import("../logic")) => void} setLogicFunction */
+	setLogicLinker(setLogicFunction) {
+		this.setLogic = setLogicFunction;
+		return this;
+	}
 }
 
 module.exports = {
-	Item
+	ItemTemplate
 };

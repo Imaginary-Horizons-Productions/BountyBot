@@ -1,8 +1,9 @@
-﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Company } = require('../companies/Company');
-const { SAFE_DELIMITER } = require('../../constants');
-const { timeConversion } = require('../../util/textUtil');
+const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../../constants');
+const { timeConversion, commandMention, listifyEN } = require('../../util/textUtil');
+const { Completion } = require('./Completion');
 
 /** Bounties are user created objectives for other server members to complete */
 class Bounty extends Model {
@@ -12,18 +13,6 @@ class Bounty extends Model {
 		});
 	}
 
-	/** Generate an embed for the given bounty, in addition to fetching prerequisite data
-	 * @param {Guild} guild
-	 * @param {number} posterLevel
-	 * @param {string} festivalMultiplierString
-	 * @param {boolean} shouldOmitRewardsField
-	 * @param {Sequelize} database
-	 */
-	async asEmbed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, database) {
-		const [company, completions] = await Promise.all([database.models.Company.findByPk(guild.id), database.models.Completion.findAll({ where: { bountyId: this.id } })]);
-		return this.embed(guild, posterLevel, festivalMultiplierString, shouldOmitRewardsField, company, completions);
-	}
-
 	/** Generate an embed for the given bounty
 	 * @param {Guild} guild
 	 * @param {number} posterLevel
@@ -31,47 +20,72 @@ class Bounty extends Model {
 	 * @param {Company} company
 	 * @param {Completion[]} completions
 	 */
-	embed(guild, posterLevel, shouldOmitRewardsField, company, completions) {
-		return guild.members.fetch(this.userId).then(async author => {
-			const thumbnails = {
-				open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
-				complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
-				deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
-			};
-			const fields = [];
-			const embed = new EmbedBuilder().setColor(author.displayColor)
-				.setThumbnail(this.thumbnailURL ?? thumbnails[this.state])
-				.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
-				.setTimestamp();
-			if (this.description) {
-				embed.setDescription(this.description)
-			}
-			if (this.attachmentURL) {
-				embed.setImage(this.attachmentURL);
-			}
-			if (this.scheduledEventId) {
-				const event = await guild.scheduledEvents.fetch(this.scheduledEventId);
-				fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
-			}
-			if (!shouldOmitRewardsField) {
-				fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
-			}
+	async embed(guild, posterLevel, shouldOmitRewardsField, company, completions) {
+		const author = await guild.members.fetch(this.userId);
+		const thumbnails = {
+			open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
+			complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
+			deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+		};
+		const fields = [];
+		const embed = new EmbedBuilder().setColor(author.displayColor)
+			.setThumbnail(this.thumbnailURL ?? thumbnails[this.state])
+			.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
+			.setTimestamp();
+		if (this.description) {
+			embed.setDescription(this.description);
+		}
+		if (this.attachmentURL) {
+			embed.setImage(this.attachmentURL);
+		}
+		if (this.scheduledEventId) {
+			const event = await guild.scheduledEvents.fetch(this.scheduledEventId);
+			fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
+		}
+		if (!shouldOmitRewardsField) {
+			fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
+		}
 
-			if (this.isEvergreen) {
-				embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
-			} else {
-				embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
-			}
-			if (completions.length > 0) {
-				fields.push({ name: "Completers", value: `<@${completions.map(reciept => reciept.userId).join(">, <@")}>` });
-			}
+		if (this.isEvergreen) {
+			embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
+		} else {
+			embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+		}
+		if (completions.length > 0) {
+			const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
+			fields.push({ name: "Completers", value: listifyEN([...uniqueCompleters].map(id => userMention(id))) });
+		}
 
-			if (fields.length > 0) {
-				embed.addFields(fields);
-			}
+		if (fields.length > 0) {
+			embed.addFields(fields);
+		}
+		return embed;
+	}
 
-			return embed;
-		});
+	/**
+	 * @param {string[]} completerIds
+	 * @param {number} completerReward
+	 * @param {string?} posterId null for evergreen bounties
+	 * @param {number?} posterReward null for evergreen bounties
+	 * @param {string} multiplierString
+	 * @param {string[]} rankUpdates
+	 * @param {string[]} rewardTexts
+	 */
+	static generateRewardString(completerIds, completerReward, posterId, posterReward, multiplierString, rankUpdates, rewardTexts) {
+		let text = `${heading("XP Gained", 2)}\n${completerIds.map(id => `${userMention(id)} +${completerReward} XP${multiplierString}`).join("\n")}`;
+		if (posterId && posterReward) {
+			text += `\n${userMention(posterId)} +${posterReward} XP${multiplierString}`;
+		}
+		if (rankUpdates.length > 0) {
+			text += `\n${heading("Rank Ups", 2)}\n- ${rankUpdates.join("\n- ")}`;
+		}
+		if (rewardTexts.length > 0) {
+			text += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
+		}
+		if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
+			return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+		}
+		return text;
 	}
 
 	/** Update the bounty's embed in the bounty board
@@ -124,11 +138,17 @@ class Bounty extends Model {
 		]
 	}
 
+	/**
+	 * @param {number} posterLevel
+	 * @param {number} slotNumber
+	 * @param {number} showcaseCount
+	 */
 	static calculateCompleterReward(posterLevel, slotNumber, showcaseCount) {
 		const showcaseMultiplier = 0.25 * showcaseCount + 1;
 		return Math.max(2, Math.floor((6 + 0.5 * posterLevel - 3 * slotNumber + 0.5 * slotNumber % 2) * showcaseMultiplier));
 	}
 
+	/** @param {number} hunterCount */
 	calculatePosterReward(hunterCount) {
 		let posterXP = Math.ceil(hunterCount / 2);
 		for (const property of ["description", "thumbnailURL", "attachmentURL", "scheduledEventId"]) {
@@ -142,7 +162,7 @@ class Bounty extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Bounty.init({
+	return Bounty.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -207,7 +227,6 @@ function initModel(sequelize) {
 		freezeTableName: true,
 		paranoid: true
 	});
-	return Bounty;
 };
 
 module.exports = { Bounty, initModel };

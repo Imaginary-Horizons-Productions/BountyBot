@@ -1,8 +1,11 @@
-const { CommandInteraction, userMention, bold, MessageFlags } = require("discord.js");
+const { CommandInteraction, userMention, bold, MessageFlags, Guild } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { addCompleters, findBounty } = require("../../logic/bounties.js");
 const { Completion } = require("../../models/bounties/Completion.js");
+const { Bounty } = require("../../models/bounties/Bounty.js");
+const { Company } = require("../../models/companies/Company.js");
+const { Hunter } = require("../../models/users/Hunter.js");
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -36,9 +39,9 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 
 	const bounty = await findBounty({slotNumber, posterId, guildId: interaction.guild.id});
@@ -54,7 +57,6 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 	}
 	
 	const completerMembers = Array.from((await interaction.guild.members.fetch({ user: completerIds })).values());
-
 	try {
 		let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await addCompleters(bounty, interaction.guild, completerMembers, runMode);
 		updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
@@ -67,9 +69,10 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			console.error(e);
 		} else {
 			interaction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
-		}
-		return;
-	}
+    }
+    return;
+  }
+
 };
 
 module.exports = {
@@ -91,8 +94,5 @@ module.exports = {
 			}
 		]
 	},
-	executeSubcommand,
-	setLogic: (logicBundle) => {
-		bounties = logicBundle.bounties;
-	}
+	executeSubcommand
 };

@@ -4,6 +4,9 @@ const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { Op } = require('sequelize');
 const { listifyEN, timeConversion } = require('../util/textUtil');
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const mainId = "bbremovecompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
@@ -27,8 +30,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 				const removedIds = collectedInteraction.members.map((_, key) => key);
 				database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: removedIds } } });
-				const poster = await database.models.Hunter.findOne({ where: { companyId: collectedInteraction.guildId, userId: collectedInteraction.user.id } });
-				const company = await database.models.Company.findByPk(collectedInteraction.guildId);
+				const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guild.id);
+				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guildId);
 				bounty.embed(collectedInteraction.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))
 					.then(async embed => {
 						if (collectedInteraction.channel.archived) {
@@ -51,4 +54,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			});
 		})
 	}
-);
+).setLogicLinker(logicBundle => {
+	logicLayer = logicBundle;
+});

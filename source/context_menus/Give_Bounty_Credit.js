@@ -1,9 +1,15 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, Guild } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { addCompleters, findBounty } = require('../logic/bounties.js');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
+const { Bounty } = require('../models/bounties/Bounty.js');
+const { Company } = require('../models/companies/Company.js');
+const { Hunter } = require('../models/users/Hunter.js');
+
+/** @type {typeof import("../logic")} */
+let logicLayer;
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -42,8 +48,14 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		if (runMode === "prod" && interaction.targetUser.bot) {
+		if (runMode === "production" && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+
+		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
+		if (hunter.isBanned) {
+			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -66,7 +78,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 			try {
-				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await addCompleters(bounty, modalSubmission.guild, [interaction.targetUser], runMode);
+				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(bounty, modalSubmission.guild, [interaction.targetUser], runMode);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, modalSubmission.guild);
 				modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(returnedBounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
 			} catch (e) {
@@ -79,8 +91,6 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}
 		})
 	}
-);
-
-module.exports.setLogic = (logicBundle) => {
-	bounties = logicBundle.bounties;
-}
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

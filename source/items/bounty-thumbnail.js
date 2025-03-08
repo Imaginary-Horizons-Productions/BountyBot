@@ -1,13 +1,16 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
-const { Item } = require("../classes");
+const { ItemTemplate } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../constants");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
 const { timeConversion } = require("../util/textUtil");
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const itemName = "Bounty Thumbnail";
-module.exports = new Item(itemName, "Adds an image (via URL) to one of your open bounties!", 3000,
+module.exports = new ItemTemplate(itemName, "Adds an image (via URL) to one of your open bounties!", 3000,
 	async (interaction, database) => {
-		const openBounties = await database.models.Bounty.findAll({ where: { companyId: interaction.guildId, userId: interaction.user.id, state: "open" } });
+		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: [MessageFlags.Ephemeral] });
 			return true;
@@ -54,7 +57,7 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 				bounty.thumbnailURL = imageURL;
 				await bounty.save().then(async bounty => {
 					bounty.reload();
-					const company = await database.models.Company.findByPk(interaction.guildId);
+					const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 					bounty.updatePosting(interaction.guild, company, database);
 				});
 				return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
@@ -67,4 +70,6 @@ module.exports = new Item(itemName, "Adds an image (via URL) to one of your open
 			})
 		})
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

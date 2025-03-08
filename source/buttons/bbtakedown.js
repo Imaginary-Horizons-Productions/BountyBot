@@ -3,6 +3,9 @@ const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { getRankUpdates } = require('../util/scoreUtil');
 
+/** @type {typeof import("../logic")} */
+let logicLayer;
+
 const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
@@ -30,14 +33,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 				bounty.destroy();
 
-				database.models.Hunter.findOne({ where: { userId: interaction.user.id, companyId: interaction.guildId } }).then(async hunter => {
+				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 					hunter.decrement("xp");
-					const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-					const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
-					if (!participationCreated) {
-						participation.decrement("xp");
-					}
-					getRankUpdates(interaction.guild, database);
+					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+					logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
+					getRankUpdates(interaction.guild, logicLayer);
 				})
 
 				return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
@@ -50,4 +50,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			});
 		})
 	}
-);
+).setLogicLinker(logicBundle => {
+	logicLayer = logicBundle;
+});

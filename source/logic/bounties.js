@@ -31,6 +31,19 @@ async function findBounty(bountyInfo) {
 }
 
 /**
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function findOpenBounties(userId, companyId) {
+	return db.models.Bounty.findAll({ where: { userId, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
+}
+
+/** @param {string} companyId */
+function findEvergreenBounties(companyId) {
+	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
+}
+
+/**
  * @param {Bounty} bounty
  * @param {Guild} guild
  * @param {GuildMember[]} completerMembers
@@ -94,30 +107,22 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
  * @param {Hunter} poster
  * @param {Hunter[]} validatedHunters
  * @param {Guild} guild
- * @param {Sequelize} database
- * @returns {[string, string[], { gpContributed: number; goalCompleted: boolean; contributorIds: string[];}]}
  */
-async function completeBounty(bounty, poster, validatedHunters, guild, database) {
+async function completeBounty(bounty, poster, validatedHunters, guild) {
 	bounty.update({ state: "completed", completedAt: new Date() });
-	const season = await database.models.Season.findOne({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
-	season.increment("bountiesCompleted");
 	const rewardTexts = [];
-	const progressData = await progressGoal(guild.id, "bounties", poster.userId);
-	if (progressData.gpContributed > 0) {
-		rewardTexts.push(`This bounty contributed ${progressData.gpContributed} GP to the Server Goal!`);
-	}
 
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
-	const company = await database.models.Company.findByPk(bounty.companyId);
+	const company = await db.models.Company.findByPk(bounty.companyId);
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
-	database.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
+	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	for (const hunter of validatedHunters) {
-		const completerLevelTexts = await hunter.addXP(guild.name, bountyValue, true, database);
+		const completerLevelTexts = await hunter.addXP(guild.name, bountyValue, true, company);
 		if (completerLevelTexts.length > 0) {
 			rewardTexts.push(...completerLevelTexts);
 		}
 		hunter.increment("othersFinished");
-		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
+		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
@@ -128,7 +133,7 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 		}
 		const droppedItem = rollItemDrop(dropRate);
 		if (droppedItem) {
-			const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: hunter.userId, itemName: droppedItem } });
+			const [itemRow, itemWasCreated] = await db.models.Item.findOrCreate({ where: { userId: hunter.userId, itemName: droppedItem } });
 			if (!itemWasCreated) {
 				itemRow.increment("count");
 			}
@@ -137,12 +142,12 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
-	const posterLevelTexts = await poster.addXP(guild.name, posterXP * company.festivalMultiplier, true, database);
+	const posterLevelTexts = await poster.addXP(guild.name, posterXP * company.festivalMultiplier, true, company);
 	if (posterLevelTexts.length > 0) {
 		rewardTexts.push(...posterLevelTexts);
 	}
 	poster.increment("mineFinished");
-	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
+	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
 	}
@@ -153,24 +158,33 @@ async function completeBounty(bounty, poster, validatedHunters, guild, database)
 	}
 	const droppedItem = rollItemDrop(dropRate);
 	if (droppedItem) {
-		const [itemRow, itemWasCreated] = await database.models.Item.findOrCreate({ where: { userId: bounty.userId, itemName: droppedItem } });
+		const [itemRow, itemWasCreated] = await db.models.Item.findOrCreate({ where: { userId: bounty.userId, itemName: droppedItem } });
 		if (!itemWasCreated) {
 			itemRow.increment("count");
 		}
 		rewardTexts.push(`<@${poster.userId}> has found a **${droppedItem}**!`);
 	}
-	const multiplierString = bounty.Company.festivalMultiplierString();
 
-	return [
-		`__**XP Gained**__\n${validatedHunters.map(hunter => `${userMention(hunter.userId)} + ${bountyBaseValue} XP${multiplierString}`).join("\n")}\n${userMention(poster.userId)} + ${posterXP} XP${multiplierString}`,
-		rewardTexts,
-		progressData
-	];
+	return {
+		completerXP: bountyBaseValue,
+		posterXP,
+		rewardTexts
+	};
+}
+
+/** *Delete all Bounties associated with the given Company*
+ * @param {string} companyId
+ */
+function deleteCompanyBounties(companyId) {
+	return db.models.Bounty.destroy({ where: { companyId } });
 }
 
 module.exports = {
 	setDB,
+	findBounty,
+	findOpenBounties,
+	findEvergreenBounties,
 	addCompleters,
 	completeBounty,
-	findBounty
+	deleteCompanyBounties
 }

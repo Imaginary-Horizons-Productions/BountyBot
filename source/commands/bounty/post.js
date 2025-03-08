@@ -11,11 +11,11 @@ const { getRankUpdates } = require("../../util/scoreUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string, Hunter]} args
+ * @param {[typeof import("../../logic"), string, Hunter]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId, hunter]) {
-	const [{ maxSimBounties }] = await database.models.Company.findOrCreate({ where: { id: interaction.guildId } });
-	const existingBounties = await database.models.Bounty.findAll({ where: { userId: posterId, companyId: interaction.guildId, state: "open" } });
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId, hunter]) {
+	const [{ maxSimBounties }] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+	const existingBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guildId);
 	const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 	const bountySlots = hunter.maxSlots(maxSimBounties);
 	const slotOptions = [];
@@ -50,8 +50,8 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [slotNumber] = collectedInteraction.values;
 		// Check user actually has slot
-		const company = await database.models.Company.findByPk(interaction.guildId);
-		const hunter = await database.models.Hunter.findOne({ where: { companyId: interaction.guildId, userId: interaction.user.id } });
+		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+		const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guildId);
 		if (parseInt(slotNumber) > hunter.maxSlots(company.maxSimBounties)) {
 			interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 			return;
@@ -176,16 +176,13 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId, h
 				return;
 			}
 
-			const [season] = await database.models.Season.findOrCreate({ where: { companyId: modalSubmission.guildId, isCurrentSeason: true } });
-			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.user.id, seasonId: season.id }, defaults: { xp: 1 } });
-			if (!participationCreated) {
-				participation.increment({ xp: 1 });
-			}
-			const company = await database.models.Company.findByPk(modalSubmission.guildId);
-			const poster = await database.models.Hunter.findOne({ where: { userId: modalSubmission.user.id, companyId: modalSubmission.guildId } });
-			poster.addXP(modalSubmission.guild.name, 1, true, database).then(() => {
-				getRankUpdates(modalSubmission.guild, database);
-				updateScoreboard(company, interaction.guild, database);
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(modalSubmission.guild.id);
+			logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
+			const company = await logicLayer.companies.findCompanyByPK(modalSubmission.guild.id);
+			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guildId);
+			poster.addXP(modalSubmission.guild.name, 1, true, company).then(() => {
+				getRankUpdates(modalSubmission.guild, logicLayer);
+				updateScoreboard(interaction.guild, database, logicLayer);
 			});
 
 			if (shouldMakeEvent) {

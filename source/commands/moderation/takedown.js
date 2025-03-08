@@ -8,11 +8,11 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const poster = interaction.options.getUser("poster");
-	const openBounties = await database.models.Bounty.findAll({ where: { userId: poster.id, companyId: interaction.guildId, state: "open" } });
+	const openBounties = await logicLayer.bounties.findOpenBounties(poster.id, interaction.guild.id);
 	if (openBounties.length < 1) {
 		interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, flags: [MessageFlags.Ephemeral] });
 		return;
@@ -37,21 +37,19 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 			bounty.state = "deleted";
 			bounty.save();
-			if (bounty.Company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(bounty.Company.bountyBoardId);
+			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
+			if (company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 				postingThread.delete("Bounty taken down by moderator");
 			}
 			bounty.destroy();
 
-			database.models.Hunter.findOne({ where: { userId: posterId, companyId: interaction.guildId } }).then(async poster => {
+			logicLayer.hunters.findOneHunter(posterId, interaction.guild.id).then(async poster => {
 				poster.decrement("xp");
-				const [season] = await database.models.Season.findOrCreate({ where: { companyId: interaction.guildId, isCurrentSeason: true } });
-				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: posterId, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
-				if (!participationCreated) {
-					participation.decrement("xp");
-				}
-				getRankUpdates(interaction.guild, database);
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
+				logicLayer.seasons.changeSeasonXP(posterId, interaction.guildId, season.id, -1);
+				getRankUpdates(interaction.guild, logicLayer);
 			})
 			collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
 		});

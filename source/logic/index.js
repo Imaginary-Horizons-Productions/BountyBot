@@ -6,8 +6,11 @@
  */
 module.exports = {
 	bounties: require('./bounties.js'),
-	goals: require("./goals.js"),
 	companies: require("./companies.js"),
+	goals: require("./goals.js"),
 	hunters: require("./hunters.js"),
+	ranks: require("./ranks.js"),
+	items: require("./items.js"),
+	seasons: require("./seasons.js"),
 	toasts: require("./toasts.js")
 };

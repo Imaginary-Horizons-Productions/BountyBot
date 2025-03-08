@@ -1,10 +1,10 @@
-const { EmbedBuilder, userMention, Guild, GuildMember } = require("discord.js");
+const { Guild, GuildMember } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { timeConversion, listifyEN, congratulationBuilder, generateTextBar } = require("../util/textUtil");
-const { progressGoal, findLatestGoalProgress } = require("./goals");
+const { timeConversion } = require("../util/textUtil");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
-const { findOrCreateBountyHunter } = require("./hunters");
+const { Toast } = require("../models/toasts/Toast");
+const { Recipient } = require("../models/toasts/Recipient");
 
 /** @type {Sequelize} */
 let db;
@@ -13,27 +13,50 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Create a Seconding entity*
+ * @param {string} toastId
+ * @param {string} seconderId
+ * @param {boolean} wasCrit
+ */
+function createSeconding(toastId, seconderId, wasCrit) {
+	return db.models.Seconding.create({ toastId, seconderId, wasCrit });
+}
+
+/** *Find a specified Hunter's most seconded Toast*
+ * @param {string} senderId
+ * @param {string} companyId
+ */
+function findMostSecondedToast(senderId, companyId) {
+	return db.models.Toast.findOne({ where: { senderId, companyId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] });
+}
+
+/** *Checks if the specified seconder has already seconded the specified Toast*
+ * @param {string} toastId
+ * @param {string} seconderId
+ */
+async function wasAlreadySeconded(toastId, seconderId) {
+	return Boolean(await db.models.Seconding.findOne({ where: { toastId, seconderId } }));
+}
+
+/** *Find the specified Toast*
+ * @param {string} toastId
+ * @returns {Promise<Toast & {Recipients: Recipient[]}>}
+ */
+function findToastByPK(toastId) {
+	return db.models.Toast.findByPk(toastId, { include: db.models.Toast.Recipients });
+}
+
 /**
  * @param {Guild} guild
  * @param {Company} company
  * @param {GuildMember} sender
  * @param {Hunter} senderHunter
  * @param {string[]} toasteeIds
+ * @param {string} seasonId
  * @param {string} toastText
  * @param {string | null} imageURL
  */
-async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toastText, imageURL = null) {
-	const embeds = [
-		new EmbedBuilder().setColor("e5b271")
-			.setThumbnail(company.toastThumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
-			.setTitle(toastText)
-			.setDescription(`A toast to ${listifyEN(toasteeIds.map(id => userMention(id)))}!`)
-			.setFooter({ text: sender.displayName, iconURL: sender.user.avatarURL() })
-	];
-	if (imageURL) {
-		embeds[0].setImage(imageURL);
-	}
-
+async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seasonId, toastText, imageURL = null) {
 	// Make database entities
 	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } }, include: db.models.Toast.Recipients });
 	let rewardsAvailable = 10;
@@ -63,30 +86,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
 	}, []);
 
-	const [season] = await db.models.Season.findOrCreate({ where: { companyId: guild.id, isCurrentSeason: true } });
-	season.increment("toastsRaised");
-
 	const rewardTexts = [];
-	if (rewardsAvailable > 0) {
-		const progressData = await progressGoal(interaction.guildId, "toasts", sender.id);
-		if (progressData.gpContributed > 0) {
-			rewardTexts.push(`This toast contributed ${progressData.gpContributed} GP to the Server Goal!`);
-			if (progressData.goalCompleted) {
-				embeds.push(new EmbedBuilder().setColor("e5b271")
-					.setTitle("Server Goal Completed")
-					.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-					.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-					.addFields({ name: "Contributors", value: listifyEN(progressData.contributorIds.map(id => userMention(id))) })
-				);
-			}
-			const { goalId, currentGP, requiredGP } = await findLatestGoalProgress(interaction.guildId);
-			if (goalId !== null) {
-				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
-			} else {
-				embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
-			}
-		}
-	}
 	senderHunter.increment("toastsRaised");
 	const toast = await db.models.Toast.create({ companyId: guild.id, senderId: sender.id, text: toastText, imageURL });
 	const rawRecipients = [];
@@ -95,10 +95,11 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 	for (const id of toasteeIds) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
-			const [hunter] = await findOrCreateBountyHunter(id, company.id);
+			await db.models.User.findOrCreate({ where: { id } });
+			const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: id, companyId: company.id } });
 			rewardedHunterIds.push(hunter.userId);
-			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, db));
-			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId: season.id }, defaults: { xp: 1 } });
+			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, company));
+			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId }, defaults: { xp: 1 } });
 			if (!participationCreated) {
 				participation.increment("xp");
 			}
@@ -142,16 +143,20 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, toas
 	db.models.Recipient.bulkCreate(rawRecipients);
 
 	// Add XP and update ranks
-	rewardTexts.push(...await senderHunter.addXP(guild.name, critValue, false, db));
-	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId: season.id }, defaults: { xp: critValue, toastsRaised: 1 } });
+	rewardTexts.push(...await senderHunter.addXP(guild.name, critValue, false, company));
+	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: critValue, toastsRaised: 1 });
 	}
 
-	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue, embeds };
+	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue };
 }
 
 module.exports = {
 	setDB,
+	createSeconding,
+	findMostSecondedToast,
+	wasAlreadySeconded,
+	findToastByPK,
 	raiseToast
 }

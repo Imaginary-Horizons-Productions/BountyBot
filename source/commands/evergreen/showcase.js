@@ -7,10 +7,10 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {...unknown} args
+ * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...args) {
-	const existingBounties = await database.models.Bounty.findAll({ where: { isEvergreen: true, companyId: interaction.guildId, state: "open" }, order: [["slotNumber", "ASC"]] });
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+	const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 	if (existingBounties.length < 1) {
 		interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -30,12 +30,13 @@ async function executeSubcommand(interaction, database, runMode, ...args) {
 		withResponse: true
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
-		return database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
+		return database.models.Bounty.findByPk(bountyId).then(async bounty => {
 			if (bounty?.state !== "open") {
 				return collectedInteraction;
 			}
 
-			bounty.embed(interaction.guild, bounty.Company.level, false, bounty.Company, []).then(embed => {
+			const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
+			bounty.embed(interaction.guild, company.level, false, company, []).then(embed => {
 				const payload = { embeds: [embed] };
 				const extraText = interaction.options.get("extra-text");
 				if (extraText) {

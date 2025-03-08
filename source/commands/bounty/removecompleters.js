@@ -1,4 +1,4 @@
-const { CommandInteraction, MessageFlags } = require("discord.js");
+const { CommandInteraction, MessageFlags, userMention } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil");
 
@@ -6,9 +6,9 @@ const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil")
  * @param {CommandInteraction} interaction
  * @param {Sequelize} database
  * @param {string} runMode
- * @param {[string]} args
+ * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[posterId]) {
+async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
 		if (!bounty) {
@@ -23,7 +23,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 		}
 
 		database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: mentionedIds } } });
-		const company = await database.models.Company.findByPk(interaction.guildId);
+		const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 		bounty.updatePosting(interaction.guild, company, database);
 		if (company.bountyBoardId) {
 			interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
@@ -33,7 +33,7 @@ async function executeSubcommand(interaction, database, runMode, ...[posterId]) 
 			});
 		}
 
-		interaction.reply({ content: `The following bounty hunters have been removed as completers from **${bounty.title}**: <@${mentionedIds.join(">, ")}>`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `The following bounty hunters have been removed as completers from **${bounty.title}**: ${listifyEN(mentionedIds.map(id => userMention(id)))}`, flags: [MessageFlags.Ephemeral] });
 	})
 };
 

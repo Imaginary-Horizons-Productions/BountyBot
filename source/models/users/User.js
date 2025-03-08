@@ -29,7 +29,7 @@ class User extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	User.init({
+	return User.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -43,7 +43,6 @@ function initModel(sequelize) {
 		modelName: "User",
 		freezeTableName: true
 	});
-	return User;
 }
 
 module.exports = { User, initModel };
