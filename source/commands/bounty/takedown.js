@@ -42,11 +42,8 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				hunter.decrement("xp");
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { xp: -1 } });
-				if (!participationCreated) {
-					participation.decrement("xp");
-				}
-				getRankUpdates(interaction.guild, database, logicLayer);
+				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
+				getRankUpdates(interaction.guild, logicLayer);
 			})
 
 			collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });

@@ -177,14 +177,11 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			}
 
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(modalSubmission.guild.id);
-			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: modalSubmission.guildId, userId: modalSubmission.user.id, seasonId: season.id }, defaults: { xp: 1 } });
-			if (!participationCreated) {
-				participation.increment({ xp: 1 });
-			}
+			logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
 			const company = await logicLayer.companies.findCompanyByPK(modalSubmission.guild.id);
 			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guildId);
 			poster.addXP(modalSubmission.guild.name, 1, true, company).then(() => {
-				getRankUpdates(modalSubmission.guild, database, logicLayer);
+				getRankUpdates(modalSubmission.guild, logicLayer);
 				updateScoreboard(interaction.guild, database, logicLayer);
 			});
 

@@ -19,7 +19,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		if (runMode === "prod" && interaction.targetUser.bot) {
+		if (runMode === "production" && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot raist a toast to a bot.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
@@ -83,7 +83,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}).then(async response => {
 				let content = "";
 				if (rewardedHunterIds.length > 0) {
-					const rankUpdates = await getRankUpdates(interaction.guild, database, logicLayer);
+					const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
 					content = Toast.generateRewardString(rewardedHunterIds, rankUpdates, rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
 				}
 

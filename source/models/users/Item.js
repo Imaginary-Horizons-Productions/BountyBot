@@ -7,7 +7,7 @@ class Item extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Item.init({
+	return Item.init({
 		userId: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -25,7 +25,6 @@ function initModel(sequelize) {
 		modelName: "Item",
 		freezeTableName: true
 	});
-	return Item;
 };
 
 module.exports = { Item, initModel };

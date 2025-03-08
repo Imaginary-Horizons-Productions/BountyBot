@@ -37,7 +37,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 
 	const validatedCompleterIds = [];
 	for (const member of (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values()) {
-		if (runMode !== "prod" || !member.user.bot) {
+		if (runMode !== "production" || !member.user.bot) {
 			const memberId = member.id;
 			const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 			if (!hunter.isBanned) {
@@ -75,10 +75,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 		levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, company));
 		hunter.increment("othersFinished");
-		const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: bountyValue } });
-		if (!participationCreated) {
-			participation.increment({ xp: bountyValue });
-		}
+		logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, bountyValue);
 		const { gpContributed, goalCompleted, contributorIds } = await logicLayer.goals.progressGoal(interaction.guildId, "bounties", hunter, season);
 		totalGP += gpContributed;
 		wasGoalCompleted ||= goalCompleted;
@@ -101,7 +98,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		}
 		return interaction.reply(acknowledgeOptions);
 	}).then(response => {
-		getRankUpdates(interaction.guild, database, logicLayer).then(rankUpdates => {
+		getRankUpdates(interaction.guild, logicLayer).then(rankUpdates => {
 			response.resource.message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 				thread.send({ content: Bounty.generateRewardString(validatedCompleterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), rankUpdates, levelTexts), flags: MessageFlags.SuppressNotifications });
 			})

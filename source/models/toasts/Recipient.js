@@ -14,7 +14,7 @@ class Recipient extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Recipient.init({
+	return Recipient.init({
 		toastId: {
 			primaryKey: true,
 			type: DataTypes.BIGINT
@@ -36,7 +36,6 @@ function initModel(sequelize) {
 		modelName: "Recipient",
 		freezeTableName: true
 	});
-	return Recipient;
 }
 
 module.exports = { Recipient, initModel };

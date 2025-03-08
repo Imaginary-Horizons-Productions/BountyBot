@@ -3,6 +3,7 @@ const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Company } = require('../companies/Company');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../../constants');
 const { timeConversion, commandMention, listifyEN } = require('../../util/textUtil');
+const { Completion } = require('./Completion');
 
 /** Bounties are user created objectives for other server members to complete */
 class Bounty extends Model {
@@ -19,48 +20,46 @@ class Bounty extends Model {
 	 * @param {Company} company
 	 * @param {Completion[]} completions
 	 */
-	embed(guild, posterLevel, shouldOmitRewardsField, company, completions) {
-		return guild.members.fetch(this.userId).then(async author => {
-			const thumbnails = {
-				open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
-				complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
-				deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
-			};
-			const fields = [];
-			const embed = new EmbedBuilder().setColor(author.displayColor)
-				.setThumbnail(this.thumbnailURL ?? thumbnails[this.state])
-				.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
-				.setTimestamp();
-			if (this.description) {
-				embed.setDescription(this.description)
-			}
-			if (this.attachmentURL) {
-				embed.setImage(this.attachmentURL);
-			}
-			if (this.scheduledEventId) {
-				const event = await guild.scheduledEvents.fetch(this.scheduledEventId);
-				fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
-			}
-			if (!shouldOmitRewardsField) {
-				fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
-			}
+	async embed(guild, posterLevel, shouldOmitRewardsField, company, completions) {
+		const author = await guild.members.fetch(this.userId);
+		const thumbnails = {
+			open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
+			complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
+			deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+		};
+		const fields = [];
+		const embed = new EmbedBuilder().setColor(author.displayColor)
+			.setThumbnail(this.thumbnailURL ?? thumbnails[this.state])
+			.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
+			.setTimestamp();
+		if (this.description) {
+			embed.setDescription(this.description);
+		}
+		if (this.attachmentURL) {
+			embed.setImage(this.attachmentURL);
+		}
+		if (this.scheduledEventId) {
+			const event = await guild.scheduledEvents.fetch(this.scheduledEventId);
+			fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
+		}
+		if (!shouldOmitRewardsField) {
+			fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
+		}
 
-			if (this.isEvergreen) {
-				embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
-			} else {
-				embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
-			}
-			if (completions.length > 0) {
-				const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
-				fields.push({ name: "Completers", value: listifyEN([...uniqueCompleters].map(id => userMention(id))) });
-			}
+		if (this.isEvergreen) {
+			embed.setAuthor({ name: `Evergreen Bounty #${this.slotNumber}`, iconURL: author.user.displayAvatarURL() });
+		} else {
+			embed.setAuthor({ name: `${author.displayName}'s #${this.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+		}
+		if (completions.length > 0) {
+			const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
+			fields.push({ name: "Completers", value: listifyEN([...uniqueCompleters].map(id => userMention(id))) });
+		}
 
-			if (fields.length > 0) {
-				embed.addFields(fields);
-			}
-
-			return embed;
-		});
+		if (fields.length > 0) {
+			embed.addFields(fields);
+		}
+		return embed;
 	}
 
 	/**
@@ -163,7 +162,7 @@ class Bounty extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Bounty.init({
+	return Bounty.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -228,7 +227,6 @@ function initModel(sequelize) {
 		freezeTableName: true,
 		paranoid: true
 	});
-	return Bounty;
 };
 
 module.exports = { Bounty, initModel };

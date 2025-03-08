@@ -28,7 +28,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		updateOptions.rankmoji = newRankmoji;
 	}
 	rank.update(updateOptions);
-	getRankUpdates(interaction.guild, database, logicLayer);
+	getRankUpdates(interaction.guild, logicLayer);
 	interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
 };
 

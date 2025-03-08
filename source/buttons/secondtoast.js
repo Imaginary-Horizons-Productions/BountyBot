@@ -20,7 +20,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 
 		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
-		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
+		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
@@ -46,13 +46,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		for (const userId of recipientIds) {
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, company);
-			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: 1 } });
-			if (!participationCreated) {
-				participation.increment({ xp: 1 });
-			}
 			if (recipientLevelTexts.length > 0) {
 				rewardTexts.push(...recipientLevelTexts);
 			}
+			logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, 1);
 			hunter.increment("toastsReceived");
 		}
 
@@ -67,13 +64,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, include: database.models.Toast.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
-		const staleToastees = lastFiveToasts.reduce((list, toast) => {
-			return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(recipient => recipient.userId));
-		}, []);
-
 		let wasCrit = false;
 		if (critSecondsAvailable > 0) {
+			const staleToastees = await logicLayer.toasts.findStaleToasteeIds(interaction.user.id, interaction.guild.id);
 			let lowestEffectiveToastLevel = seconder.level + 2;
 			for (const userId of recipientIds) {
 				// Calculate crit
@@ -100,10 +93,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (seconderLevelTexts.length > 0) {
 					rewardTexts = rewardTexts.concat(seconderLevelTexts);
 				}
-				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: 1 } });
-				if (!participationCreated) {
-					participation.increment({ xp: 1 });
-				}
+				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, 1);
 			}
 		}
 
@@ -126,7 +116,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 		interaction.update({ embeds: [embed] });
-		getRankUpdates(interaction.guild, database, logicLayer).then(async rankUpdates => {
+		getRankUpdates(interaction.guild, logicLayer).then(async rankUpdates => {
 			const content = Seconding.generateRewardString(interaction.member.displayName, recipientIds, rankUpdates, rewardTexts);
 			if (interaction.channel.isThread()) {
 				interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });
