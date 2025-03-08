@@ -91,7 +91,7 @@ class Company extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Company.init({
+	return Company.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.STRING
@@ -168,7 +168,6 @@ function initModel(sequelize) {
 		freezeTableName: true,
 		paranoid: true
 	});
-	return Company;
 };
 
 module.exports = { Company, initModel };

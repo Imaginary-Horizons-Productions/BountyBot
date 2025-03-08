@@ -10,7 +10,7 @@ class Season extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Season.init({
+	return Season.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -48,7 +48,6 @@ function initModel(sequelize) {
 		freezeTableName: true,
 		paranoid: true
 	});
-	return Season;
 }
 
 module.exports = { Season, initModel };

@@ -20,14 +20,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		const originalToast = await database.models.Toast.findByPk(toastId, { include: database.models.Toast.Recipients });
+		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
 		if (runMode === "prod" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const secondReciept = await database.models.Seconding.findOne({ where: { toastId, seconderId: interaction.user.id } });
-		if (secondReciept) {
+		if (await logicLayer.toasts.wasAlreadySeconded(toastId, interaction.user.id)) {
 			interaction.reply({ content: "You've already seconded this toast.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
@@ -48,13 +47,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		for (const userId of recipientIds) {
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const recipientLevelTexts = await hunter.addXP(interaction.guild.name, 1, true, company);
-			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId, seasonId: season.id }, defaults: { xp: 1 } });
-			if (!participationCreated) {
-				participation.increment({ xp: 1 });
-			}
 			if (recipientLevelTexts.length > 0) {
 				rewardTexts.push(...recipientLevelTexts);
 			}
+			logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, 1);
 			hunter.increment("toastsReceived");
 		}
 
@@ -102,14 +98,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (seconderLevelTexts.length > 0) {
 					rewardTexts = rewardTexts.concat(seconderLevelTexts);
 				}
-				const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: 1 } });
-				if (!participationCreated) {
-					participation.increment({ xp: 1 });
-				}
+				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, 1);
 			}
 		}
 
-		database.models.Seconding.create({ toastId: originalToast.id, seconderId: interaction.user.id, wasCrit });
+		logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, wasCrit);
 
 		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
 		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by") ?? -1;
