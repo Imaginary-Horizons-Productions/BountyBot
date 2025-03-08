@@ -1,8 +1,7 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { Op } = require('sequelize');
 const { getRankUpdates } = require('../util/scoreUtil');
-const { timeConversion, generateTextBar } = require('../util/textUtil');
+const { generateTextBar } = require('../util/textUtil');
 const { updateScoreboard } = require('../util/embedUtil');
 const { Seconding } = require('../models/toasts/Seconding');
 const { Goal } = require('../models/companies/Goal');
@@ -54,7 +53,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			hunter.increment("toastsReceived");
 		}
 
-		const recentToasts = await database.models.Seconding.findAll({ where: { seconderId: interaction.user.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } } });
+		const recentToasts = await logicLayer.toasts.findRecentSecondings(interaction.user.id);
 		let critSecondsAvailable = 2;
 		for (const seconding of recentToasts) {
 			if (seconding.wasCrit) {
@@ -65,13 +64,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		}
 
-		const lastFiveToasts = await database.models.Toast.findAll({ where: { companyId: interaction.guildId, senderId: interaction.user.id }, include: database.models.Toast.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
-		const staleToastees = lastFiveToasts.reduce((list, toast) => {
-			return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(recipient => recipient.userId));
-		}, []);
-
 		let wasCrit = false;
 		if (critSecondsAvailable > 0) {
+			const staleToastees = await logicLayer.toasts.findStaleToasteeIds(interaction.user.id, interaction.guild.id);
 			let lowestEffectiveToastLevel = seconder.level + 2;
 			for (const userId of recipientIds) {
 				// Calculate crit
