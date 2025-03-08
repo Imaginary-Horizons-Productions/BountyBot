@@ -14,6 +14,8 @@ function setDB(database) {
 }
 
 /** *Get the ids of the rewarded Recipients on the sender's last 5 Toasts*
+ *
+ * Duplicated stale toastee ids are intended as a way of recording accumulating staleness
  * @param {string} senderId
  * @param {string} companyId
  */
