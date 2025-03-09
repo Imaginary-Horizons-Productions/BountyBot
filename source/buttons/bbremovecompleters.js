@@ -10,7 +10,7 @@ let logicLayer;
 const mainId = "bbremovecompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
-		database.models.Bounty.findByPk(bountyId).then(async bounty => {
+		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (bounty.userId !== interaction.user.id) {
 				interaction.reply({ content: "Only the bounty poster can remove completers.", flags: [MessageFlags.Ephemeral] });
 				return;

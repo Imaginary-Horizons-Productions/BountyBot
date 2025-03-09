@@ -50,7 +50,7 @@ module.exports = new ItemTemplate(itemName, "Adds an image (via URL) to one of y
 				flags: [MessageFlags.Ephemeral],
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-				const bounty = await database.models.Bounty.findByPk(collectedInteraction.values[0]);
+				const bounty = await logicLayer.bounties.findBounty(collectedInteraction.values[0]);
 				if (bounty?.state !== "open") {
 					return collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
 				}

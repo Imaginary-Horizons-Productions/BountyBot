@@ -30,7 +30,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		withResponse: true
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
-		return database.models.Bounty.findByPk(bountyId).then(async bounty => {
+		return logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (bounty?.state !== "open") {
 				return collectedInteraction;
 			}
