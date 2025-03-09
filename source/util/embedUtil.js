@@ -1,6 +1,5 @@
 const fs = require("fs");
 const { EmbedBuilder, Guild, Colors } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { MAX_EMBED_DESCRIPTION_LENGTH } = require("../constants");
 const { generateTextBar } = require("./textUtil");
 
@@ -189,7 +188,7 @@ async function buildVersionEmbed() {
 
 /** If the guild has a scoreboard reference channel, update the embed in it
  * @param {Guild} guild
- * @param {Sequelize} database
+ * @param {typeof import("../logic")} logicLayer
  */
 async function updateScoreboard(guild, logicLayer) {
 	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
