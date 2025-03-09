@@ -27,7 +27,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					)
 				]
 			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
-				const bounty = await database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company });
+				const bounty = await logicLayer.bounties.findBounty(bountyId);
 				bounty.state = "deleted";
 				bounty.save();
 				database.models.Completion.destroy({ where: { bountyId: bounty.id } });

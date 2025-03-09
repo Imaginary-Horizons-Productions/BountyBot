@@ -20,10 +20,10 @@ function setDB(database) {
  */
 function findBounty(bountyInfo) {
 	if (typeof bountyInfo === 'string') {
-		return db.models.Bounty.findByPk(bountyInfo, { include: db.models.Bounty.Company });
+		return db.models.Bounty.findByPk(bountyInfo);
 	} else {
 		const { posterId: userId, guildId: companyId, slotNumber } = bountyInfo;
-		return db.models.Bounty.findOne({ where: { userId, companyId, slotNumber, state: "open" }, include: db.models.Bounty.Company });
+		return db.models.Bounty.findOne({ where: { userId, companyId, slotNumber, state: "open" } });
 	}
 }
 
