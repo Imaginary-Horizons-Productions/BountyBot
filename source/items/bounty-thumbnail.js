@@ -58,7 +58,7 @@ module.exports = new ItemTemplate(itemName, "Adds an image (via URL) to one of y
 				await bounty.save().then(async bounty => {
 					bounty.reload();
 					const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-					bounty.updatePosting(interaction.guild, company, database);
+					bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id)).level, bounty.id);
 				});
 				return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
 			}).catch(error => {
