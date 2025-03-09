@@ -20,13 +20,12 @@ function setDB(database) {
 
 /**
  * @param {{slotNumber: number, posterId: string, guildId: string} | string} bountyInfo
- * @returns {Bounty?} the bounty, if it exists
  */
-async function findBounty(bountyInfo) {
+function findBounty(bountyInfo) {
 	if (typeof bountyInfo === 'string') {
-		return await db.models.Bounty.findByPk(bountyInfo,  { include: db.models.Bounty.Company });
+		return db.models.Bounty.findByPk(bountyInfo,  { include: db.models.Bounty.Company });
 	} else {
-		return await db.models.Bounty.findOne({ where: { userId: bountyInfo.posterId, companyId: guildId, slotNumber: bountyInfo.slotNumber, state: "open" }, include: db.models.Bounty.Company });
+		return db.models.Bounty.findOne({ where: { userId: bountyInfo.posterId, companyId: guildId, slotNumber: bountyInfo.slotNumber, state: "open" }, include: db.models.Bounty.Company });
 	}
 }
 
