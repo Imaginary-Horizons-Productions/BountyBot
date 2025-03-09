@@ -20,10 +20,11 @@ function getInventory(userId) {
  * @param {string} itemName
  */
 function grantItem(userId, itemName) {
-	db.models.Item.findOrCreate({ where: { userId, itemName } }).then(([itemRow, itemWasCreated]) => {
+	return db.models.Item.findOrCreate({ where: { userId, itemName } }).then(([itemRow, itemWasCreated]) => {
 		if (!itemWasCreated) {
 			itemRow.increment("count");
 		}
+		return;
 	});
 }
 
