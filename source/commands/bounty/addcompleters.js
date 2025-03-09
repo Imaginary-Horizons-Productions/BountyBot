@@ -42,46 +42,36 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
-	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" }, include: database.models.Bounty.Company });
+
+	const bounty = await logicLayer.bounties.findBounty({slotNumber, posterId, guildId: interaction.guild.id});
 	if (!bounty) {
 		interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 
 	const completerIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), [posterId]);
-	const validatedCompleterIds = [];
 	if (completerIds.length < 1) {
 		interaction.reply({ content: "Could not find any user mentions in `hunters` (you can't add yourself).", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
+	
+	const completerMembers = Array.from((await interaction.guild.members.fetch({ user: completerIds })).values());
+	try {
+		let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
+		updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
+		interaction.reply({
+			content: `The following bounty hunters have been added as completers to ${bold(returnedBounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
+			flags: [MessageFlags.Ephemeral]
+		});
+	} catch (e) {
+		if (typeof e !== 'string') {
+			console.error(e);
+		} else {
+			interaction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
+    }
+    return;
+  }
 
-	const completerMembers = (await interaction.guild.members.fetch({ user: completerIds })).values();
-	const existingCompletions = await database.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: interaction.guildId } });
-	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
-	const bannedIds = [];
-	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
-		if (runMode === "production" && member.user.bot) continue;
-		const memberId = member.id;
-		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
-		if (hunter.isBanned) {
-			bannedIds.push(memberId);
-			continue;
-		}
-		existingCompleterIds.push(memberId);
-		validatedCompleterIds.push(memberId);
-	}
-
-	if (validatedCompleterIds.length < 1) {
-		interaction.reply({ content: "Could not find any new non-bot mentions in `hunters`.", flags: [MessageFlags.Ephemeral] });
-		return;
-	}
-
-	let { bounty: returnedBounty, allCompleters, poster, company } = await logicLayer.bounties.addCompleters(interaction.guild, bounty, validatedCompleterIds);
-	updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
-	interaction.reply({
-		content: `The following bounty hunters have been added as completers to ${bold(bounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
-		flags: [MessageFlags.Ephemeral]
-	});
 };
 
 module.exports = {
