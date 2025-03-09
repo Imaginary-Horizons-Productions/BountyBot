@@ -1,7 +1,6 @@
 const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags, Guild, ThreadChannel } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters, findBounty } = require('../logic/bounties.js');
 const { listifyEN, congratulationBuilder, timeConversion } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
 const { Bounty } = require('../models/bounties/Bounty.js');
@@ -61,7 +60,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 			try {
-			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(collectedInteraction.guild, bounty, validatedCompleterIds);
+			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(collectedInteraction.guild, bounty, Array.from(collectedInteraction.members.values()), runMode);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
 				return collectedInteraction.update({
 					components: []

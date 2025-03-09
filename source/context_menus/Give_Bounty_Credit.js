@@ -1,7 +1,6 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, Guild } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { addCompleters, findBounty } = require('../logic/bounties.js');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
 const { Completion } = require('../models/bounties/Completion.js');
 const { Bounty } = require('../models/bounties/Bounty.js');
