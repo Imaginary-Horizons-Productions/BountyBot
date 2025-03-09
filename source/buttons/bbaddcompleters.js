@@ -40,10 +40,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	async (interaction, [bountyId], database, runMode) => {
 		const bounty = await logicLayer.bounties.findBounty(bountyId);
 		if (!bounty) {
-			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: [MessageFlags.Ephemeral]})
+			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: [MessageFlags.Ephemeral] })
 		}
 		if (bounty.userId !== interaction.user.id) {
-			interaction.reply({ content: "Only the bounty poster can add completers.", flags: [MessageFlags.Ephemeral]});
+			interaction.reply({ content: "Only the bounty poster can add completers.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
@@ -60,7 +60,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 			try {
-			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(collectedInteraction.guild, bounty, Array.from(collectedInteraction.members.values()), runMode);
+				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(bounty, collectedInteraction.guild, Array.from(collectedInteraction.members.values()), runMode);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
 				return collectedInteraction.update({
 					components: []
@@ -69,7 +69,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (typeof e !== 'string') {
 					console.error(e);
 				} else {
-					collectedInteraction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
+					collectedInteraction.reply({ content: e, flags: [MessageFlags.Ephemeral] });
 				}
 				return;
 			}

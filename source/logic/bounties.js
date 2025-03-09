@@ -1,10 +1,7 @@
 const { Sequelize } = require("sequelize");
-const { userMention, Guild, GuildMember } = require("discord.js");
+const { Guild, GuildMember } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
-const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
-const { findOrCreateBountyHunter } = require('./hunters');
-const { progressGoal } = require("./goals");
 const { rollItemDrop } = require("../util/itemUtil");
 
 /** @type {Sequelize} */
@@ -23,9 +20,10 @@ function setDB(database) {
  */
 function findBounty(bountyInfo) {
 	if (typeof bountyInfo === 'string') {
-		return db.models.Bounty.findByPk(bountyInfo,  { include: db.models.Bounty.Company });
+		return db.models.Bounty.findByPk(bountyInfo, { include: db.models.Bounty.Company });
 	} else {
-		return db.models.Bounty.findOne({ where: { userId: bountyInfo.posterId, companyId: guildId, slotNumber: bountyInfo.slotNumber, state: "open" }, include: db.models.Bounty.Company });
+		const { posterId: userId, guildId: companyId, slotNumber } = bountyInfo;
+		return db.models.Bounty.findOne({ where: { userId, companyId, slotNumber, state: "open" }, include: db.models.Bounty.Company });
 	}
 }
 
@@ -55,9 +53,10 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 	const bannedIds = [];
 	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
-		if (runMode === "prod" && member.user.bot) continue;
+		if (runMode === "production" && member.user.bot) continue;
 		const memberId = member.id;
-		const [hunter] = await findOrCreateBountyHunter(memberId, guild.id);
+		await db.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: guild.id } });
 		if (hunter.isBanned) {
 			bannedIds.push(memberId);
 			continue;
