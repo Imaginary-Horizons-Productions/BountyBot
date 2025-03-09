@@ -9,7 +9,7 @@ let logicLayer;
 const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, [bountyId], database, runMode) => {
-		database.models.Bounty.findByPk(bountyId).then(async bounty => {
+		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (bounty.userId !== interaction.user.id) {
 				interaction.editReply({ content: "Only the bounty poster can take down their bounty." });
@@ -27,7 +27,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					)
 				]
 			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
-				const bounty = await logicLayer.bounties.findBounty(bountyId);
+				await bounty.reload();
 				bounty.state = "deleted";
 				bounty.save();
 				database.models.Completion.destroy({ where: { bountyId: bounty.id } });

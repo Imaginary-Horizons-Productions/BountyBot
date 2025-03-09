@@ -27,7 +27,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
-			const bounty = await database.models.Bounty.findByPk(bountyId);
+			const bounty = await logicLayer.bounties.findBounty(bountyId);
 			bounty.state = "deleted";
 			bounty.save();
 			database.models.Completion.destroy({ where: { bountyId: bounty.id } });

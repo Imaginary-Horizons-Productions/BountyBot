@@ -19,7 +19,7 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
 		return;
 	}
 
-	const bounty = await database.models.Bounty.findByPk(bountyId);
+	const bounty = await logicLayer.bounties.findBounty(bountyId);
 	if (bounty?.state !== "open") {
 		collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
 		return;

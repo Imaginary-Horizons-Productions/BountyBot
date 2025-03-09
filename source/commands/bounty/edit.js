@@ -32,7 +32,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const [bountyId] = collectedInteraction.values;
 		// Verify bounty exists
-		const bounty = await database.models.Bounty.findByPk(bountyId);
+		const bounty = await logicLayer.bounties.findBounty(bountyId);
 		if (bounty?.state !== "open") {
 			interaction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
 			return;
