@@ -33,7 +33,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 		const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
 		const [bountyId] = collectedInteraction.values;
-		database.models.Bounty.findByPk(bountyId, { include: database.models.Bounty.Company }).then(async bounty => {
+		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
 			bounty.state = "deleted";
 			bounty.save();
