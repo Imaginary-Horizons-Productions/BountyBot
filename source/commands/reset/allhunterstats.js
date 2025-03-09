@@ -16,7 +16,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	if (season) {
 		await logicLayer.seasons.deleteSeasonParticipations(season.id);
 	}
-	updateScoreboard(interaction.guild, database, logicLayer);
+	updateScoreboard(interaction.guild, logicLayer);
 	interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);
 };
 

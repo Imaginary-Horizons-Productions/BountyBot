@@ -105,11 +105,10 @@ async function buildSeasonalScoreboardEmbed(guild, logicLayer) {
 
 /** An overall scoreboard orders a company's hunters by total xp
  * @param {Guild} guild
- * @param {Sequelize} database
  * @param {typeof import("../logic")} logicLayer
  */
-async function buildOverallScoreboardEmbed(guild, database, logicLayer) {
-	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
+async function buildOverallScoreboardEmbed(guild, logicLayer) {
+	const hunters = await logicLayer.hunters.findCompanyHuntersByDescendingXP(guild.id);
 	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
 
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
@@ -192,13 +191,13 @@ async function buildVersionEmbed() {
  * @param {Guild} guild
  * @param {Sequelize} database
  */
-async function updateScoreboard(guild, database, logicLayer) {
+async function updateScoreboard(guild, logicLayer) {
 	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
 	if (company.scoreboardChannelId && company.scoreboardMessageId) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
 		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, logicLayer) : await buildOverallScoreboardEmbed(guild, database, logicLayer)] });
+			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, logicLayer) : await buildOverallScoreboardEmbed(guild, logicLayer)] });
 		});
 	}
 }

@@ -29,7 +29,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	});
 	const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 	scoreboard.send({
-		embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild, logicLayer) : await buildOverallScoreboardEmbed(interaction.guild, database, logicLayer)]
+		embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild, logicLayer) : await buildOverallScoreboardEmbed(interaction.guild, logicLayer)]
 	}).then(message => {
 		company.scoreboardChannelId = scoreboard.id;
 		company.scoreboardMessageId = message.id;
