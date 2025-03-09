@@ -10,12 +10,9 @@ module.exports = new ItemTemplate(itemName, `Gain ${xpValue} XP in the used serv
 	async (interaction, database) => {
 		logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
-			const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { companyId: interaction.guildId, userId: interaction.user.id, seasonId: season.id }, defaults: { xp: xpValue } });
-			if (!participationCreated) {
-				participation.increment({ xp: xpValue });
-			}
+			logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, xpValue);
 			hunter.addXP(interaction.guild.name, xpValue, true, await logicLayer.companies.findCompanyByPK(interaction.guildId)).then(levelTexts => {
-				getRankUpdates(interaction.guild, database, logicLayer).then(rankUpdates => {
+				getRankUpdates(interaction.guild, logicLayer).then(rankUpdates => {
 					hunter.save();
 					let result = `${interaction.member} used an XP Boost and gained ${xpValue} XP.`;
 					const allMessages = rankUpdates.concat(levelTexts);

@@ -17,7 +17,7 @@ class Completion extends Model {
 
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
-	Completion.init({
+	return Completion.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.UUID,
@@ -40,7 +40,6 @@ function initModel(sequelize) {
 		modelName: "Completion",
 		freezeTableName: true
 	});
-	return Completion;
 };
 
 module.exports = { Completion, initModel };

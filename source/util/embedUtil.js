@@ -44,12 +44,12 @@ function randomFooterTip() {
 
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Guild} guild
- * @param {Sequelize} database
+ * @param {typeof import("../logic")} logicLayer
  */
-async function buildSeasonalScoreboardEmbed(guild, database, logicLayer) {
+async function buildSeasonalScoreboardEmbed(guild, logicLayer) {
 	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
 	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(company.id);
-	const participations = await database.models.Participation.findAll({ where: { seasonId: season.id }, order: [["xp", "DESC"]] });
+	const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
 
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
@@ -106,6 +106,7 @@ async function buildSeasonalScoreboardEmbed(guild, database, logicLayer) {
 /** An overall scoreboard orders a company's hunters by total xp
  * @param {Guild} guild
  * @param {Sequelize} database
+ * @param {typeof import("../logic")} logicLayer
  */
 async function buildOverallScoreboardEmbed(guild, database, logicLayer) {
 	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
@@ -197,7 +198,7 @@ async function updateScoreboard(guild, database, logicLayer) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
 		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, database, logicLayer) : await buildOverallScoreboardEmbed(guild, database, logicLayer)] });
+			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, logicLayer) : await buildOverallScoreboardEmbed(guild, database, logicLayer)] });
 		});
 	}
 }

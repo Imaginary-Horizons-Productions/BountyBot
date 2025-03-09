@@ -17,7 +17,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	}
 	hunter.save();
 	interaction.reply({ content: `${member} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot.`, flags: [MessageFlags.Ephemeral] });
-	if (!member.bot) {
+	if (!member.user.bot) {
 		member.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`);
 	}
 };

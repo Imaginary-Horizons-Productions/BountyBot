@@ -1,7 +1,6 @@
 const { Sequelize } = require("sequelize");
-const { Guild } = require("discord.js");
+const { Guild, GuildMember } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
-const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { rollItemDrop } = require("../util/itemUtil");
 
@@ -14,6 +13,18 @@ let db;
  */
 function setDB(database) {
 	db = database;
+}
+
+/**
+ * @param {{slotNumber: number, posterId: string, guildId: string} | string} bountyInfo
+ */
+function findBounty(bountyInfo) {
+	if (typeof bountyInfo === 'string') {
+		return db.models.Bounty.findByPk(bountyInfo, { include: db.models.Bounty.Company });
+	} else {
+		const { posterId: userId, guildId: companyId, slotNumber } = bountyInfo;
+		return db.models.Bounty.findOne({ where: { userId, companyId, slotNumber, state: "open" }, include: db.models.Bounty.Company });
+	}
 }
 
 /**
@@ -30,14 +41,36 @@ function findEvergreenBounties(companyId) {
 }
 
 /**
- * @param {Guild} guild
  * @param {Bounty} bounty
- * @param {Company} company
- * @param {string[]} completerIds
+ * @param {Guild} guild
+ * @param {GuildMember[]} completerMembers
+ * @param {string} runMode
  */
-async function addCompleters(guild, bounty, completerIds) {
+async function addCompleters(bounty, guild, completerMembers, runMode) {
+	// Validate completer IDs
+	const validatedCompleterIds = [];
+	const existingCompletions = await db.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: guild.id } });
+	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
+	const bannedIds = [];
+	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
+		if (runMode === "production" && member.user.bot) continue;
+		const memberId = member.id;
+		await db.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: guild.id } });
+		if (hunter.isBanned) {
+			bannedIds.push(memberId);
+			continue;
+		}
+		existingCompleterIds.push(memberId);
+		validatedCompleterIds.push(memberId);
+	}
+
+	if (validatedCompleterIds.length < 1) {
+		throw `Could not find any new non-bot mentions in \`hunters\`.${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
+	}
+
 	const rawCompletions = [];
-	for (const userId of completerIds) {
+	for (const userId of validatedCompleterIds) {
 		rawCompletions.push({
 			bountyId: bounty.id,
 			userId,
@@ -61,7 +94,9 @@ async function addCompleters(guild, bounty, completerIds) {
 		bounty,
 		allCompleters,
 		poster,
-		company
+		company,
+		validatedCompleterIds,
+		bannedIds
 	};
 }
 
@@ -144,6 +179,7 @@ function deleteCompanyBounties(companyId) {
 
 module.exports = {
 	setDB,
+	findBounty,
 	findOpenBounties,
 	findEvergreenBounties,
 	addCompleters,
