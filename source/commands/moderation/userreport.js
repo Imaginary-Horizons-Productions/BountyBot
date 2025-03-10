@@ -16,7 +16,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	}
 
 	const dqCount = await database.models.Participation.sum("dqCount", { where: { companyId: interaction.guild.id, userId: member.id } }) ?? 0;
-	const lastFiveBounties = await database.models.Bounty.findAll({ where: { userId: member.id, companyId: interaction.guild.id, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: database.models.Bounty.Completions });
+	const lastFiveBounties = await logicLayer.bounties.findHuntersLastFiveBounties(member.id, interaction.guildId);
 	interaction.reply({ embeds: [hunter.modStatsEmbed(interaction.guild, member, dqCount, lastFiveBounties)], flags: [MessageFlags.Ephemeral] });
 };
 
