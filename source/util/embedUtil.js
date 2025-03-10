@@ -1,8 +1,6 @@
 const fs = require("fs");
-const { EmbedBuilder, Guild, Colors } = require("discord.js");
-const { Sequelize } = require("sequelize");
+const { EmbedBuilder, Colors } = require("discord.js");
 const { MAX_EMBED_DESCRIPTION_LENGTH } = require("../constants");
-const { generateTextBar } = require("./textUtil");
 
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
@@ -42,128 +40,6 @@ function randomFooterTip() {
 	return tipPool[Math.floor(Math.random() * tipPool.length)];
 }
 
-/** A seasonal scoreboard orders a company's hunters by their seasonal xp
- * @param {Guild} guild
- * @param {typeof import("../logic")} logicLayer
- */
-async function buildSeasonalScoreboardEmbed(guild, logicLayer) {
-	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
-	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(company.id);
-	const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
-
-	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
-	const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
-
-	const scorelines = [];
-	for (const participation of participations) {
-		if (participation.xp > 0) {
-			const hunter = await participation.hunter;
-			scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
-		}
-	}
-	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
-		.setTitle("The Season Scoreboard")
-		.setFooter(randomFooterTip())
-		.setTimestamp();
-	let description = "";
-	const andMore = "…and more";
-	const maxDescriptionLength = 2048 - andMore.length;
-	for (const scoreline of scorelines) {
-		if (description.length + scoreline.length <= maxDescriptionLength) {
-			description += `${scoreline}\n`;
-		} else {
-			description += andMore;
-			break;
-		}
-	}
-
-	if (description) {
-		embed.setDescription(description);
-	} else {
-		embed.setDescription("No Bounty Hunters yet…");
-	}
-
-	const fields = [];
-	const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
-	if (goalId !== null) {
-		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
-	}
-	if (company.nextRaffleString) {
-		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
-	}
-
-	if (fields.length > 0) {
-		embed.addFields(fields);
-	}
-	return embed;
-}
-
-/** An overall scoreboard orders a company's hunters by total xp
- * @param {Guild} guild
- * @param {Sequelize} database
- * @param {typeof import("../logic")} logicLayer
- */
-async function buildOverallScoreboardEmbed(guild, database, logicLayer) {
-	const hunters = await database.models.Hunter.findAll({ where: { companyId: guild.id }, order: [["xp", "DESC"]] });
-	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
-
-	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-	const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
-
-	const scorelines = [];
-	for (const hunter of hunters) {
-		if (hunter.xp > 0) {
-			scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
-		}
-	}
-	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
-		.setTitle("The Scoreboard")
-		.setFooter(randomFooterTip())
-		.setTimestamp();
-	let description = "";
-	const andMore = "…and more";
-	const maxDescriptionLength = 2048 - andMore.length;
-	for (const scoreline of scorelines) {
-		if (description.length + scoreline.length <= maxDescriptionLength) {
-			description += `${scoreline}\n`;
-		} else {
-			description += andMore;
-			break;
-		}
-	}
-
-	if (description) {
-		embed.setDescription(description);
-	} else {
-		embed.setDescription("No Bounty Hunters yet…");
-	}
-
-	const fields = [];
-	const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
-	if (goalId !== null) {
-		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
-	}
-	if (company.nextRaffleString) {
-		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
-	}
-
-	if (fields.length > 0) {
-		embed.addFields(fields);
-	}
-
-	return embed;
-}
-
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project
  * @returns {MessageEmbed}
  */
@@ -188,26 +64,8 @@ async function buildVersionEmbed() {
 		.setTimestamp(stats.mtime);
 }
 
-/** If the guild has a scoreboard reference channel, update the embed in it
- * @param {Guild} guild
- * @param {Sequelize} database
- */
-async function updateScoreboard(guild, database, logicLayer) {
-	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
-	if (company.scoreboardChannelId && company.scoreboardMessageId) {
-		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
-			return scoreboard.messages.fetch(company.scoreboardMessageId);
-		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, logicLayer) : await buildOverallScoreboardEmbed(guild, database, logicLayer)] });
-		});
-	}
-}
-
 module.exports = {
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
 	randomFooterTip,
-	buildSeasonalScoreboardEmbed,
-	buildOverallScoreboardEmbed,
-	buildVersionEmbed,
-	updateScoreboard
+	buildVersionEmbed
 };

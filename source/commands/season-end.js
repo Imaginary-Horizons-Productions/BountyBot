@@ -65,7 +65,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				})
 			}
 			await logicLayer.hunters.resetCompanyRanks(company.id);
-			updateScoreboard(interaction.guild, database, logicLayer);
+			company.updateScoreboard(interaction.guild, logicLayer);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;

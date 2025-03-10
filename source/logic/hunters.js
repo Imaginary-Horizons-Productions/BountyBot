@@ -41,6 +41,13 @@ function findCompanyHunters(companyId) {
 	return db.models.Hunter.findAll({ where: { companyId } });
 }
 
+/** *Find all Hunters in the specified Company, ordered by descending XP*
+ * @param {string} companyId
+ */
+function findCompanyHuntersByDescendingXP(companyId) {
+	return db.models.Hunter.findAll({ where: { companyId }, order: [["xp", "DESC"]] });
+}
+
 /** *Sets a Hunter's Profile Color*
  * @param {string} userId
  * @param {string} companyId
@@ -69,6 +76,7 @@ module.exports = {
 	findOrCreateBountyHunter,
 	findOneHunter,
 	findCompanyHunters,
+	findCompanyHuntersByDescendingXP,
 	setHunterProfileColor,
 	resetCompanyRanks,
 	deleteCompanyHunters
