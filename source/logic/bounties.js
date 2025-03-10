@@ -61,6 +61,14 @@ function findCompanyBountiesByCreationDate(companyId) {
 	return db.models.Bounty.findAll({ where: { companyId, state: "open" }, order: [["createdAt", "DESC"]] });
 }
 
+/** *Finds a Hunter's last five bounties for the purpose of making a moderation user report*
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function findHuntersLastFiveBounties(userId, companyId) {
+	return db.models.Bounty.findAll({ where: { userId, companyId, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: db.models.Bounty.Completions });
+}
+
 /**
  * @param {Bounty} bounty
  * @param {Guild} guild
@@ -228,6 +236,7 @@ module.exports = {
 	bulkFindOpenBounties,
 	findEvergreenBounties,
 	findCompanyBountiesByCreationDate,
+	findHuntersLastFiveBounties,
 	addCompleters,
 	completeBounty,
 	deleteCompanyBounties,
