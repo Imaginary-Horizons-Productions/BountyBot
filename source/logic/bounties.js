@@ -15,6 +15,13 @@ function setDB(database) {
 	db = database;
 }
 
+/** *Create many Completions*
+ * @param {{ bountyId: string, userId: string, companyId: string, xpAwarded?: number}[]} rawCompletions
+ */
+function bulkCreateCompletions(rawCompletions) {
+	return db.models.Completion.bulkCreate(rawCompletions);
+}
+
 /**
  * @param {{slotNumber: number, posterId: string, guildId: string} | string} bountyInfo
  */
@@ -77,7 +84,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 			companyId: guild.id
 		})
 	}
-	await db.models.Completion.bulkCreate(rawCompletions);
+	await bulkCreateCompletions(rawCompletions);
 	let allCompleters = await db.models.Completion.findAll({
 		where: {
 			bountyId: bounty.id
@@ -201,6 +208,7 @@ function deleteBountyCompletions(bountyId) {
 
 module.exports = {
 	setDB,
+	bulkCreateCompletions,
 	findBounty,
 	findOpenBounties,
 	findEvergreenBounties,
