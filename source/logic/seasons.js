@@ -40,6 +40,14 @@ function getParticipantCount(seasonId) {
 	return db.models.Participation.count({ where: { seasonId } });
 }
 
+/** *Counts the number of times the specified Hunter has been DQ'd*
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function getDQCount(userId, companyId) {
+	return db.models.Participation.sum("dqCount", { where: { userId, companyId } }) ?? 0;
+}
+
 /** *Get all of a Season's Participations*
  * @param {string} seasonId
  */
@@ -119,6 +127,7 @@ module.exports = {
 	findOrCreateCurrentSeason,
 	findOneSeason,
 	getParticipantCount,
+	getDQCount,
 	findSeasonParticipations,
 	bulkFindParticipations,
 	findHunterParticipations,
