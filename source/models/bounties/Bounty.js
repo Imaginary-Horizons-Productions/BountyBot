@@ -91,11 +91,11 @@ class Bounty extends Model {
 	/** Update the bounty's embed in the bounty board
 	 * @param {Guild} guild
 	 * @param {Company} company
-	 * @param {Sequelize} database
+	 * @param {number} posterLevel
+	 * @param {Completion[]} completions
 	 */
-	async updatePosting(guild, company, database) {
+	async updatePosting(guild, company, posterLevel, completions) {
 		if (company.bountyBoardId) {
-			const poster = await database.models.Hunter.findOne({ where: { userId: this.userId, companyId: this.companyId } });
 			return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(this.postingId);
 			}).then(async thread => {
@@ -105,7 +105,7 @@ class Bounty extends Model {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(async posting => {
-				this.embed(guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: this.id } })).then(embed => {
+				this.embed(guild, posterLevel, false, company, completions).then(embed => {
 					posting.edit({
 						embeds: [embed],
 						components: this.generateBountyBoardButtons()

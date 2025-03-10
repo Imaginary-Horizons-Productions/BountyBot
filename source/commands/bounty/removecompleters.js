@@ -24,7 +24,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 
 		database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: mentionedIds } } });
 		const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-		bounty.updatePosting(interaction.guild, company, database);
+		bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(posterId, interaction.guild.id)).level, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 		if (company.bountyBoardId) {
 			interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(bounty.postingId);

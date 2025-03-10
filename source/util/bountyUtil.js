@@ -33,8 +33,9 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
 		poster.lastShowcaseTimestamp = new Date();
 		poster.save();
 	}
-	bounty.updatePosting(interaction.guild, company, database);
-	bounty.embed(interaction.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })).then(async embed => {
+	const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+	bounty.updatePosting(interaction.guild, company, poster.level, completions);
+	bounty.embed(interaction.guild, poster.level, false, company, completions).then(async embed => {
 		if (showcaseChannel.archived) {
 			await showcaseChannel.setArchived(false, "bounty showcased");
 		}
