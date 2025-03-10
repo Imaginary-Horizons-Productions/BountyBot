@@ -29,7 +29,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		const [bounty] = openBounties.splice(openBounties.findIndex(bounty => bounty.id === bountyId), 1);
 		bounty.state = "deleted";
 		bounty.save();
-		database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+		logicLayer.bounties.deleteBountyCompletions(bountyId);
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 		if (openBounties.length > 0) {
 			const embeds = await Promise.all(openBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, [])));
