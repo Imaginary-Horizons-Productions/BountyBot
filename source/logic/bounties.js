@@ -192,6 +192,13 @@ function deleteCompanyCompletions(companyId) {
 	return db.models.Completion.destroy({ where: { companyId } });
 }
 
+/** *Delete all Completions associated with the specified Bounty*
+ * @param {string} bountyId
+ */
+function deleteBountyCompletions(bountyId) {
+	return db.models.Completion.destroy({ where: { bountyId } });
+}
+
 module.exports = {
 	setDB,
 	findBounty,
@@ -201,5 +208,6 @@ module.exports = {
 	completeBounty,
 	deleteCompanyBounties,
 	deleteSelectedBountyCompletions,
-	deleteCompanyCompletions
+	deleteCompanyCompletions,
+	deleteBountyCompletions
 }

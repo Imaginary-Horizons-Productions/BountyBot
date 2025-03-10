@@ -34,7 +34,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
 		const [bountyId] = collectedInteraction.values;
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
-			await database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+			logicLayer.bounties.deleteBountyCompletions(bountyId);
 			bounty.state = "deleted";
 			bounty.save();
 			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
