@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const { Guild, GuildMember } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Hunter } = require("../models/users/Hunter");
@@ -177,6 +177,14 @@ function deleteCompanyBounties(companyId) {
 	return db.models.Bounty.destroy({ where: { companyId } });
 }
 
+/** *Delete the Completions (pending credit) of the specified Hunters on the specified Bounty*
+ * @param {string} bountyId
+ * @param {string[]} userIds
+ */
+function deleteSelectedBountyCompletions(bountyId, userIds) {
+	return db.models.Completion.destroy({ where: { bountyId, userId: { [Op.in]: userIds } } });
+}
+
 module.exports = {
 	setDB,
 	findBounty,
@@ -184,5 +192,6 @@ module.exports = {
 	findEvergreenBounties,
 	addCompleters,
 	completeBounty,
-	deleteCompanyBounties
+	deleteCompanyBounties,
+	deleteSelectedBountyCompletions
 }
