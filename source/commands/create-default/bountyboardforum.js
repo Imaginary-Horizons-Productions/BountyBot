@@ -48,7 +48,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 				continue;
 			}
 			logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId).then(async poster => {
-				return bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
+				return bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id));
 			}).then(bountyEmbed => {
 				return bountyBoard.threads.create({
 					name: bounty.title,
@@ -83,7 +83,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 
 		// make Evergreen Bounty list
 		if (evergreenBounties.length > 0) {
-			Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } })))).then(embeds => {
+			Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))).then(embeds => {
 				generateBountyBoardThread(bountyBoard.threads, embeds, company);
 			})
 		}
