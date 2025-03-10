@@ -1,6 +1,6 @@
 const { MessageFlags, EmbedBuilder, Colors } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
-const { ihpAuthorPayload, randomFooterTip } = require('../../util/embedUtil');
+const { ihpAuthorPayload, randomFooterTip, buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../../util/embedUtil');
 const { generateTextBar } = require('../../util/textUtil');
 const { Season } = require('../seasons/Season');
 
@@ -55,6 +55,20 @@ class Company extends Model {
 			messageOptions.content = `${this.announcementPrefix} ${messageOptions.content}`;
 		}
 		return messageOptions;
+	}
+
+	/** If the server has a scoreboard reference channel, update the embed in it
+	 * @param {Guild} guild
+	 * @param {typeof import("../../logic")} logicLayer
+	 */
+	async updateScoreboard(guild, logicLayer) {
+		if (this.scoreboardChannelId && this.scoreboardMessageId) {
+			guild.channels.fetch(this.scoreboardChannelId).then(scoreboard => {
+				return scoreboard.messages.fetch(this.scoreboardMessageId);
+			}).then(async scoreboardMessage => {
+				scoreboardMessage.edit({ embeds: [this.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, logicLayer) : await buildOverallScoreboardEmbed(guild, logicLayer)] });
+			});
+		}
 	}
 
 	/**

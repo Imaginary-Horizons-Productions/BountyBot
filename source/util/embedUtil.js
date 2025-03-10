@@ -186,26 +186,10 @@ async function buildVersionEmbed() {
 		.setTimestamp(stats.mtime);
 }
 
-/** If the guild has a scoreboard reference channel, update the embed in it
- * @param {Guild} guild
- * @param {typeof import("../logic")} logicLayer
- */
-async function updateScoreboard(guild, logicLayer) {
-	const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
-	if (company.scoreboardChannelId && company.scoreboardMessageId) {
-		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
-			return scoreboard.messages.fetch(company.scoreboardMessageId);
-		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds: [company.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, logicLayer) : await buildOverallScoreboardEmbed(guild, logicLayer)] });
-		});
-	}
-}
-
 module.exports = {
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
 	randomFooterTip,
 	buildSeasonalScoreboardEmbed,
 	buildOverallScoreboardEmbed,
-	buildVersionEmbed,
-	updateScoreboard
+	buildVersionEmbed
 };

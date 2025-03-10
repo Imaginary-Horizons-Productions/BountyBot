@@ -127,7 +127,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					thread.send({ content, flags: MessageFlags.SuppressNotifications });
 				})
 			}
-			updateScoreboard(interaction.guild, logicLayer);
+			company.updateScoreboard(interaction.guild, logicLayer);
 		})
 
 		if (progressData.goalCompleted) {

@@ -11,12 +11,12 @@ const { updateScoreboard } = require("../../util/embedUtil");
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	logicLayer.hunters.deleteCompanyHunters(interaction.guild.id);
 	interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
-	await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+	const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 	const season = await logicLayer.seasons.findOneSeason(interaction.guild.id, "current");
 	if (season) {
 		await logicLayer.seasons.deleteSeasonParticipations(season.id);
 	}
-	updateScoreboard(interaction.guild, logicLayer);
+	company.updateScoreboard(interaction.guild, logicLayer);
 	interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);
 };
 
