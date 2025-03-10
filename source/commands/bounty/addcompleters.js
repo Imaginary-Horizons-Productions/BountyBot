@@ -43,7 +43,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 
-	const bounty = await logicLayer.bounties.findBounty({slotNumber, posterId, guildId: interaction.guild.id});
+	const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: posterId, companyId: interaction.guild.id });
 	if (!bounty) {
 		interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -54,7 +54,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 		interaction.reply({ content: "Could not find any user mentions in `hunters` (you can't add yourself).", flags: [MessageFlags.Ephemeral] });
 		return;
 	}
-	
+
 	const completerMembers = Array.from((await interaction.guild.members.fetch({ user: completerIds })).values());
 	try {
 		let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
@@ -67,10 +67,10 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 		if (typeof e !== 'string') {
 			console.error(e);
 		} else {
-			interaction.reply({ content: e, flags: [MessageFlags.Ephemeral]});
-    }
-    return;
-  }
+			interaction.reply({ content: e, flags: [MessageFlags.Ephemeral] });
+		}
+		return;
+	}
 
 };
 

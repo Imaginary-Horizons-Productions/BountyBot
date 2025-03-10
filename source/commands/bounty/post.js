@@ -58,7 +58,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 		}
 
 		// Check slot is not occupied
-		const existingBounty = await database.models.Bounty.findOne({ where: { state: "open", userId: interaction.user.id, companyId: interaction.guildId, slotNumber: parseInt(slotNumber) } });
+		const existingBounty = await logicLayer.bounties.findBounty({ userId: interaction.user.id, companyId: interaction.guild.id, slotNumber: parseInt(slotNumber) });
 		if (existingBounty) {
 			interaction.update({ content: `You already have a bounty in slot ${slotNumber}.`, components: [] });
 			return;
