@@ -92,7 +92,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
-					const embeds = await Promise.all(existingBounties.sort((a, b) => a.slotNumber - b.slotNumber).map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }))));
+					const embeds = await Promise.all(existingBounties.sort((a, b) => a.slotNumber - b.slotNumber).map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id))));
 					if (company.evergreenThreadId) {
 						return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 							const message = await thread.fetchStarterMessage();

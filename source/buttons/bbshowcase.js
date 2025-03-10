@@ -35,7 +35,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				flags: [MessageFlags.Ephemeral],
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.ChannelSelect })).then(collectedInteraction => {
-				showcaseBounty(collectedInteraction, bountyId, collectedInteraction.channels.first(), false, database, logicLayer);
+				showcaseBounty(collectedInteraction, bountyId, collectedInteraction.channels.first(), false, logicLayer);
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

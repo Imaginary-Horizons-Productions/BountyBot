@@ -47,6 +47,13 @@ function findEvergreenBounties(companyId) {
 	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
 }
 
+/** *Find all Completions associated with the specified Bounty*
+ * @param {string} bountyId
+ */
+function findBountyCompletions(bountyId) {
+	return db.models.Completion.findAll({ where: { bountyId } });
+}
+
 /**
  * @param {Bounty} bounty
  * @param {Guild} guild
@@ -212,6 +219,7 @@ module.exports = {
 	findBounty,
 	findOpenBounties,
 	findEvergreenBounties,
+	findBountyCompletions,
 	addCompleters,
 	completeBounty,
 	deleteCompanyBounties,

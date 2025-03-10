@@ -187,7 +187,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			// update bounty board
 			const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
 			const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
-			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
+			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, await logicLayer.bounties.findBountyCompletions(bountyId));
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.fetch(bounty.postingId);

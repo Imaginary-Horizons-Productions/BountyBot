@@ -26,7 +26,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 
 			// Early-out if no completers
-			const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+			const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
 			const completerMembers = (await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) })).values();
 			const validatedHunterIds = [];
 			const validatedHunters = [];

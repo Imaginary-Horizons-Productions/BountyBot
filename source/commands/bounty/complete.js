@@ -27,7 +27,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 		return;
 	}
 
-	const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+	const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
 	const allCompleterIds = completions.map(reciept => reciept.userId);
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 	const completerIdsWithoutReciept = [];

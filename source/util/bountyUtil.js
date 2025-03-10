@@ -1,14 +1,13 @@
 const { Interaction, TextChannel, PermissionFlagsBits, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 
 /**
  * @param {Interaction} interaction
  * @param {string} bountyId
  * @param {TextChannel} showcaseChannel
  * @param {boolean} isItemShowcase
- * @param {Sequelize} database
+ * @param {typeof import("../logic")} logicLayer
  */
-async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShowcase, database, logicLayer) {
+async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShowcase, logicLayer) {
 	if (!showcaseChannel.members.has(interaction.client.user.id)) {
 		interaction.reply({ content: "BountyBot is not in the selected channel.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -33,7 +32,7 @@ async function showcaseBounty(interaction, bountyId, showcaseChannel, isItemShow
 		poster.lastShowcaseTimestamp = new Date();
 		poster.save();
 	}
-	const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+	const completions = await logicLayer.bounties.findBountyCompletions(bountyId);
 	bounty.updatePosting(interaction.guild, company, poster.level, completions);
 	bounty.embed(interaction.guild, poster.level, false, company, completions).then(async embed => {
 		if (showcaseChannel.archived) {
