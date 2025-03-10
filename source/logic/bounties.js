@@ -16,14 +16,13 @@ function setDB(database) {
 }
 
 /**
- * @param {{slotNumber: number, posterId: string, guildId: string} | string} bountyInfo
+ * @param {{slotNumber: number, userId: string, companyId: string} | string} bountyInfo
  */
 function findBounty(bountyInfo) {
 	if (typeof bountyInfo === 'string') {
 		return db.models.Bounty.findByPk(bountyInfo);
 	} else {
-		const { posterId: userId, guildId: companyId, slotNumber } = bountyInfo;
-		return db.models.Bounty.findOne({ where: { userId, companyId, slotNumber, state: "open" } });
+		return db.models.Bounty.findOne({ where: { ...bountyInfo, state: "open" } });
 	}
 }
 
