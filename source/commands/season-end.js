@@ -31,7 +31,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			const endingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "current");
 			const shoutouts = [];
 			if (endingSeason) {
-				const firstPlace = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id, placement: 1 } });
+				const firstPlace = await logicLayer.seasons.findFirstPlaceParticipation(interaction.guildId, endingSeason.id);
 				if (firstPlace) {
 					shoutouts.push(`<@${firstPlace.userId}> earned the most XP this season!`);
 				}

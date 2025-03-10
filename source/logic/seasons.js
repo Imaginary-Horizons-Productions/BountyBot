@@ -33,20 +33,6 @@ function findOneSeason(companyId, type) {
 	}
 }
 
-/** *Change the specified Hunter's Seasonal XP*
- * @param {string} userId
- * @param {string} companyId
- * @param {string} seasonId
- * @param {number} xp negative numbers allowed
- */
-function changeSeasonXP(userId, companyId, seasonId, xp) {
-	db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } }).then(([participation, participationCreated]) => {
-		if (!participationCreated) {
-			participation.increment({ xp });
-		}
-	});
-}
-
 /** *Get the number of participating bounty hunters in the specified Season*
  * @param {string} seasonId
  */
@@ -75,6 +61,28 @@ function bulkFindParticipations(seasonId, userIds) {
  */
 function findHunterParticipations(userId, companyId) {
 	return db.models.Participation.findAll({ where: { userId, companyId }, order: [["createdAt", "DESC"]] });
+}
+
+/** *Find the first place Participation in the specified Company and Season*
+ * @param {string} companyId
+ * @param {string} seasonId
+ */
+function findFirstPlaceParticipation(companyId, seasonId) {
+	return db.models.Participation.findOne({ where: { companyId, seasonId, placement: 1 } });
+}
+
+/** *Change the specified Hunter's Seasonal XP*
+ * @param {string} userId
+ * @param {string} companyId
+ * @param {string} seasonId
+ * @param {number} xp negative numbers allowed
+ */
+function changeSeasonXP(userId, companyId, seasonId, xp) {
+	db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } }).then(([participation, participationCreated]) => {
+		if (!participationCreated) {
+			participation.increment({ xp });
+		}
+	});
 }
 
 /**
@@ -110,11 +118,12 @@ module.exports = {
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
-	changeSeasonXP,
 	getParticipantCount,
 	findSeasonParticipations,
 	bulkFindParticipations,
 	findHunterParticipations,
+	findFirstPlaceParticipation,
+	changeSeasonXP,
 	incrementSeasonStat,
 	deleteCompanySeasons,
 	deleteSeasonParticipations,
