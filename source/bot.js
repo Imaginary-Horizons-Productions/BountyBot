@@ -253,7 +253,7 @@ dAPIClient.on(Events.GuildDelete, async guild => {
 	});
 
 	logicBlob.bounties.deleteCompanyBounties(guild.id);
-	dbConnection.models.Completion.destroy({ where: { companyId: guild.id } });
+	logicBlob.bounties.deleteCompanyCompletions(guild.id);
 
 	logicBlob.seasons.deleteCompanyParticipations(guild.id);
 	logicBlob.seasons.deleteCompanySeasons(guild.id);
