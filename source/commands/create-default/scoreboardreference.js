@@ -1,6 +1,5 @@
 const { CommandInteraction, ChannelType, PermissionFlagsBits, OverwriteType, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require("../../util/embedUtil");
 
 /**
  * @param {CommandInteraction} interaction
@@ -29,7 +28,11 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	});
 	const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
 	scoreboard.send({
-		embeds: [isSeasonal ? await buildSeasonalScoreboardEmbed(interaction.guild, logicLayer) : await buildOverallScoreboardEmbed(interaction.guild, logicLayer)]
+		embeds: [
+			isSeasonal ?
+				await company.seasonalScoreboardEmbed(interaction.guild, logicLayer) :
+				await company.overallScoreboardEmbed(interaction.guild, logicLayer)
+		]
 	}).then(message => {
 		company.scoreboardChannelId = scoreboard.id;
 		company.scoreboardMessageId = message.id;

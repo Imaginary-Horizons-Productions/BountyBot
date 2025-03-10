@@ -1,6 +1,6 @@
-const { MessageFlags, EmbedBuilder, Colors } = require('discord.js');
+const { MessageFlags, EmbedBuilder, Colors, Guild } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
-const { ihpAuthorPayload, randomFooterTip, buildSeasonalScoreboardEmbed, buildOverallScoreboardEmbed } = require('../../util/embedUtil');
+const { ihpAuthorPayload, randomFooterTip } = require('../../util/embedUtil');
 const { generateTextBar } = require('../../util/textUtil');
 const { Season } = require('../seasons/Season');
 
@@ -66,9 +66,132 @@ class Company extends Model {
 			guild.channels.fetch(this.scoreboardChannelId).then(scoreboard => {
 				return scoreboard.messages.fetch(this.scoreboardMessageId);
 			}).then(async scoreboardMessage => {
-				scoreboardMessage.edit({ embeds: [this.scoreboardIsSeasonal ? await buildSeasonalScoreboardEmbed(guild, logicLayer) : await buildOverallScoreboardEmbed(guild, logicLayer)] });
+				scoreboardMessage.edit({
+					embeds: [
+						this.scoreboardIsSeasonal ?
+							await this.seasonalScoreboardEmbed(guild, logicLayer) :
+							await this.overallScoreboardEmbed(guild, logicLayer)
+					]
+				});
 			});
 		}
+	}
+
+	/** A seasonal scoreboard orders a company's hunters by their seasonal xp
+	 * @param {Guild} guild
+	 * @param {typeof import("../logic")} logicLayer
+	 */
+	async seasonalScoreboardEmbed(guild, logicLayer) {
+		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(this.id);
+		const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
+		const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
+		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
+
+		const scorelines = [];
+		for (const participation of participations) {
+			if (participation.xp > 0) {
+				const hunter = await participation.hunter;
+				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
+			}
+		}
+		const embed = new EmbedBuilder().setColor(Colors.Blurple)
+			.setAuthor(ihpAuthorPayload)
+			.setThumbnail(this.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+			.setTitle("The Season Scoreboard")
+			.setFooter(randomFooterTip())
+			.setTimestamp();
+		let description = "";
+		const andMore = "…and more";
+		const maxDescriptionLength = 2048 - andMore.length;
+		for (const scoreline of scorelines) {
+			if (description.length + scoreline.length <= maxDescriptionLength) {
+				description += `${scoreline}\n`;
+			} else {
+				description += andMore;
+				break;
+			}
+		}
+
+		if (description) {
+			embed.setDescription(description);
+		} else {
+			embed.setDescription("No Bounty Hunters yet…");
+		}
+
+		const fields = [];
+		const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+		if (goalId !== null) {
+			fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+		}
+		if (this.festivalMultiplier !== 1) {
+			fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${this.festivalMultiplierString()}.` });
+		}
+		if (this.nextRaffleString) {
+			fields.push({ name: "Next Raffle", value: `The next raffle will be on ${this.nextRaffleString}!` });
+		}
+
+		if (fields.length > 0) {
+			embed.addFields(fields);
+		}
+		return embed;
+	}
+
+	/** An overall scoreboard orders a company's hunters by total xp
+	 * @param {Guild} guild
+	 * @param {typeof import("../logic")} logicLayer
+	 */
+	async overallScoreboardEmbed(guild, logicLayer) {
+		const hunters = await logicLayer.hunters.findCompanyHuntersByDescendingXP(guild.id);
+		const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
+		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
+
+		const scorelines = [];
+		for (const hunter of hunters) {
+			if (hunter.xp > 0) {
+				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
+			}
+		}
+		const embed = new EmbedBuilder().setColor(Colors.Blurple)
+			.setAuthor(ihpAuthorPayload)
+			.setThumbnail(this.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+			.setTitle("The Scoreboard")
+			.setFooter(randomFooterTip())
+			.setTimestamp();
+		let description = "";
+		const andMore = "…and more";
+		const maxDescriptionLength = 2048 - andMore.length;
+		for (const scoreline of scorelines) {
+			if (description.length + scoreline.length <= maxDescriptionLength) {
+				description += `${scoreline}\n`;
+			} else {
+				description += andMore;
+				break;
+			}
+		}
+
+		if (description) {
+			embed.setDescription(description);
+		} else {
+			embed.setDescription("No Bounty Hunters yet…");
+		}
+
+		const fields = [];
+		const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+		if (goalId !== null) {
+			fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+		}
+		if (this.festivalMultiplier !== 1) {
+			fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${this.festivalMultiplierString()}.` });
+		}
+		if (this.nextRaffleString) {
+			fields.push({ name: "Next Raffle", value: `The next raffle will be on ${this.nextRaffleString}!` });
+		}
+
+		if (fields.length > 0) {
+			embed.addFields(fields);
+		}
+
+		return embed;
 	}
 
 	/**
