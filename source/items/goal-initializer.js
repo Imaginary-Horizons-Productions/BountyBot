@@ -17,7 +17,7 @@ module.exports = new ItemTemplate(itemName, "Begin a Server Goal if there isn't 
 		const eligibleTypes = ["bounties", "toasts", "secondings"];
 		const goalType = eligibleTypes[Math.floor(Math.random() * eligibleTypes.length)];
 		const previousSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
-		const activeHunters = previousSeason ? (await database.models.Participation.findOne({ where: { seasonId: season.id }, order: [["placement", "DESC"]] })).placement : 3;
+		const activeHunters = previousSeason ? await logicLayer.seasons.getParticipantCount(previousSeason.id) : 3;
 		const requiredGP = activeHunters * 20;
 		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		await logicLayer.goals.createGoal(interaction.guildId, goalType, requiredGP);
