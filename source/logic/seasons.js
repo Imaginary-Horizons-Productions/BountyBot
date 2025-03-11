@@ -12,7 +12,7 @@ function setDB(database) {
 
 /** @param {string} companyId */
 function createSeason(companyId) {
-	return database.models.Season.create({ companyId })
+	return db.models.Season.create({ companyId })
 }
 
 /** @param {string} companyId */
