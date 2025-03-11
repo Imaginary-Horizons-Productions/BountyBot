@@ -1,5 +1,5 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize, Op } = require("sequelize");
+const { Sequelize } = require("sequelize");
 
 /**
  * @param {CommandInteraction} interaction
@@ -9,7 +9,7 @@ const { Sequelize, Op } = require("sequelize");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const levelThreshold = interaction.options.getInteger("level");
-	const eligibleHunters = await database.models.Hunter.findAll({ where: { companyId: interaction.guildId, level: { [Op.gte]: levelThreshold } } });
+	const eligibleHunters = await logicLayer.hunters.findHuntersAtOrAboveLevel(interaction.guild.id, levelThreshold);
 	const eligibleMembers = await interaction.guild.members.fetch({ user: eligibleHunters.map(hunter => hunter.userId) });
 	const eligibleIds = eligibleMembers.filter(member => member.manageable).map(member => member.id);
 	if (eligibleIds.size < 1) {
