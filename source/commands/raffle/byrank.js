@@ -1,5 +1,5 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
-const { Sequelize, Op } = require("sequelize");
+const { Sequelize } = require("sequelize");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /**
@@ -38,9 +38,8 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		withResponse: true
 	}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
 		const rankIndex = Number(collectedInteraction.values[0]);
-		database.models.Hunter.findAll({ where: { companyId: interaction.guildId, rank: { [Op.gte]: rankIndex } } }).then(unvalidatedHunters => {
-			const qualifiedHunters = unvalidatedHunters.filter(hunter => !hunter.isRankDisqualified);
-			return interaction.guild.members.fetch({ user: qualifiedHunters.map(hunter => hunter.userId) });
+		logicLayer.hunters.findHunterIdsAtOrAboveRank(interaction.guildId, rankIndex).then(qualifiedHunterIds => {
+			return interaction.guild.members.fetch({ user: qualifiedHunterIds });
 		}).then((unvalidatedMembers) => {
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
 			if (eligibleMembers.size < 1) {

@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const { Hunter } = require("../models/users/Hunter");
 
 /** @type {Sequelize} */
@@ -41,6 +41,26 @@ function findCompanyHunters(companyId) {
 	return db.models.Hunter.findAll({ where: { companyId } });
 }
 
+/** *Find the ids of all rank qualified Hunters in the specified Company that are at or above the specified Rank*
+ * @param {string} companyId
+ * @param {number} rankIndex
+ */
+async function findHunterIdsAtOrAboveRank(companyId, rankIndex) {
+	const hunters = await db.models.Hunter.findAll({ where: { companyId, rank: { [Op.gte]: rankIndex } } });
+	const season = await db.models.Season.findOne({ where: { companyId, isCurrentSeason: true } });
+	if (!season) {
+		return hunters.map(hunter => hunter.userId);
+	}
+	const participations = await db.models.Participation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: hunters.map(hunter => hunter.userId) } } });
+	const qualifiedHunterIds = [];
+	for (const participation of participations) {
+		if (!participation.isRankDisqualified) {
+			qualifiedHunterIds.push(participation.userId);
+		}
+	}
+	return qualifiedHunterIds;
+}
+
 /** *Sets a Hunter's Profile Color*
  * @param {string} userId
  * @param {string} companyId
@@ -69,6 +89,7 @@ module.exports = {
 	findOrCreateBountyHunter,
 	findOneHunter,
 	findCompanyHunters,
+	findHunterIdsAtOrAboveRank,
 	setHunterProfileColor,
 	resetCompanyRanks,
 	deleteCompanyHunters
