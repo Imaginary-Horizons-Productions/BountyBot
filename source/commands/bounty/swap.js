@@ -1,5 +1,5 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize, Op } = require("sequelize");
+const { Sequelize } = require("sequelize");
 const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
 const { Bounty } = require("../../models/bounties/Bounty");
@@ -82,7 +82,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 					const destinationSlot = parseInt(collectedInteraction.values[0]);
 					const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
 
-					const bounties = await database.models.Bounty.findAll({ where: { userId: interaction.user.id, companyId: interaction.guildId, slotNumber: { [Op.in]: [sourceSlot, destinationSlot] }, state: "open" } });
+					const bounties = await logicLayer.bounties.bulkFindOpenBounties(interaction.user.id, interaction.guildId, [sourceSlot, destinationSlot]);
 					const sourceBounty = bounties.find(bounty => bounty.slotNumber == sourceSlot);
 					const destinationBounty = bounties.find(bounty => bounty.slotNumber == destinationSlot);
 					sourceBounty.slotNumber = destinationSlot;

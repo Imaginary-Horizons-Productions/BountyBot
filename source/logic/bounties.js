@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const { Guild, GuildMember } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Hunter } = require("../models/users/Hunter");
@@ -13,6 +13,18 @@ let db;
  */
 function setDB(database) {
 	db = database;
+}
+
+/** @param {{ userId: string, companyId: string, slotNumber: number, isEvergreen: boolean, title: string }} rawBounty */
+function createBounty(rawBounty) {
+	return db.models.Bounty.create(rawBounty);
+}
+
+/** *Create many Completions*
+ * @param {{ bountyId: string, userId: string, companyId: string, xpAwarded?: number}[]} rawCompletions
+ */
+function bulkCreateCompletions(rawCompletions) {
+	return db.models.Completion.bulkCreate(rawCompletions);
 }
 
 /**
@@ -35,6 +47,15 @@ function findOpenBounties(userId, companyId) {
 	return db.models.Bounty.findAll({ where: { userId, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
 }
 
+/** *Find a Hunter's Bounties in the slotNumbers*
+ * @param {string} userId
+ * @param {string} companyId
+ * @param {number[]} slotNumbers
+ */
+function bulkFindOpenBounties(userId, companyId, slotNumbers) {
+	return db.models.Bounty.findAll({ where: { userId, companyId, slotNumber: { [Op.in]: slotNumbers }, state: "open" } });
+}
+
 /** @param {string} companyId */
 function findEvergreenBounties(companyId) {
 	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
@@ -45,6 +66,19 @@ function findEvergreenBounties(companyId) {
  */
 function findBountyCompletions(bountyId) {
 	return db.models.Completion.findAll({ where: { bountyId } });
+}
+
+/** @param {string} companyId */
+function findCompanyBountiesByCreationDate(companyId) {
+	return db.models.Bounty.findAll({ where: { companyId, state: "open" }, order: [["createdAt", "DESC"]] });
+}
+
+/** *Finds a Hunter's last five bounties for the purpose of making a moderation user report*
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function findHuntersLastFiveBounties(userId, companyId) {
+	return db.models.Bounty.findAll({ where: { userId, companyId, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: db.models.Bounty.Completions });
 }
 
 /**
@@ -84,7 +118,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 			companyId: guild.id
 		})
 	}
-	await db.models.Completion.bulkCreate(rawCompletions);
+	await bulkCreateCompletions(rawCompletions);
 	let allCompleters = await db.models.Completion.findAll({
 		where: {
 			bountyId: bounty.id
@@ -184,13 +218,43 @@ function deleteCompanyBounties(companyId) {
 	return db.models.Bounty.destroy({ where: { companyId } });
 }
 
+/** *Delete the Completions (pending credit) of the specified Hunters on the specified Bounty*
+ * @param {string} bountyId
+ * @param {string[]} userIds
+ */
+function deleteSelectedBountyCompletions(bountyId, userIds) {
+	return db.models.Completion.destroy({ where: { bountyId, userId: { [Op.in]: userIds } } });
+}
+
+/** *Delete all Completions associated with the specified Company*
+ * @param {string} companyId
+ */
+function deleteCompanyCompletions(companyId) {
+	return db.models.Completion.destroy({ where: { companyId } });
+}
+
+/** *Delete all Completions associated with the specified Bounty*
+ * @param {string} bountyId
+ */
+function deleteBountyCompletions(bountyId) {
+	return db.models.Completion.destroy({ where: { bountyId } });
+}
+
 module.exports = {
 	setDB,
+	createBounty,
+	bulkCreateCompletions,
 	findBounty,
 	findOpenBounties,
+	bulkFindOpenBounties,
 	findEvergreenBounties,
 	findBountyCompletions,
+	findCompanyBountiesByCreationDate,
+	findHuntersLastFiveBounties,
 	addCompleters,
 	completeBounty,
-	deleteCompanyBounties
+	deleteCompanyBounties,
+	deleteSelectedBountyCompletions,
+	deleteCompanyCompletions,
+	deleteBountyCompletions
 }

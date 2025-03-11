@@ -41,7 +41,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 	company.bountyBoardCompletedTagId = completedTagId;
 
 	const evergreenBounties = [];
-	database.models.Bounty.findAll({ where: { companyId: interaction.guildId, state: "open" }, order: [["createdAt", "DESC"]] }).then(bounties => {
+	logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(bounties => {
 		for (const bounty of bounties) {
 			if (bounty.isEvergreen) {
 				evergreenBounties.unshift(bounty);

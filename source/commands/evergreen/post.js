@@ -84,7 +84,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		}
 
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		const bounty = await database.models.Bounty.create(rawBounty);
+		const bounty = await logicLayer.bounties.createBounty(rawBounty);
 		existingBounties.push(bounty);
 
 		// post in bounty board forum

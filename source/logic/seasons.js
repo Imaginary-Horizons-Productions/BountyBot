@@ -12,7 +12,7 @@ function setDB(database) {
 
 /** @param {string} companyId */
 function createSeason(companyId) {
-	return database.models.Season.create({ companyId })
+	return db.models.Season.create({ companyId })
 }
 
 /** @param {string} companyId */
@@ -33,25 +33,19 @@ function findOneSeason(companyId, type) {
 	}
 }
 
-/** *Change the specified Hunter's Seasonal XP*
- * @param {string} userId
- * @param {string} companyId
- * @param {string} seasonId
- * @param {number} xp negative numbers allowed
- */
-function changeSeasonXP(userId, companyId, seasonId, xp) {
-	db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } }).then(([participation, participationCreated]) => {
-		if (!participationCreated) {
-			participation.increment({ xp });
-		}
-	});
-}
-
 /** *Get the number of participating bounty hunters in the specified Season*
  * @param {string} seasonId
  */
 function getParticipantCount(seasonId) {
 	return db.models.Participation.count({ where: { seasonId } });
+}
+
+/** *Counts the number of times the specified Hunter has been DQ'd*
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function getDQCount(userId, companyId) {
+	return db.models.Participation.sum("dqCount", { where: { userId, companyId } }) ?? 0;
 }
 
 /** *Get all of a Season's Participations*
@@ -77,6 +71,28 @@ function findHunterParticipations(userId, companyId) {
 	return db.models.Participation.findAll({ where: { userId, companyId }, order: [["createdAt", "DESC"]] });
 }
 
+/** *Find the first place Participation in the specified Company and Season*
+ * @param {string} companyId
+ * @param {string} seasonId
+ */
+function findFirstPlaceParticipation(companyId, seasonId) {
+	return db.models.Participation.findOne({ where: { companyId, seasonId, placement: 1 } });
+}
+
+/** *Change the specified Hunter's Seasonal XP*
+ * @param {string} userId
+ * @param {string} companyId
+ * @param {string} seasonId
+ * @param {number} xp negative numbers allowed
+ */
+function changeSeasonXP(userId, companyId, seasonId, xp) {
+	db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } }).then(([participation, participationCreated]) => {
+		if (!participationCreated) {
+			participation.increment({ xp });
+		}
+	});
+}
+
 /**
  * @param {string} companyId
  * @param {string} stat
@@ -84,6 +100,23 @@ function findHunterParticipations(userId, companyId) {
 async function incrementSeasonStat(guildId, stat) {
 	const [season] = await findOrCreateCurrentSeason(guildId);
 	return season.increment(stat);
+}
+
+/**
+ * @param {string} userId
+ * @param {string} companyId
+ * @param {string} seasonId
+ */
+async function disqualifyHunter(userId, companyId, seasonId) {
+	await db.models.User.findOrCreate({ where: { id: userId } });
+	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { isRankDisqualified: true } });
+	if (!participationCreated) {
+		await participation.update("isRankDisqualified", !participation.isRankDisqualified);
+	}
+	if (participationCreated || participation.isRankDisqualified) {
+		await participation.increment("dqCount");
+	}
+	return;
 }
 
 /** @param {string} companyId */
@@ -110,12 +143,15 @@ module.exports = {
 	createSeason,
 	findOrCreateCurrentSeason,
 	findOneSeason,
-	changeSeasonXP,
 	getParticipantCount,
+	getDQCount,
 	findSeasonParticipations,
 	bulkFindParticipations,
 	findHunterParticipations,
+	findFirstPlaceParticipation,
+	changeSeasonXP,
 	incrementSeasonStat,
+	disqualifyHunter,
 	deleteCompanySeasons,
 	deleteSeasonParticipations,
 	deleteCompanyParticipations
