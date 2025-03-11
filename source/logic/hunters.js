@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const { Hunter } = require("../models/users/Hunter");
 
 /** @type {Sequelize} */
@@ -48,6 +48,14 @@ function findCompanyHuntersByDescendingXP(companyId) {
 	return db.models.Hunter.findAll({ where: { companyId }, order: [["xp", "DESC"]] });
 }
 
+/** *Find all Hunters in the specified Company at or above the level threshold*
+ * @param {string} companyId
+ * @param {number} levelThreshold
+ */
+function findHuntersAtOrAboveLevel(companyId, levelThreshold) {
+	return db.models.Hunter.findAll({ where: { companyId, level: { [Op.gte]: levelThreshold } } });
+}
+
 /** *Sets a Hunter's Profile Color*
  * @param {string} userId
  * @param {string} companyId
@@ -77,6 +85,7 @@ module.exports = {
 	findOneHunter,
 	findCompanyHunters,
 	findCompanyHuntersByDescendingXP,
+	findHuntersAtOrAboveLevel,
 	setHunterProfileColor,
 	resetCompanyRanks,
 	deleteCompanyHunters

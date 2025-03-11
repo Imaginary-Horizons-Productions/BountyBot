@@ -65,7 +65,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 			xpAwarded: bountyValue
 		});
 	}
-	const completions = await database.models.Completion.bulkCreate(rawCompletions);
+	const completions = await logicLayer.bounties.bulkCreateCompletions(rawCompletions);
 
 	const levelTexts = [];
 	let totalGP = 0;

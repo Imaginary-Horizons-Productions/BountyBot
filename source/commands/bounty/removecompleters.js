@@ -1,5 +1,5 @@
 const { CommandInteraction, MessageFlags, userMention } = require("discord.js");
-const { Sequelize, Op } = require("sequelize");
+const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil");
 
 /**
@@ -22,9 +22,9 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			return;
 		}
 
-		database.models.Completion.destroy({ where: { bountyId: bounty.id, userId: { [Op.in]: mentionedIds } } });
+		logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, mentionedIds);
 		const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-		bounty.updatePosting(interaction.guild, company, database);
+		bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(posterId, interaction.guild.id)).level, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
 		if (company.bountyBoardId) {
 			interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(bounty.postingId);

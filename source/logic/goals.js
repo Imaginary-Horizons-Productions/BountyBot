@@ -19,6 +19,15 @@ function findCurrentServerGoal(companyId) {
 	return db.models.Goal.findOne({ where: { companyId }, state: "ongoing", order: [["createdAt", "DESC"]] });
 }
 
+/** *Create a Goal for the specified Company*
+ * @param {string} companyId
+ * @param {"bounties" | "toasts" | "secondings"} type
+ * @param {number} requiredGP
+ */
+function createGoal(companyId, type, requiredGP) {
+	return db.models.Goal.create({ companyId, type, requiredGP });
+}
+
 /** *Create a Contribution for the specified contributor on the specified Goal*
  * @param {string} goalId
  * @param {string} contributorId
@@ -84,6 +93,7 @@ async function progressGoal(companyId, progressType, hunter, season) {
 module.exports = {
 	setDB,
 	findCurrentServerGoal,
+	createGoal,
 	createGoalContribution,
 	findLatestGoalProgress,
 	progressGoal

@@ -30,7 +30,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				await bounty.reload();
 				bounty.state = "deleted";
 				bounty.save();
-				database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+				logicLayer.bounties.deleteBountyCompletions(bountyId);
 				bounty.destroy();
 
 				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {

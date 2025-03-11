@@ -20,7 +20,7 @@ module.exports = new ItemTemplate(itemName, "Begin a Server Goal if there isn't 
 		const activeHunters = previousSeason ? (await database.models.Participation.findOne({ where: { seasonId: season.id }, order: [["placement", "DESC"]] })).placement : 3;
 		const requiredGP = activeHunters * 20;
 		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		await database.models.Goal.create({ companyId: interaction.guildId, type: goalType, requiredGP });
+		await logicLayer.goals.createGoal(interaction.guildId, goalType, requiredGP);
 		interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member} has started a Server Goal! This time **${goalType} are worth double GP**!` }));
 	}
 ).setLogicLinker(logicBlob => {

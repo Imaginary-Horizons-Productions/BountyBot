@@ -30,7 +30,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
 			bounty.state = "deleted";
 			bounty.save();
-			database.models.Completion.destroy({ where: { bountyId: bounty.id } });
+			logicLayer.bounties.deleteBountyCompletions(bountyId);
 			const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 			if (company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);

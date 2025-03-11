@@ -28,7 +28,7 @@ function findCompanyByPK(companyId) {
  * @param {string} id
  */
 function resetCompanySettings(id) {
-	database.models.Company.update(
+	db.models.Company.update(
 		{
 			announcementPrefix: "@here",
 			maxSimBounties: 5,
