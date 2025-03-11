@@ -12,15 +12,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 	const member = interaction.options.getMember("bounty-hunter");
 	await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
-	await database.models.User.findOrCreate({ where: { id: member.id } });
-	const [participation, participationCreated] = await database.models.Participation.findOrCreate({ where: { userId: member.id, companyId: interaction.guildId, seasonId: season.id }, defaults: { isRankDisqualified: true } });
-	if (!participationCreated) {
-		participation.isRankDisqualified = !participation.isRankDisqualified;
-		participation.save();
-	}
-	if (participationCreated || participation.isRankDisqualified) {
-		participation.increment("dqCount");
-	}
+	await logicLayer.seasons.disqualifyHunter(member.id, interaction.guildId, season.id);
 	getRankUpdates(interaction.guild, logicLayer);
 	interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, flags: [MessageFlags.Ephemeral] });
 	if (!member.user.bot) {
