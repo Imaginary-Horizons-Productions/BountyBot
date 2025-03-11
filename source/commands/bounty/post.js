@@ -204,7 +204,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 				rawBounty.scheduledEventId = event.id;
 			}
 
-			const bounty = await database.models.Bounty.create(rawBounty);
+			const bounty = await logicLayer.bounties.createBounty(rawBounty);
 
 			// post in bounty board forum
 			const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, []);
