@@ -15,6 +15,11 @@ function setDB(database) {
 	db = database;
 }
 
+/** @param {{ userId: string, companyId: string, slotNumber: number, isEvergreen: boolean, title: string }} rawBounty */
+function createBounty(rawBounty) {
+	return db.models.Bounty.create(rawBounty);
+}
+
 /** *Create many Completions*
  * @param {{ bountyId: string, userId: string, companyId: string, xpAwarded?: number}[]} rawCompletions
  */
@@ -230,6 +235,7 @@ function deleteBountyCompletions(bountyId) {
 
 module.exports = {
 	setDB,
+	createBounty,
 	bulkCreateCompletions,
 	findBounty,
 	findOpenBounties,
