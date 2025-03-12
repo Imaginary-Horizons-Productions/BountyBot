@@ -71,7 +71,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		);
 		interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
 			const slotNumber = modalSubmission.fields.getTextInputValue("slot-number");
-			const bounty = await logicLayer.bounties.findBounty({ slotNumber, posterId: interaction.user.id, guildId: modalSubmission.guild.id });
+			const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: interaction.user.id, companyId: modalSubmission.guild.id });
 			if (!bounty) {
 				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, flags: [MessageFlags.Ephemeral] });
 				return;
