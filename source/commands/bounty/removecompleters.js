@@ -10,7 +10,7 @@ const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil")
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
-	database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } }).then(async bounty => {
+	logicLayer.bounties.findBounty({ userId: posterId, companyId: interaction.guild.id, slotNumber }).then(async bounty => {
 		if (!bounty) {
 			interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 			return;
@@ -24,7 +24,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 
 		logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, mentionedIds);
 		const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-		bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(posterId, interaction.guild.id)).level, await database.models.Completion.findAll({ where: { bountyId: bounty.id } }));
+		bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(posterId, interaction.guild.id)).level, await logicLayer.bounties.findBountyCompletions(bounty.id));
 		if (company.bountyBoardId) {
 			interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 				return bountyBoard.threads.fetch(bounty.postingId);

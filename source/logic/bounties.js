@@ -28,14 +28,13 @@ function bulkCreateCompletions(rawCompletions) {
 }
 
 /**
- * @param {{slotNumber: number, posterId: string, guildId: string} | string} bountyInfo
+ * @param {{slotNumber: number, userId: string, companyId: string} | string} bountyInfo
  */
 function findBounty(bountyInfo) {
 	if (typeof bountyInfo === 'string') {
 		return db.models.Bounty.findByPk(bountyInfo);
 	} else {
-		const { posterId: userId, guildId: companyId, slotNumber } = bountyInfo;
-		return db.models.Bounty.findOne({ where: { userId, companyId, slotNumber, state: "open" } });
+		return db.models.Bounty.findOne({ where: { ...bountyInfo, state: "open" } });
 	}
 }
 
@@ -59,6 +58,13 @@ function bulkFindOpenBounties(userId, companyId, slotNumbers) {
 /** @param {string} companyId */
 function findEvergreenBounties(companyId) {
 	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
+}
+
+/** *Find all Completions associated with the specified Bounty*
+ * @param {string} bountyId
+ */
+function findBountyCompletions(bountyId) {
+	return db.models.Completion.findAll({ where: { bountyId } });
 }
 
 /** @param {string} companyId */
@@ -241,6 +247,7 @@ module.exports = {
 	findOpenBounties,
 	bulkFindOpenBounties,
 	findEvergreenBounties,
+	findBountyCompletions,
 	findCompanyBountiesByCreationDate,
 	findHuntersLastFiveBounties,
 	addCompleters,

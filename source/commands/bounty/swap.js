@@ -88,13 +88,13 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 					sourceBounty.slotNumber = destinationSlot;
 					await sourceBounty.save();
 					await sourceBounty.reload();
-					sourceBounty.updatePosting(interaction.guild, company, hunter.level, await database.models.Completion.findAll({ where: { bountyId: sourceBounty.id } }));
+					sourceBounty.updatePosting(interaction.guild, company, hunter.level, await logicLayer.bounties.findBountyCompletions(sourceBounty.id));
 
 					if (destinationBounty) {
 						destinationBounty.slotNumber = sourceSlot;
 						await destinationBounty.save();
 						await destinationBounty.reload();
-						destinationBounty.updatePosting(interaction.guild, company, hunter.level, await database.models.Completion.findAll({ where: { bountyId: destinationBounty.id } }));
+						destinationBounty.updatePosting(interaction.guild, company, hunter.level, await logicLayer.bounties.findBountyCompletions(destinationBounty.id));
 					}
 
 					const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);

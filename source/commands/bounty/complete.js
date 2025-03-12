@@ -14,8 +14,7 @@ const { Goal } = require("../../models/companies/Goal");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
-	/** @type {Bounty | null} */
-	const bounty = await database.models.Bounty.findOne({ where: { userId: posterId, companyId: interaction.guildId, slotNumber, state: "open" } });
+	const bounty = await logicLayer.bounties.findBounty({ userId: posterId, slotNumber, companyId: interaction.guild.id });
 	if (!bounty) {
 		interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -27,7 +26,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 		return;
 	}
 
-	const completions = await database.models.Completion.findAll({ where: { bountyId: bounty.id } });
+	const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
 	const allCompleterIds = completions.map(reciept => reciept.userId);
 	const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
 	const completerIdsWithoutReciept = [];
@@ -114,7 +113,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer,
 			})
 		}
 
-		updateScoreboard(interaction.guild, database, logicLayer);
+		company.updateScoreboard(interaction.guild, logicLayer);
 	});
 };
 
