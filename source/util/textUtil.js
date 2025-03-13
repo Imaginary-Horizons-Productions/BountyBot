@@ -124,13 +124,12 @@ function timeConversion(value, startingUnit, resultUnit) {
 
 /**
  * A utility wrapper for @function timeConversion that goes back in time from the current timestamp
- * @param {{'w': number?,
- * 			'd': number?,
- * 			'h': number?,
- * 			'm': number?,
- * 			's': number?,
- * 			'ms': number?}} timeMap The amount of time to go back in the past
- * @returns {Date} The Date in the past as adjusted by the timeMap
+ * @param {{w?: number,
+ * 			d?: number,
+ * 			h?: number,
+ * 			m?: number,
+ * 			s?: number,
+ * 			ms?: number}} timeMap The amount of time to go back in the past
  */
 function dateInPast(timeMap) {
 	let nowTimestamp = new Date();
@@ -142,13 +141,12 @@ function dateInPast(timeMap) {
 
 /**
  * A utility wrapper for @function timeConversion that goes into the future from the current timestamp
- * @param {{'w': number?,
-* 			'd': number?,
-* 			'h': number?,
-* 			'm': number?,
-* 			's': number?,
-* 			'ms': number?}} timeMap The amount of time to go into the future
-* @returns {Date} The Date in the future as adjusted by the timeMap
+ * @param {{w?: number,
+* 			d?: number,
+* 			h?: number,
+* 			m?: number,
+* 			s?: number,
+* 			ms?: number}} timeMap The amount of time to go into the future
 */
 function dateInFuture(timeMap) {
 	let nowTimestamp = new Date();
