@@ -151,7 +151,7 @@ module.exports = {
 	findFirstPlaceParticipation,
 	changeSeasonXP,
 	incrementSeasonStat,
-	disqualifyHunter: toggleHunterSeasonDisqualification,
+	toggleHunterSeasonDisqualification,
 	deleteCompanySeasons,
 	deleteSeasonParticipations,
 	deleteCompanyParticipations
