@@ -1,8 +1,9 @@
 const { Sequelize, Op } = require("sequelize");
-const { Guild, GuildMember } = require("discord.js");
+const { Guild, GuildMember, time } = require("discord.js");
 const { Bounty } = require("../models/bounties/Bounty");
 const { Hunter } = require("../models/users/Hunter");
 const { rollItemDrop } = require("../util/itemUtil");
+const { dateInPast } = require("../util/textUtil");
 
 /** @type {Sequelize} */
 let db;
@@ -141,6 +142,27 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 }
 
 /**
+ * Functionality internal to bounty logic for rolling items on bounty completion.
+ * Drop rates vary for completers vs. posters.
+ * @param {number} dropRate The drop rate for this roll
+ * @param {string} hunterId The ID snowflake of the hunter we are rolling for
+ */
+async function rollItemForHunter(dropRate, hunterId) {
+	const itemCutoff = (await db.models.User.findByPk(hunterId))[0].isPremium ? 4 : 2;
+	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, updatedAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
+	if (itemsDropped >= itemCutoff) return; // Don't roll items when we've dropped our max
+	
+	const droppedItem = rollItemDrop(dropRate);
+	if (!droppedItem) return;
+
+	const [itemRow, itemWasCreated] = await db.models.Item.findOrCreate({ where: { userId: hunterId, itemName: droppedItem } });
+	if (!itemWasCreated) {
+		itemRow.increment("count");
+	}
+	return `<@${hunterId}> has found a **${droppedItem}**!`;
+}
+
+/**
  * @param {Bounty} bounty
  * @param {Hunter} poster
  * @param {Hunter[]} validatedHunters
@@ -169,14 +191,8 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 			dropRate *= 2;
 			hunter.update("itemFindBoost", false);
 		}
-		const droppedItem = rollItemDrop(dropRate);
-		if (droppedItem) {
-			const [itemRow, itemWasCreated] = await db.models.Item.findOrCreate({ where: { userId: hunter.userId, itemName: droppedItem } });
-			if (!itemWasCreated) {
-				itemRow.increment("count");
-			}
-			rewardTexts.push(`<@${hunter.userId}> has found a **${droppedItem}**!`);
-		}
+		const rollStr = await rollItemForHunter(dropRate, hunter.userId);
+		rollStr ?? rewardTexts.push(rollStr);
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
@@ -194,14 +210,8 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 		dropRate *= 2;
 		poster.update("itemFindBoost", false);
 	}
-	const droppedItem = rollItemDrop(dropRate);
-	if (droppedItem) {
-		const [itemRow, itemWasCreated] = await db.models.Item.findOrCreate({ where: { userId: bounty.userId, itemName: droppedItem } });
-		if (!itemWasCreated) {
-			itemRow.increment("count");
-		}
-		rewardTexts.push(`<@${poster.userId}> has found a **${droppedItem}**!`);
-	}
+	const rollStr = await rollItemForHunter(dropRate, poster.userId);
+	rollStr ?? rewardTexts.push(rollStr);
 
 	return {
 		completerXP: bountyBaseValue,

@@ -122,6 +122,42 @@ function timeConversion(value, startingUnit, resultUnit) {
 	}
 }
 
+/**
+ * A utility wrapper for @function timeConversion that goes back in time from the current timestamp
+ * @param {{'w': number?,
+ * 			'd': number?,
+ * 			'h': number?,
+ * 			'm': number?,
+ * 			's': number?,
+ * 			'ms': number?}} timeMap The amount of time to go back in the past
+ * @returns {Date} The Date in the past as adjusted by the timeMap
+ */
+function dateInPast(timeMap) {
+	let nowTimestamp = new Date();
+	for (key in timeMap) {
+		nowTimestamp -= timeConversion(timeMap[key], key, 'ms');
+	}
+	return new Date(nowTimestamp);
+}
+
+/**
+ * A utility wrapper for @function timeConversion that goes into the future from the current timestamp
+ * @param {{'w': number?,
+* 			'd': number?,
+* 			'h': number?,
+* 			'm': number?,
+* 			's': number?,
+* 			'ms': number?}} timeMap The amount of time to go into the future
+* @returns {Date} The Date in the future as adjusted by the timeMap
+*/
+function dateInFuture(timeMap) {
+	let nowTimestamp = new Date();
+	for (key in timeMap) {
+		nowTimestamp += timeConversion(timeMap[key], key, 'ms');
+	}
+	return new Date(nowTimestamp);
+}
+
 /** Extracting user ids from mentions in a string allows us to accept an arbitrary number of users from a single string input
  * @param {string} mentionsText
  * @param {string[]} excludedIds
@@ -240,6 +276,8 @@ module.exports = {
 	generateTextBar,
 	getNumberEmoji,
 	timeConversion,
+	dateInPast,
+	dateInFuture,
 	extractUserIdsFromMentions,
 	textsHaveAutoModInfraction,
 	listifyEN,
