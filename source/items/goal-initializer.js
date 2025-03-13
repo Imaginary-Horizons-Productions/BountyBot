@@ -6,7 +6,7 @@ let logicLayer;
 
 const itemName = "Goal Initializer";
 module.exports = new ItemTemplate(itemName, "Begin a Server Goal if there isn't already one running", 3000,
-	async (interaction, database) => {
+	async (interaction) => {
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guildId);
 		if (!!goal) {

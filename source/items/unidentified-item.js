@@ -8,7 +8,7 @@ let logicLayer;
 
 const itemName = "Unidentified Item";
 module.exports = new ItemTemplate(itemName, "Rolls as a random item!", 3000,
-	async (interaction, database) => {
+	async (interaction) => {
 		const rolledItem = rollItemDrop(1);
 		await logicLayer.items.grantItem(interaction.user.id, rolledItem);
 		interaction.reply({ content: `The unidentified item was a **${rolledItem}**! Use it with ${commandMention("item")}?`, flags: [MessageFlags.Ephemeral] });

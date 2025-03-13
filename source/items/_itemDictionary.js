@@ -1,6 +1,5 @@
 const { CommandInteraction } = require("discord.js");
 const { ItemTemplate } = require("../classes");
-const { Sequelize } = require("sequelize");
 
 /** @type {Record<string, ItemTemplate>} */
 const ITEMS = {};
@@ -71,11 +70,10 @@ exports.getItemCooldown = function (itemName) {
 /**
  * @param {string} itemName
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @returns {Promise<boolean>} whether to skip decrementing the item count
  */
-exports.useItem = function (itemName, interaction, database) {
-	return ITEMS[itemName].effect(interaction, database);
+exports.useItem = function (itemName, interaction) {
+	return ITEMS[itemName].effect(interaction);
 }
 
 exports.setLogic = function (logicBlob) {

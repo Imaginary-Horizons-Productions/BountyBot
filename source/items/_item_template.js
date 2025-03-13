@@ -6,7 +6,7 @@ let logicLayer;
 const itemName = "";
 module.exports = new ItemTemplate(itemName, "description", 3000,
 	/** specs */
-	async (interaction, database) => {
+	async (interaction) => {
 
 	}
 ).setLogicLinker(logicBlob => {
