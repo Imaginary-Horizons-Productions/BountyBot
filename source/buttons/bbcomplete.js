@@ -1,7 +1,6 @@
 const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
-const { updateScoreboard } = require('../util/embedUtil');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { commandMention, timeConversion, generateTextBar } = require('../util/textUtil');
 const { Bounty } = require('../models/bounties/Bounty');

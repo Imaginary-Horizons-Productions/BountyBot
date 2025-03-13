@@ -2,7 +2,6 @@ const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuil
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { textsHaveAutoModInfraction, generateTextBar } = require('../util/textUtil');
-const { updateScoreboard } = require('../util/embedUtil.js');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
 const { Goal } = require('../models/companies/Goal.js');

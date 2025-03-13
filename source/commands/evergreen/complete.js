@@ -2,7 +2,6 @@ const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
-const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, generateTextBar } = require("../../util/textUtil");
 const { Goal } = require("../../models/companies/Goal");
 
@@ -14,7 +13,7 @@ const { Goal } = require("../../models/companies/Goal");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
-	const bounty = await database.models.Bounty.findOne({ where: { isEvergreen: true, companyId: interaction.guildId, slotNumber, state: "open" } });
+	const bounty = await logicLayer.bounties.findOneEvergreenBounty(interaction.guild.id, slotNumber);
 	if (!bounty) {
 		interaction.reply({ content: "There isn't an evergreen bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 		return;

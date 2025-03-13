@@ -1,6 +1,5 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { updateScoreboard } = require('../util/embedUtil');
 const { Hunter } = require('../models/users/Hunter');
 const { COMPANY_XP_COEFFICIENT } = require('../constants');
 
