@@ -34,16 +34,16 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				if (firstPlace) {
 					shoutouts.push(`<@${firstPlace.userId}> earned the most XP this season!`);
 				}
-				const mostPostingsCompleted = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["postingsCompleted", "DESC"]] });
-				if (mostPostingsCompleted?.postingsCompleted > 0) {
+				const mostPostingsCompleted = await logicLayer.seasons.findParticipationWithTopParticipationStat(interaction.guildId, endingSeason.id, "postingsCompleted");
+				if (mostPostingsCompleted) {
 					shoutouts.push(`<@${mostPostingsCompleted.userId}> posted the most completed bounties this season!`);
 				}
-				const mostToastsRaised = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["toastsRaised", "DESC"]] });
-				if (mostToastsRaised?.toastsRaised > 0) {
+				const mostToastsRaised = await logicLayer.seasons.findParticipationWithTopParticipationStat(interaction.guildId, endingSeason.id, "toastsRaised");
+				if (mostToastsRaised) {
 					shoutouts.push(`<@${mostToastsRaised.userId}> raised the most toasts this season!`);
 				}
-				const mostGoalContributions = await database.models.Participation.findOne({ where: { companyId: interaction.guildId, seasonId: endingSeason.id }, order: [["goalContributions", "DESC"]] });
-				if (mostGoalContributions?.goalContributions > 0) {
+				const mostGoalContributions = await logicLayer.seasons.findParticipationWithTopParticipationStat(interaction.guildId, endingSeason.id, "goalContributions");
+				if (mostGoalContributions) {
 					shoutouts.push(`<@${mostGoalContributions.userId}> made the most goal contributions this season!`);
 				}
 				endingSeason.isCurrentSeason = false;
