@@ -91,7 +91,7 @@ class Company extends Model {
 		for (const participation of participations) {
 			if (participation.xp > 0) {
 				const hunter = await participation.hunter;
-				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
+				scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
 			}
 		}
 		const embed = new EmbedBuilder().setColor(Colors.Blurple)
