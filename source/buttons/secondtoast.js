@@ -2,7 +2,6 @@ const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { getRankUpdates } = require('../util/scoreUtil');
 const { generateTextBar } = require('../util/textUtil');
-const { updateScoreboard } = require('../util/embedUtil');
 const { Seconding } = require('../models/toasts/Seconding');
 const { Goal } = require('../models/companies/Goal');
 

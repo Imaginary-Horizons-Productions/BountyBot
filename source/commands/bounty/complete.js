@@ -1,7 +1,6 @@
 const { CommandInteraction, MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
-const { updateScoreboard } = require("../../util/embedUtil");
 const { extractUserIdsFromMentions, timeConversion, commandMention, generateTextBar } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { Goal } = require("../../models/companies/Goal");

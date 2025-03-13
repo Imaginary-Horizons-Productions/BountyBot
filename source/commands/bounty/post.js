@@ -4,7 +4,6 @@ const { Bounty } = require("../../models/bounties/Bounty");
 const { Hunter } = require("../../models/users/Hunter");
 const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction, commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, SAFE_DELIMITER } = require("../../constants");
-const { updateScoreboard } = require("../../util/embedUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 
 /**
