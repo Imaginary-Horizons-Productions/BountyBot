@@ -9,7 +9,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id, "ascending");
+	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 	if (ranks.length < 1) {
 		interaction.reply({ content: "This server doesn't have any ranks configured.", flags: [MessageFlags.Ephemeral] });
 		return;
@@ -43,7 +43,7 @@ async function executeSubcommand(interaction, database, runMode, ...[logicLayer]
 		}).then((unvalidatedMembers) => {
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
 			if (eligibleMembers.size < 1) {
-				logicLayer.ranks.findAllRanks(interaction.guildId, "ascending").then(ranks => {
+				logicLayer.ranks.findAllRanks(interaction.guildId).then(ranks => {
 					const rank = ranks[rankIndex];
 					collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${rankIndex + 1}`}).`, flags: [MessageFlags.Ephemeral] });
 				});

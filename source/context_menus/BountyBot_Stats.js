@@ -43,7 +43,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
-				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
+				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
 

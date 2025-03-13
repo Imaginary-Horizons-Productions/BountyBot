@@ -43,15 +43,9 @@ function findOneRank(companyId, varianceThreshold) {
 
 /** *Finds all of a company's ranks and returns them in the specified order*
  * @param {string} companyId
- * @param {"ascending" | "descending"} sortOrder the order to sort the ranks by variance threshold
  */
-function findAllRanks(companyId, sortOrder) {
-	switch (sortOrder) {
-		case "ascending":
-			return db.models.Rank.findAll({ where: { companyId }, order: [["varianceThreshold", "ASC"]] });
-		case "descending":
-			return db.models.Rank.findAll({ where: { companyId }, order: [["varianceThreshold", "DESC"]] });
-	}
+function findAllRanks(companyId) {
+	return db.models.Rank.findAll({ where: { companyId }, order: [["varianceThreshold", "DESC"]] });
 }
 
 /** *Deletes all of a company's ranks*

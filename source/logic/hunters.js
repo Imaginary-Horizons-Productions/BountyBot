@@ -46,7 +46,7 @@ function findCompanyHunters(companyId) {
  * @param {number} rankIndex
  */
 async function findHunterIdsAtOrAboveRank(companyId, rankIndex) {
-	const hunters = await db.models.Hunter.findAll({ where: { companyId, rank: { [Op.gte]: rankIndex } } });
+	const hunters = await db.models.Hunter.findAll({ where: { companyId, rank: { [Op.lte]: rankIndex } } });
 	const season = await db.models.Season.findOne({ where: { companyId, isCurrentSeason: true } });
 	if (!season) {
 		return hunters.map(hunter => hunter.userId);
