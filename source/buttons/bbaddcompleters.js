@@ -37,7 +37,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
-	async (interaction, [bountyId], runMode) => {
+	async (interaction, runMode, [bountyId]) => {
 		const bounty = await logicLayer.bounties.findBounty(bountyId);
 		if (!bounty) {
 			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: [MessageFlags.Ephemeral] })

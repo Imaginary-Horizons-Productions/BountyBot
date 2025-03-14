@@ -1,15 +1,18 @@
 const { BuildError } = require("./BuildError");
-const { ButtonWrapper, CommandWrapper, SelectWrapper, ContextMenuWrapper, UserContextMenuWrapper, MessageContextMenuWrapper, SubcommandWrapper } = require("./InteractionWrapper");
+const { CommandWrapper, SubcommandWrapper } = require("./CommandWrapper");
+const { ContextMenuWrapper, UserContextMenuWrapper, MessageContextMenuWrapper } = require("./InteractionWrapper");
 const { ItemTemplate } = require("./ItemTemplate");
+const { MessageComponentWrapper, ButtonWrapper, SelectWrapper } = require("./MessageComponentWrapper");
 
 module.exports = {
 	BuildError,
 	ItemTemplate,
-	ButtonWrapper,
 	CommandWrapper,
 	SubcommandWrapper,
-	SelectWrapper,
 	ContextMenuWrapper,
 	UserContextMenuWrapper,
-	MessageContextMenuWrapper
+	MessageContextMenuWrapper,
+	MessageComponentWrapper,
+	ButtonWrapper,
+	SelectWrapper
 };
