@@ -244,13 +244,7 @@ dAPIClient.on(Events.ThreadDelete, async thread => {
 dAPIClient.on(Events.GuildDelete, async guild => {
 	await dbReady;
 	logicBlob.hunters.deleteCompanyHunters(guild.id);
-	dbConnection.models.Toast.findAll({ where: { companyId: guild.id } }).then(toasts => {
-		toasts.forEach(toast => {
-			dbConnection.models.Recipient.destroy({ where: { toastId: toast.id } });
-			dbConnection.models.Seconding.destroy({ where: { toastId: toast.id } });
-			toast.destroy();
-		})
-	});
+	logicBlob.toasts.deleteCompanyToastRecords(guild.id);
 
 	logicBlob.bounties.deleteCompanyBounties(guild.id);
 	logicBlob.bounties.deleteCompanyCompletions(guild.id);
