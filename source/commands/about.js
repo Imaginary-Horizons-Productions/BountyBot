@@ -6,7 +6,7 @@ const { BOUNTYBOT_INVITE_URL } = require('../constants');
 const mainId = "about";
 module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Get BountyBot's description and contributors */
-	(interaction, database, runMode) => {
+	(interaction, runMode) => {
 		fs.promises.stat("./source/commands/about.js").then(stats => {
 			const avatarURL = interaction.client.user.avatarURL();
 			interaction.reply({

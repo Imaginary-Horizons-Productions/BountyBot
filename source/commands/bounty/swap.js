@@ -1,5 +1,4 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { getNumberEmoji } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../constants");
 const { Bounty } = require("../../models/bounties/Bounty");
@@ -7,11 +6,10 @@ const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 	logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id).then(openBounties => {
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });

@@ -1,5 +1,4 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { extractUserIdsFromMentions, generateTextBar } = require("../../util/textUtil");
@@ -7,11 +6,10 @@ const { Goal } = require("../../models/companies/Goal");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	const bounty = await logicLayer.bounties.findOneEvergreenBounty(interaction.guild.id, slotNumber);
 	if (!bounty) {

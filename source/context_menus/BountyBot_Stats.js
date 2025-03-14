@@ -3,7 +3,6 @@ const { Hunter } = require('../models/users/Hunter');
 const { randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
 const { UserContextMenuWrapper } = require('../classes');
-const { Op } = require('sequelize');
 const { COMPANY_XP_COEFFICIENT } = require('../constants');
 
 /** @type {typeof import("../logic")} */
@@ -11,7 +10,7 @@ let logicLayer;
 
 const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
-	async (interaction, database, runMode) => {
+	async (interaction, runMode) => {
 		const target = interaction.targetMember;
 		if (target.id == interaction.client.user.id) {
 			// BountyBot

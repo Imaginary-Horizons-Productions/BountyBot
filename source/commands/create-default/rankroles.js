@@ -1,13 +1,11 @@
 const { CommandInteraction, GuildPremiumTier, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 	await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 	const previousRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 	const previousRoleIds = [];

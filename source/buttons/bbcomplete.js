@@ -11,7 +11,7 @@ let logicLayer;
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, [bountyId], database, runMode) => {
+	(interaction, [bountyId], runMode) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (!bounty) {
 				interaction.reply({ content: "This bounty could not be found.", flags: [MessageFlags.Ephemeral] });

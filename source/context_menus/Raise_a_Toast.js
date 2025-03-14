@@ -12,7 +12,7 @@ let logicLayer;
 const mainId = "Raise a Toast";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive toast text, then raise the toast to the user */
-	async (interaction, database, runMode) => {
+	async (interaction, runMode) => {
 		if (interaction.targetId === interaction.user.id) {
 			interaction.reply({ content: "You cannot raise a toast to yourself.", flags: [MessageFlags.Ephemeral] });
 			return;
