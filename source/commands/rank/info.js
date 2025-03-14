@@ -9,7 +9,7 @@ const { Sequelize } = require("sequelize");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	const varianceThreshold = interaction.options.getNumber("variance-threshold");
-	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id, "descending");
+	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 	let index = 0;
 	const rank = ranks.find(rank => {
 		index++;

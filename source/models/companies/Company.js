@@ -85,13 +85,13 @@ class Company extends Model {
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(this.id);
 		const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
 		const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
-		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
+		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id)).map(rank => rank.rankmoji);
 
 		const scorelines = [];
 		for (const participation of participations) {
 			if (participation.xp > 0) {
 				const hunter = await participation.hunter;
-				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
+				scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
 			}
 		}
 		const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -143,7 +143,7 @@ class Company extends Model {
 	async overallScoreboardEmbed(guild, logicLayer) {
 		const hunters = await logicLayer.hunters.findCompanyHuntersByDescendingXP(guild.id);
 		const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id, "descending")).map(rank => rank.rankmoji);
+		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id)).map(rank => rank.rankmoji);
 
 		const scorelines = [];
 		for (const hunter of hunters) {
