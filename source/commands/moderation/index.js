@@ -19,7 +19,6 @@ module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", Permis
 	(interaction, runMode) => {
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
-).setSubcommands(subcommandSlashData)
-	.setLogicLinker(logicBlob => {
-		logicLayer = logicBlob;
-	});
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+}).setSubcommands(subcommandSlashData);

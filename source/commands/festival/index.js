@@ -17,7 +17,6 @@ module.exports = new CommandWrapper(mainId, "Manage a server-wide festival to mu
 			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer, company);
 		});
 	}
-).setSubcommands(subcommandSlashData)
-	.setLogicLinker(logicBlob => {
-		logicLayer = logicBlob;
-	});
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+}).setSubcommands(subcommandSlashData);

@@ -17,7 +17,6 @@ module.exports = new CommandWrapper(mainId, "Create a Discord resource for use b
 			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer, company);
 		});
 	}
-).setSubcommands(subcommandSlashData)
-	.setLogicLinker(logicBlob => {
-		logicLayer = logicBlob;
-	});
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+}).setSubcommands(subcommandSlashData);

@@ -13,7 +13,6 @@ module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty h
 	(interaction, runMode) => {
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
-).setSubcommands(subcommandSlashData)
-	.setLogicLinker(logicBlob => {
-		logicLayer = logicBlob;
-	});
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+}).setSubcommands(subcommandSlashData);

@@ -1,19 +1,9 @@
-const { CommandInteraction, MessageFlags } = require("discord.js");
+const { MessageFlags } = require("discord.js");
+const { SubcommandWrapper } = require("../../classes");
 
-/**
- * @param {CommandInteraction} interaction
- * @param {string} runMode
- * @param {[typeof import("../../logic")]} args
- */
-async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
-	logicLayer.companies.resetCompanySettings(interaction.guild.id);
-	interaction.reply({ content: "Server settings have been reset.", flags: [MessageFlags.Ephemeral] });
-};
-
-module.exports = {
-	data: {
-		name: "server-settings",
-		description: "IRREVERSIBLY return all server configs to default",
-	},
-	executeSubcommand
-};
+module.exports = new SubcommandWrapper("server-settings", "IRREVERSIBLY return all server configs to default",
+	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+		logicLayer.companies.resetCompanySettings(interaction.guild.id);
+		interaction.reply({ content: "Server settings have been reset.", flags: [MessageFlags.Ephemeral] });
+	}
+);

@@ -1,28 +1,16 @@
-const { CommandInteraction } = require("discord.js");
+const { SubcommandWrapper } = require("../classes");
 
-/**
- * @param {CommandInteraction} interaction
- * @param {string} runMode
- * @param {[typeof import("../../logic")]} args
- */
-async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+module.exports = new SubcommandWrapper("", "",
+	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 
-};
-
-module.exports = {
-	data: {
+	}
+).setOptions(
+	{
+		type: "",
 		name: "",
 		description: "",
-		optionsInput: [
-			{
-				type: "",
-				name: "",
-				description: "",
-				required: false,
-				autocomplete: [{ name: "", value: "" }], // optional
-				choices: [{ name: "", value: "" }]  // optional
-			}
-		]
-	},
-	executeSubcommand
-};
+		required: false,
+		autocomplete: [{ name: "", value: "" }], // optional
+		choices: [{ name: "", value: "" }]  // optional
+	}
+);
