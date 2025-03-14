@@ -6,7 +6,7 @@ let logicLayer;
 const mainId = "";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Specs */
-	(interaction, args, runMode) => {
+	(interaction, runMode, args) => {
 
 	}
 ).setLogicLinker(logicBundle => {
