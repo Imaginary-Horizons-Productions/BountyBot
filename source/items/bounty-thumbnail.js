@@ -9,7 +9,7 @@ let logicLayer;
 
 const itemName = "Bounty Thumbnail";
 module.exports = new ItemTemplate(itemName, "Adds an image (via URL) to one of your open bounties!", 3000,
-	async (interaction, database) => {
+	async (interaction) => {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: [MessageFlags.Ephemeral] });

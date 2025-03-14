@@ -44,7 +44,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 				return;
 			}
 
-			await itemRow.reload();
+			await itemRow?.reload();
 			if (runMode === "production" && itemRow.count < 1) {
 				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: [MessageFlags.Ephemeral] });
 				return;
@@ -71,7 +71,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 				setTimeout(() => timestamps.delete(collectedInteration.user.id), getItemCooldown(itemName));
 			}
 
-			return useItem(itemName, collectedInteration, database).then(shouldSkipDecrement => {
+			return useItem(itemName, collectedInteration).then(shouldSkipDecrement => {
 				if (!shouldSkipDecrement && runMode === "production") {
 					itemRow.decrement("count");
 				}

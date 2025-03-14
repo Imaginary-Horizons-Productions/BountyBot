@@ -1,6 +1,5 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
 const { Sequelize } = require("sequelize");
-const { updateScoreboard } = require("../../util/embedUtil");
 
 /**
  * @param {CommandInteraction} interaction

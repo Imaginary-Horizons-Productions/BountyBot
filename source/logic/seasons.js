@@ -79,6 +79,19 @@ function findFirstPlaceParticipation(companyId, seasonId) {
 	return db.models.Participation.findOne({ where: { companyId, seasonId, placement: 1 } });
 }
 
+/** *Finds the Participation of the specified Season's Hunter with the most of the specified Participation property*
+ * @param {string} companyId
+ * @param {string} seasonId
+ * @param {string} particiaptionProperty
+ */
+async function findParticipationWithTopParticipationStat(companyId, seasonId, particiaptionProperty) {
+	const participation = await db.models.Participation.findOne({ where: { companyId, seasonId }, order: [[particiaptionProperty, "DESC"]] });
+	if (participation === null || participation[particiaptionProperty] === 0) {
+		return null;
+	}
+	return participation;
+}
+
 /** *Change the specified Hunter's Seasonal XP*
  * @param {string} userId
  * @param {string} companyId
@@ -149,6 +162,7 @@ module.exports = {
 	bulkFindParticipations,
 	findHunterParticipations,
 	findFirstPlaceParticipation,
+	findParticipationWithTopParticipationStat,
 	changeSeasonXP,
 	incrementSeasonStat,
 	toggleHunterSeasonDisqualification,

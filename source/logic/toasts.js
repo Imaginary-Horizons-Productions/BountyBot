@@ -169,6 +169,19 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue };
 }
 
+/** *Deletes all Toasts, Recipients, and Secondings for a specified Company*
+ * @param {string} companyId
+ */
+function deleteCompanyToastRecords(companyId) {
+	return db.models.Toast.findAll({ where: { companyId } }).then(toasts => {
+		toasts.forEach(toast => {
+			db.models.Recipient.destroy({ where: { toastId: toast.id } });
+			db.models.Seconding.destroy({ where: { toastId: toast.id } });
+			toast.destroy();
+		})
+	});
+}
+
 module.exports = {
 	setDB,
 	findRecentSecondings,
@@ -177,5 +190,6 @@ module.exports = {
 	findMostSecondedToast,
 	wasAlreadySeconded,
 	findToastByPK,
-	raiseToast
+	raiseToast,
+	deleteCompanyToastRecords
 }
