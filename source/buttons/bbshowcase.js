@@ -9,7 +9,7 @@ let logicLayer;
 
 const mainId = "bbshowcase";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, [bountyId], database, runMode) => {
+	(interaction, [bountyId], runMode) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (bounty.userId !== interaction.user.id) {
 				interaction.reply({ content: "Only the bounty poster can showcase the bounty.", flags: [MessageFlags.Ephemeral] });

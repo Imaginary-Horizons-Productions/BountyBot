@@ -11,7 +11,7 @@ const ITEM_COOLDOWNS = new Map();
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
-	async (interaction, database, runMode) => {
+	async (interaction, runMode) => {
 		const itemName = interaction.options.getString("item-name");
 		await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 		const itemRow = await logicLayer.items.findUserItemEntry(interaction.user.id, itemName);

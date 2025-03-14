@@ -1,13 +1,11 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 	const levelThreshold = interaction.options.getInteger("level");
 	const eligibleHunters = await logicLayer.hunters.findHuntersAtOrAboveLevel(interaction.guild.id, levelThreshold);
 	const eligibleMembers = await interaction.guild.members.fetch({ user: eligibleHunters.map(hunter => hunter.userId) });

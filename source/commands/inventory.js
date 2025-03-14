@@ -8,7 +8,7 @@ let logicLayer;
 
 const mainId = "inventory";
 module.exports = new CommandWrapper(mainId, "Show your inventory of usable items", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
-	(interaction, database, runMode) => {
+	(interaction, runMode) => {
 		logicLayer.items.getInventory(interaction.user.id).then(itemRows => {
 			let content = `Here are the items in your inventory (use them with ${commandMention("item")}):\n- `;
 			if (itemRows.length > 0) {

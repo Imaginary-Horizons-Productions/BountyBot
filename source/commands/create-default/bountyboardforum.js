@@ -1,5 +1,4 @@
 const { CommandInteraction, PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
 const { Company } = require("../../models/companies/Company");
 const { SAFE_DELIMITER } = require("../../constants");
@@ -7,11 +6,10 @@ const { timeConversion } = require("../../util/textUtil");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer, company]) {
 	const bountyBoard = await interaction.guild.channels.create({
 		parent: interaction.channel.parentId,
 		name: "the-bounty-board",

@@ -11,8 +11,8 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"serversettings.js"
 ]);
 module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, bounties, or server configs", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
-	(interaction, database, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer);
+	(interaction, runMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
 ).setSubcommands(subcommandSlashData)
 	.setLogicLinker(logicBlob => {

@@ -1,5 +1,4 @@
 const { CommandInteraction, userMention, bold, MessageFlags, Guild } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { Completion } = require("../../models/bounties/Completion.js");
 const { Bounty } = require("../../models/bounties/Bounty.js");
@@ -36,11 +35,10 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 
 	const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: posterId, companyId: interaction.guild.id });

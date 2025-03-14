@@ -41,7 +41,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 const mainId = "Give Bounty Credit";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
-	async (interaction, database, runMode) => {
+	async (interaction, runMode) => {
 		if (interaction.targetId === interaction.user.id) {
 			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", flags: [MessageFlags.Ephemeral] });
 			return;

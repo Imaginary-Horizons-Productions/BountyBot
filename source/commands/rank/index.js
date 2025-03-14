@@ -10,8 +10,8 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"remove.js"
 ]);
 module.exports = new CommandWrapper(mainId, "Seasonal Ranks distinguish bounty hunters who have above average season XP", PermissionFlagsBits.ManageRoles, true, [InteractionContextType.Guild], 3000,
-	(interaction, database, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer);
+	(interaction, runMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
 ).setSubcommands(subcommandSlashData)
 	.setLogicLinker(logicBlob => {

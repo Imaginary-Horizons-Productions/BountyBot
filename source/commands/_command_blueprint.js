@@ -9,7 +9,7 @@ const mainId = "";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, []);
 module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Command specifications go here */
-	(interaction, database, runMode) => {
+	(interaction, runMode) => {
 
 	}
 ).setOptions(
@@ -21,7 +21,6 @@ module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.V
 		autocomplete: [{ name: "", value: "" }], // optional
 		choices: [{ name: "", value: "" }] // optional
 	}
-).setSubcommands(subcommandSlashData)
-.setLogicLinker(logicBlob => {
+).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-});
+}).setSubcommands(subcommandSlashData);

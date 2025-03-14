@@ -1,13 +1,11 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer, userId]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer, userId]) {
 	const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? userId;
 	logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id).then(async existingBounties => {
 		if (existingBounties.length < 1) {

@@ -3,7 +3,6 @@ const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../models/users/Hunter');
 const { randomFooterTip, ihpAuthorPayload } = require('../util/embedUtil');
 const { generateTextBar } = require('../util/textUtil');
-const { Op } = require('sequelize');
 const { COMPANY_XP_COEFFICIENT } = require('../constants');
 
 /** @type {typeof import("../logic")} */
@@ -12,7 +11,7 @@ let logicLayer;
 const mainId = "stats";
 module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
 	/** Get the BountyBot stats for yourself or someone else */
-	async (interaction, database, runMode) => {
+	async (interaction, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
 		if (target) {
 			if (target.id === interaction.client.user.id) {

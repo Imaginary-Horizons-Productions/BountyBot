@@ -1,5 +1,4 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, ButtonBuilder, ButtonStyle, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { Hunter } = require("../../models/users/Hunter");
 const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction, commandMention } = require("../../util/textUtil");
@@ -8,11 +7,10 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic"), string, Hunter]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId, hunter]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId, hunter]) {
 	const [{ maxSimBounties }] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 	const existingBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guildId);
 	const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
