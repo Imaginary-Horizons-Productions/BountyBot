@@ -10,7 +10,7 @@ let logicLayer;
 
 const itemName = "Bonus Bounty Showcase";
 module.exports = new ItemTemplate(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
-	async (interaction, database) => {
+	async (interaction) => {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't have any open bounties on this server to showcase.", flags: [MessageFlags.Ephemeral] });

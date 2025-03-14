@@ -7,7 +7,7 @@ let logicLayer;
 const itemName = "Epic XP Boost";
 const xpValue = 25;
 module.exports = new ItemTemplate(itemName, `Gain ${xpValue} XP in the used server (unaffected by festivals)`, 60000,
-	async (interaction, database) => {
+	async (interaction) => {
 		logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 			logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, xpValue);

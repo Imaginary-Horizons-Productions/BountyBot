@@ -1,12 +1,11 @@
 const { CommandInteraction } = require("discord.js");
-const { Sequelize } = require("sequelize");
 
 class ItemTemplate {
 	/**
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: CommandInteraction, database: Sequelize) => Promise<boolean>} effectFunction
+	 * @param {(interaction: CommandInteraction) => Promise<boolean>} effectFunction
 	 */
 	constructor(nameInput, descriptionInput, cooldownInMS, effectFunction) {
 		this.name = nameInput;

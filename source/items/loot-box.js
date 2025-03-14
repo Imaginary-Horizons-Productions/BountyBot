@@ -8,7 +8,7 @@ let logicLayer;
 
 const itemName = "Loot Box";
 module.exports = new ItemTemplate(itemName, "Unboxes into 2 random items!", 3000,
-	async (interaction, database) => {
+	async (interaction) => {
 		const rolledItems = [rollItemDrop(1), rollItemDrop(1)];
 		for (const droppedItem of rolledItems) {
 			await logicLayer.items.grantItem(interaction.user.id, droppedItem);
