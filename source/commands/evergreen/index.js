@@ -18,7 +18,6 @@ module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed a
 	(interaction, runMode) => {
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
-).setSubcommands(subcommandSlashData)
-	.setLogicLinker(logicBlob => {
-		logicLayer = logicBlob;
-	});
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+}).setSubcommands(subcommandSlashData);

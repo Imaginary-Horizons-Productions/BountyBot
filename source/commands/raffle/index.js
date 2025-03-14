@@ -15,7 +15,6 @@ module.exports = new CommandWrapper(mainId, "Randomly select a bounty hunter fro
 	(interaction, runMode) => {
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
-).setSubcommands(subcommandSlashData)
-	.setLogicLinker(logicBlob => {
-		logicLayer = logicBlob;
-	});
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+}).setSubcommands(subcommandSlashData);
