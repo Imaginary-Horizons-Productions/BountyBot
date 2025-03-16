@@ -90,7 +90,7 @@ async function calculateRanks(season, allHunters, ranks, participations) {
  */
 async function getRankUpdates(guild, logicLayer) {
 	const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
-	const ranks = await logicLayer.ranks.findAllRanks(guild.id, "descending");
+	const ranks = await logicLayer.ranks.findAllRanks(guild.id);
 	const allHunters = await logicLayer.hunters.findCompanyHunters(guild.id);
 	const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
 

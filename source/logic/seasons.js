@@ -120,16 +120,16 @@ async function incrementSeasonStat(guildId, stat) {
  * @param {string} companyId
  * @param {string} seasonId
  */
-async function disqualifyHunter(userId, companyId, seasonId) {
+async function toggleHunterSeasonDisqualification(userId, companyId, seasonId) {
 	await db.models.User.findOrCreate({ where: { id: userId } });
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { isRankDisqualified: true } });
 	if (!participationCreated) {
-		await participation.update("isRankDisqualified", !participation.isRankDisqualified);
+		await participation.update({ isRankDisqualified: !participation.isRankDisqualified });
 	}
 	if (participationCreated || participation.isRankDisqualified) {
 		await participation.increment("dqCount");
 	}
-	return;
+	return participation;
 }
 
 /** @param {string} companyId */
@@ -165,7 +165,7 @@ module.exports = {
 	findParticipationWithTopParticipationStat,
 	changeSeasonXP,
 	incrementSeasonStat,
-	disqualifyHunter,
+	toggleHunterSeasonDisqualification,
 	deleteCompanySeasons,
 	deleteSeasonParticipations,
 	deleteCompanyParticipations

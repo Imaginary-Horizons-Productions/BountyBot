@@ -11,7 +11,7 @@ const { commandMention } = require("../../util/textUtil");
  * @param {[typeof import("../../logic")]} args
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
-	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id, "descending");
+	const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 	const newThreshold = interaction.options.getNumber("variance-threshold");
 	const existingThresholds = ranks.map(rank => rank.varianceThreshold);
 	if (existingThresholds.includes(newThreshold)) {

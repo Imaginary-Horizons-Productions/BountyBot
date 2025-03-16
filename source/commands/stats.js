@@ -44,7 +44,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
-					const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
+					const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
 
@@ -85,7 +85,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
-				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId, "descending");
+				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
 				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, interaction.guild.id);
 

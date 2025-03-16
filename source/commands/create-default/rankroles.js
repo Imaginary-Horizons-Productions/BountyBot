@@ -9,7 +9,7 @@ const { Sequelize } = require("sequelize");
  */
 async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
 	await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-	const previousRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id, "descending");
+	const previousRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 	const previousRoleIds = [];
 	for (const rank of previousRanks) {
 		if (rank.roleId) {
