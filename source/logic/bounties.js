@@ -148,12 +148,12 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
  * @param {string} hunterId The ID snowflake of the hunter we are rolling for
  */
 async function rollItemForHunter(dropRate, hunterId) {
-	const itemCutoff = (await db.models.User.findByPk(hunterId))[0].isPremium ? 4 : 2;
+	const itemCutoff = await db.models.User.findByPk(hunterId).isPremium ? 4 : 2;
 	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, updatedAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
-	if (itemsDropped >= itemCutoff) return; // Don't roll items when we've dropped our max
+	if (itemsDropped >= itemCutoff) return null; // Don't roll items when we've dropped our max
 	
 	const droppedItem = rollItemDrop(dropRate);
-	if (!droppedItem) return;
+	if (!droppedItem) return null;
 
 	const [itemRow, itemWasCreated] = await db.models.Item.findOrCreate({ where: { userId: hunterId, itemName: droppedItem } });
 	if (!itemWasCreated) {
@@ -175,6 +175,7 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
 	const company = await db.models.Company.findByPk(bounty.companyId);
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
+	const [season] = await db.models.Season.findOrCreate({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	for (const hunter of validatedHunters) {
 		const completerLevelTexts = await hunter.addXP(guild.name, bountyValue, true, company);
@@ -192,7 +193,9 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 			hunter.update("itemFindBoost", false);
 		}
 		const rollStr = await rollItemForHunter(dropRate, hunter.userId);
-		rollStr ?? rewardTexts.push(rollStr);
+		if (rollStr) {
+			rewardTexts.push(rollStr);
+		}
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
@@ -211,7 +214,9 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 		poster.update("itemFindBoost", false);
 	}
 	const rollStr = await rollItemForHunter(dropRate, poster.userId);
-	rollStr ?? rewardTexts.push(rollStr);
+	if (rollStr) {
+		rewardTexts.push(rollStr);
+	}
 
 	return {
 		completerXP: bountyBaseValue,
