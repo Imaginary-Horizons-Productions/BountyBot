@@ -16,6 +16,7 @@ const { Sequelize } = require('sequelize');
 const path = require('path');
 const basename = path.basename(__filename);
 const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
+const { MessageComponentWrapper } = require('./classes');
 
 const { getCommand, slashData, setLogic: setCommandLogic } = require("./commands/_commandDictionary.js");
 const { getButton, setLogic: setButtonLogic } = require("./buttons/_buttonDictionary.js");
@@ -184,13 +185,13 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		return;
 	} else {
 		const [mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
-		let getter;
+		/** @type {MessageComponentWrapper} */
+		let interactionWrapper;
 		if (interaction.isButton()) {
-			getter = getButton;
+			interactionWrapper = getButton(mainId);
 		} else if (interaction.isAnySelectMenu()) {
-			getter = getSelect;
+			interactionWrapper = getSelect(mainId);
 		}
-		const interactionWrapper = getter(mainId);
 		const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 
 		if (cooldownTimestamp) {
@@ -198,7 +199,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			return;
 		}
 
-		interactionWrapper.execute(interaction, args, runMode);
+		interactionWrapper.execute(interaction, runMode, args);
 	}
 });
 
