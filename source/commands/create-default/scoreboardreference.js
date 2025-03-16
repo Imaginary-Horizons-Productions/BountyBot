@@ -1,13 +1,11 @@
 const { CommandInteraction, ChannelType, PermissionFlagsBits, OverwriteType, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic"), Company]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer, company]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer, company]) {
 	const scoreboard = await interaction.guild.channels.create({
 		parent: interaction.channel.parentId,
 		name: "bountybot-scoreboard",

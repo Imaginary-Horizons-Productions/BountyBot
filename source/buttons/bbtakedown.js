@@ -8,7 +8,7 @@ let logicLayer;
 
 const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, [bountyId], database, runMode) => {
+	(interaction, [bountyId], runMode) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (bounty.userId !== interaction.user.id) {

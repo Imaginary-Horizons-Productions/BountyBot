@@ -1,16 +1,14 @@
 const { CommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions } = require("../../util/messageComponentUtil");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 	const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 	interaction.reply({
 		content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,

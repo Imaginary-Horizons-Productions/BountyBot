@@ -1,13 +1,11 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 	const member = interaction.options.getMember("user");
 	const hunter = await logicLayer.hunters.findOneHunter(member.id, interaction.guild.id);
 	if (!hunter) {

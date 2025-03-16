@@ -12,9 +12,9 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"rankroles.js"
 ]);
 module.exports = new CommandWrapper(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, [InteractionContextType.Guild], 30000,
-	(interaction, database, runMode) => {
+	(interaction, runMode) => {
 		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(([company]) => {
-			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer, company);
+			subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer, company);
 		});
 	}
 ).setSubcommands(subcommandSlashData)

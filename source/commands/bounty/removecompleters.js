@@ -1,14 +1,12 @@
 const { CommandInteraction, MessageFlags, userMention } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { extractUserIdsFromMentions, listifyEN } = require("../../util/textUtil");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic"), string]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer, posterId]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 	const slotNumber = interaction.options.getInteger("bounty-slot");
 	logicLayer.bounties.findBounty({ userId: posterId, companyId: interaction.guild.id, slotNumber }).then(async bounty => {
 		if (!bounty) {

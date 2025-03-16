@@ -1,14 +1,12 @@
 const { CommandInteraction, MessageFlags } = require("discord.js");
-const { Sequelize } = require("sequelize");
 const { commandMention } = require("../../util/textUtil");
 
 /**
  * @param {CommandInteraction} interaction
- * @param {Sequelize} database
  * @param {string} runMode
  * @param {[typeof import("../../logic")]} args
  */
-async function executeSubcommand(interaction, database, runMode, ...[logicLayer]) {
+async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 	const penaltyValue = Math.abs(interaction.options.get("penalty", true).value);
 	const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 	if (!goal) {

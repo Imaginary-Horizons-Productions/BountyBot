@@ -166,7 +166,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			return;
 		}
 
-		contextMenu.execute(interaction, dbConnection, runMode);
+		contextMenu.execute(interaction, runMode);
 	} else if (interaction.isCommand()) {
 		const command = getCommand(interaction.commandName);
 		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
@@ -179,7 +179,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
-		command.execute(interaction, dbConnection, runMode);
+		command.execute(interaction, runMode);
 	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
 		return;
 	} else {
@@ -198,7 +198,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			return;
 		}
 
-		interactionWrapper.execute(interaction, args, dbConnection, runMode);
+		interactionWrapper.execute(interaction, args, runMode);
 	}
 });
 

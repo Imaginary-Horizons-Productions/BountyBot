@@ -7,7 +7,7 @@ let logicLayer;
 const mainId = "scoreboard";
 module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** View the XP scoreboard */
-	async (interaction, database, runMode) => {
+	async (interaction, runMode) => {
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		interaction.reply({
 			embeds: [

@@ -16,8 +16,8 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"xppenalty.js"
 ]);
 module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, [InteractionContextType.Guild], 3000,
-	(interaction, database, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, database, runMode, logicLayer);
+	(interaction, runMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
 ).setSubcommands(subcommandSlashData)
 	.setLogicLinker(logicBlob => {

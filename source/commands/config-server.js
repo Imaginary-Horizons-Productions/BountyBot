@@ -6,7 +6,7 @@ let logicLayer;
 
 const mainId = "config-server";
 module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
-	(interaction, database, runMode) => {
+	(interaction, runMode) => {
 		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(([company]) => {
 			const updatePayload = {};
 			let content = "The following server settings have been configured:";
