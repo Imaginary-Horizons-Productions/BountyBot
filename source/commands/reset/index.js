@@ -14,7 +14,6 @@ module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, boun
 	(interaction, runMode) => {
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
 	}
-).setSubcommands(subcommandSlashData)
-	.setLogicLinker(logicBlob => {
-		logicLayer = logicBlob;
-	});
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+}).setSubcommands(subcommandSlashData);
