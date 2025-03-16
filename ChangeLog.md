@@ -13,6 +13,8 @@ Server Goals are BountyBot objectives everyone on the server contributes to. A g
 - Fixed crash when using `/create-default rank-roles` twice in a row
 - Fixed `/moderation user-report` listing XP awarded for recent bounties as "undefined"
 - Fixed Dark Purple Profile Colorizer not dropping
+- Item drops are now limited to 2 items per day, or 4 items if you are a premium user
+
 ## BountyBot Version 2.8.0:
 ### Context Menu Options
 - Added the following BountyBot functionality to the Apps dropdown when right-clicking on a User or Message:
