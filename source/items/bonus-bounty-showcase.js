@@ -3,7 +3,6 @@ const { ItemTemplate } = require("../classes");
 const { timeConversion, commandMention } = require("../util/textUtil");
 const { bountiesToSelectOptions } = require("../util/messageComponentUtil");
 const { SKIP_INTERACTION_HANDLING } = require("../constants");
-const { showcaseBounty } = require("../util/bountyUtil");
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
@@ -29,7 +28,34 @@ module.exports = new ItemTemplate(itemName, "Showcase one of your bounties and i
 			flags: [MessageFlags.Ephemeral],
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-			showcaseBounty(collectedInteraction, collectedInteraction.values[0], collectedInteraction.channel, true, logicLayer);
+			if (!collectedInteraction.channel.members.has(collectedInteraction.client.user.id)) {
+				collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: [MessageFlags.Ephemeral] });
+				return;
+			}
+
+			if (!collectedInteraction.channel.permissionsFor(collectedInteraction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
+				collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: [MessageFlags.Ephemeral] });
+				return;
+			}
+
+			const bounty = await existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
+			if (bounty.state !== "open") {
+				collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
+				return;
+			}
+
+			bounty.increment("showcaseCount");
+			await bounty.reload();
+			const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guildId);
+			const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
+			const completions = await logicLayer.bounties.findBountyCompletions(collectedInteraction.values[0]);
+			bounty.updatePosting(collectedInteraction.guild, company, poster.level, completions);
+			return bounty.embed(collectedInteraction.guild, poster.level, false, company, completions).then(async embed => {
+				if (collectedInteraction.channel.archived) {
+					await collectedInteraction.channel.setArchived(false, "bounty showcased");
+				}
+				return collectedInteraction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
+			})
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);
