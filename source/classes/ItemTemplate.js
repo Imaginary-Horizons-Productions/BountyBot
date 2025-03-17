@@ -1,5 +1,18 @@
 const { CommandInteraction } = require("discord.js");
 
+class ItemTemplateSet {
+	/** @param {ItemTemplate[]} itemTemplates */
+	constructor(...itemTemplates) {
+		this.items = itemTemplates;
+	}
+
+	/** @param {(logicBlob: typeof import("../logic")) => void} setLogicFunction */
+	setLogicLinker(setLogicFunction) {
+		this.setLogic = setLogicFunction;
+		return this;
+	}
+}
+
 class ItemTemplate {
 	/**
 	 * @param {string} nameInput
@@ -13,14 +26,9 @@ class ItemTemplate {
 		this.cooldown = cooldownInMS;
 		this.effect = effectFunction;
 	}
-
-	/** @param {(logicBlob: typeof import("../logic")) => void} setLogicFunction */
-	setLogicLinker(setLogicFunction) {
-		this.setLogic = setLogicFunction;
-		return this;
-	}
 }
 
 module.exports = {
+	ItemTemplateSet,
 	ItemTemplate
 };
