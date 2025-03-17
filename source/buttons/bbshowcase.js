@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ComponentType, DiscordjsErrorCodes, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ComponentType, DiscordjsErrorCodes, MessageFlags, PermissionFlagsBits } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { timeConversion } = require('../util/textUtil');
