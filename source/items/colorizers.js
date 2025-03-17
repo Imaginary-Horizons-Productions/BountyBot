@@ -1,5 +1,5 @@
 const { MessageFlags } = require("discord.js");
-const { ItemTemplate } = require("../classes");
+const { ItemTemplate, ItemTemplateSet } = require("../classes");
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
@@ -51,4 +51,7 @@ const colors = [
 	'Yellow'
 ];
 
-module.exports = colors.map(color => new Colorizer(color).setLogicLinker((logicBlob) => { logicLayer = logicBlob; }));
+module.exports = new ItemTemplateSet(...colors.map(color => new Colorizer(color)))
+	.setLogicLinker((logicBlob) => {
+		logicLayer = logicBlob;
+	});
