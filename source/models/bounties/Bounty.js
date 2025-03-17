@@ -1,7 +1,7 @@
 ﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Company } = require('../companies/Company');
-const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH } = require('../../constants');
+const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH, MAX_EMBED_FIELD_VALUE_LENGTH } = require('../../constants');
 const { timeConversion, commandMention, listifyEN } = require('../../util/textUtil');
 const { Completion } = require('./Completion');
 
@@ -53,7 +53,12 @@ class Bounty extends Model {
 		}
 		if (completions.length > 0) {
 			const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
-			fields.push({ name: "Completers", value: listifyEN([...uniqueCompleters].map(id => userMention(id))) });
+			const completersFieldText = listifyEN([...uniqueCompleters].map(id => userMention(id)));
+			if (completersFieldText.length <= MAX_EMBED_FIELD_VALUE_LENGTH) {
+				fields.push({ name: "Completers", value: completersFieldText });
+			} else {
+				fields.push({ name: "Completers", value: "Too many to display!" });
+			}
 		}
 
 		if (fields.length > 0) {
