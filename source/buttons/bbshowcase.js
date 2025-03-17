@@ -45,7 +45,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					return;
 				}
 
-				const bounty = await existingBounties.find(bounty => bounty.id === bountyId).reload();
+				await bounty.reload();
 				if (bounty.state !== "open") {
 					collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
 					return;

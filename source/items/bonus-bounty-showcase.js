@@ -38,7 +38,7 @@ module.exports = new ItemTemplate(itemName, "Showcase one of your bounties and i
 				return;
 			}
 
-			const bounty = await existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
+			const bounty = await openBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
 			if (bounty.state !== "open") {
 				collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
 				return;
