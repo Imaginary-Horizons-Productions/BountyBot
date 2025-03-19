@@ -133,7 +133,7 @@ function timeConversion(value, startingUnit, resultUnit) {
  */
 function dateInPast(timeMap) {
 	let nowTimestamp = new Date();
-	for (key in timeMap) {
+	for (const key in timeMap) {
 		nowTimestamp -= timeConversion(timeMap[key], key, 'ms');
 	}
 	return new Date(nowTimestamp);
@@ -150,7 +150,7 @@ function dateInPast(timeMap) {
 */
 function dateInFuture(timeMap) {
 	let nowTimestamp = new Date();
-	for (key in timeMap) {
+	for (const key in timeMap) {
 		nowTimestamp += timeConversion(timeMap[key], key, 'ms');
 	}
 	return new Date(nowTimestamp);
