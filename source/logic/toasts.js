@@ -1,6 +1,6 @@
 const { Guild, GuildMember } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { timeConversion } = require("../util/textUtil");
+const { dateInPast } = require("../util/textUtil");
 const { Company } = require("../models/companies/Company");
 const { Hunter } = require("../models/users/Hunter");
 const { Toast } = require("../models/toasts/Toast");
@@ -17,7 +17,7 @@ function setDB(database) {
  * @param {string} seconderId
  */
 function findRecentSecondings(seconderId) {
-	return db.models.Seconding.findAll({ where: { seconderId, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } } });
+	return db.models.Seconding.findAll({ where: { seconderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } } });
 }
 
 /** *Get the ids of the rewarded Recipients on the sender's last 5 Toasts*
@@ -78,7 +78,7 @@ function findToastByPK(toastId) {
  */
 async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seasonId, toastText, imageURL = null) {
 	// Make database entities
-	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id, createdAt: { [Op.gt]: new Date(new Date() - 2 * timeConversion(1, "d", "ms")) } }, include: db.models.Toast.Recipients });
+	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.models.Toast.Recipients });
 	let rewardsAvailable = 10;
 	let critToastsAvailable = 2;
 	for (const toast of recentToasts) {
@@ -91,7 +91,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 			}
 		}
 	}
-	const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > new Date(new Date() - timeConversion(1, "d", "ms")));
+	const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > dateInPast({ d: 1 }));
 	const hunterIdsToastedInLastDay = toastsInLastDay.reduce((idSet, toast) => {
 		toast.Recipients.forEach(reciept => {
 			if (!idSet.has(reciept.recipientId)) {
