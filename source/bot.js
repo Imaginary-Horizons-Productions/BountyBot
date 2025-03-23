@@ -42,7 +42,7 @@ const dAPIClient = new Client({
 			name: "🔰 Get started with /tutorial"
 		}]
 	},
-	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers]
+	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages]
 });
 /** @type {Map<string, Map<string, number>>} */
 const interactionCooldowns = new Map();
