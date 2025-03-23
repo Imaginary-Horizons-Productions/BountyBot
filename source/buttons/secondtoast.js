@@ -33,7 +33,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		originalToast.increment("secondings");
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", seconder, season);
-		const rewardTexts = [`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`];
+		const rewardTexts = [];
+		if (progressData.gpContributed != 0) {
+			rewardTexts.push(`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`);
+		}
 
 		const recipientIds = [];
 		originalToast.Recipients.forEach(reciept => {
