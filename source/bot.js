@@ -71,6 +71,9 @@ const dbReady = dbConnection.authenticate().then(async () => {
 			models[modelName].associate(models);
 		}
 	});
+
+	if (runMode !== 'production') dbConnection.sync();
+
 	for (const interface in logicBlob) { // Set the database for the logic files that store it
 		logicBlob[interface].setDB?.(dbConnection);
 	}
