@@ -13,16 +13,17 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 	/** Get the BountyBot stats for yourself or someone else */
 	async (interaction, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
+		const guild = interaction.guild;
 		if (target) {
 			if (target.id === interaction.client.user.id) {
 				// BountyBot
-				const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+				const [company] = await logicLayer.companies.findOrCreateCompany(guild.id);
 				const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
 				const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 				const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
 				const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-				company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+				company.statsEmbed(guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
 					interaction.reply({
 						embeds: [embed],
 						flags: [MessageFlags.Ephemeral]
@@ -30,22 +31,22 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				})
 			} else {
 				// Other Hunter
-				logicLayer.hunters.findOneHunter(target.id, interaction.guild.id).then(async hunter => {
+				logicLayer.hunters.findOneHunter(target.id, guild.id).then(async hunter => {
 					if (!hunter) {
 						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
 						return;
 					}
 
-					const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+					const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(guild.id);
 					const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 					const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
-					const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+					const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
-					const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
+					const ranks = await logicLayer.ranks.findAllRanks(guild.id);
 					const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
-					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
+					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, guild.id);
 
 					interaction.reply({
 						embeds: [
@@ -70,30 +71,30 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			}
 		} else {
 			// Self
-			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
+			logicLayer.hunters.findOneHunter(interaction.user.id, guild.id).then(async hunter => {
 				if (!hunter) {
 					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", flags: [MessageFlags.Ephemeral] });
 					return;
 				}
 
-				const { xpCoefficient, maxSimBounties } = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+				const { xpCoefficient, maxSimBounties } = await logicLayer.companies.findCompanyByPK(guild.id);
 				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
 				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
 				const bountySlots = hunter.maxSlots(maxSimBounties);
 				const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
-				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
-				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, interaction.guild.id);
+				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, guild.id);
 
 				interaction.reply({
 					embeds: [
 						new EmbedBuilder().setColor(Colors[hunter.profileColor])
 							.setAuthor(ihpAuthorPayload)
 							.setThumbnail(interaction.user.avatarURL())
-							.setTitle(`You are __Level ${hunter.level}__ in ${interaction.guild.name}`)
+							.setTitle(`You are __Level ${hunter.level}__ in ${guild.name}`)
 							.setDescription(
 								`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - hunter.xp} XP\n\
 								You have earned *${currentParticipation?.xp ?? 0} XP* this season${hunter.rank != null ? ` which qualifies for ${rankName}` : ""}.${hunter.nextRankXP > 0 ? `You need ${hunter.nextRankXP} XP to reach the next rank.` : ""}\n\n\

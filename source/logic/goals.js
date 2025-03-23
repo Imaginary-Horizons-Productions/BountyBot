@@ -73,7 +73,7 @@ async function progressGoal(companyId, progressType, hunter, season) {
 		if (goal.type === progressType) {
 			returnData.gpContributed *= 2;
 		}
-		await createGoalContribution(goal.id, userId, returnData.gpContributed);
+		await createGoalContribution(goal.id, hunter.userId, returnData.gpContributed);
 		hunter.increment("goalContributions");
 		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId: hunter.userId, seasonId: season.id } });
 		participation.increment("goalContributions");
