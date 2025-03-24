@@ -119,8 +119,8 @@ class Company extends Model {
 		}
 
 		const fields = [];
-		const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
-		if (goalId !== null) {
+		const { currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+		if (currentGP < requiredGP) {
 			fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 		}
 		if (this.festivalMultiplier !== 1) {
@@ -176,8 +176,8 @@ class Company extends Model {
 		}
 
 		const fields = [];
-		const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
-		if (goalId !== null) {
+		const { currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+		if (currentGP < requiredGP) {
 			fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 		}
 		if (this.festivalMultiplier !== 1) {

@@ -16,7 +16,7 @@ function setDB(database) {
  * @param {string} companyId
  */
 function findCurrentServerGoal(companyId) {
-	return db.models.Goal.findOne({ where: { companyId }, state: "ongoing", order: [["createdAt", "DESC"]] });
+	return db.models.Goal.findOne({ where: { companyId, state: "ongoing" }, order: [["createdAt", "DESC"]] });
 }
 
 /** *Create a Goal for the specified Company*
