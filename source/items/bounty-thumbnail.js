@@ -39,7 +39,7 @@ module.exports = new ItemTemplateSet(
 					}
 				}
 
-				modalSubmission.reply({
+				return modalSubmission.reply({
 					content: `A bounty's thumbnail will be shown on the bounty board and in the bounty's embed. It will also increase the XP you receive when the bounty's completed by 1.\n${imageURL}`,
 					components: [
 						new ActionRowBuilder().addComponents(
@@ -62,13 +62,13 @@ module.exports = new ItemTemplateSet(
 						bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id)).level, bounty.id);
 					});
 					return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
-				}).catch(error => {
-					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-						console.error(error);
-					}
-				}).finally(() => {
-					modalSubmission.deleteReply();
 				})
+			}).catch(error => {
+				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+					console.error(error);
+				}
+			}).finally(() => {
+				modalSubmission.deleteReply();
 			})
 		}
 	)
