@@ -94,7 +94,8 @@ async function progressGoal(companyId, progressType, hunter, season) {
  * @param {string} companyId
  */
 async function deleteCompanyGoals(companyId) {
-	await db.models.Contribution.destroy({ where: { companyId } });
+	const goals = await db.models.Goal.findAll({ where: { companyId } });
+	await db.models.Contribution.destroy({ where: { goalId: { [Op.in]: goals.map(goal => goal.id) } } });
 	return db.models.Goal.destroy({ where: { companyId } });
 }
 
