@@ -90,11 +90,20 @@ async function progressGoal(companyId, progressType, hunter, season) {
 	return returnData;
 }
 
+/** *Destroy all Goals and Contributions for the specified Company*
+ * @param {string} companyId
+ */
+async function deleteCompanyGoals(companyId) {
+	await db.models.Contribution.destroy({ where: { companyId } });
+	return db.models.Goal.destroy({ where: { companyId } });
+}
+
 module.exports = {
 	setDB,
 	findCurrentServerGoal,
 	createGoal,
 	createGoalContribution,
 	findLatestGoalProgress,
-	progressGoal
+	progressGoal,
+	deleteCompanyGoals
 };
