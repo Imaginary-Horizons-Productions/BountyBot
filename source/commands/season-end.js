@@ -10,7 +10,8 @@ const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
 	async (interaction, runMode) => {
-		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
+		const guild = interaction.guild;
+		const company = await logicLayer.companies.findCompanyByPK(guild.id);
 		if (!company) {
 			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", flags: [MessageFlags.Ephemeral] });
 			return;
@@ -21,7 +22,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 		const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
 		const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-		company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
+		company.statsEmbed(guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
 			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
@@ -54,8 +55,8 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {
-				const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
-				interaction.guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
+				const allHunters = await logicLayer.hunters.findCompanyHunters(guild.id);
+				guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {
 						if (member.manageable) {
 							member.roles.remove(roleIds);
@@ -64,7 +65,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				})
 			}
 			await logicLayer.hunters.resetCompanyRanks(company.id);
-			company.updateScoreboard(interaction.guild, logicLayer);
+			company.updateScoreboard(guild, logicLayer);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;
