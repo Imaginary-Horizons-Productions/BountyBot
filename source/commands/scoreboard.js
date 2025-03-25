@@ -9,14 +9,14 @@ module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, fals
 	/** View the XP scoreboard */
 	async (interaction, runMode) => {
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		interaction.reply({
-			embeds: [
-				interaction.options.getString("scoreboard-type") === "season" ?
-					await company.seasonalScoreboardEmbed(interaction.guild, logicLayer) :
-					await company.overallScoreboardEmbed(interaction.guild, logicLayer)
-			],
-			flags: [MessageFlags.Ephemeral]
-		});
+		const embeds = [];
+		if (interaction.options.getString("scoreboard-type") === "season") {
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+			embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+		} else {
+			embeds.push(await company.overallScoreboardEmbed(interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+		}
+		interaction.reply({ embeds, flags: [MessageFlags.Ephemeral] });
 	}
 ).setOptions(
 	{

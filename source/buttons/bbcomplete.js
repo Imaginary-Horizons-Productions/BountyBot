@@ -101,7 +101,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						console.error(error);
 					}
 				});
-				company.updateScoreboard(collectedInteraction.guild, logicLayer);
+				const embeds = [];
+				const ranks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
+				if (company.scoreboardIsSeasonal) {
+					embeds.push(await company.seasonalScoreboardEmbed(collectedInteraction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks));
+				} else {
+					embeds.push(await company.overallScoreboardEmbed(collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), ranks));
+				}
+				company.updateScoreboard(collectedInteraction.guild, embeds);
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

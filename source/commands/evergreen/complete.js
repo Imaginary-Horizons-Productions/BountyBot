@@ -92,11 +92,17 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 			}
 			return interaction.reply(acknowledgeOptions);
 		}).then(response => {
-			getRankUpdates(interaction.guild, logicLayer).then(rankUpdates => {
+			getRankUpdates(interaction.guild, logicLayer).then(async rankUpdates => {
 				response.resource.message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
 					thread.send({ content: Bounty.generateRewardString(validatedCompleterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), rankUpdates, levelTexts), flags: MessageFlags.SuppressNotifications });
 				})
-				company.updateScoreboard(interaction.guild, logicLayer);
+				const embeds = [];
+				if (company.scoreboardIsSeasonal) {
+					embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+				} else {
+					embeds.push(await company.overallScoreboardEmbed(interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+				}
+				company.updateScoreboard(interaction.guild, embeds);
 			});
 		})
 	}

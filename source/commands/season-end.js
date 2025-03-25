@@ -54,8 +54,8 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			await logicLayer.seasons.createSeason(interaction.guildId);
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
+			const allHunters = await logicLayer.hunters.findCompanyHunters(guild.id);
 			if (roleIds.length > 0) {
-				const allHunters = await logicLayer.hunters.findCompanyHunters(guild.id);
 				guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {
 						if (member.manageable) {
@@ -65,7 +65,13 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				})
 			}
 			await logicLayer.hunters.resetCompanyRanks(company.id);
-			company.updateScoreboard(guild, logicLayer);
+			const embeds = [];
+			if (company.scoreboardIsSeasonal) {
+				embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, [], ranks));
+			} else {
+				embeds.push(await company.overallScoreboardEmbed(interaction.guild, allHunters, ranks));
+			}
+			company.updateScoreboard(guild, embeds);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;

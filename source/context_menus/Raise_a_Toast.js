@@ -94,7 +94,13 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 							thread.send({ content, flags: MessageFlags.SuppressNotifications });
 						})
 					}
-					company.updateScoreboard(modalSubmission.guild, logicLayer);
+					const embeds = [];
+					if (company.scoreboardIsSeasonal) {
+						embeds.push(await company.seasonalScoreboardEmbed(modalSubmission.guild, await logicLayer.seasons.findSeasonParticipations(season.id), await logicLayer.ranks.findAllRanks(modalSubmission.guild.id)));
+					} else {
+						embeds.push(await company.overallScoreboardEmbed(modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), await logicLayer.ranks.findAllRanks(modalSubmission.guild.id)));
+					}
+					company.updateScoreboard(modalSubmission.guild, embeds);
 				}
 			});
 		})

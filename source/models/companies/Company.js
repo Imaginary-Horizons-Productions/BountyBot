@@ -3,6 +3,9 @@ const { Model, Sequelize, DataTypes } = require('sequelize');
 const { ihpAuthorPayload, randomFooterTip } = require('../../util/embedUtil');
 const { generateTextBar } = require('../../util/textUtil');
 const { Season } = require('../seasons/Season');
+const { Rank } = require('./Rank');
+const { Participation } = require('../seasons/Participation');
+const { Hunter } = require('../users/Hunter');
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
 class Company extends Model {
@@ -59,33 +62,26 @@ class Company extends Model {
 
 	/** If the server has a scoreboard reference channel, update the embed in it
 	 * @param {Guild} guild
-	 * @param {typeof import("../../logic")} logicLayer
+	 * @param {EmbedBuilder[]} embeds
 	 */
-	async updateScoreboard(guild, logicLayer) {
+	async updateScoreboard(guild, embeds) {
 		if (this.scoreboardChannelId && this.scoreboardMessageId) {
 			guild.channels.fetch(this.scoreboardChannelId).then(scoreboard => {
 				return scoreboard.messages.fetch(this.scoreboardMessageId);
 			}).then(async scoreboardMessage => {
-				scoreboardMessage.edit({
-					embeds: [
-						this.scoreboardIsSeasonal ?
-							await this.seasonalScoreboardEmbed(guild, logicLayer) :
-							await this.overallScoreboardEmbed(guild, logicLayer)
-					]
-				});
+				scoreboardMessage.edit({ embeds });
 			});
 		}
 	}
 
 	/** A seasonal scoreboard orders a company's hunters by their seasonal xp
 	 * @param {Guild} guild
-	 * @param {typeof import("../logic")} logicLayer
+	 * @param {Participation[]} participations
+	 * @param {Rank[]} ranks
 	 */
-	async seasonalScoreboardEmbed(guild, logicLayer) {
-		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(this.id);
-		const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
+	async seasonalScoreboardEmbed(guild, participations, ranks) {
 		const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
-		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id)).map(rank => rank.rankmoji);
+		const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 		const scorelines = [];
 		for (const participation of participations) {
@@ -138,12 +134,12 @@ class Company extends Model {
 
 	/** An overall scoreboard orders a company's hunters by total xp
 	 * @param {Guild} guild
-	 * @param {typeof import("../logic")} logicLayer
+	 * @param {Hunter[]} hunters
+	 * @param {Rank[]} ranks
 	 */
-	async overallScoreboardEmbed(guild, logicLayer) {
-		const hunters = await logicLayer.hunters.findCompanyHuntersByDescendingXP(guild.id);
+	async overallScoreboardEmbed(guild, hunters, ranks) {
 		const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-		const rankmojiArray = (await logicLayer.ranks.findAllRanks(guild.id)).map(rank => rank.rankmoji);
+		const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 		const scorelines = [];
 		for (const hunter of hunters) {
