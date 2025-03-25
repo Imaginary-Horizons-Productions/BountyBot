@@ -10,7 +10,8 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			return;
 		}
 		const guildRoles = await interaction.guild.roles.fetch();
-		interaction.reply({
+		await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+		interaction.editReply({
 			content: "Select a rank to be the eligibility threshold for this raffle:",
 			components: [
 				new ActionRowBuilder().addComponents(
@@ -29,7 +30,6 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 						}))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const varianceThreshold = Number(collectedInteraction.values[0]);
@@ -55,8 +55,8 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 
 			if (error.name === "SequelizeInstanceError") {
 				interaction.user.send({ content: "A raffle by ranks could not be started because there was an error with finding the rank you selected." });
-			} else if (Object.values(error.rawError.errors.data.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
-				interaction.user.send({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji." });
+			} else if (Object.values(error.rawError.errors.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
+				interaction.user.send({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji.", flags: [MessageFlags.Ephemeral] });
 			} else {
 				console.error(error);
 			}
