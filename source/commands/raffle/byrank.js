@@ -31,7 +31,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 				)
 			],
 			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const varianceThreshold = Number(collectedInteraction.values[0]);
 			const reloadedRanks = await Promise.all(ranks.map(rank => rank.reload()));
 			const rankIndex = reloadedRanks.findIndex(rank => rank.varianceThreshold === varianceThreshold);
