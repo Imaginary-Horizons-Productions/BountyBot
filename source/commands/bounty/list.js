@@ -10,7 +10,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 				return;
 			}
 			const hunter = await logicLayer.hunters.findOneHunter(listUserId, interaction.guild.id);
-			const company = await logicLayer.companies.findByPk(interaction.guildId);
+			const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 			interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter?.level ?? company.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
 		});
 	}
