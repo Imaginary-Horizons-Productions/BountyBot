@@ -234,7 +234,9 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 							bounty.save()
 						});
 					} else {
-						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: [MessageFlags.Ephemeral] });
+						if (!interaction.member.manageable) {
+							interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: [MessageFlags.Ephemeral] });
+						}
 					}
 				});
 			});
