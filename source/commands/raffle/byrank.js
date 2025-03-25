@@ -35,10 +35,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			const varianceThreshold = Number(collectedInteraction.values[0]);
 			const reloadedRanks = await Promise.all(ranks.map(rank => rank.reload()));
 			const rankIndex = reloadedRanks.findIndex(rank => rank.varianceThreshold === varianceThreshold);
-			if (rankIndex === -1) {
-				collectedInteraction.reply({ content: "There was an error with finding the rank you selected.", flags: [MessageFlags.Ephemeral] });
-				return;
-			}
+			const rank = ranks[rankIndex];
 			const qualifiedHunterIds = await logicLayer.hunters.findHunterIdsAtOrAboveRank(interaction.guildId, rankIndex);
 			const unvalidatedMembers = await interaction.guild.members.fetch({ user: qualifiedHunterIds });
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
@@ -52,8 +49,10 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 				company.update("nextRaffleString", null);
 			});
 		}).catch(error => {
-			if (Object.values(error.rawError.errors.data.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
-				interaction.reply({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji.", flags: [MessageFlags.Ephemeral] });
+			if (error.name === "SequelizeInstanceError") {
+				interaction.user.send({ content: "A raffle by ranks could not be started because there was an error with finding the rank you selected." });
+			} else if (Object.values(error.rawError.errors.data.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
+				interaction.user.send({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji." });
 			} else if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);
 			}
