@@ -95,7 +95,7 @@ async function getRankUpdates(guild, logicLayer) {
 	const participations = await logicLayer.seasons.findSeasonParticipations(season.id);
 
 	return calculateRanks(season, allHunters, ranks, participations).then(async (firstPlaceMessage) => {
-		const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
+		const roleIds = ranks.filter(rank => rank.roleId).map(rank => rank.roleId);
 		const outMessages = [];
 		if (firstPlaceMessage) {
 			outMessages.push(firstPlaceMessage);
