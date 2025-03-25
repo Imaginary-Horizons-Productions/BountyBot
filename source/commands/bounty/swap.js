@@ -83,6 +83,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 						sourceBounty.slotNumber = destinationSlot;
 						await sourceBounty.save();
 						await sourceBounty.reload();
+						const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 						sourceBounty.updatePosting(interaction.guild, company, hunter.level, await logicLayer.bounties.findBountyCompletions(sourceBounty.id));
 
 						if (destinationBounty) {
@@ -92,7 +93,6 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 							destinationBounty.updatePosting(interaction.guild, company, hunter.level, await logicLayer.bounties.findBountyCompletions(destinationBounty.id));
 						}
 
-						const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 						interaction.channel.send(company.sendAnnouncement({ content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(hunter.level, destinationSlot, sourceBounty.showcaseCount)} XP.` }));
 					}
 				})
