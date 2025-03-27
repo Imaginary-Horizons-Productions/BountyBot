@@ -172,7 +172,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 /** *Deletes all Toasts, Recipients, and Secondings for a specified Company*
  * @param {string} companyId
  */
-function deleteCompanyToastRecords(companyId) {
+function deleteCompanyToasts(companyId) {
 	return db.models.Toast.findAll({ where: { companyId } }).then(toasts => {
 		toasts.forEach(toast => {
 			db.models.Recipient.destroy({ where: { toastId: toast.id } });
@@ -191,5 +191,5 @@ module.exports = {
 	wasAlreadySeconded,
 	findToastByPK,
 	raiseToast,
-	deleteCompanyToastRecords
+	deleteCompanyToasts
 }
