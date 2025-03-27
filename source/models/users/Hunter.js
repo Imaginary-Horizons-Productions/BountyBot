@@ -63,8 +63,8 @@ class Hunter extends Model {
 		this.updateLevel(company.xpCoefficient);
 		this.save();
 
-		const levelChanged = await company.updateLevel();
-		if (levelChanged) {
+		const companyLevelChanged = await company.updateLevel();
+		if (companyLevelChanged) {
 			company.save();
 		}
 
