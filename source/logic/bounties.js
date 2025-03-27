@@ -4,6 +4,7 @@ const { Bounty } = require("../models/bounties/Bounty");
 const { Hunter } = require("../models/users/Hunter");
 const { rollItemDrop } = require("../util/itemUtil");
 const { dateInPast } = require("../util/textUtil");
+const { premium } = require("../constants");
 
 /** @type {Sequelize} */
 let db;
@@ -156,7 +157,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
  * @param {string} hunterId The ID snowflake of the hunter we are rolling for
  */
 async function rollItemForHunter(dropRate, hunterId) {
-	const itemCutoff = await db.models.User.findByPk(hunterId).isPremium ? 4 : 2;
+	const itemCutoff = premium.gift.concat(premium.paid).includes(hunterId) ? 4 : 2;
 	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, updatedAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
 	if (itemsDropped >= itemCutoff) return null; // Don't roll items when we've dropped our max
 
