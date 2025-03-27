@@ -35,7 +35,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			const varianceThreshold = Number(collectedInteraction.values[0]);
 			const reloadedRanks = await Promise.all(ranks.map(rank => rank.reload()));
 			const rankIndex = reloadedRanks.findIndex(rank => rank.varianceThreshold === varianceThreshold);
-			const rank = ranks[rankIndex];
+			const rank = reloadedRanks[rankIndex];
 			const qualifiedHunterIds = await logicLayer.hunters.findHunterIdsAtOrAboveRank(interaction.guildId, rankIndex);
 			const unvalidatedMembers = await interaction.guild.members.fetch({ user: qualifiedHunterIds });
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
