@@ -34,7 +34,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 				try {
 					new URL(toastThumbnailURL);
 					updatePayload.toastThumbnailURL = toastThumbnailURL;
-					content += `\n- The toast thumbnail was set to ${toastThumbnailURL}.`;
+					content += `\n- The toast thumbnail was set to <${toastThumbnailURL}>.`;
 				} catch (error) {
 					errors.push(error.message);
 				}
@@ -45,7 +45,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 				try {
 					new URL(openBountyThumbnailURL);
 					updatePayload.openBountyThumbnailURL = openBountyThumbnailURL;
-					content += `\n- The open bounty thumbnail was set to ${openBountyThumbnailURL}.`;
+					content += `\n- The open bounty thumbnail was set to <${openBountyThumbnailURL}>.`;
 				} catch (error) {
 					errors.push(error.message);
 				}
@@ -56,7 +56,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 				try {
 					new URL(completedBountyThumbnailURL);
 					updatePayload.completedBountyThumbnailURL = completedBountyThumbnailURL;
-					content += `\n- The completed bounty thumbnail was set to ${completedBountyThumbnailURL}.`;
+					content += `\n- The completed bounty thumbnail was set to <${completedBountyThumbnailURL}>.`;
 				} catch (error) {
 					errors.push(error.message);
 				}
@@ -67,7 +67,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 				try {
 					new URL(scoreboardThumbnailURL);
 					updatePayload.scoreboardThumbnailURL = scoreboardThumbnailURL;
-					content += `\n- The scoreboard thumbnail was set to ${scoreboardThumbnailURL}.`;
+					content += `\n- The scoreboard thumbnail was set to <${scoreboardThumbnailURL}>.`;
 				} catch (error) {
 					errors.push(error.message);
 				}
@@ -78,7 +78,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 				try {
 					new URL(serverBonusesThumbnailURL);
 					updatePayload.serverBonusesThumbnailURL = serverBonusesThumbnailURL;
-					content += `\n- The server bonuses thumbnail was set to ${serverBonusesThumbnailURL}.`;
+					content += `\n- The server bonuses thumbnail was set to <${serverBonusesThumbnailURL}>.`;
 				} catch (error) {
 					errors.push(error.message);
 				}
