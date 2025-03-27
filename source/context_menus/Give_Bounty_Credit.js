@@ -1,4 +1,4 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, Guild } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, Guild, DiscordjsErrorCodes } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../constants');
 const { commandMention, listifyEN, congratulationBuilder } = require('../util/textUtil');
@@ -69,7 +69,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				)
 			)
 		);
-		interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
+		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
 			const slotNumber = modalSubmission.fields.getTextInputValue("slot-number");
 			const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: interaction.user.id, companyId: modalSubmission.guild.id });
 			if (!bounty) {
@@ -87,6 +87,10 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					modalSubmission.reply({ content: e, flags: [MessageFlags.Ephemeral] });
 				}
 				return;
+			}
+		}).catch(error => {
+			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
 			}
 		})
 	}

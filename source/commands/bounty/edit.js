@@ -84,7 +84,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 						)
 					)
 			);
-			interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 

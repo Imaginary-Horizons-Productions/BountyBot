@@ -1,4 +1,4 @@
-const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
+const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, DiscordjsErrorCodes } = require("discord.js");
 const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { textsHaveAutoModInfraction, timeConversion, commandMention } = require("../../util/textUtil");
 const { generateBountyBoardThread } = require("../../util/scoreUtil");
@@ -46,7 +46,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 				)
 		);
 
-		interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: timeConversion(5, "m", "ms") }).then(async interaction => {
+		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: timeConversion(5, "m", "ms") }).then(async interaction => {
 			const title = interaction.fields.getTextInputValue("title");
 			const description = interaction.fields.getTextInputValue("description");
 
@@ -107,6 +107,10 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 					}
 				}
 			});
-		}).catch(console.error)
+		}).catch(error => {
+			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
+			}
+		})
 	}
 );

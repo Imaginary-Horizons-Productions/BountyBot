@@ -1,4 +1,4 @@
-const { ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder, InteractionContextType, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder, InteractionContextType, MessageFlags, DiscordjsErrorCodes } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { MAX_EMBED_TITLE_LENGTH, testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../constants');
 
@@ -78,7 +78,11 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 							modalSubmission.reply({ content: `Your bug report has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}.You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: [MessageFlags.Ephemeral] })
 						})
 					})
-				}).catch(console.error);
+				}).catch(error => {
+					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+						console.error(error);
+					}
+				});
 				break;
 			case "feature":
 				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -149,7 +153,11 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 							modalSubmission.reply({ content: `Your feature request has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}. You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: [MessageFlags.Ephemeral] })
 						})
 					})
-				}).catch(console.error);
+				}).catch(error => {
+					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+						console.error(error);
+					}
+				});
 				break;
 		}
 	}

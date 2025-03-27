@@ -98,7 +98,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					)
 			);
 
-			collectedInteraction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			return collectedInteraction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 
