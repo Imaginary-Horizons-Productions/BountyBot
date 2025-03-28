@@ -15,18 +15,39 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 
 			const xpCoefficient = interaction.options.getNumber("level-threshold-multiplier");
 			if (xpCoefficient !== null) {
-				updatePayload.xpCoefficient = xpCoefficient;
-				content += `\n- The level-up xp coefficient has been set to ${xpCoefficient}.`;
+				if (xpCoefficient <= 0) {
+					errors.push(`${xpCoefficient} could not be set for Level Threshold Multiplier. It must be a number greater than 0.`)
+				} else {
+					updatePayload.xpCoefficient = xpCoefficient;
+					logicLayer.hunters.findCompanyHunters(interaction.guild.id).then(hunters => {
+						let anyLevelChanged = false;
+						for (const hunter of hunters) {
+							const levelChanged = hunter.updateLevel(xpCoefficient);
+							if (levelChanged) {
+								anyLevelChanged = true;
+								hunter.save();
+							}
+						}
+						if (anyLevelChanged) {
+							company.updateLevel().then(companyLevelChanged => {
+								if (companyLevelChanged) {
+									company.save();
+								}
+							})
+						}
+					})
+					content += `\n- The Level Threshold Multiplier has been set to ${xpCoefficient}.`;
+				}
 			}
 
 			const slots = interaction.options.getInteger("bounty-slots");
 			if (slots !== null) {
 				if (slots < 1 || slots > GLOBAL_MAX_BOUNTY_SLOTS) {
-					interaction.reply({ content: `Your settings were not set because ${slots} is an invalid value for bounty slots (must be between 1 and 10 inclusive).`, flags: [MessageFlags.Ephemeral] });
-					return;
+					errors.push(`${slots} could not be set for Bounty Slots. It must be a number between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS} (inclusive).`);
+				} else {
+					updatePayload.maxSimBounties = slots;
+					content += `\n- Max bounty slots a bounty hunter can have (including earned slots) has been set to ${slots}.`;
 				}
-				updatePayload.maxSimBounties = slots;
-				content += `\n- Max bounty slots a bounty hunter can have (including earned slots) has been set to ${slots}.`;
 			}
 
 			const toastThumbnailURL = interaction.options.getString("toast-thumbnail-url");

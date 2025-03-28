@@ -37,6 +37,16 @@ class Hunter extends Model {
 		return Math.min(slots, maxSimBounties);
 	}
 
+	/** Updates the level on this Hunter instance (DOES NOT SAVE TO DB)
+	 * @param {number} xpCoefficient
+	 */
+	updateLevel(xpCoefficient) {
+		const calculatedLevel = Math.floor(Math.sqrt(this.xp / xpCoefficient) + 1);
+		const levelChanged = this.level !== calculatedLevel;
+		this.level = calculatedLevel;
+		return levelChanged;
+	}
+
 	/**
 	 * @param {string} guildName
 	 * @param {number} points
@@ -50,12 +60,13 @@ class Hunter extends Model {
 		const previousCompanyLevel = company.level;
 
 		this.xp += totalPoints;
-
-		this.level = Math.floor(Math.sqrt(this.xp / company.xpCoefficient) + 1);
+		this.updateLevel(company.xpCoefficient);
 		this.save();
 
-		company.level = Math.floor(Math.sqrt(await company.xp / 3) + 1);
-		company.save();
+		const companyLevelChanged = await company.updateLevel();
+		if (companyLevelChanged) {
+			company.save();
+		}
 
 		const levelTexts = [];
 		if (this.level > previousLevel) {

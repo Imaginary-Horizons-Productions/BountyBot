@@ -224,6 +224,14 @@ class Company extends Model {
 			.setFooter(randomFooterTip())
 			.setTimestamp()
 	}
+
+	/** Updates the level on this Company instance (DOES NOT SAVE TO DB) */
+	async updateLevel() {
+		const calculatedLevel = Math.floor(Math.sqrt(await this.xp / 3) + 1);
+		const levelChanged = this.level !== calculatedLevel;
+		this.level = calculatedLevel;
+		return levelChanged;
+	}
 }
 
 /** @param {Sequelize} sequelize */
