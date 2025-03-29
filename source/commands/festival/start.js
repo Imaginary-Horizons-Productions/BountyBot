@@ -17,6 +17,7 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 			}
 		})
 		interaction.reply(company.sendAnnouncement({ content: `An XP multiplier festival has started. Bounty and toast XP will be multiplied by ${multiplier}.` }));
+		company.updateScoreboard(interaction.guild, logicLayer);
 	}
 ).setOptions(
 	{
