@@ -7,5 +7,6 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 			bountyBot.setNickname(null);
 		})
 		interaction.reply(company.sendAnnouncement({ content: "The XP multiplier festival has ended. Hope you participate next time!" }));
+		company.updateScoreboard(interaction.guild, logicLayer);
 	}
 );
