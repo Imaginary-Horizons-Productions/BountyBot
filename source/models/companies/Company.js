@@ -310,8 +310,7 @@ function initModel(sequelize) {
 	}, {
 		sequelize,
 		modelName: "Company",
-		freezeTableName: true,
-		paranoid: true
+		freezeTableName: true
 	});
 };
 
