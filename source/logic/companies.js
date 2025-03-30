@@ -45,7 +45,7 @@ function resetCompanySettings(id) {
 	);
 }
 
-/** *Sets the deletedAt of the selected Company (Companies are paranoid)*
+/** *Deletes the specified Company*
  * @param {string} companyId
  */
 function deleteCompany(companyId) {

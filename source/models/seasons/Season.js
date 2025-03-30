@@ -45,8 +45,7 @@ function initModel(sequelize) {
 	}, {
 		sequelize,
 		modelName: "Season",
-		freezeTableName: true,
-		paranoid: true
+		freezeTableName: true
 	});
 }
 
