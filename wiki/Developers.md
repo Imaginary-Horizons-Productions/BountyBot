@@ -34,3 +34,12 @@ Please use `camelCase` unless one of the following exceptions apply:
    - Context menu commands have their customIds visible to the end user as the menu option name, and we use `Proper Noun Case` as a result
       - File names should match the customIds, but use underscores instead of spaces (like `Proper_Noun_Case.js`)
    - Others are `alllowercase`
+
+## Migrations and Database Management
+We us `sequelize-cli` for migration management (see `npx seqeulize help` for a list of its commands)
+
+### Migration Writing Tips
+- Migration SQL logging can be turned on by adding `logging: true` to the env in `./config/config.json`
+   - This logging is off by default because it throws a deprecation error on regular startup
+- Creating tables in migrations is considered best practice (so that shards aren't trying to race to finish that work), but the schemas for `queryInterface.createTable()` need to include even the properties Sequelize automatically manages (like auto-incrementing `id`s, `createdAt`, or `updatedAt`)
+- `queryInterface.bulkUpdate()` will create an empty SET query if provided an empty `values` object (like if dynamic calculation finds no properties to update), causing a `SQLITE_ERROR: incomplete input`
