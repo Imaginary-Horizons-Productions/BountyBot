@@ -12,7 +12,9 @@ module.exports = {
 				await queryInterface.addColumn(table, "updatedAt", { type: Sequelize.Sequelize.DataTypes.DATE, allowNull: false });
 				updatedColumnEntries.push(["updatedAt", new Date()]);
 			}
-			await queryInterface.bulkUpdate(table, Object.fromEntries(updatedColumnEntries));
+			if (updatedColumnEntries.length > 0) {
+				await queryInterface.bulkUpdate(table, Object.fromEntries(updatedColumnEntries));
+			}
 		}
 	},
 	async down(queryInterface, Sequelize) {
