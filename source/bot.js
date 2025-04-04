@@ -252,7 +252,7 @@ dAPIClient.on(Events.GuildDelete, async guild => {
 	logicBlob.seasons.deleteCompanySeasons(guild.id);
 	logicBlob.goals.deleteCompanyGoals(guild.id);
 	logicBlob.hunters.deleteCompanyHunters(guild.id);
-	logicBlob.ranks.findCompanyRanks(guild.id)
+	(await logicBlob.ranks.findAllRanks(guild.id))
 			.map(r => r.roleId)
 			.filter(id => !!id)
 			.forEach(id => guild.roles.delete(id, 'Cleaning up BountyBot roles during kick.'));
