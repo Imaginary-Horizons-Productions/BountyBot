@@ -1,5 +1,4 @@
 const { MessageFlags } = require("discord.js");
-const { Buffer } = require('node:buffer');
 const { SubcommandWrapper } = require("../../classes");
 const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
 
@@ -15,10 +14,10 @@ module.exports = new SubcommandWrapper("info", "Get the information about an exi
 		}).join('\n');
 
 		const msgJson = { flags: [MessageFlags.Ephemeral] };
-		if (rankStrings.length > MAX_MESSAGE_CONTENT_LENGTH) { // Send large content as a text file
-			msgJson.files = [ Buffer.from(rankStrings, 'utf16le') ];
-		} else {
+		if (rankStrings.length < MAX_MESSAGE_CONTENT_LENGTH) { // Send large content as a text file
 			msgJson.content = rankStrings;
+		} else {
+			msgJson.files = [new AttachmentBuilder(Buffer.from(rankStrings, 'utf16le'), { name: 'ranks.txt' })];
 		}
 
 		interaction.reply(msgJson);
