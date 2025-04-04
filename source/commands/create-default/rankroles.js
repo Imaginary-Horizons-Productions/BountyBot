@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks f
 				console.error(error);
 			}
 		});
-		const deletedCount = await logicLayer.ranks.deleteRanks(interaction.guild.id);
+		const deletedCount = await logicLayer.ranks.deleteCompanyRanks(interaction.guild.id);
 		const roles = await interaction.guild.roles.fetch().then(existingGuildRoles => {
 			return Promise.all(
 				[
