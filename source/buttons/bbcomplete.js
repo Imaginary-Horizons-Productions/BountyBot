@@ -13,12 +13,12 @@ const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
+			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (!bounty) {
-				interaction.reply({ content: "This bounty could not be found.", flags: [MessageFlags.Ephemeral] });
+				interaction.editReply({ content: "This bounty could not be found." });
 				return;
 			}
 
-			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (bounty.userId !== interaction.user.id) {
 				interaction.editReply({ content: "Only the bounty poster can mark a bounty completed." });
 				return;
