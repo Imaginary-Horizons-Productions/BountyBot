@@ -16,6 +16,10 @@ module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks f
 				console.error(error);
 			}
 		});
+		logicBlob.ranks.findCompanyRanks(interaction.guild.id)
+				.map(r => r.roleId)
+				.filter(id => !!id)
+				.forEach(id => interaction.guild.roles.delete(id, 'Cleaning up BountyBot roles during default rank creation.'));
 		const deletedCount = await logicLayer.ranks.deleteRanks(interaction.guild.id);
 		const roles = await interaction.guild.roles.fetch().then(existingGuildRoles => {
 			return Promise.all(

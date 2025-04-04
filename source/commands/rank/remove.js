@@ -9,7 +9,9 @@ module.exports = new SubcommandWrapper("remove", "Remove an existing seasonal ra
 			interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
-
+		if (rank.roleId) {
+			interaction.guild.ranks.delete(rank.roleId, 'Removing rank role during rank removal.')
+		}
 		rank.destroy();
 		interaction.reply({ content: "The rank has been removed.", flags: [MessageFlags.Ephemeral] });
 	}
