@@ -31,7 +31,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
 				const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guild.id);
 				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guildId);
-				bounty.embed(collectedInteraction.guild, poster.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.findBountyCompletions(bountyId))
+				bounty.embed(collectedInteraction.guild, poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), await logicLayer.bounties.findBountyCompletions(bountyId))
 					.then(async embed => {
 						if (collectedInteraction.channel.archived) {
 							await collectedInteraction.channel.setArchived(false, "completers removed from bounty");

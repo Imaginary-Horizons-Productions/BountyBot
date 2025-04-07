@@ -86,7 +86,7 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 		if (companyLevelLine) {
 			levelTexts.push(companyLevelLine);
 		}
-		bounty.embed(interaction.guild, company.getLevel(allHunters), true, company, completions).then(async embed => {
+		bounty.embed(interaction.guild, company.getLevel(allHunters), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
 			const acknowledgeOptions = { embeds: [embed], withResponse: true };
 			if (totalGP > 0) {
 				levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);

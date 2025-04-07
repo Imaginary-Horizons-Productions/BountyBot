@@ -32,7 +32,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 
 				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 				const currentCompanyLevel = company.getLevel(await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id));
-				bounty.embed(interaction.guild, currentCompanyLevel, false, company, []).then(embed => {
+				bounty.embed(interaction.guild, currentCompanyLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), []).then(embed => {
 					const payload = { embeds: [embed] };
 					const extraText = interaction.options.get("extra-text");
 					if (extraText) {

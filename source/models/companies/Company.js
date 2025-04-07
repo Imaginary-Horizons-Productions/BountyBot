@@ -57,6 +57,14 @@ class Company extends Model {
 		return Math.floor(Math.sqrt(this.getXP(hunters) / 3) + 1);
 	}
 
+	getThumbnailURLMap() {
+		return {
+			open: this.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
+			complete: this.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
+			deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+		};
+	}
+
 	festivalMultiplierString() {
 		if (this.festivalMultiplier != 1) {
 			return ` x${bold(italic(this.festivalMultiplier))}`;

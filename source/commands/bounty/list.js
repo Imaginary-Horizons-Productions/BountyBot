@@ -14,7 +14,9 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 				const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
 				const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 				const companyLevel = company.getLevel(allHunters);
-				interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, companyLevel, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
+				const URLMap = company.getThumbnailURLMap();
+				const multiplierString = company.festivalMultiplierString();
+				interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, companyLevel, false, URLMap, multiplierString, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
 			});
 		} else {
 			logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id).then(async existingBounties => {
@@ -24,7 +26,9 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 				}
 				const hunter = await logicLayer.hunters.findOneHunter(listUserId, interaction.guild.id);
 				const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-				interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
+				const URLMap = company.getThumbnailURLMap();
+				const multiplierString = company.festivalMultiplierString();
+				interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter.getLevel(company.xpCoefficient), false, URLMap, multiplierString, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
 			});
 		}
 	}
