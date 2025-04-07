@@ -4,6 +4,7 @@ const { Bounty } = require("../models/bounties/Bounty");
 const { Hunter } = require("../models/users/Hunter");
 const { rollItemDrop } = require("../util/itemUtil");
 const { dateInPast } = require("../util/textUtil");
+const { premium } = require("../constants");
 
 /** @type {Sequelize} */
 let db;
@@ -156,10 +157,10 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
  * @param {string} hunterId The ID snowflake of the hunter we are rolling for
  */
 async function rollItemForHunter(dropRate, hunterId) {
-	const itemCutoff = await db.models.User.findByPk(hunterId).isPremium ? 4 : 2;
+	const itemCutoff = premium.gift.concat(premium.paid).includes(hunterId) ? 4 : 2;
 	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, updatedAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
 	if (itemsDropped >= itemCutoff) return null; // Don't roll items when we've dropped our max
-	
+
 	const droppedItem = rollItemDrop(dropRate);
 	if (!droppedItem) return null;
 
@@ -233,10 +234,11 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	};
 }
 
-/** *Delete all Bounties associated with the given Company*
+/** *Delete all Bounties and Completions associated with the given Company*
  * @param {string} companyId
  */
-function deleteCompanyBounties(companyId) {
+async function deleteCompanyBounties(companyId) {
+	await db.models.Completion.destroy({ where: { companyId } });
 	return db.models.Bounty.destroy({ where: { companyId } });
 }
 
@@ -246,13 +248,6 @@ function deleteCompanyBounties(companyId) {
  */
 function deleteSelectedBountyCompletions(bountyId, userIds) {
 	return db.models.Completion.destroy({ where: { bountyId, userId: { [Op.in]: userIds } } });
-}
-
-/** *Delete all Completions associated with the specified Company*
- * @param {string} companyId
- */
-function deleteCompanyCompletions(companyId) {
-	return db.models.Completion.destroy({ where: { companyId } });
 }
 
 /** *Delete all Completions associated with the specified Bounty*
@@ -278,6 +273,5 @@ module.exports = {
 	completeBounty,
 	deleteCompanyBounties,
 	deleteSelectedBountyCompletions,
-	deleteCompanyCompletions,
 	deleteBountyCompletions
 }

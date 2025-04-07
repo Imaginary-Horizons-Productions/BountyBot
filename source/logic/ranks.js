@@ -51,7 +51,7 @@ function findAllRanks(companyId) {
 /** *Deletes all of a company's ranks*
  * @param {string} companyId
  */
-function deleteRanks(companyId) {
+function deleteCompanyRanks(companyId) {
 	return db.models.Rank.destroy({ where: { companyId } });
 }
 
@@ -61,5 +61,5 @@ module.exports = {
 	createCustomRank,
 	findOneRank,
 	findAllRanks,
-	deleteRanks
+	deleteCompanyRanks
 }

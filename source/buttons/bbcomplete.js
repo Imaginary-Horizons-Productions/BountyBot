@@ -13,12 +13,12 @@ const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
+			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (!bounty) {
-				interaction.reply({ content: "This bounty could not be found.", flags: [MessageFlags.Ephemeral] });
+				interaction.editReply({ content: "This bounty could not be found." });
 				return;
 			}
 
-			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (bounty.userId !== interaction.user.id) {
 				interaction.editReply({ content: "Only the bounty poster can mark a bounty completed." });
 				return;
@@ -82,7 +82,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 							if (goalId !== null) {
-								embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${Math.min(currentGP, requiredGP)}/${requiredGP} GP` });
+								embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 							} else {
 								embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
 							}

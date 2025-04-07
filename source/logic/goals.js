@@ -16,7 +16,7 @@ function setDB(database) {
  * @param {string} companyId
  */
 function findCurrentServerGoal(companyId) {
-	return db.models.Goal.findOne({ where: { companyId }, state: "ongoing", order: [["createdAt", "DESC"]] });
+	return db.models.Goal.findOne({ where: { companyId, state: "ongoing" }, order: [["createdAt", "DESC"]] });
 }
 
 /** *Create a Goal for the specified Company*
@@ -90,11 +90,21 @@ async function progressGoal(companyId, progressType, hunter, season) {
 	return returnData;
 }
 
+/** *Destroy all Goals and Contributions for the specified Company*
+ * @param {string} companyId
+ */
+async function deleteCompanyGoals(companyId) {
+	const goals = await db.models.Goal.findAll({ where: { companyId } });
+	await db.models.Contribution.destroy({ where: { goalId: { [Op.in]: goals.map(goal => goal.id) } } });
+	return db.models.Goal.destroy({ where: { companyId } });
+}
+
 module.exports = {
 	setDB,
 	findCurrentServerGoal,
 	createGoal,
 	createGoalContribution,
 	findLatestGoalProgress,
-	progressGoal
+	progressGoal,
+	deleteCompanyGoals
 };

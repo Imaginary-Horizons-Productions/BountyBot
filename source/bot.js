@@ -247,16 +247,16 @@ dAPIClient.on(Events.ThreadDelete, async thread => {
 
 dAPIClient.on(Events.GuildDelete, async guild => {
 	await dbReady;
-	logicBlob.hunters.deleteCompanyHunters(guild.id);
-	logicBlob.toasts.deleteCompanyToastRecords(guild.id);
-
+	logicBlob.toasts.deleteCompanyToasts(guild.id);
 	logicBlob.bounties.deleteCompanyBounties(guild.id);
-	logicBlob.bounties.deleteCompanyCompletions(guild.id);
-
-	logicBlob.seasons.deleteCompanyParticipations(guild.id);
 	logicBlob.seasons.deleteCompanySeasons(guild.id);
-
-	logicBlob.ranks.deleteRanks(guild.id);
+	logicBlob.goals.deleteCompanyGoals(guild.id);
+	logicBlob.hunters.deleteCompanyHunters(guild.id);
+	(await logicBlob.ranks.findAllRanks(guild.id))
+			.map(r => r.roleId)
+			.filter(id => !!id)
+			.forEach(id => guild.roles.delete(id, 'Cleaning up BountyBot roles during kick.'));
+	logicBlob.ranks.deleteCompanyRanks(guild.id);
 	logicBlob.companies.deleteCompany(guild.id);
 });
 //#endregion

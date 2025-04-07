@@ -229,8 +229,7 @@ function initModel(sequelize) {
 	}, {
 		sequelize,
 		modelName: "Bounty",
-		freezeTableName: true,
-		paranoid: true
+		freezeTableName: true
 	});
 };
 

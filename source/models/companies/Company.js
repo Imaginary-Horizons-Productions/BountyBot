@@ -115,8 +115,8 @@ class Company extends Model {
 		}
 
 		const fields = [];
-		const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
-		if (goalId !== null) {
+		const { currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+		if (currentGP < requiredGP) {
 			fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 		}
 		if (this.festivalMultiplier !== 1) {
@@ -172,8 +172,8 @@ class Company extends Model {
 		}
 
 		const fields = [];
-		const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
-		if (goalId !== null) {
+		const { currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+		if (currentGP < requiredGP) {
 			fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 		}
 		if (this.festivalMultiplier !== 1) {
@@ -219,6 +219,14 @@ class Company extends Model {
 			)
 			.setFooter(randomFooterTip())
 			.setTimestamp()
+	}
+
+	/** Updates the level on this Company instance (DOES NOT SAVE TO DB) */
+	async updateLevel() {
+		const calculatedLevel = Math.floor(Math.sqrt(await this.xp / 3) + 1);
+		const levelChanged = this.level !== calculatedLevel;
+		this.level = calculatedLevel;
+		return levelChanged;
 	}
 }
 
@@ -298,8 +306,7 @@ function initModel(sequelize) {
 	}, {
 		sequelize,
 		modelName: "Company",
-		freezeTableName: true,
-		paranoid: true
+		freezeTableName: true
 	});
 };
 
