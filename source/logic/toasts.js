@@ -109,12 +109,14 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	const rawRecipients = [];
 	const rewardedHunterIds = [];
 	let critValue = 0;
+	const startingSenderLevel = senderHunter.getLevel(company.xpCoefficient);
 	for (const id of toasteeIds) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
 			await db.models.User.findOrCreate({ where: { id } });
 			const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: id, companyId: company.id } });
 			rewardedHunterIds.push(hunter.userId);
+			//TODONOW update
 			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, company));
 			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId }, defaults: { xp: 1 } });
 			if (!participationCreated) {
@@ -126,7 +128,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 			if (critToastsAvailable > 0) {
 				const critRoll = Math.random() * 100;
 
-				let effectiveToastLevel = senderHunter.level + 2;
+				let effectiveToastLevel = startingSenderLevel + 2;
 				for (const recipientId of staleToastees) {
 					if (id == recipientId) {
 						effectiveToastLevel--;
@@ -160,6 +162,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	db.models.Recipient.bulkCreate(rawRecipients);
 
 	// Add XP and update ranks
+	//TODONOW update
 	rewardTexts.push(...await senderHunter.addXP(guild.name, critValue, false, company));
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (!participationCreated) {

@@ -12,6 +12,7 @@ module.exports = new ItemTemplateSet(
 			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, xpValue);
+				//TODONOW update
 				hunter.addXP(interaction.guild.name, xpValue, true, await logicLayer.companies.findCompanyByPK(interaction.guildId)).then(levelTexts => {
 					getRankUpdates(interaction.guild, logicLayer).then(rankUpdates => {
 						hunter.save();

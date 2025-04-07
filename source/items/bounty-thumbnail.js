@@ -59,7 +59,7 @@ module.exports = new ItemTemplateSet(
 					await bounty.save().then(async bounty => {
 						bounty.reload();
 						const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-						bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id)).level, bounty.id);
+						bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id)).getLevel(company.xpCoefficient), bounty.id);
 					});
 					return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
 				})

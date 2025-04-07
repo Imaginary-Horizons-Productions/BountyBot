@@ -35,15 +35,15 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 		company.bountyBoardCompletedTagId = completedTagId;
 
 		const evergreenBounties = [];
-		logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(bounties => {
+		logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(async bounties => {
+			const allHunters = await logicLayer.hunters.findCompanyHunters(bounty.companyId);
 			for (const bounty of bounties) {
 				if (bounty.isEvergreen) {
 					evergreenBounties.unshift(bounty);
 					continue;
 				}
-				logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId).then(async poster => {
-					return bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.level : poster.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id));
-				}).then(bountyEmbed => {
+				const poster = allHunters.find(hunter => hunter.userId === bounty.userId);
+				bounty.embed(interaction.guild, bounty.userId == interaction.client.user.id ? company.getLevel(allHunters) : poster.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)).then(bountyEmbed => {
 					return bountyBoard.threads.create({
 						name: bounty.title,
 						message: {
@@ -77,7 +77,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 
 			// make Evergreen Bounty list
 			if (evergreenBounties.length > 0) {
-				Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))).then(embeds => {
+				Promise.all(evergreenBounties.map(async bounty => bounty.embed(interaction.guild, company.getLevel(allHunters), false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))).then(embeds => {
 					generateBountyBoardThread(bountyBoard.threads, embeds, company);
 				})
 			}

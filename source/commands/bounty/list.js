@@ -9,9 +9,11 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 				interaction.reply({ content: `<@${listUserId}> doesn't have any open bounties posted.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
-			const hunter = await logicLayer.hunters.findOneHunter(listUserId, interaction.guild.id);
+			const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
+			const hunter = allHunters.find(hunter => hunter.userId === listUserId);
 			const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-			interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter?.level ?? company.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
+			//TODONOW non-extent hunter is probably a bad check for evergreens
+			interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter?.getLevel(company.xpCoefficient) ?? company.getLevel(allHunters), false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
 		});
 	}
 ).setOptions(

@@ -1,10 +1,9 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
-const { congratulationBuilder, listifyEN } = require('../../util/textUtil');
+const { listifyEN, congratulationBuilder } = require('../../util/textUtil');
 const { Bounty } = require('../bounties/Bounty');
-const { EmbedBuilder, userMention } = require('discord.js');
+const { EmbedBuilder, userMention, bold } = require('discord.js');
 const { randomFooterTip } = require('../../util/embedUtil');
 const { Completion } = require('../bounties/Completion');
-const { Company } = require('../companies/Company');
 
 /** This class stores a user's information related to a specific company */
 class Hunter extends Model {
@@ -23,10 +22,13 @@ class Hunter extends Model {
 		return xpCoefficient * (level - 1) ** 2;
 	}
 
-	/** @param {number} maxSimBounties */
-	maxSlots(maxSimBounties) {
-		let slots = 1 + Math.floor(this.level / 12) * 2;
-		let remainder = this.level % 12;
+	/**
+	 * @param {number} level
+	 * @param {number} maxSimBounties
+	 */
+	static getBountySlotCount(level, maxSimBounties) {
+		let slots = 1 + Math.floor(level / 12) * 2;
+		let remainder = level % 12;
 		if (remainder >= 3) {
 			slots++;
 			remainder -= 3;
@@ -37,72 +39,47 @@ class Hunter extends Model {
 		return Math.min(slots, maxSimBounties);
 	}
 
-	/** Updates the level on this Hunter instance (DOES NOT SAVE TO DB)
-	 * @param {number} xpCoefficient
-	 */
-	updateLevel(xpCoefficient) {
-		const calculatedLevel = Math.floor(Math.sqrt(this.xp / xpCoefficient) + 1);
-		const levelChanged = this.level !== calculatedLevel;
-		this.level = calculatedLevel;
-		return levelChanged;
-	}
-
-	/**
-	 * @param {string} guildName
-	 * @param {number} points
-	 * @param {boolean} ignoreMultiplier
-	 * @param {Company} company
-	 */
-	async addXP(guildName, points, ignoreMultiplier, company) {
-		const totalPoints = points * (!ignoreMultiplier ? company.festivalMultiplier : 1);
-
-		const previousLevel = this.level;
-		const previousCompanyLevel = company.level;
-
-		this.xp += totalPoints;
-		this.updateLevel(company.xpCoefficient);
-		this.save();
-
-		const companyLevelChanged = await company.updateLevel();
-		if (companyLevelChanged) {
-			company.save();
-		}
-
-		const levelTexts = [];
-		if (this.level > previousLevel) {
-			const rewards = [];
-			for (let level = previousLevel + 1; level <= this.level; level++) {
-				rewards.push(...this.levelUpReward(level, company.maxSimBounties, false));
-			}
-			levelTexts.push(`${congratulationBuilder()}, <@${this.userId}>! You have leveled up to level **${this.level}**!\n\t- ${rewards.join('\n\t- ')}`);
-		}
-
-		if (company.level > previousCompanyLevel) {
-			levelTexts.push(`${guildName} is now level ${company.level}! Evergreen bounties are now worth more XP!`);
-		}
-
-		return levelTexts;
-	}
-
 	/**
 	 * @param {number} level
 	 * @param {number} maxSlots
 	 * @param {boolean} futureReward
 	 */
-	levelUpReward(level, maxSlots, futureReward = true) {
+	static getLevelUpRewards(level, maxSlots, futureReward = true) {
 		const texts = [];
 		if (level % 2) {
 			texts.push(`Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
 		} else {
 			texts.push(`Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
 		}
-		const currentSlots = this.maxSlots(maxSlots);
+		const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
 		if (currentSlots < maxSlots) {
 			if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
-				texts.push(` You ${futureReward ? "will" : "have"} unlock${futureReward ? "" : "ed"} bounty slot #${currentSlots}.`);
+				texts.push(` You ${futureReward ? "will unlock" : "have unlocked"} bounty slot #${currentSlots}.`);
 			};
 		}
 		return texts;
+	}
+
+	/**
+	 * @param {number} previousLevel
+	 * @param {number} currentLevel
+	 * @param {string} userId
+	 */
+	static buildLevelUpLine(previousLevel, currentLevel, userId) {
+		if (currentLevel > previousLevel) {
+			const rewards = [];
+			for (let level = previousLevel + 1; level <= currentLevel; level++) {
+				rewards.push(...Hunter.getLevelUpRewards(level, company.maxSimBounties, false));
+			}
+			return `${congratulationBuilder()}, ${userMention(userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
+		}
+		return null;
+	}
+
+
+	/** @param {number} xpCoefficient */
+	getLevel(xpCoefficient) {
+		return Math.floor(Math.sqrt(this.xp / xpCoefficient) + 1);
 	}
 
 	/**
@@ -148,10 +125,6 @@ function initModel(sequelize) {
 		companyId: {
 			primaryKey: true,
 			type: DataTypes.STRING
-		},
-		level: {
-			type: DataTypes.BIGINT,
-			defaultValue: 1
 		},
 		xp: {
 			type: DataTypes.BIGINT,

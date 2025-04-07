@@ -27,7 +27,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
 			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 			if (openBounties.length > 0) {
-				const embeds = await Promise.all(openBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, [])));
+				const currentCompanyLevel = company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
+				const embeds = await Promise.all(openBounties.map(bounty => bounty.embed(interaction.guild, currentCompanyLevel, false, company, [])));
 				if (company.bountyBoardId) {
 					const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
@@ -39,8 +40,6 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 				bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
 					thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
-					return logicLayer.companies.findCompanyByPK(bounty.companyId);
-				}).then(company => {
 					company.evergreenThreadId = null;
 					company.save();
 				});

@@ -28,6 +28,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 		}).then(response => {
 			const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 			collector.on("collect", async (collectedInteraction) => {
+				const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 				if (collectedInteraction.customId.endsWith("evergreen")) {
 					logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 						await Promise.all(existingBounties.map(bounty => bounty.reload()));
@@ -41,7 +42,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 										emoji: getNumberEmoji(bounty.slotNumber),
 										label: `Slot ${bounty.slotNumber}: ${bounty.title}`,
 										// Evergreen bounties are not eligible for showcase bonuses
-										description: `XP Reward: ${Bounty.calculateCompleterReward(hunter.level, bounty.slotNumber, 0)}`,
+										description: `XP Reward: ${Bounty.calculateCompleterReward(hunter.getLevel(company.xpCoefficient), bounty.slotNumber, 0)}`,
 										value: bounty.id
 									}
 								);
@@ -68,7 +69,6 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 					})
 				} else {
 					const sourceBountyId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
-					const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 
 					const sourceBounty = existingBounties.find(bounty => bounty.id === sourceBountyId);
 					const sourceSlot = sourceBounty.slotNumber;
@@ -80,19 +80,20 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 					destinationBounty.slotNumber = sourceSlot;
 					await destinationBounty.save();
 
+					const currentCompanyLevel = company.getLevel(await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id));
 					if (company.bountyBoardId) {
 						interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 							bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
 								return thread.fetchStarterMessage();
 							}).then(async message => {
 								existingBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
-								message.edit({ embeds: await Promise.all(existingBounties.map(bounty => bounty.embed(interaction.guild, company.level, false, company, []))) });
+								message.edit({ embeds: await Promise.all(existingBounties.map(bounty => bounty.embed(interaction.guild, currentCompanyLevel, false, company, []))) });
 							});
 						})
 					}
 
 					// Evergreen bounties are not eligible for showcase bonuses
-					interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, destinationSlot, 0)} XP and **${destinationBounty.title}** is now worth ${Bounty.calculateCompleterReward(company.level, sourceSlot, 0)} XP.`);
+					interaction.channel.send(`Some evergreen bounties have been swapped, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, destinationSlot, 0)} XP and **${destinationBounty.title}** is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, sourceSlot, 0)} XP.`);
 				}
 			})
 

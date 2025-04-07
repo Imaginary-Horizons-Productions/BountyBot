@@ -83,11 +83,12 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 			existingBounties.push(bounty);
 
 			// post in bounty board forum
-			const bountyEmbed = await bounty.embed(interaction.guild, company.level, false, company, []);
+			const currentCompanyLevel = company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
+			const bountyEmbed = await bounty.embed(interaction.guild, currentCompanyLevel, false, company, []);
 			interaction.reply(company.sendAnnouncement({ content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 				if (company.bountyBoardId) {
 					interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
-						const embeds = await Promise.all(existingBounties.sort((a, b) => a.slotNumber - b.slotNumber).map(async bounty => bounty.embed(interaction.guild, company.level, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id))));
+						const embeds = await Promise.all(existingBounties.sort((a, b) => a.slotNumber - b.slotNumber).map(async bounty => bounty.embed(interaction.guild, currentCompanyLevel, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id))));
 						if (company.evergreenThreadId) {
 							return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 								const message = await thread.fetchStarterMessage();

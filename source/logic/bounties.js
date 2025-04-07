@@ -181,12 +181,13 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	bounty.update({ state: "completed", completedAt: new Date() });
 	const rewardTexts = [];
 
-	const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
 	const company = await db.models.Company.findByPk(bounty.companyId);
+	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	const [season] = await db.models.Season.findOrCreate({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	for (const hunter of validatedHunters) {
+		//TODONOW update
 		const completerLevelTexts = await hunter.addXP(guild.name, bountyValue, true, company);
 		if (completerLevelTexts.length > 0) {
 			rewardTexts.push(...completerLevelTexts);
@@ -208,6 +209,7 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
+	//TODONOW update
 	const posterLevelTexts = await poster.addXP(guild.name, posterXP * company.festivalMultiplier, true, company);
 	if (posterLevelTexts.length > 0) {
 		rewardTexts.push(...posterLevelTexts);

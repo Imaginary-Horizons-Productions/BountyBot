@@ -21,6 +21,7 @@ class Bounty extends Model {
 	 * @param {Completion[]} completions
 	 */
 	async embed(guild, posterLevel, shouldOmitRewardsField, company, completions) {
+		//TODONOW calculate posterLevel here from poster and company?
 		const author = await guild.members.fetch(this.userId);
 		const thumbnails = {
 			open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
