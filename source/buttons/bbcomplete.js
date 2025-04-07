@@ -64,7 +64,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 				const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-				const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild);
+				const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), collectedInteraction.guild.name);
 				const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", poster, season);
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);

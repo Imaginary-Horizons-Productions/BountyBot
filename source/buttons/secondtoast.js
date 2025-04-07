@@ -4,8 +4,6 @@ const { getRankUpdates } = require('../util/scoreUtil');
 const { generateTextBar } = require('../util/textUtil');
 const { Seconding } = require('../models/toasts/Seconding');
 const { Goal } = require('../models/companies/Goal');
-const { Hunter } = require('../models/users/Hunter');
-const { Company } = require('../models/companies/Company');
 
 /** @type {typeof import("../logic")} */
 let logicLayer;
@@ -53,8 +51,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, 1);
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const previousLevel = hunter.getLevel(company.xpCoefficient);
-			hunter.increment({ toastsReceived: 1, xp: 1 });
-			const hunterLevelLine = Hunter.buildLevelUpLine(previousLevel, hunter.getLevel(company.xpCoefficient), userId);
+			await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
+			const hunterLevelLine = hunter.buildLevelUpLine(previousLevel, company.xpCoefficient);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
@@ -99,15 +97,15 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(interaction.user.id);
 			}
 		}
-		const companyLevelLine = Company.buildLevelUpLine(previousCompanyLevel, company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id)), interaction.guild.name);
+		const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), interaction.guild.name);
 		if (companyLevelLine) {
 			rewardTexts.push(companyLevelLine);
 		}
 
 		logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, critSeconds > 0);
 		if (critSeconds > 0) {
-			seconder.increment({ xp: critSeconds });
-			const hunterLevelLine = Hunter.buildLevelUpLine(startingSeconderLevel, seconder.getLevel(company.xpCoefficient), interaction.user.id);
+			await seconder.increment({ xp: critSeconds }).then(seconder => seconder.reload());
+			const hunterLevelLine = seconder.buildLevelUpLine(startingSeconderLevel, company.xpCoefficient);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}

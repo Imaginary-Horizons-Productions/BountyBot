@@ -55,7 +55,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 		const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-		const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, interaction.guild);
+		const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), interaction.guild.name);
 		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", poster, season);
 		if (goalUpdate.gpContributed > 0) {
 			rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);

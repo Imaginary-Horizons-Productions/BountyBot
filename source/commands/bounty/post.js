@@ -176,8 +176,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
 				const company = await logicLayer.companies.findCompanyByPK(modalSubmission.guild.id);
 				const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guildId);
-				//TODONOW update
-				poster.addXP(modalSubmission.guild.name, 1, true, company).then(() => {
+				poster.increment({ xp: 1 }).then(() => {
 					getRankUpdates(modalSubmission.guild, logicLayer);
 					company.updateScoreboard(interaction.guild, logicLayer);
 				});
@@ -204,6 +203,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const bounty = await logicLayer.bounties.createBounty(rawBounty);
 
 				// post in bounty board forum
+				await poster.reload();
 				const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company, []);
 				modalSubmission.reply(company.sendAnnouncement({ content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 					if (company.bountyBoardId) {

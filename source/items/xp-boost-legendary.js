@@ -12,18 +12,25 @@ module.exports = new ItemTemplateSet(
 			logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, xpValue);
-				//TODONOW update
-				hunter.addXP(interaction.guild.name, xpValue, true, await logicLayer.companies.findCompanyByPK(interaction.guildId)).then(levelTexts => {
-					getRankUpdates(interaction.guild, logicLayer).then(rankUpdates => {
-						hunter.save();
-						let result = `${interaction.member} used an XP Boost and gained ${xpValue} XP.`;
-						const allMessages = rankUpdates.concat(levelTexts);
-						if (allMessages.length > 0) {
-							result += `\n- ${allMessages.join("\n- ")}`;
-						}
-						interaction.reply({ content: result });
-					})
-				});
+				const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
+				const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
+				const previousCompanyLevel = company.getLevel(allHunters);
+				const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
+				await hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
+				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
+				let result = `${interaction.member} used a ${itemName} and gained ${xpValue} XP.`;
+				const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient);
+				if (hunterLevelLine) {
+					rankUpdates.push(hunterLevelLine);
+				}
+				const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, allHunters, interaction.guild.name);
+				if (companyLevelLine) {
+					rankUpdates.push(companyLevelLine);
+				}
+				if (rankUpdates.length > 0) {
+					result += `\n- ${rankUpdates.join("\n- ")}`;
+				}
+				interaction.reply({ content: result });
 			})
 		}
 	)

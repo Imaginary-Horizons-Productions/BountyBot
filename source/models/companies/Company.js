@@ -36,10 +36,11 @@ class Company extends Model {
 
 	/**
 	 * @param {number} previousLevel
-	 * @param {number} currentLevel
+	 * @param {Hunter[]} allHunters
 	 * @param {string} guildName
 	 */
-	static buildLevelUpLine(previousLevel, currentLevel, guildName) {
+	buildLevelUpLine(previousLevel, allHunters, guildName) {
+		const currentLevel = this.getLevel(allHunters);
 		if (currentLevel > previousLevel) {
 			return `${guildName} is now level ${currentLevel}! Evergreen bounties now award more XP!`;
 		}
