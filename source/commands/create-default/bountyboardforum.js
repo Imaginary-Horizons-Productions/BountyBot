@@ -36,7 +36,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 
 		const evergreenBounties = [];
 		logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(async bounties => {
-			const allHunters = await logicLayer.hunters.findCompanyHunters(bounty.companyId);
+			const allHunters = await logicLayer.hunters.findCompanyHunters(company.id);
 			for (const bounty of bounties) {
 				if (bounty.isEvergreen) {
 					evergreenBounties.unshift(bounty);

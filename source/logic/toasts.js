@@ -119,7 +119,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 			rewardedHunterIds.push(hunter.userId);
 			const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 			await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
-			const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient);
+			const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
@@ -170,7 +170,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	if (critValue > 0) {
 		const previousSenderLevel = senderHunter.getLevel(company.xpCoefficient);
 		await senderHunter.increment({ toastsRaised: 1, xp: critValue }).then(senderHunter => senderHunter.reload());
-		const senderLevelLine = senderHunter.buildLevelUpLine(previousSenderLevel, company.xpCoefficient);
+		const senderLevelLine = senderHunter.buildLevelUpLine(previousSenderLevel, company.xpCoefficient, company.maxSimBounties);
 		if (senderLevelLine) {
 			rewardTexts.push(senderLevelLine);
 		}

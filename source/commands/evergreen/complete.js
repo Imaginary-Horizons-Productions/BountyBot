@@ -71,7 +71,7 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 			await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
-			const levelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient);
+			const levelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
 			if (levelLine) {
 				levelTexts.push(levelLine);
 			}

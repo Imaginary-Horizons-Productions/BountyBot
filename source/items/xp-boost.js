@@ -19,7 +19,7 @@ module.exports = new ItemTemplateSet(
 				await hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
 				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
 				let result = `${interaction.member} used an ${itemName} and gained ${xpValue} XP.`;
-				const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient);
+				const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
 				if (hunterLevelLine) {
 					rankUpdates.push(hunterLevelLine);
 				}

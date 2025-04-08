@@ -62,15 +62,15 @@ class Hunter extends Model {
 
 	/**
 	 * @param {number} previousLevel
-	 * @param {number} currentLevel
-	 * @param {string} userId
+	 * @param {number} xpCoefficient
+	 * @param {number} maxSimBounties
 	 */
-	buildLevelUpLine(previousLevel, xpCoefficient) {
+	buildLevelUpLine(previousLevel, xpCoefficient, maxSimBounties) {
 		const currentLevel = this.getLevel(xpCoefficient);
 		if (currentLevel > previousLevel) {
 			const rewards = [];
 			for (let level = previousLevel + 1; level <= currentLevel; level++) {
-				rewards.push(...Hunter.getLevelUpRewards(level, company.maxSimBounties, false));
+				rewards.push(...Hunter.getLevelUpRewards(level, maxSimBounties, false));
 			}
 			return `${congratulationBuilder()}, ${userMention(this.userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
 		}

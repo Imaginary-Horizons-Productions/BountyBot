@@ -191,7 +191,7 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 	for (const hunter of validatedHunters) {
 		const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 		await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
-		const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient);
+		const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
 		if (hunterLevelLine) {
 			rewardTexts.push(hunterLevelLine);
 		}
@@ -213,7 +213,7 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
 	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
 	await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
-	const posterLevelLine = poster.buildLevelUpLine(previousPosterLevel, company.xpCoefficient);
+	const posterLevelLine = poster.buildLevelUpLine(previousPosterLevel, company.xpCoefficient, company.maxSimBounties);
 	if (posterLevelLine) {
 		rewardTexts.push(posterLevelLine);
 	}

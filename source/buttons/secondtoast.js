@@ -52,7 +52,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const previousLevel = hunter.getLevel(company.xpCoefficient);
 			await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
-			const hunterLevelLine = hunter.buildLevelUpLine(previousLevel, company.xpCoefficient);
+			const hunterLevelLine = hunter.buildLevelUpLine(previousLevel, company.xpCoefficient, company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
@@ -105,7 +105,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, critSeconds > 0);
 		if (critSeconds > 0) {
 			await seconder.increment({ xp: critSeconds }).then(seconder => seconder.reload());
-			const hunterLevelLine = seconder.buildLevelUpLine(startingSeconderLevel, company.xpCoefficient);
+			const hunterLevelLine = seconder.buildLevelUpLine(startingSeconderLevel, company.xpCoefficient, company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
