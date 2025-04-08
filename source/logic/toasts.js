@@ -183,7 +183,13 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 		participation.increment("toastsRaised");
 	}
 
-	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, allHunters, guild.name);
+	const xpChangedIds = toasteeIds.concat(senderHunter.userId);
+	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
+		if (xpChangedIds.includes(hunter.userId)) {
+			return hunter.reload();
+		}
+	}))
+	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guild.name);
 	if (companyLevelLine) {
 		rewardTexts.push(companyLevelLine);
 	}

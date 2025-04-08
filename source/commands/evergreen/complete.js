@@ -82,7 +82,12 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 			contributorIds.forEach(id => finalContributorIds.add(id));
 		}
 
-		const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, allHunters, interaction.guild.name);
+		const reloadedHunters = await Promise.all(allHunters.map(hunter => {
+			if (validatedCompleterIds.includes(hunter.userId)) {
+				return hunter.reload();
+			}
+		}))
+		const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, interaction.guild.name);
 		if (companyLevelLine) {
 			levelTexts.push(companyLevelLine);
 		}

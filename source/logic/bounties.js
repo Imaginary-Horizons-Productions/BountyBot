@@ -231,7 +231,13 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 		rewardTexts.push(rollStr);
 	}
 
-	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, allHunters, guildName);
+	const xpChangedIds = validatedHunters.map(hunter => hunter.userId).concat(poster.userId);
+	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
+		if (xpChangedIds.includes(hunter.userId)) {
+			return hunter.reload();
+		}
+	}))
+	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guildName);
 	if (companyLevelLine) {
 		rewardTexts.push(companyLevelLine);
 	}

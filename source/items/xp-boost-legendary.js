@@ -23,7 +23,12 @@ module.exports = new ItemTemplateSet(
 				if (hunterLevelLine) {
 					rankUpdates.push(hunterLevelLine);
 				}
-				const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, allHunters, interaction.guild.name);
+				const reloadedHunters = await Promise.all(allHunters.map(hunter => {
+					if (hunter.userId === interaction.user.id) {
+						return hunter.reload();
+					}
+				}))
+				const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, interaction.guild.name);
 				if (companyLevelLine) {
 					rankUpdates.push(companyLevelLine);
 				}
