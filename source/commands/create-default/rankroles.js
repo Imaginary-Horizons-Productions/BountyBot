@@ -4,22 +4,15 @@ const { SubcommandWrapper } = require("../../classes");
 module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-		const previousRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-		const previousRoleIds = [];
-		for (const rank of previousRanks) {
-			if (rank.roleId) {
-				previousRoleIds.push(rank.roleId);
-			}
-		}
-		await Promise.all(previousRoleIds.map(id => interaction.guild.roles.delete(id, "/create-default rank-roles"))).catch(error => {
-			if (error.code !== 10011) { // Ignore "Unknown Role" errors as we have no way to check if our stored role ids are stale
-				console.error(error);
-			}
-		});
-		(await logicLayer.ranks.findAllRanks(interaction.guild.id))
-				.map(r => r.roleId)
-				.filter(id => !!id)
-				.forEach(id => interaction.guild.roles.delete(id, 'Cleaning up BountyBot roles during default rank creation.'));
+		await Promise.all(logicLayer.ranks.findAllRanks(interaction.guild.id))
+			.map(r => r.roleId)
+			.filter(id => !!id)
+			.forEach(id => interaction.guild.roles.delete(id, 'Cleaning up BountyBot roles during default rank creation.'))
+			.catch(error => {
+				if (error.code !== 10011) { // Ignore "Unknown Role" errors as we have no way to check if our stored role ids are stale
+					console.error(error);
+				}
+			});
 		const deletedCount = await logicLayer.ranks.deleteCompanyRanks(interaction.guild.id);
 		const roles = await interaction.guild.roles.fetch().then(existingGuildRoles => {
 			return Promise.all(
