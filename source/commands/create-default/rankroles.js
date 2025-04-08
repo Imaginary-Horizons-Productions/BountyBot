@@ -7,7 +7,7 @@ module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks f
 		await Promise.all(logicLayer.ranks.findAllRanks(interaction.guild.id))
 			.map(r => r.roleId)
 			.filter(id => !!id)
-			.forEach(id => interaction.guild.roles.delete(id, 'Cleaning up BountyBot roles during default rank creation.'))
+			.map(id => interaction.guild.roles.delete(id, 'Cleaning up BountyBot roles during default rank creation.'))
 			.catch(error => {
 				if (error.code !== 10011) { // Ignore "Unknown Role" errors as we have no way to check if our stored role ids are stale
 					console.error(error);
