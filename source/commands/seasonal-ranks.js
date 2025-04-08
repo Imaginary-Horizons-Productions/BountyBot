@@ -1,9 +1,13 @@
-const { MessageFlags } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { MAX_MESSAGE_CONTENT_LENGTH } = require("../../constants");
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
+const { CommandWrapper } = require('../classes/index.js');
+const { MAX_MESSAGE_CONTENT_LENGTH } = require("../constants.js");
 
-module.exports = new SubcommandWrapper("info", "Get the information about an existing seasonal rank",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+/** @type {typeof import("../logic/index.js")} */
+let logicLayer;
+
+const mainId = "seasonal-ranks";
+module.exports = new CommandWrapper(mainId, "Look up this server's seasonal ranks", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.Guild], 3000,
+	async (interaction, runMode) => {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		if (!ranks || !ranks.length) {
 			interaction.reply({ content: `Could not find aany seasonal ranks. Please contact a server admin to make sure this isn't a mistake.`, flags: [MessageFlags.Ephemeral] });
@@ -22,4 +26,6 @@ module.exports = new SubcommandWrapper("info", "Get the information about an exi
 
 		interaction.reply(msgJson);
 	}
-);
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});
