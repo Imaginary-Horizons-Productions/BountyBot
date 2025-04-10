@@ -14,7 +14,7 @@ module.exports = new CommandWrapper(mainId, "Look up this server's seasonal rank
 			return;
 		}
 		const content = `${heading("Seasonal Ranks", 1)}\nBounty Hunters who earn more XP compared to their contemporaries are given special roles to distinguish themselves for the season. These roles are as follows:\n\n${ranks.map((rank, index) => {
-			return `${rank.rankmoji ?? ""}${rank.roleId ? roleMention(rank.roleId) : `Rank ${index}`}\nVariance Threshold: ${rank.varianceThreshold}\n`;
+			return `${rank.rankmoji ? `${rank.rankmoji} ` : ""}${rank.roleId ? roleMention(rank.roleId) : `Rank ${index}`}\nVariance Threshold: ${rank.varianceThreshold}\n`;
 		}).join('\n')}`;
 
 		const messagePayload = { flags: [MessageFlags.Ephemeral] };
