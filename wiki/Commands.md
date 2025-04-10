@@ -204,8 +204,6 @@ Announce an upcoming raffle
 
 > Permission Level: ManageRoles
 
-#### /rank info
-Get the information about an existing seasonal rank
 #### /rank add
 Add a seasonal rank for showing outstanding bounty hunters
 #### /rank edit
@@ -241,6 +239,14 @@ The Season Scoreboard only includes hunters with XP this season
 > Permission Level: ManageGuild
 
 Start a new season for this server, resetting ranks and placements
+### /seasonal-ranks
+> Usable in: Servers
+
+> Cooldown: 3 seconds
+
+> Permission Level: ViewChannel
+
+Look up this server's seasonal ranks
 ### /stats
 > Usable in: Servers
 
