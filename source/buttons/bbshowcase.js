@@ -58,8 +58,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				poster.save();
 				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
 				const completions = await logicLayer.bounties.findBountyCompletions(bountyId);
-				bounty.updatePosting(collectedInteraction.guild, company, poster.level, completions);
-				return bounty.embed(collectedInteraction.guild, poster.level, false, company, completions).then(async embed => {
+				const currentPosterLevel = poster.getLevel(company.xpCoefficient);
+				bounty.updatePosting(collectedInteraction.guild, company, currentPosterLevel, completions);
+				return bounty.embed(collectedInteraction.guild, currentPosterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
 					if (channel.archived) {
 						await channel.setArchived(false, "bounty showcased");
 					}

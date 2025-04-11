@@ -49,7 +49,9 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 
 		const rawCompletions = [];
 		// Evergreen bounties are not eligible for showcase bonuses
-		const bountyBaseValue = Bounty.calculateCompleterReward(company.level, slotNumber, 0);
+		const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
+		const previousCompanyLevel = company.getLevel(allHunters);
+		const bountyBaseValue = Bounty.calculateCompleterReward(company.getLevel(allHunters), slotNumber, 0);
 		const bountyValue = bountyBaseValue * company.festivalMultiplier;
 		for (const userId of dedupedCompleterIds) {
 			rawCompletions.push({
@@ -67,8 +69,12 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 		const finalContributorIds = new Set(validatedCompleterIds);
 		for (const userId of validatedCompleterIds) {
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
-			levelTexts.push(...await hunter.addXP(interaction.guild.name, bountyValue, true, company));
-			hunter.increment("othersFinished");
+			const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
+			await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
+			const levelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
+			if (levelLine) {
+				levelTexts.push(levelLine);
+			}
 			logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, bountyValue);
 			const { gpContributed, goalCompleted, contributorIds } = await logicLayer.goals.progressGoal(interaction.guildId, "bounties", hunter, season);
 			totalGP += gpContributed;
@@ -76,7 +82,18 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 			contributorIds.forEach(id => finalContributorIds.add(id));
 		}
 
-		bounty.embed(interaction.guild, company.level, true, company, completions).then(async embed => {
+		const reloadedHunters = await Promise.all(allHunters.map(hunter => {
+			if (validatedCompleterIds.includes(hunter.userId)) {
+				return hunter.reload();
+			} else {
+				return hunter;
+			}
+		}))
+		const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, interaction.guild.name);
+		if (companyLevelLine) {
+			levelTexts.push(companyLevelLine);
+		}
+		bounty.embed(interaction.guild, company.getLevel(allHunters), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
 			const acknowledgeOptions = { embeds: [embed], withResponse: true };
 			if (totalGP > 0) {
 				levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);

@@ -15,12 +15,14 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 		if (target.id == interaction.client.user.id) {
 			// BountyBot
 			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-			const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
-			const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+			const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
+			const currentCompanyLevel = company.getLevel(allHunters);
+			const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
+			const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
 			const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 			const lastSeason = await logicLayer.seasons.findOneSeason(interaction.guild.id, "previous");
 			const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-			company.statsEmbed(interaction.guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+			company.statsEmbed(interaction.guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
 
 				interaction.reply({
 					embeds: [embed],
@@ -36,8 +38,9 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 				}
 
 				const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-				const currentLevelThreshold = Hunter.xpThreshold(hunter.level, xpCoefficient);
-				const nextLevelThreshold = Hunter.xpThreshold(hunter.level + 1, xpCoefficient);
+				const currentHunterLevel = hunter.getLevel(xpCoefficient);
+				const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, xpCoefficient);
+				const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, xpCoefficient);
 				const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
@@ -51,7 +54,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 						new EmbedBuilder().setColor(Colors[hunter.profileColor])
 							.setAuthor(ihpAuthorPayload)
 							.setThumbnail(target.user.avatarURL())
-							.setTitle(`${target.displayName} is __Level ${hunter.level}__`)
+							.setTitle(`${target.displayName} is __Level ${currentHunterLevel}__`)
 							.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${hunter.rank !== null ? ` which qualifies for ${rankName}` : ""}.`)
 							.addFields(
 								{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
