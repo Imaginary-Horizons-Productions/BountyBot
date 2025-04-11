@@ -85,6 +85,8 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 		const reloadedHunters = await Promise.all(allHunters.map(hunter => {
 			if (validatedCompleterIds.includes(hunter.userId)) {
 				return hunter.reload();
+			} else {
+				return hunter;
 			}
 		}))
 		const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, interaction.guild.name);

@@ -235,6 +235,8 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
 		if (xpChangedIds.includes(hunter.userId)) {
 			return hunter.reload();
+		} else {
+			return hunter;
 		}
 	}))
 	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guildName);

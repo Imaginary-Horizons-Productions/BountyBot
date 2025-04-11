@@ -187,6 +187,8 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
 		if (xpChangedIds.includes(hunter.userId)) {
 			return hunter.reload();
+		} else {
+			return hunter;
 		}
 	}))
 	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guild.name);
