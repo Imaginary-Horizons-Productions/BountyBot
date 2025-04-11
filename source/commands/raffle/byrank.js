@@ -44,7 +44,8 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 				return;
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
-			collectedInteraction.reply(`The winner of this raffle is: ${winner}`);
+			collectedInteraction.update({ components: [] });
+			collectedInteraction.channel.send(`The winner of this raffle is: ${winner}`);
 			logicLayer.companies.findCompanyByPK(interaction.guild.id).then(company => {
 				company.update("nextRaffleString", null);
 			});
