@@ -1,6 +1,8 @@
 # BountyBot Change Log
-## BountyBot Version 2.9.0:
+## BountyBot Version 2.10.0:
+### Other Changes
 - Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
+- Made thumbnails of deleted bounties cutomizable: use `deletedBountyThumbnailURL` in `/config-premium`
 
 ## BountyBot Version 2.9.0:
 ### Server Goals
