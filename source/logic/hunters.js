@@ -41,6 +41,19 @@ function findCompanyHunters(companyId) {
 	return db.models.Hunter.findAll({ where: { companyId } });
 }
 
+
+/** *Returns a map of userId to Hunter for all Hunters in the specified Company*
+ * @param {string} companyId
+ */
+async function getCompanyHunterMap(companyId) {
+	const hunterMap = {};
+	const hunters = await db.models.Hunter.findAll({ where: { companyId } });
+	for (const hunter of hunters) {
+		hunterMap[hunter.userId] = hunter;
+	}
+	return hunterMap;
+}
+
 /** *Find the ids of all rank qualified Hunters in the specified Company that are at or above the specified Rank*
  * @param {string} companyId
  * @param {number} rankIndex
@@ -104,6 +117,7 @@ module.exports = {
 	findOrCreateBountyHunter,
 	findOneHunter,
 	findCompanyHunters,
+	getCompanyHunterMap,
 	findHunterIdsAtOrAboveRank,
 	findCompanyHuntersByDescendingXP,
 	findHuntersAtOrAboveLevel,

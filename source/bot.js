@@ -92,7 +92,7 @@ dAPIClient.login(require(authPath).token);
 
 //#region Event Handlers
 dAPIClient.on(Events.ClientReady, () => {
-	console.log(`Connected as ${dAPIClient.user.tag}`);
+	console.log(`Connected as ${dAPIClient.user.tag} -- Run Mode: ${runMode}`);
 	if (runMode === "production") {
 		(() => {
 			try {
@@ -253,9 +253,9 @@ dAPIClient.on(Events.GuildDelete, async guild => {
 	logicBlob.goals.deleteCompanyGoals(guild.id);
 	logicBlob.hunters.deleteCompanyHunters(guild.id);
 	(await logicBlob.ranks.findAllRanks(guild.id))
-			.map(r => r.roleId)
-			.filter(id => !!id)
-			.forEach(id => guild.roles.delete(id, 'Cleaning up BountyBot roles during kick.'));
+		.map(r => r.roleId)
+		.filter(id => !!id)
+		.forEach(id => guild.roles.delete(id, 'Cleaning up BountyBot roles during kick.'));
 	logicBlob.ranks.deleteCompanyRanks(guild.id);
 	logicBlob.companies.deleteCompany(guild.id);
 });
