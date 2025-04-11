@@ -83,6 +83,17 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 				}
 			}
 
+			const deletedBountyThumbnailURL = interaction.options.getString("deleted-bounty-thumbnail-url");
+			if (deletedBountyThumbnailURL) {
+				try {
+					new URL(deletedBountyThumbnailURL);
+					updatePayload.deletedBountyThumbnailURL = deletedBountyThumbnailURL;
+					content += `\n- The deleted bounty thumbnail was set to <${deletedBountyThumbnailURL}>.`;
+				} catch (error) {
+					errors.push(error.message);
+				}
+			}
+
 			const scoreboardThumbnailURL = interaction.options.getString("scoreboard-thumbnail-url");
 			if (scoreboardThumbnailURL) {
 				try {
@@ -141,6 +152,12 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 		type: "String",
 		name: "completed-bounty-thumbnail-url",
 		description: "Configure the image shown in the thumbnail of completed bounties",
+		required: false
+	},
+	{
+		type: "String",
+		name: "deleted-bounty-thumbnail-url",
+		description: "Configure the image shown in the thumbnail of deleted bounties",
 		required: false
 	},
 	{

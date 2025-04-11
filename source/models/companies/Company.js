@@ -304,6 +304,9 @@ function initModel(sequelize) {
 		completedBountyThumbnailURL: {
 			type: DataTypes.STRING
 		},
+		deletedBountyThumbnailURL: {
+			type: DataTypes.STRING
+		},
 		scoreboardThumbnailURL: {
 			type: DataTypes.STRING
 		}

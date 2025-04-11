@@ -25,7 +25,7 @@ class Bounty extends Model {
 		const thumbnails = {
 			open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
 			complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
-			deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+			deleted: company.deletedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
 		};
 		const fields = [];
 		const embed = new EmbedBuilder().setColor(author.displayColor)
