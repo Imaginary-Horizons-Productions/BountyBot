@@ -56,6 +56,8 @@ Configure the image shown in the thumbnail of toasts
 Configure the image shown in the thumbnail of open bounties
 #### completed-bounty-thumbnail-url (optional)
 Configure the image shown in the thumbnail of completed bounties
+#### deleted-bounty-thumbnail-url (optional)
+Configure the image shown in the thumbnail of deleted bounties
 #### scoreboard-thumbnail-url (optional)
 Configure the image shown in the thumbnail of the scoreboard
 #### server-bonuses-thumbnail-url (optional)
@@ -204,8 +206,6 @@ Announce an upcoming raffle
 
 > Permission Level: ManageRoles
 
-#### /rank info
-Get the information about an existing seasonal rank
 #### /rank add
 Add a seasonal rank for showing outstanding bounty hunters
 #### /rank edit
@@ -241,6 +241,14 @@ The Season Scoreboard only includes hunters with XP this season
 > Permission Level: ManageGuild
 
 Start a new season for this server, resetting ranks and placements
+### /seasonal-ranks
+> Usable in: Servers
+
+> Cooldown: 3 seconds
+
+> Permission Level: ViewChannel
+
+Look up this server's seasonal ranks
 ### /stats
 > Usable in: Servers
 

@@ -1,4 +1,8 @@
 # BountyBot Change Log
+## BountyBot Version 2.10.0:
+### Other Changes
+- Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
+
 ## BountyBot Version 2.9.0:
 ### Server Goals
 Server Goals are BountyBot objectives everyone on the server contributes to. A goal can require bounty completions, toasts, or toast secondings, with numbers depending on active bounty hunters on your server. A goal can be started by a bounty hunter using a Goal Initializer item on your server, and will reward contributors to the goal with XP and double item find on their next bounty completion. Server Goal progress can be found on the scoreboard. The bounty hunter with the most Server Goal contributions will receive a shoutout at the end of the season.

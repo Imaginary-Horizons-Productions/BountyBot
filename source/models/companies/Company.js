@@ -61,7 +61,7 @@ class Company extends Model {
 		return {
 			open: this.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
 			complete: this.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
-			deleted: "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+			deleted: this.deletedBountyThumbnailURL ??"https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
 		};
 	}
 
@@ -317,6 +317,9 @@ function initModel(sequelize) {
 			type: DataTypes.STRING
 		},
 		completedBountyThumbnailURL: {
+			type: DataTypes.STRING
+		},
+		deletedBountyThumbnailURL: {
 			type: DataTypes.STRING
 		},
 		scoreboardThumbnailURL: {
