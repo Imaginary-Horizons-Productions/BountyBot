@@ -56,6 +56,8 @@ Configure the image shown in the thumbnail of toasts
 Configure the image shown in the thumbnail of open bounties
 #### completed-bounty-thumbnail-url (optional)
 Configure the image shown in the thumbnail of completed bounties
+#### deleted-bounty-thumbnail-url (optional)
+Configure the image shown in the thumbnail of deleted bounties
 #### scoreboard-thumbnail-url (optional)
 Configure the image shown in the thumbnail of the scoreboard
 #### server-bonuses-thumbnail-url (optional)
