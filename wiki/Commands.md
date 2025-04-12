@@ -265,10 +265,18 @@ Whose stats to check; BountyBot for the server stats, empty for yourself
 > Permission Level: SendMessages
 
 Raise a toast to other bounty hunter(s), usually granting +1 XP
-#### toastees
-The mention(s) of the bounty hunter(s) to whom you are raising a toast
 #### message
 The text of the toast to raise
+#### toastee
+The first bounty hunter to whom you are raising a toast
+#### second-toastee (optional)
+The second bounty hunter to whom you are raising a toast
+#### third-toastee (optional)
+The third bounty hunter to whom you are raising a toast
+#### fourth-toastee (optional)
+The fourth bounty hunter to whom you are raising a toast
+#### fifth-toastee (optional)
+The fifth bounty hunter to whom you are raising a toast
 #### image-url (optional)
 The URL to the image to add to the toast
 ### /tutorial
