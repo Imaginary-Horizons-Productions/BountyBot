@@ -1,7 +1,11 @@
 # BountyBot Change Log
 ## BountyBot Version 2.10.0:
+### User Options in Slash Commands
+Slash commands originally accepted users as a string (instead of Discord's user filtering) to allow users to mention as many users as they wanted. However, this doesn't work on mobile, so those slash commands have been remade to use Discord's user filtering.
+- `/toast` now accepts 1 required toastee and up to 4 optional ones. The `message` option has been changed to the first option to group the toastee options.
 ### Other Changes
 - Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
+- Fixed BountyBot banned users being able to receive toasts
 
 ## BountyBot Version 2.9.0:
 ### Server Goals
