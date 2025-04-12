@@ -67,7 +67,7 @@ class Company extends Model {
 
 	festivalMultiplierString() {
 		if (this.festivalMultiplier != 1) {
-			return ` x${bold(italic(this.festivalMultiplier))}`;
+			return ` ${bold(italic(`x${this.festivalMultiplier}`))}`;
 		} else {
 			return "";
 		}
