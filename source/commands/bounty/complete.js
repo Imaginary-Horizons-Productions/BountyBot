@@ -5,7 +5,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 const { Goal } = require("../../models/companies/Goal");
 const { SubcommandWrapper } = require("../../classes");
 
-module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, awarding XP to completers",
+module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, awarding XP to hunters who turned it in",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 		const bounty = await logicLayer.bounties.findBounty({ userId: posterId, slotNumber, companyId: interaction.guild.id });
@@ -44,7 +44,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 
 		if (validatedCompleterIds.length < 1) {
-			interaction.reply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.`, flags: [MessageFlags.Ephemeral] })
+			interaction.reply({ content: `No bounty hunters have turn-ins recorded for this bounty. If you'd like to close your bounty without distributng rewards, use ${commandMention("bounty take-down")}.`, flags: [MessageFlags.Ephemeral] })
 			return;
 		}
 
@@ -118,25 +118,25 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 	{
 		type: "String",
 		name: "first-bounty-hunter",
-		description: "A bounty hunter who completed the bounty",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
 		type: "String",
 		name: "second-bounty-hunter",
-		description: "A bounty hunter who completed the bounty",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
 		type: "String",
 		name: "third-bounty-hunter",
-		description: "A bounty hunter who completed the bounty",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
 		type: "String",
 		name: "fourth-bounty-hunter",
-		description: "A bounty hunter who completed the bounty",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
