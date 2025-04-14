@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { Bounty } = require("../../models/bounties/Bounty");
-const { extractUserIdsFromMentions, timeConversion, commandMention, generateTextBar } = require("../../util/textUtil");
+const { timeConversion, commandMention, generateTextBar } = require("../../util/textUtil");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { Goal } = require("../../models/companies/Goal");
 const { SubcommandWrapper } = require("../../classes");
@@ -22,16 +22,14 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 
 		const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
 		const allCompleterIds = completions.map(reciept => reciept.userId);
-		const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
-		const completerIdsWithoutReciept = [];
-		for (const id of mentionedIds) {
-			if (!allCompleterIds.includes(id)) {
-				allCompleterIds.push(id);
-				completerIdsWithoutReciept.push(id);
+		const completerMembers = (await interaction.guild.members.fetch({ user: allCompleterIds })).values();
+		for (const optionalHunter of ["first-bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
+			const guildMember = interaction.options.getMember(optionalHunter);
+			if (guildMember?.id !== interaction.user.id && !allCompleterIds.includes(id)) {
+				completerMembers.push(guildMember);
 			}
 		}
 
-		const completerMembers = allCompleterIds.length > 0 ? (await interaction.guild.members.fetch({ user: allCompleterIds })).values() : [];
 		const validatedCompleterIds = [];
 		const validatedHunters = [];
 		for (const member of completerMembers) {
@@ -114,13 +112,37 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 	{
 		type: "Integer",
 		name: "bounty-slot",
-		description: "The slot number of the bounty to complete",
+		description: "The slot number of your bounty",
 		required: true
 	},
 	{
 		type: "String",
-		name: "hunters",
-		description: "The bounty hunter(s) to credit with completion",
+		name: "first-bounty-hunter",
+		description: "A bounty hunter who completed this bounty",
+		required: false
+	},
+	{
+		type: "String",
+		name: "second-bounty-hunter",
+		description: "A bounty hunter who completed this bounty",
+		required: false
+	},
+	{
+		type: "String",
+		name: "third-bounty-hunter",
+		description: "A bounty hunter who completed this bounty",
+		required: false
+	},
+	{
+		type: "String",
+		name: "fourth-bounty-hunter",
+		description: "A bounty hunter who completed this bounty",
+		required: false
+	},
+	{
+		type: "String",
+		name: "fifth-bounty-hunter",
+		description: "A bounty hunter who completed this bounty",
 		required: false
 	}
 );
