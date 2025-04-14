@@ -26,7 +26,7 @@ module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of
 				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.fetch(bounty.postingId);
 				}).then(posting => {
-					posting.send({ content: `${listifyEN(hunterIds.map(id => `<@${id}>`))} ${hunterIds.length === 1 ? "has" : "have"} been removed as ${hunterIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
+					posting.send({ content: `${listifyEN(hunterIds.map(id => `<@${id}>`))} ${hunterIds.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
 				});
 			}
 
