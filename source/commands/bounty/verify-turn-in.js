@@ -47,7 +47,7 @@ module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty 
 		const completerMembers = [];
 		for (const optionalToastee of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
-			if (guildMember?.id !== interaction.user.id && !completerMembers.some(member => member.id === guildMember.id)) {
+			if (guildMember?.id !== interaction.user.id) {
 				completerMembers.push(guildMember);
 			}
 		}
