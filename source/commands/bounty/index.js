@@ -22,11 +22,6 @@ module.exports = new CommandWrapper(mainId, "Bounties are user-created objective
 		const userId = interaction.user.id;
 		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(userId, interaction.guild.id);
-		if (hunter.isBanned) {
-			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-
 		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer, userId, hunter);
 	}
 ).setLogicLinker(logicBlob => {
