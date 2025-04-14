@@ -156,23 +156,6 @@ function dateInFuture(timeMap) {
 	return new Date(nowTimestamp);
 }
 
-/** Extracting user ids from mentions in a string allows us to accept an arbitrary number of users from a single string input
- * @param {string} mentionsText
- * @param {string[]} excludedIds
- */
-function extractUserIdsFromMentions(mentionsText, excludedIds) {
-	const idRegExp = RegExp(/<@(\d+)>/, "g");
-	const ids = [];
-	let results;
-	while ((results = idRegExp.exec(mentionsText)) != null) {
-		const id = results[1];
-		if (!excludedIds.includes(id)) {
-			ids.push(id);
-		}
-	}
-	return ids;
-}
-
 /** Simulate auto mod actions for texts input to BountyBot
  * @param {TextChannel} channel
  * @param {GuildMember} member
@@ -276,7 +259,6 @@ module.exports = {
 	timeConversion,
 	dateInPast,
 	dateInFuture,
-	extractUserIdsFromMentions,
 	textsHaveAutoModInfraction,
 	listifyEN,
 	trimForSelectOptionDescription,
