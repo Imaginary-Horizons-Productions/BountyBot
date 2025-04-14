@@ -118,31 +118,31 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 	{
 		type: "String",
 		name: "first-bounty-hunter",
-		description: "A bounty hunter who completed this bounty",
+		description: "A bounty hunter who completed the bounty",
 		required: false
 	},
 	{
 		type: "String",
 		name: "second-bounty-hunter",
-		description: "A bounty hunter who completed this bounty",
+		description: "A bounty hunter who completed the bounty",
 		required: false
 	},
 	{
 		type: "String",
 		name: "third-bounty-hunter",
-		description: "A bounty hunter who completed this bounty",
+		description: "A bounty hunter who completed the bounty",
 		required: false
 	},
 	{
 		type: "String",
 		name: "fourth-bounty-hunter",
-		description: "A bounty hunter who completed this bounty",
+		description: "A bounty hunter who completed the bounty",
 		required: false
 	},
 	{
 		type: "String",
 		name: "fifth-bounty-hunter",
-		description: "A bounty hunter who completed this bounty",
+		description: "A bounty hunter who completed the bounty",
 		required: false
 	}
 );
