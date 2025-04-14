@@ -1,11 +1,11 @@
 const { MessageFlags } = require("discord.js");
 const { Bounty } = require("../../models/bounties/Bounty");
 const { getRankUpdates } = require("../../util/scoreUtil");
-const { extractUserIdsFromMentions, generateTextBar } = require("../../util/textUtil");
+const { generateTextBar } = require("../../util/textUtil");
 const { Goal } = require("../../models/companies/Goal");
 const { SubcommandWrapper } = require("../../classes");
 
-module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for completing an evergreen bounty",
+module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-ins of an evergreen bounty",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 		const bounty = await logicLayer.bounties.findOneEvergreenBounty(interaction.guild.id, slotNumber);
@@ -15,31 +15,15 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 		}
 
 		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
-
-		const mentionedIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), []);
-		if (mentionedIds.length < 1) {
-			interaction.reply({ content: "Could not find any bounty hunter ids in `hunters`.", flags: [MessageFlags.Ephemeral] })
-			return;
-		}
-
-		const dedupedCompleterIds = [];
-		for (const id of mentionedIds) {
-			if (!dedupedCompleterIds.includes(id)) {
-				dedupedCompleterIds.push(id);
+		const hunterMembers = [];
+		for (const potentialHunter of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
+			const guildMember = interaction.options.getMember(potentialHunter);
+			if (runMode !== "production" || !(guildMember?.id !== interaction.user.id && !guildMember.user.bot)) {
+				hunterMembers.push(guildMember);
 			}
 		}
 
-		const validatedCompleterIds = [];
-		for (const member of (await interaction.guild.members.fetch({ user: dedupedCompleterIds })).values()) {
-			if (runMode !== "production" || !member.user.bot) {
-				const memberId = member.id;
-				const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
-				if (!hunter.isBanned) {
-					validatedCompleterIds.push(memberId);
-				}
-			}
-		}
-
+		const validatedCompleterIds = hunterMembers.map(member => member.id);
 		if (validatedCompleterIds.length < 1) {
 			interaction.reply({ content: "There aren't any eligible bounty hunters to credit with completing this evergreen bounty.", flags: [MessageFlags.Ephemeral] })
 			return;
@@ -104,13 +88,37 @@ module.exports = new SubcommandWrapper("complete", "Awarding XP to a hunter for 
 	{
 		type: "Integer",
 		name: "bounty-slot",
-		description: "The slot number of the bounty to complete",
+		description: "The slot number of the bounty",
 		required: true
 	},
 	{
 		type: "String",
-		name: "hunters",
-		description: "The bounty hunter(s) to credit with completion",
+		name: "bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
 		required: true
+	},
+	{
+		type: "String",
+		name: "second-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
+	},
+	{
+		type: "String",
+		name: "third-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
+	},
+	{
+		type: "String",
+		name: "fourth-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
+	},
+	{
+		type: "String",
+		name: "fifth-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
 	}
 );
