@@ -18,14 +18,14 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		const hunterMembers = [];
 		for (const potentialHunter of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
 			const guildMember = interaction.options.getMember(potentialHunter);
-			if (runMode !== "production" || !(guildMember?.id !== interaction.user.id && !guildMember.user.bot)) {
+			if (runMode !== "production" || !guildMember.user.bot) {
 				hunterMembers.push(guildMember);
 			}
 		}
 
 		const validatedCompleterIds = hunterMembers.map(member => member.id);
 		if (validatedCompleterIds.length < 1) {
-			interaction.reply({ content: "There aren't any eligible bounty hunters to credit with completing this evergreen bounty.", flags: [MessageFlags.Ephemeral] })
+			interaction.reply({ content: "No valid bounty hunters received. Bots cannot be credited for bounty completion.", flags: [MessageFlags.Ephemeral] })
 			return;
 		}
 
