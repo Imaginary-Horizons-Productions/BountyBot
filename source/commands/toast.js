@@ -30,7 +30,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			if (guildMember) {
 				if (hunterMap[guildMember.id]?.isBanned) {
 					bannedIds.push(guildMember.id);
-				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
+				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id && !validatedToasteeIds.includes(guildMember.id))) {
 					validatedToasteeIds.push(guildMember.id);
 				}
 			}
