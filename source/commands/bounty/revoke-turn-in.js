@@ -1,8 +1,8 @@
-const { MessageFlags, userMention } = require("discord.js");
+const { MessageFlags, userMention, bold } = require("discord.js");
 const { listifyEN } = require("../../util/textUtil");
 const { SubcommandWrapper } = require("../../classes");
 
-module.exports = new SubcommandWrapper("remove-completers", "Remove hunter(s) from a bounty's list of completers",
+module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 		logicLayer.bounties.findBounty({ userId: posterId, companyId: interaction.guild.id, slotNumber }).then(async bounty => {
@@ -30,7 +30,7 @@ module.exports = new SubcommandWrapper("remove-completers", "Remove hunter(s) fr
 				});
 			}
 
-			interaction.reply({ content: `The following bounty hunters have been removed as completers from **${bounty.title}**: ${listifyEN(hunterIds.map(id => userMention(id)))}`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `The bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${listifyEN(hunterIds.map(id => userMention(id)))}`, flags: [MessageFlags.Ephemeral] });
 		})
 	}
 ).setOptions(

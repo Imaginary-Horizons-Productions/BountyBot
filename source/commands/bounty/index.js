@@ -12,7 +12,7 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"swap.js",
 	"showcase.js",
 	"addcompleters.js",
-	"removecompleters.js",
+	"revoke-turn-in.js",
 	"complete.js",
 	"takedown.js",
 	"list.js"

@@ -55,9 +55,9 @@ class Bounty extends Model {
 			const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
 			const completersFieldText = listifyEN([...uniqueCompleters].map(id => userMention(id)));
 			if (completersFieldText.length <= MAX_EMBED_FIELD_VALUE_LENGTH) {
-				fields.push({ name: "Completers", value: completersFieldText });
+				fields.push({ name: "Turned in by:", value: completersFieldText });
 			} else {
-				fields.push({ name: "Completers", value: "Too many to display!" });
+				fields.push({ name: "Turned in by:", value: "Too many to display!" });
 			}
 		}
 
