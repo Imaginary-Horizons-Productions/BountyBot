@@ -1,5 +1,5 @@
 const { userMention, bold, MessageFlags, Guild } = require("discord.js");
-const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
+const { listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
 const { Completion } = require("../../models/bounties/Completion.js");
 const { Bounty } = require("../../models/bounties/Bounty.js");
 const { Company } = require("../../models/companies/Company.js");
@@ -44,13 +44,32 @@ module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bou
 			return;
 		}
 
-		const completerIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), [posterId]);
-		if (completerIds.length < 1) {
-			interaction.reply({ content: "Could not find any user mentions in `hunters` (you can't add yourself).", flags: [MessageFlags.Ephemeral] });
+		const hunterMap = logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const bannedIds = [];
+		const completerMembers = [];
+		for (const optionalToastee of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
+			const guildMember = interaction.options.getMember(optionalToastee);
+			if (guildMember) {
+				if (hunterMap[guildMember.id]?.isBanned) {
+					bannedIds.push(guildMember.id);
+				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
+					completerMembers.push(guildMember);
+				}
+			}
+		}
+
+		let bannedText;
+		if (bannedIds.length > 1) {
+			bannedText = ` ${listifyEN(bannedIds.map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+		} else if (bannedIds.length === 1) {
+			bannedText = ` ${userMention(bannedIds[0])} was skipped because they're banned from using BountyBot on this server.`;
+		}
+
+		if (completerMembers.length < 1) {
+			interaction.reply({ content: `No valid bounty hunters received. You cannot credit yourself or bots with bounty completion.${bannedText ?? ""}`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const completerMembers = Array.from((await interaction.guild.members.fetch({ user: completerIds })).values());
 		try {
 			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
 			updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
@@ -71,13 +90,37 @@ module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bou
 	{
 		type: "Integer",
 		name: "bounty-slot",
-		description: "The slot number of the bounty to add completers to",
+		description: "The slot number of your bounty",
 		required: true
 	},
 	{
-		type: "String",
-		name: "hunters",
-		description: "The bounty hunter(s) to add as completer(s)",
+		type: "User",
+		name: "bounty-hunter",
+		description: "The bounty hunter to award",
 		required: true
+	},
+	{
+		type: "User",
+		name: "second-bounty-hunter",
+		description: "The second bounty hunter to award",
+		required: false
+	},
+	{
+		type: "User",
+		name: "third-bounty-hunter",
+		description: "The third bounty hunter to award",
+		required: false
+	},
+	{
+		type: "User",
+		name: "fourth-bounty-hunter",
+		description: "The fourth bounty hunter to award",
+		required: false
+	},
+	{
+		type: "User",
+		name: "fifth-bounty-hunter",
+		description: "The fifth bounty hunter to award",
+		required: false
 	}
 );
