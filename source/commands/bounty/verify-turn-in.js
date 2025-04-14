@@ -1,10 +1,10 @@
 const { userMention, bold, MessageFlags, Guild } = require("discord.js");
-const { listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
+const { listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil.js");
 const { Completion } = require("../../models/bounties/Completion.js");
 const { Bounty } = require("../../models/bounties/Bounty.js");
 const { Company } = require("../../models/companies/Company.js");
 const { Hunter } = require("../../models/users/Hunter.js");
-const { SubcommandWrapper } = require("../../classes");
+const { SubcommandWrapper } = require("../../classes/index.js");
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -34,7 +34,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 	});
 }
 
-module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bounty's list of completers",
+module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty hunters have turned in one of your bounties",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 
@@ -56,7 +56,7 @@ module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bou
 			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
 			updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 			interaction.reply({
-				content: `The following bounty hunters have been added as completers to ${bold(returnedBounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
+				content: `Bounty turn-ins for following bounty hunters have been recorded: ${bold(returnedBounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nXP and drops will be distributed when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were skipped due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 				flags: [MessageFlags.Ephemeral]
 			});
 		} catch (e) {
@@ -78,31 +78,31 @@ module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bou
 	{
 		type: "User",
 		name: "bounty-hunter",
-		description: "The bounty hunter to award",
+		description: "A bounty hunter who turned in the bounty",
 		required: true
 	},
 	{
 		type: "User",
 		name: "second-bounty-hunter",
-		description: "The second bounty hunter to award",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
 		type: "User",
 		name: "third-bounty-hunter",
-		description: "The third bounty hunter to award",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
 		type: "User",
 		name: "fourth-bounty-hunter",
-		description: "The fourth bounty hunter to award",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
 		type: "User",
 		name: "fifth-bounty-hunter",
-		description: "The fifth bounty hunter to award",
+		description: "A bounty hunter who turned in the bounty",
 		required: false
 	}
 );

@@ -7,15 +7,15 @@ let logicLayer;
 
 const mainId = "bounty";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, [
-	"post.js",
-	"edit.js",
-	"swap.js",
-	"showcase.js",
-	"addcompleters.js",
-	"removecompleters.js",
 	"complete.js",
+	"edit.js",
+	"list.js",
+	"post.js",
+	"removecompleters.js",
+	"showcase.js",
+	"swap.js",
 	"takedown.js",
-	"list.js"
+	"verify-turn-in.js",
 ]);
 module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, runMode) => {
