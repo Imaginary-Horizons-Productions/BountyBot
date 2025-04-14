@@ -5,7 +5,7 @@ const { getRankUpdates } = require("../../util/scoreUtil");
 const { Goal } = require("../../models/companies/Goal");
 const { SubcommandWrapper } = require("../../classes");
 
-module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, awarding XP to hunters who turned it in",
+module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 		const bounty = await logicLayer.bounties.findBounty({ userId: posterId, slotNumber, companyId: interaction.guild.id });
@@ -27,6 +27,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			const guildMember = interaction.options.getMember(optionalHunter);
 			if (guildMember?.id !== interaction.user.id && !allCompleterIds.includes(id)) {
 				completerMembers.push(guildMember);
+				allCompleterIds.push(guildMember.id);
 			}
 		}
 
