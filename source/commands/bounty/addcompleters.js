@@ -44,30 +44,12 @@ module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bou
 			return;
 		}
 
-		const hunterMap = logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-		const bannedIds = [];
 		const completerMembers = [];
 		for (const optionalToastee of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
-			if (guildMember) {
-				if (hunterMap[guildMember.id]?.isBanned) {
-					bannedIds.push(guildMember.id);
-				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
-					completerMembers.push(guildMember);
-				}
+			if (guildMember?.id !== interaction.user.id) {
+				completerMembers.push(guildMember);
 			}
-		}
-
-		let bannedText;
-		if (bannedIds.length > 1) {
-			bannedText = ` ${listifyEN(bannedIds.map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
-		} else if (bannedIds.length === 1) {
-			bannedText = ` ${userMention(bannedIds[0])} was skipped because they're banned from using BountyBot on this server.`;
-		}
-
-		if (completerMembers.length < 1) {
-			interaction.reply({ content: `No valid bounty hunters received. You cannot credit yourself or bots with bounty completion.${bannedText ?? ""}`, flags: [MessageFlags.Ephemeral] });
-			return;
 		}
 
 		try {
