@@ -1,5 +1,7 @@
 'use strict';
-
+function xpToLevel(xp, xpCoefficient = 3) {
+	return Math.floor(Math.sqrt(xp / xpCoefficient) + 1);
+}
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 	async up(queryInterface, Sequelize) {
