@@ -39,7 +39,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		let bannedText;
 		if (bannedIds.size > 1) {
 			bannedText = `${listifyEN([...bannedIds.values()].map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
-		} else if (bannedIds.length === 1) {
+		} else if (bannedIds.size === 1) {
 			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
 		if (validatedToasteeIds.size < 1) {
