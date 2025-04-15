@@ -47,7 +47,7 @@ module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty 
 		const completerMembers = [];
 		for (const optionalToastee of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
-			if (guildMember?.id !== interaction.user.id) {
+			if (guildMember && guildMember.id !== interaction.user.id) {
 				completerMembers.push(guildMember);
 			}
 		}
@@ -56,7 +56,7 @@ module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty 
 			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
 			updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 			interaction.reply({
-				content: `Bounty turn-ins for following bounty hunters have been recorded: ${bold(returnedBounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nXP and drops will be distributed when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were skipped due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
+				content: `The following bounty hunters' turn-ins of ${bold(returnedBounty.title)} have been recorded: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nXP and drops will be distributed when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were skipped due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 				flags: [MessageFlags.Ephemeral]
 			});
 		} catch (e) {
