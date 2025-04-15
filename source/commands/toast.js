@@ -23,26 +23,26 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const errors = [];
 
 		// Find valid toastees
-		const bannedIds = [];
-		const validatedToasteeIds = [];
+		const bannedIds = new Set();
+		const validatedToasteeIds = new Set();
 		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
 			if (guildMember) {
 				if (hunterMap[guildMember.id]?.isBanned) {
-					bannedIds.push(guildMember.id);
-				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id && !validatedToasteeIds.includes(guildMember.id))) {
-					validatedToasteeIds.push(guildMember.id);
+					bannedIds.add(guildMember.id);
+				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
+					validatedToasteeIds.add(guildMember.id);
 				}
 			}
 		}
 
 		let bannedText;
-		if (bannedIds.length > 1) {
-			bannedText = ` ${listifyEN(bannedIds.map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+		if (bannedIds.size > 1) {
+			bannedText = ` ${listifyEN([...bannedIds.values()].map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
 		} else if (bannedIds.length === 1) {
-			bannedText = ` ${userMention(bannedIds[0])} was skipped because they're banned from using BountyBot on this server.`;
+			bannedText = ` ${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
-		if (validatedToasteeIds.length < 1) {
+		if (validatedToasteeIds.size < 1) {
 			errors.push(`No valid toastees received. You cannot raise a toast to yourself or a bot.${bannedText ?? ""}`);
 		}
 
