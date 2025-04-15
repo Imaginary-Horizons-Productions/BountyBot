@@ -38,12 +38,16 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		let bannedText;
 		if (bannedIds.size > 1) {
-			bannedText = ` ${listifyEN([...bannedIds.values()].map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+			bannedText = `${listifyEN([...bannedIds.values()].map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
 		} else if (bannedIds.length === 1) {
-			bannedText = ` ${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
+			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
 		if (validatedToasteeIds.size < 1) {
-			errors.push(`No valid toastees received. You cannot raise a toast to yourself or a bot.${bannedText ?? ""}`);
+			const sentences = ["No valid toastees received. You cannot raise a toast to yourself or a bot."];
+			if (bannedText) {
+				sentences.push(bannedText);
+			}
+			errors.push(sentences.join(" "));
 		}
 
 		// Validate image-url is a URL
@@ -97,6 +101,9 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			components: [Toast.generateSecondingActionRow(toastId)],
 			withResponse: true
 		}).then(async response => {
+			if (bannedText) {
+				interaction.followUp({ content: bannedText, flags: [MessageFlags.Ephemeral] });
+			}
 			let content = "";
 			if (rewardedHunterIds.length > 0) {
 				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
