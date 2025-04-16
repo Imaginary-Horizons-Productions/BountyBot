@@ -116,7 +116,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 	}
 
 	if (validatedCompleterIds.length < 1) {
-		throw `Could not find any new non-bot mentions in \`hunters\`.${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
+		throw `No new turn-ins were able to be recorded. Bots cannot turn-in bounties. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
 	}
 
 	const rawCompletions = [];
