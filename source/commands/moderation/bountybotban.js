@@ -11,7 +11,7 @@ module.exports = new SubcommandWrapper("bountybot-ban", "Toggle whether the prov
 			hunter.hasBeenBanned = true;
 		}
 		hunter.save();
-		interaction.reply({ content: `${discordUser} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `${discordUser} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
 		if (!discordUser.bot) {
 			discordUser.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`);
 		}

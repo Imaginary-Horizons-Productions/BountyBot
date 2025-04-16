@@ -12,12 +12,6 @@ const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, runMode, [toastId]) => {
-		const [seconder] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
-		if (seconder.isBanned) {
-			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-
 		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
 		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
@@ -29,6 +23,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
+		const [seconder] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 		seconder.increment("toastsSeconded");
 		originalToast.increment("secondings");
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);

@@ -14,11 +14,6 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 	async (interaction, runMode) => {
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
-		if (sender.isBanned) {
-			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
 
 		const errors = [];
 
@@ -73,6 +68,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}
 
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
+		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 
 		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, validatedToasteeIds, season.id, toastText, imageURL);
 		const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
