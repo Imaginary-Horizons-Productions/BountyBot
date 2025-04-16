@@ -64,7 +64,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 				const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-				const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, collectedInteraction.guild);
+				const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), collectedInteraction.guild.name);
 				const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", poster, season);
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
@@ -77,7 +77,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 				collectedInteraction.reply({ content: Bounty.generateRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts), flags: MessageFlags.SuppressNotifications });
-				bounty.embed(collectedInteraction.guild, poster.level, true, company, completions)
+				bounty.embed(collectedInteraction.guild, poster.getLevel(company.xpCoefficient), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);

@@ -54,7 +54,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 		const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-		const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, interaction.guild);
+		const { completerXP, posterXP, rewardTexts } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), interaction.guild.name);
 		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", poster, season);
 		if (goalUpdate.gpContributed > 0) {
 			rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
@@ -63,7 +63,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 		const content = Bounty.generateRewardString(validatedCompleterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
-		bounty.embed(interaction.guild, poster.level, true, company, completions).then(async embed => {
+		bounty.embed(interaction.guild, poster.getLevel(company.xpCoefficient), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {
 				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 				if (goalId !== null) {

@@ -147,6 +147,12 @@ dAPIClient.on(Events.ClientReady, () => {
 
 dAPIClient.on(Events.InteractionCreate, async interaction => {
 	await dbReady;
+	const [interactingHunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
+	if (interactingHunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
+		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
+		return;
+	}
+
 	if (interaction.isAutocomplete()) {
 		const command = getCommand(interaction.commandName);
 		const focusedOption = interaction.options.getFocused(true);

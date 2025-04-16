@@ -17,12 +17,14 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			return;
 		}
 
-		const currentLevelThreshold = Hunter.xpThreshold(company.level, COMPANY_XP_COEFFICIENT);
-		const nextLevelThreshold = Hunter.xpThreshold(company.level + 1, COMPANY_XP_COEFFICIENT);
+		const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
+		const currentCompanyLevel = company.getLevel(allHunters);
+		const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
+		const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
 		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 		const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
 		const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-		company.statsEmbed(guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
+		company.statsEmbed(guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
 			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
@@ -55,8 +57,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
 			if (roleIds.length > 0) {
-				const allHunters = await logicLayer.hunters.findCompanyHunters(guild.id);
-				guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
+				interaction.guild.members.fetch({ user: allHunters.map(hunter => hunter.userId) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {
 						if (member.manageable) {
 							member.roles.remove(roleIds);
