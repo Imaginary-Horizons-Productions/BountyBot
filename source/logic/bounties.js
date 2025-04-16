@@ -116,7 +116,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 	}
 
 	if (validatedCompleterIds.length < 1) {
-		throw `Could not find any new non-bot mentions in \`hunters\`.${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
+		throw `No new turn-ins were able to be recorded. Bots cannot turn-in bounties. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
 	}
 
 	const rawCompletions = [];
@@ -175,23 +175,26 @@ async function rollItemForHunter(dropRate, hunterId) {
  * @param {Bounty} bounty
  * @param {Hunter} poster
  * @param {Hunter[]} validatedHunters
- * @param {Guild} guild
+ * @param {Hunter[]} allHunters
+ * @param {string} guildName
  */
-async function completeBounty(bounty, poster, validatedHunters, guild) {
+async function completeBounty(bounty, poster, validatedHunters, allHunters, guildName) {
 	bounty.update({ state: "completed", completedAt: new Date() });
 	const rewardTexts = [];
 
-	const bountyBaseValue = Bounty.calculateCompleterReward(poster.level, bounty.slotNumber, bounty.showcaseCount);
 	const company = await db.models.Company.findByPk(bounty.companyId);
+	const previousCompanyLevel = company.getLevel(allHunters);
+	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	const [season] = await db.models.Season.findOrCreate({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	for (const hunter of validatedHunters) {
-		const completerLevelTexts = await hunter.addXP(guild.name, bountyValue, true, company);
-		if (completerLevelTexts.length > 0) {
-			rewardTexts.push(...completerLevelTexts);
+		const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
+		await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
+		const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
+		if (hunterLevelLine) {
+			rewardTexts.push(hunterLevelLine);
 		}
-		hunter.increment("othersFinished");
 		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
@@ -208,11 +211,12 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
-	const posterLevelTexts = await poster.addXP(guild.name, posterXP * company.festivalMultiplier, true, company);
-	if (posterLevelTexts.length > 0) {
-		rewardTexts.push(...posterLevelTexts);
+	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
+	await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
+	const posterLevelLine = poster.buildLevelUpLine(previousPosterLevel, company.xpCoefficient, company.maxSimBounties);
+	if (posterLevelLine) {
+		rewardTexts.push(posterLevelLine);
 	}
-	poster.increment("mineFinished");
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
@@ -227,6 +231,18 @@ async function completeBounty(bounty, poster, validatedHunters, guild) {
 		rewardTexts.push(rollStr);
 	}
 
+	const xpChangedIds = validatedHunters.map(hunter => hunter.userId).concat(poster.userId);
+	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
+		if (xpChangedIds.includes(hunter.userId)) {
+			return hunter.reload();
+		} else {
+			return hunter;
+		}
+	}))
+	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guildName);
+	if (companyLevelLine) {
+		rewardTexts.push(companyLevelLine);
+	}
 	return {
 		completerXP: bountyBaseValue,
 		posterXP,

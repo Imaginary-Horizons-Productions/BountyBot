@@ -19,23 +19,6 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 					errors.push(`${xpCoefficient} could not be set for Level Threshold Multiplier. It must be a number greater than 0.`)
 				} else {
 					updatePayload.xpCoefficient = xpCoefficient;
-					logicLayer.hunters.findCompanyHunters(interaction.guild.id).then(hunters => {
-						let anyLevelChanged = false;
-						for (const hunter of hunters) {
-							const levelChanged = hunter.updateLevel(xpCoefficient);
-							if (levelChanged) {
-								anyLevelChanged = true;
-								hunter.save();
-							}
-						}
-						if (anyLevelChanged) {
-							company.updateLevel().then(companyLevelChanged => {
-								if (companyLevelChanged) {
-									company.save();
-								}
-							})
-						}
-					})
 					content += `\n- The Level Threshold Multiplier has been set to ${xpCoefficient}.`;
 				}
 			}
