@@ -23,14 +23,14 @@ class Toast extends Model {
 	/**
 	 * @param {string?} thumbnailURL
 	 * @param {string} toastText
-	 * @param {string[]} recipientIds
+	 * @param {Set<string>} recipientIdSet
 	 * @param {GuildMember} senderMember
 	 */
-	static generateEmbed(thumbnailURL, toastText, recipientIds, senderMember) {
+	static generateEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
 		return new EmbedBuilder().setColor("e5b271")
 			.setThumbnail(thumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
 			.setTitle(toastText)
-			.setDescription(`A toast to ${listifyEN(recipientIds.map(id => userMention(id)))}!`)
+			.setDescription(`A toast to ${listifyEN([...recipientIdSet.values()].map(id => userMention(id)))}!`)
 			.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
 	}
 

@@ -23,27 +23,31 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const errors = [];
 
 		// Find valid toastees
-		const bannedIds = [];
-		const validatedToasteeIds = [];
+		const bannedIds = new Set();
+		const validatedToasteeIds = new Set();
 		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
 			if (guildMember) {
 				if (hunterMap[guildMember.id]?.isBanned) {
-					bannedIds.push(guildMember.id);
+					bannedIds.add(guildMember.id);
 				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
-					validatedToasteeIds.push(guildMember.id);
+					validatedToasteeIds.add(guildMember.id);
 				}
 			}
 		}
 
 		let bannedText;
-		if (bannedIds.length > 1) {
-			bannedText = ` ${listifyEN(bannedIds.map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
-		} else if (bannedIds.length === 1) {
-			bannedText = ` ${userMention(bannedIds[0])} was skipped because they're banned from using BountyBot on this server.`;
+		if (bannedIds.size > 1) {
+			bannedText = `${listifyEN([...bannedIds.values()].map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+		} else if (bannedIds.size === 1) {
+			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
-		if (validatedToasteeIds.length < 1) {
-			errors.push(`No valid toastees received. You cannot raise a toast to yourself or a bot.${bannedText ?? ""}`);
+		if (validatedToasteeIds.size < 1) {
+			const sentences = ["No valid toastees received. You cannot raise a toast to yourself or a bot."];
+			if (bannedText) {
+				sentences.push(bannedText);
+			}
+			errors.push(sentences.join(" "));
 		}
 
 		// Validate image-url is a URL
@@ -97,6 +101,9 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			components: [Toast.generateSecondingActionRow(toastId)],
 			withResponse: true
 		}).then(async response => {
+			if (bannedText) {
+				interaction.followUp({ content: bannedText, flags: [MessageFlags.Ephemeral] });
+			}
 			let content = "";
 			if (rewardedHunterIds.length > 0) {
 				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
