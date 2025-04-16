@@ -77,6 +77,8 @@ function findToastByPK(toastId) {
  * @param {string | null} imageURL
  */
 async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seasonId, toastText, imageURL = null) {
+	const allHunters = await db.models.Hunter.findAll({ where: { companyId: company.id } });
+	const previousCompanyLevel = company.getLevel(allHunters);
 	// Make database entities
 	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.models.Toast.Recipients });
 	let rewardsAvailable = 10;
@@ -104,29 +106,34 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	const staleToastees = await findStaleToasteeIds(sender.id, guild.id);
 
 	const rewardTexts = [];
-	senderHunter.increment("toastsRaised");
 	const toast = await db.models.Toast.create({ companyId: guild.id, senderId: sender.id, text: toastText, imageURL });
 	const rawRecipients = [];
 	const rewardedHunterIds = [];
 	let critValue = 0;
+	const startingSenderLevel = senderHunter.getLevel(company.xpCoefficient);
 	for (const id of toasteeIds) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
+			const xpAwarded = Math.floor(company.festivalMultiplier);
 			await db.models.User.findOrCreate({ where: { id } });
 			const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: id, companyId: company.id } });
 			rewardedHunterIds.push(hunter.userId);
-			rewardTexts.push(...await hunter.addXP(guild.name, 1, false, company));
+			const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
+			await hunter.increment({ toastsReceived: 1, xp: xpAwarded }).then(hunter => hunter.reload());
+			const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
+			if (hunterLevelLine) {
+				rewardTexts.push(hunterLevelLine);
+			}
 			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId }, defaults: { xp: 1 } });
 			if (!participationCreated) {
-				participation.increment("xp");
+				participation.increment({ xp: xpAwarded });
 			}
-			hunter.increment("toastsReceived");
 
 			// Calculate crit
 			if (critToastsAvailable > 0) {
 				const critRoll = Math.random() * 100;
 
-				let effectiveToastLevel = senderHunter.level + 2;
+				let effectiveToastLevel = startingSenderLevel + 2;
 				for (const recipientId of staleToastees) {
 					if (id == recipientId) {
 						effectiveToastLevel--;
@@ -159,11 +166,34 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	}
 	db.models.Recipient.bulkCreate(rawRecipients);
 
-	// Add XP and update ranks
-	rewardTexts.push(...await senderHunter.addXP(guild.name, critValue, false, company));
+	// Update sender
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
-	if (!participationCreated) {
-		participation.increment({ xp: critValue, toastsRaised: 1 });
+	if (critValue > 0) {
+		const previousSenderLevel = senderHunter.getLevel(company.xpCoefficient);
+		await senderHunter.increment({ toastsRaised: 1, xp: critValue }).then(senderHunter => senderHunter.reload());
+		const senderLevelLine = senderHunter.buildLevelUpLine(previousSenderLevel, company.xpCoefficient, company.maxSimBounties);
+		if (senderLevelLine) {
+			rewardTexts.push(senderLevelLine);
+		}
+		if (!participationCreated) {
+			participation.increment({ xp: critValue, toastsRaised: 1 });
+		}
+	} else {
+		senderHunter.increment("toastsRaised");
+		participation.increment("toastsRaised");
+	}
+
+	const xpChangedIds = toasteeIds.concat(senderHunter.userId);
+	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
+		if (xpChangedIds.includes(hunter.userId)) {
+			return hunter.reload();
+		} else {
+			return hunter;
+		}
+	}))
+	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guild.name);
+	if (companyLevelLine) {
+		rewardTexts.push(companyLevelLine);
 	}
 
 	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue };
