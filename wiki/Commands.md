@@ -12,24 +12,24 @@ Get BountyBot's description and contributors
 
 > Permission Level: SendMessages
 
-#### /bounty post
-Post your own bounty (+1 XP)
-#### /bounty edit
-Edit the title, description, image, or time of one of your bounties
-#### /bounty swap
-Move one of your bounties to another slot to change its reward
-#### /bounty showcase
-Show the embed for one of your existing bounties and increase the reward
-#### /bounty add-completers
-Add hunter(s) to a bounty's list of completers
-#### /bounty remove-completers
-Remove hunter(s) from a bounty's list of completers
 #### /bounty complete
 Close one of your open bounties, awarding XP to completers
-#### /bounty take-down
-Take down one of your bounties without awarding XP (forfeit posting XP)
+#### /bounty edit
+Edit the title, description, image, or time of one of your bounties
 #### /bounty list
 List all of a hunter's open bounties (default: your own)
+#### /bounty post
+Post your own bounty (+1 XP)
+#### /bounty remove-completers
+Remove hunter(s) from a bounty's list of completers
+#### /bounty showcase
+Show the embed for one of your existing bounties and increase the reward
+#### /bounty swap
+Move one of your bounties to another slot to change its reward
+#### /bounty take-down
+Take down one of your bounties without awarding XP (forfeit posting XP)
+#### /bounty verify-turn-in
+Verify up to 5 bounty hunters have turned in one of your bounties
 ### /commands
 > Usable in: DMs, Servers, and Group DMs
 
