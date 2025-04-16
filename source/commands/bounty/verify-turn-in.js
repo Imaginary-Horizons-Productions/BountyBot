@@ -1,10 +1,10 @@
 const { userMention, bold, MessageFlags, Guild } = require("discord.js");
-const { extractUserIdsFromMentions, listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil");
+const { listifyEN, commandMention, congratulationBuilder } = require("../../util/textUtil.js");
 const { Completion } = require("../../models/bounties/Completion.js");
 const { Bounty } = require("../../models/bounties/Bounty.js");
 const { Company } = require("../../models/companies/Company.js");
 const { Hunter } = require("../../models/users/Hunter.js");
-const { SubcommandWrapper } = require("../../classes");
+const { SubcommandWrapper } = require("../../classes/index.js");
 
 /**
  * Updates the board posting for the bounty after adding the completers
@@ -26,15 +26,14 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 	}
 	post.edit({ name: bounty.title });
 	let numCompleters = newCompleterIds.length;
-	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-	let starterMessage = await post.fetchStarterMessage();
-	starterMessage.edit({
-		embeds: [await bounty.embed(guild, poster.level, false, company, completers)],
+	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
+	(await post.fetchStarterMessage()).edit({
+		embeds: [await bounty.embed(guild, poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completers)],
 		components: bounty.generateBountyBoardButtons()
 	});
 }
 
-module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bounty's list of completers",
+module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty hunters have turned in one of your bounties",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 
@@ -44,18 +43,19 @@ module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bou
 			return;
 		}
 
-		const completerIds = extractUserIdsFromMentions(interaction.options.getString("hunters"), [posterId]);
-		if (completerIds.length < 1) {
-			interaction.reply({ content: "Could not find any user mentions in `hunters` (you can't add yourself).", flags: [MessageFlags.Ephemeral] });
-			return;
+		const completerMembers = [];
+		for (const optionalToastee of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
+			const guildMember = interaction.options.getMember(optionalToastee);
+			if (guildMember && guildMember.id !== interaction.user.id) {
+				completerMembers.push(guildMember);
+			}
 		}
 
-		const completerMembers = Array.from((await interaction.guild.members.fetch({ user: completerIds })).values());
 		try {
 			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
 			updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 			interaction.reply({
-				content: `The following bounty hunters have been added as completers to ${bold(returnedBounty.title)}: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nThey will recieve the reward XP when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were not added, due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
+				content: `The following bounty hunters' turn-ins of ${bold(returnedBounty.title)} have been recorded: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nXP and drops will be distributed when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were skipped due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
 				flags: [MessageFlags.Ephemeral]
 			});
 		} catch (e) {
@@ -71,13 +71,37 @@ module.exports = new SubcommandWrapper("add-completers", "Add hunter(s) to a bou
 	{
 		type: "Integer",
 		name: "bounty-slot",
-		description: "The slot number of the bounty to add completers to",
+		description: "The slot number of your bounty",
 		required: true
 	},
 	{
-		type: "String",
-		name: "hunters",
-		description: "The bounty hunter(s) to add as completer(s)",
+		type: "User",
+		name: "bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
 		required: true
+	},
+	{
+		type: "User",
+		name: "second-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
+	},
+	{
+		type: "User",
+		name: "third-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
+	},
+	{
+		type: "User",
+		name: "fourth-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
+	},
+	{
+		type: "User",
+		name: "fifth-bounty-hunter",
+		description: "A bounty hunter who turned in the bounty",
+		required: false
 	}
 );

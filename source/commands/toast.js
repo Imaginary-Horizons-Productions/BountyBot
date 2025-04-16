@@ -1,6 +1,6 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { extractUserIdsFromMentions, textsHaveAutoModInfraction, generateTextBar } = require('../util/textUtil');
+const { textsHaveAutoModInfraction, generateTextBar, listifyEN } = require('../util/textUtil');
 const { getRankUpdates } = require('../util/scoreUtil.js');
 const { Toast } = require('../models/toasts/Toast.js');
 const { Goal } = require('../models/companies/Goal.js');
@@ -12,32 +12,37 @@ const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, runMode) => {
-		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
-		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
-		if (sender.isBanned) {
-			interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
 		const errors = [];
 
 		// Find valid toastees
-		const toasteeIds = extractUserIdsFromMentions(interaction.options.getString("toastees"), [interaction.user.id]);
-
-		const nonBotToasteeIds = [];
-		if (toasteeIds.length < 1) {
-			errors.push("Could not parse any user mentions from `toastees`.");
-		} else {
-			const toasteeMembers = (await interaction.guild.members.fetch({ user: toasteeIds })).values();
-			for (const member of toasteeMembers) {
-				if (runMode !== "production" || !member.user.bot) {
-					nonBotToasteeIds.push(member.id);
+		const bannedIds = new Set();
+		const validatedToasteeIds = new Set();
+		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
+			const guildMember = interaction.options.getMember(optionalToastee);
+			if (guildMember) {
+				if (hunterMap[guildMember.id]?.isBanned) {
+					bannedIds.add(guildMember.id);
+				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
+					validatedToasteeIds.add(guildMember.id);
 				}
 			}
+		}
 
-			if (nonBotToasteeIds.length < 1) {
-				errors.push("Could not parse any non-bot mentions from `toastees`.");
+		let bannedText;
+		if (bannedIds.size > 1) {
+			bannedText = `${listifyEN([...bannedIds.values()].map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+		} else if (bannedIds.size === 1) {
+			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
+		}
+		if (validatedToasteeIds.size < 1) {
+			const sentences = ["No valid toastees received. You cannot raise a toast to yourself or a bot."];
+			if (bannedText) {
+				sentences.push(bannedText);
 			}
+			errors.push(sentences.join(" "));
 		}
 
 		// Validate image-url is a URL
@@ -63,9 +68,10 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}
 
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
+		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, nonBotToasteeIds, season.id, toastText, imageURL);
-		const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, nonBotToasteeIds, interaction.member)];
+		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, validatedToasteeIds, season.id, toastText, imageURL);
+		const embeds = [Toast.generateEmbed(company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
 		if (imageURL) {
 			embeds[0].setImage(imageURL);
 		}
@@ -91,6 +97,9 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			components: [Toast.generateSecondingActionRow(toastId)],
 			withResponse: true
 		}).then(async response => {
+			if (bannedText) {
+				interaction.followUp({ content: bannedText, flags: [MessageFlags.Ephemeral] });
+			}
 			let content = "";
 			if (rewardedHunterIds.length > 0) {
 				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
@@ -118,15 +127,39 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 ).setOptions(
 	{
 		type: "String",
-		name: "toastees",
-		description: "The mention(s) of the bounty hunter(s) to whom you are raising a toast",
-		required: true
-	},
-	{
-		type: "String",
 		name: "message",
 		description: "The text of the toast to raise",
 		required: true
+	},
+	{
+		type: "User",
+		name: "toastee",
+		description: "The first bounty hunter to whom you are raising a toast",
+		required: true
+	},
+	{
+		type: "User",
+		name: "second-toastee",
+		description: "The second bounty hunter to whom you are raising a toast",
+		required: false
+	},
+	{
+		type: "User",
+		name: "third-toastee",
+		description: "The third bounty hunter to whom you are raising a toast",
+		required: false
+	},
+	{
+		type: "User",
+		name: "fourth-toastee",
+		description: "The fourth bounty hunter to whom you are raising a toast",
+		required: false
+	},
+	{
+		type: "User",
+		name: "fifth-toastee",
+		description: "The fifth bounty hunter to whom you are raising a toast",
+		required: false
 	},
 	{
 		type: "String",

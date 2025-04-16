@@ -1,4 +1,4 @@
-const { MessageFlags, EmbedBuilder, Colors, Guild } = require('discord.js');
+const { MessageFlags, EmbedBuilder, Colors, Guild, bold, italic } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { ihpAuthorPayload, randomFooterTip } = require('../../util/embedUtil');
 const { generateTextBar } = require('../../util/textUtil');
@@ -36,9 +36,40 @@ class Company extends Model {
 		})
 	}
 
+	/**
+	 * @param {number} previousLevel
+	 * @param {Hunter[]} allHunters
+	 * @param {string} guildName
+	 */
+	buildLevelUpLine(previousLevel, allHunters, guildName) {
+		const currentLevel = this.getLevel(allHunters);
+		if (currentLevel > previousLevel) {
+			return `${guildName} is now level ${currentLevel}! Evergreen bounties now award more XP!`;
+		}
+		return null;
+	}
+
+	/** @param {Hunter[]} hunters */
+	getXP(hunters) {
+		return hunters.reduce((total, hunter) => total + hunter.getLevel(this.xpCoefficient), 0);
+	}
+
+	/** @param {Hunter[]} hunters */
+	getLevel(hunters) {
+		return Math.floor(Math.sqrt(this.getXP(hunters) / 3) + 1);
+	}
+
+	getThumbnailURLMap() {
+		return {
+			open: this.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
+			complete: this.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
+			deleted: this.deletedBountyThumbnailURL ??"https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+		};
+	}
+
 	festivalMultiplierString() {
 		if (this.festivalMultiplier != 1) {
-			return ` ***x${this.festivalMultiplier}***`;
+			return ` ${bold(italic(`x${this.festivalMultiplier}`))}`;
 		} else {
 			return "";
 		}
@@ -87,7 +118,7 @@ class Company extends Model {
 		for (const participation of participations) {
 			if (participation.xp > 0) {
 				const hunter = await participation.hunter;
-				scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.level}__ *${participation.xp} season XP*`);
+				scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(this.xpCoefficient)}__ *${participation.xp} season XP*`);
 			}
 		}
 		const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -144,7 +175,7 @@ class Company extends Model {
 		const scorelines = [];
 		for (const hunter of hunters) {
 			if (hunter.xp > 0) {
-				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.level}__ *${hunter.xp} XP*`);
+				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(this.xpCoefficient)}__ *${hunter.xp} XP*`);
 			}
 		}
 		const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -192,14 +223,15 @@ class Company extends Model {
 
 	/**
 	 * @param {Guild} guild
+	 * @param {Hunter[]} allHunters
 	 * @param {number} participantCount
 	 * @param {number} currentLevelThreshold
 	 * @param {number} nextLevelThreshold
 	 * @param {Season} currentSeason
 	 * @param {Season} lastSeason
 	 */
-	async statsEmbed(guild, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason) {
-		const companyXP = await this.xp;
+	async statsEmbed(guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason) {
+		const companyXP = this.getXP(allHunters);
 		const currentSeasonXP = await currentSeason.totalXP;
 		const lastSeasonXP = await lastSeason?.totalXP ?? 0;
 
@@ -209,7 +241,7 @@ class Company extends Model {
 		const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
 		return new EmbedBuilder().setColor(Colors.Blurple)
 			.setAuthor(ihpAuthorPayload)
-			.setTitle(`${guild.name} is __Level ${this.level}__`)
+			.setTitle(`${guild.name} is __Level ${this.getLevel(allHunters)}__`)
 			.setThumbnail(guild.iconURL())
 			.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
 			.addFields(
@@ -220,14 +252,6 @@ class Company extends Model {
 			.setFooter(randomFooterTip())
 			.setTimestamp()
 	}
-
-	/** Updates the level on this Company instance (DOES NOT SAVE TO DB) */
-	async updateLevel() {
-		const calculatedLevel = Math.floor(Math.sqrt(await this.xp / 3) + 1);
-		const levelChanged = this.level !== calculatedLevel;
-		this.level = calculatedLevel;
-		return levelChanged;
-	}
 }
 
 /** @param {Sequelize} sequelize */
@@ -236,16 +260,6 @@ function initModel(sequelize) {
 		id: {
 			primaryKey: true,
 			type: DataTypes.STRING
-		},
-		xp: {
-			type: DataTypes.VIRTUAL,
-			async get() {
-				return await sequelize.models.Hunter.sum("level", { where: { companyId: this.id } }) ?? 0;
-			}
-		},
-		level: {
-			type: DataTypes.INTEGER,
-			defaultValue: 1
 		},
 		announcementPrefix: { // allowed values: "@here", "@everyone", "@silent", ""
 			type: DataTypes.STRING,
@@ -298,6 +312,9 @@ function initModel(sequelize) {
 			type: DataTypes.STRING
 		},
 		completedBountyThumbnailURL: {
+			type: DataTypes.STRING
+		},
+		deletedBountyThumbnailURL: {
 			type: DataTypes.STRING
 		},
 		scoreboardThumbnailURL: {

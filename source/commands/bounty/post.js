@@ -4,20 +4,22 @@ const { getNumberEmoji, timeConversion, textsHaveAutoModInfraction, commandMenti
 const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS, SAFE_DELIMITER } = require("../../constants");
 const { getRankUpdates } = require("../../util/scoreUtil");
 const { SubcommandWrapper } = require("../../classes");
+const { Hunter } = require("../../models/users/Hunter");
 
 module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId, hunter]) {
-		const [{ maxSimBounties }] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const existingBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guildId);
 		const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
-		const bountySlots = hunter.maxSlots(maxSimBounties);
+		const currentHunterLevel = hunter.getLevel(company.xpCoefficient);
+		const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, company.maxSimBounties);
 		const slotOptions = [];
 		for (let slotNumber = 1; slotNumber <= bountySlots; slotNumber++) {
 			if (!occupiedSlots.includes(slotNumber)) {
 				slotOptions.push({
 					emoji: getNumberEmoji(slotNumber),
 					label: `Slot ${slotNumber}`,
-					description: `Reward: ${Bounty.calculateCompleterReward(hunter.level, slotNumber, 0)} XP`,
+					description: `Reward: ${Bounty.calculateCompleterReward(currentHunterLevel, slotNumber, 0)} XP`,
 					value: slotNumber.toString()
 				})
 			}
@@ -43,9 +45,10 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [slotNumber] = collectedInteraction.values;
 			// Check user actually has slot
-			const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
-			const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guildId);
-			if (parseInt(slotNumber) > hunter.maxSlots(company.maxSimBounties)) {
+			await company.reload();
+			await hunter.reload();
+			const reloadedBountySlotCount = Hunter.getBountySlotCount(hunter.getLevel(company.xpCoefficient), company.maxSimBounties);
+			if (parseInt(slotNumber) > reloadedBountySlotCount) {
 				interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 				return;
 			}
@@ -173,7 +176,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
 				const company = await logicLayer.companies.findCompanyByPK(modalSubmission.guild.id);
 				const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guildId);
-				poster.addXP(modalSubmission.guild.name, 1, true, company).then(async () => {
+				poster.increment({ xp: 1 }).then(async () => {
 					getRankUpdates(modalSubmission.guild, logicLayer);
 					const embeds = [];
 					if (company.scoreboardIsSeasonal) {
@@ -206,7 +209,8 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const bounty = await logicLayer.bounties.createBounty(rawBounty);
 
 				// post in bounty board forum
-				const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.level, false, company, []);
+				await poster.reload();
+				const bountyEmbed = await bounty.embed(modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), []);
 				modalSubmission.reply(company.sendAnnouncement({ content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 					if (company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {

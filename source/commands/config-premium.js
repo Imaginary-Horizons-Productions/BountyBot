@@ -19,23 +19,6 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 					errors.push(`${xpCoefficient} could not be set for Level Threshold Multiplier. It must be a number greater than 0.`)
 				} else {
 					updatePayload.xpCoefficient = xpCoefficient;
-					logicLayer.hunters.findCompanyHunters(interaction.guild.id).then(hunters => {
-						let anyLevelChanged = false;
-						for (const hunter of hunters) {
-							const levelChanged = hunter.updateLevel(xpCoefficient);
-							if (levelChanged) {
-								anyLevelChanged = true;
-								hunter.save();
-							}
-						}
-						if (anyLevelChanged) {
-							company.updateLevel().then(companyLevelChanged => {
-								if (companyLevelChanged) {
-									company.save();
-								}
-							})
-						}
-					})
 					content += `\n- The Level Threshold Multiplier has been set to ${xpCoefficient}.`;
 				}
 			}
@@ -78,6 +61,17 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 					new URL(completedBountyThumbnailURL);
 					updatePayload.completedBountyThumbnailURL = completedBountyThumbnailURL;
 					content += `\n- The completed bounty thumbnail was set to <${completedBountyThumbnailURL}>.`;
+				} catch (error) {
+					errors.push(error.message);
+				}
+			}
+
+			const deletedBountyThumbnailURL = interaction.options.getString("deleted-bounty-thumbnail-url");
+			if (deletedBountyThumbnailURL) {
+				try {
+					new URL(deletedBountyThumbnailURL);
+					updatePayload.deletedBountyThumbnailURL = deletedBountyThumbnailURL;
+					content += `\n- The deleted bounty thumbnail was set to <${deletedBountyThumbnailURL}>.`;
 				} catch (error) {
 					errors.push(error.message);
 				}
@@ -141,6 +135,12 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 		type: "String",
 		name: "completed-bounty-thumbnail-url",
 		description: "Configure the image shown in the thumbnail of completed bounties",
+		required: false
+	},
+	{
+		type: "String",
+		name: "deleted-bounty-thumbnail-url",
+		description: "Configure the image shown in the thumbnail of deleted bounties",
 		required: false
 	},
 	{

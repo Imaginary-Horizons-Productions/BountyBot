@@ -12,24 +12,24 @@ Get BountyBot's description and contributors
 
 > Permission Level: SendMessages
 
-#### /bounty post
-Post your own bounty (+1 XP)
-#### /bounty edit
-Edit the title, description, image, or time of one of your bounties
-#### /bounty swap
-Move one of your bounties to another slot to change its reward
-#### /bounty showcase
-Show the embed for one of your existing bounties and increase the reward
-#### /bounty add-completers
-Add hunter(s) to a bounty's list of completers
-#### /bounty remove-completers
-Remove hunter(s) from a bounty's list of completers
 #### /bounty complete
 Close one of your open bounties, awarding XP to completers
-#### /bounty take-down
-Take down one of your bounties without awarding XP (forfeit posting XP)
+#### /bounty edit
+Edit the title, description, image, or time of one of your bounties
 #### /bounty list
 List all of a hunter's open bounties (default: your own)
+#### /bounty post
+Post your own bounty (+1 XP)
+#### /bounty remove-completers
+Remove hunter(s) from a bounty's list of completers
+#### /bounty showcase
+Show the embed for one of your existing bounties and increase the reward
+#### /bounty swap
+Move one of your bounties to another slot to change its reward
+#### /bounty take-down
+Take down one of your bounties without awarding XP (forfeit posting XP)
+#### /bounty verify-turn-in
+Verify up to 5 bounty hunters have turned in one of your bounties
 ### /commands
 > Usable in: DMs, Servers, and Group DMs
 
@@ -56,6 +56,8 @@ Configure the image shown in the thumbnail of toasts
 Configure the image shown in the thumbnail of open bounties
 #### completed-bounty-thumbnail-url (optional)
 Configure the image shown in the thumbnail of completed bounties
+#### deleted-bounty-thumbnail-url (optional)
+Configure the image shown in the thumbnail of deleted bounties
 #### scoreboard-thumbnail-url (optional)
 Configure the image shown in the thumbnail of the scoreboard
 #### server-bonuses-thumbnail-url (optional)
@@ -204,8 +206,6 @@ Announce an upcoming raffle
 
 > Permission Level: ManageRoles
 
-#### /rank info
-Get the information about an existing seasonal rank
 #### /rank add
 Add a seasonal rank for showing outstanding bounty hunters
 #### /rank edit
@@ -241,6 +241,14 @@ The Season Scoreboard only includes hunters with XP this season
 > Permission Level: ManageGuild
 
 Start a new season for this server, resetting ranks and placements
+### /seasonal-ranks
+> Usable in: Servers
+
+> Cooldown: 3 seconds
+
+> Permission Level: ViewChannel
+
+Look up this server's seasonal ranks
 ### /stats
 > Usable in: Servers
 
@@ -257,10 +265,18 @@ Whose stats to check; BountyBot for the server stats, empty for yourself
 > Permission Level: SendMessages
 
 Raise a toast to other bounty hunter(s), usually granting +1 XP
-#### toastees
-The mention(s) of the bounty hunter(s) to whom you are raising a toast
 #### message
 The text of the toast to raise
+#### toastee
+The first bounty hunter to whom you are raising a toast
+#### second-toastee (optional)
+The second bounty hunter to whom you are raising a toast
+#### third-toastee (optional)
+The third bounty hunter to whom you are raising a toast
+#### fourth-toastee (optional)
+The fourth bounty hunter to whom you are raising a toast
+#### fifth-toastee (optional)
+The fifth bounty hunter to whom you are raising a toast
 #### image-url (optional)
 The URL to the image to add to the toast
 ### /tutorial

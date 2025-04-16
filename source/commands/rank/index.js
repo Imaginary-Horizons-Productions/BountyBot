@@ -4,7 +4,6 @@ const { createSubcommandMappings } = require('../../util/fileUtil.js');
 
 const mainId = "rank";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, [
-	"info.js",
 	"add.js",
 	"edit.js",
 	"remove.js"

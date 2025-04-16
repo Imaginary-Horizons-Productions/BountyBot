@@ -1,4 +1,13 @@
 # BountyBot Change Log
+## BountyBot Version 2.10.0:
+### User Options in Slash Commands
+Slash commands originally accepted users as a string (instead of Discord's user filtering) to allow users to mention as many users as they wanted. However, this doesn't work on mobile, so those slash commands have been remade to use Discord's user filtering.
+- `/toast` now requires 1 toastee and up to 4 optional ones. The `message` option has been changed to the first option to group the toastee options.
+- `/bounty add-completers` has been renamed to `/bounty verify-turn-in` and now requires 1 bounty hunter and up to 4 optional ones.
+### Other Changes
+- Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
+- Fixed BountyBot banned users being able to receive toasts
+
 ## BountyBot Version 2.9.0:
 ### Server Goals
 Server Goals are BountyBot objectives everyone on the server contributes to. A goal can require bounty completions, toasts, or toast secondings, with numbers depending on active bounty hunters on your server. A goal can be started by a bounty hunter using a Goal Initializer item on your server, and will reward contributors to the goal with XP and double item find on their next bounty completion. Server Goal progress can be found on the scoreboard. The bounty hunter with the most Server Goal contributions will receive a shoutout at the end of the season.
