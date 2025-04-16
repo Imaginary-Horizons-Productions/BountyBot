@@ -21,7 +21,7 @@ module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of
 
 			logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, hunterIds);
 			const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-			bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(posterId, interaction.guild.id)).level, await logicLayer.bounties.findBountyCompletions(bounty.id));
+			bounty.updatePosting(interaction.guild, company, (await logicLayer.hunters.findOneHunter(posterId, interaction.guild.id)).getLevel(company.xpCoefficient), await logicLayer.bounties.findBountyCompletions(bounty.id));
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.fetch(bounty.postingId);
