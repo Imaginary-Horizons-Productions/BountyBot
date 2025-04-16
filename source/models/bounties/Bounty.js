@@ -1,6 +1,5 @@
 ﻿const { EmbedBuilder, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
-const { Company } = require('../companies/Company');
 const { SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH, MAX_EMBED_FIELD_VALUE_LENGTH } = require('../../constants');
 const { timeConversion, commandMention, listifyEN } = require('../../util/textUtil');
 const { Completion } = require('./Completion');
@@ -17,19 +16,15 @@ class Bounty extends Model {
 	 * @param {Guild} guild
 	 * @param {number} posterLevel
 	 * @param {boolean} shouldOmitRewardsField
-	 * @param {Company} company
+	 * @param {Record<"open" | "complete" | "deleted", string>} thumbnailURLMap
+	 * @param {string} multiplierString
 	 * @param {Completion[]} completions
 	 */
-	async embed(guild, posterLevel, shouldOmitRewardsField, company, completions) {
+	async embed(guild, posterLevel, shouldOmitRewardsField, thumbnailURLMap, multiplierString, completions) {
 		const author = await guild.members.fetch(this.userId);
-		const thumbnails = {
-			open: company.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
-			complete: company.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
-			deleted: company.deletedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
-		};
 		const fields = [];
 		const embed = new EmbedBuilder().setColor(author.displayColor)
-			.setThumbnail(this.thumbnailURL ?? thumbnails[this.state])
+			.setThumbnail(this.thumbnailURL ?? thumbnailURLMap[this.state])
 			.setTitle(this.state == "complete" ? `Bounty Complete! ${this.title}` : this.title)
 			.setTimestamp();
 		if (this.description) {
@@ -43,7 +38,7 @@ class Bounty extends Model {
 			fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 		}
 		if (!shouldOmitRewardsField) {
-			fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
+			fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, this.slotNumber, this.showcaseCount)} XP${multiplierString}`, inline: true });
 		}
 
 		if (this.isEvergreen) {
@@ -110,7 +105,7 @@ class Bounty extends Model {
 				thread.edit({ name: this.title });
 				return thread.fetchStarterMessage();
 			}).then(async posting => {
-				this.embed(guild, posterLevel, false, company, completions).then(embed => {
+				this.embed(guild, posterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(embed => {
 					posting.edit({
 						embeds: [embed],
 						components: this.generateBountyBoardButtons()
