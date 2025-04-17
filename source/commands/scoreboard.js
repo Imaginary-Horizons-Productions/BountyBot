@@ -10,11 +10,12 @@ module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, fals
 	async (interaction, runMode) => {
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const embeds = [];
+		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		if (interaction.options.getString("scoreboard-type") === "season") {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-			embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+			embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks));
 		} else {
-			embeds.push(await company.overallScoreboardEmbed(interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+			embeds.push(await company.overallScoreboardEmbed(interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks));
 		}
 		interaction.reply({ embeds, flags: [MessageFlags.Ephemeral] });
 	}

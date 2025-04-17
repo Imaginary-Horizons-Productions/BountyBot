@@ -63,7 +63,7 @@ class Company extends Model {
 		return {
 			open: this.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png",
 			complete: this.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png",
-			deleted: this.deletedBountyThumbnailURL ??"https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
+			deleted: this.deletedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png"
 		};
 	}
 
@@ -173,7 +173,7 @@ class Company extends Model {
 		const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 		const scorelines = [];
-		for (const hunter of hunters) {
+		for (const hunter of hunters.sort((a, b) => b.xp - a.xp)) {
 			if (hunter.xp > 0) {
 				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(this.xpCoefficient)}__ *${hunter.xp} XP*`);
 			}

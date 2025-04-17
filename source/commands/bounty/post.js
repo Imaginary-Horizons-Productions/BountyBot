@@ -179,10 +179,11 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				poster.increment({ xp: 1 }).then(async () => {
 					getRankUpdates(modalSubmission.guild, logicLayer);
 					const embeds = [];
+					const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					if (company.scoreboardIsSeasonal) {
-						embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+						embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks));
 					} else {
-						embeds.push(await company.overallScoreboardEmbed(interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), await logicLayer.ranks.findAllRanks(interaction.guild.id)));
+						embeds.push(await company.overallScoreboardEmbed(interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks));
 					}
 					company.updateScoreboard(interaction.guild, embeds);
 				});
