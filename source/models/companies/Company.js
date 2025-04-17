@@ -174,9 +174,10 @@ class Company extends Model {
 
 		const scorelines = [];
 		for (const hunter of hunters.sort((a, b) => b.xp - a.xp)) {
-			if (hunter.xp > 0) {
-				scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(this.xpCoefficient)}__ *${hunter.xp} XP*`);
+			if (hunter.xp < 1) {
+				break;
 			}
+			scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(this.xpCoefficient)}__ *${hunter.xp} XP*`);
 		}
 		const embed = new EmbedBuilder().setColor(Colors.Blurple)
 			.setAuthor(ihpAuthorPayload)
