@@ -33,20 +33,17 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "bountiesCompleted");
 
-		const rawCompletions = [];
 		// Evergreen bounties are not eligible for showcase bonuses
 		const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
 		const previousCompanyLevel = company.getLevel(allHunters);
 		const bountyBaseValue = Bounty.calculateCompleterReward(company.getLevel(allHunters), slotNumber, 0);
 		const bountyValue = bountyBaseValue * company.festivalMultiplier;
-		for (const userId of dedupedCompleterIds) {
-			rawCompletions.push({
-				bountyId: bounty.id,
-				userId,
-				companyId: interaction.guildId,
-				xpAwarded: bountyValue
-			});
-		}
+		const rawCompletions = validatedCompleterIds.map(userId => ({
+			bountyId: bounty.id,
+			userId,
+			companyId: interaction.guildId,
+			xpAwarded: bountyValue
+		}));
 		const completions = await logicLayer.bounties.bulkCreateCompletions(rawCompletions);
 
 		const levelTexts = [];
