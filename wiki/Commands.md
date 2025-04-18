@@ -13,7 +13,7 @@ Get BountyBot's description and contributors
 > Permission Level: SendMessages
 
 #### /bounty complete
-Close one of your open bounties, awarding XP to completers
+Close one of your open bounties, distributing rewards to hunters who turned it in
 #### /bounty edit
 Edit the title, description, image, or time of one of your bounties
 #### /bounty list
