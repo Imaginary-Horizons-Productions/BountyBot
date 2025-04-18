@@ -41,31 +41,31 @@ module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of
 		required: true
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "bounty-hunter",
 		description: "A bounty hunter to uncredit",
 		required: true
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "second-bounty-hunter",
 		description: "A bounty hunter to uncredit",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "third-bounty-hunter",
 		description: "A bounty hunter to uncredit",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "fourth-bounty-hunter",
 		description: "A bounty hunter to uncredit",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "fifth-bounty-hunter",
 		description: "A bounty hunter to uncredit",
 		required: false
