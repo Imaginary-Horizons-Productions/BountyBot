@@ -116,31 +116,31 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		required: true
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: true
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "second-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "third-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "fourth-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "fifth-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
