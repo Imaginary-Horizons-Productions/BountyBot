@@ -21,30 +21,30 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 
 		const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
-		const allCompleterIds = completions.map(reciept => reciept.userId);
-		const completerMembers = (await interaction.guild.members.fetch({ user: allCompleterIds })).values();
-		for (const optionalHunter of ["first-bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
-			const guildMember = interaction.options.getMember(optionalHunter);
-			if (guildMember?.id !== interaction.user.id && !allCompleterIds.includes(id)) {
-				completerMembers.push(guildMember);
-				allCompleterIds.push(guildMember.id);
+		const hunterCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
+		for (const optionKey of ["first-bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
+			const guildMember = interaction.options.getMember(optionKey);
+			if (guildMember) {
+				if (guildMember?.id !== interaction.user.id && !hunterCollection.has(guildMember.id)) {
+					hunterCollection.set(guildMember.id, guildMember);
+				}
 			}
 		}
 
-		const validatedCompleterIds = [];
+		const validatedHunterIds = [];
 		const validatedHunters = [];
-		for (const member of completerMembers) {
+		for (const member of hunterCollection.values()) {
 			if (runMode !== "production" || !member.user.bot) {
 				const memberId = member.id;
 				const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 				if (!hunter.isBanned) {
-					validatedCompleterIds.push(memberId);
+					validatedHunterIds.push(memberId);
 					validatedHunters.push(hunter);
 				}
 			}
 		}
 
-		if (validatedCompleterIds.length < 1) {
+		if (validatedHunterIds.length < 1) {
 			interaction.reply({ content: `No bounty hunters have turn-ins recorded for this bounty. If you'd like to close your bounty without distributng rewards, use ${commandMention("bounty take-down")}.`, flags: [MessageFlags.Ephemeral] })
 			return;
 		}
@@ -61,7 +61,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 		const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
-		const content = Bounty.generateRewardString(validatedCompleterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
+		const content = Bounty.generateRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
 		bounty.embed(interaction.guild, poster.getLevel(company.xpCoefficient), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {
@@ -117,31 +117,31 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		required: true
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "first-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "second-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "third-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "fourth-bounty-hunter",
 		description: "A bounty hunter who turned in the bounty",
 		required: false
 	},
 	{
-		type: "String",
+		type: "User",
 		name: "fifth-bounty-hunter",
 		description: "A bounty hunter who completed the bounty",
 		required: false
