@@ -21,14 +21,16 @@ module.exports = new SubcommandWrapper("scoreboard-reference", "Create a referen
 			],
 			reason: `/create-default scoreboard-reference by ${interaction.user}`
 		});
-		const isSeasonal = interaction.options.getString("scoreboard-type") == "season";
-		scoreboard.send({
-			embeds: [
-				isSeasonal ?
-					await company.seasonalScoreboardEmbed(interaction.guild, logicLayer) :
-					await company.overallScoreboardEmbed(interaction.guild, logicLayer)
-			]
-		}).then(message => {
+		const isSeasonal = interaction.options.getString("scoreboard-type") === "season";
+		const embeds = [];
+		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+		if (isSeasonal) {
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+			embeds.push(await company.seasonalScoreboardEmbed(interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks));
+		} else {
+			embeds.push(await company.overallScoreboardEmbed(interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks));
+		}
+		scoreboard.send({ embeds }).then(message => {
 			company.scoreboardChannelId = scoreboard.id;
 			company.scoreboardMessageId = message.id;
 			company.scoreboardIsSeasonal = isSeasonal;

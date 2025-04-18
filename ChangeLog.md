@@ -4,6 +4,7 @@
 Slash commands originally accepted users as a string (instead of Discord's user filtering) to allow users to mention as many users as they wanted. However, this doesn't work on mobile, so those slash commands have been remade to use Discord's user filtering.
 - `/toast` now requires 1 toastee and up to 4 optional ones. The `message` option has been changed to the first option to group the toastee options.
 - `/bounty add-completers` has been renamed to `/bounty verify-turn-in` and now requires 1 bounty hunter and up to 4 optional ones.
+- `/bounty complete` now accepts up to 5 optional hunters.
 - `/bounty remove-completers` has been renamed to `/bounty revoke-turn-in` and now requires 1 hunter and up to 4 optional ones.
 ### Other Changes
 - Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)

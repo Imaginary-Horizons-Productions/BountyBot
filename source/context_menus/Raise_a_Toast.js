@@ -89,7 +89,14 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 							thread.send({ content, flags: MessageFlags.SuppressNotifications });
 						})
 					}
-					company.updateScoreboard(modalSubmission.guild, logicLayer);
+					const embeds = [];
+					const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+					if (company.scoreboardIsSeasonal) {
+						embeds.push(await company.seasonalScoreboardEmbed(modalSubmission.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks));
+					} else {
+						embeds.push(await company.overallScoreboardEmbed(modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), ranks));
+					}
+					company.updateScoreboard(modalSubmission.guild, embeds);
 				}
 			});
 		}).catch(error => {

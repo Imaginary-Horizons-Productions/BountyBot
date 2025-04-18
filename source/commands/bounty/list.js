@@ -1,4 +1,4 @@
-const { MessageFlags } = require("discord.js");
+const { MessageFlags, heading, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("list", "List all of a hunter's open bounties (default: your own)",
@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 				const companyLevel = company.getLevel(allHunters);
 				const URLMap = company.getThumbnailURLMap();
 				const multiplierString = company.festivalMultiplierString();
-				interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, companyLevel, false, URLMap, multiplierString, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: heading(`Evergreen Bounties on ${interaction.guild.name}`, 2), embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, companyLevel, false, URLMap, multiplierString, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
 			});
 		} else {
 			logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id).then(async existingBounties => {
@@ -28,7 +28,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 				const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 				const URLMap = company.getThumbnailURLMap();
 				const multiplierString = company.festivalMultiplierString();
-				interaction.reply({ embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter.getLevel(company.xpCoefficient), false, URLMap, multiplierString, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: heading(`${userMention(listUserId)}'s Bounties`, 2), embeds: await Promise.all(existingBounties.map(async bounty => bounty.embed(interaction.guild, hunter.getLevel(company.xpCoefficient), false, URLMap, multiplierString, await logicLayer.bounties.findBountyCompletions(bounty.id)))), flags: [MessageFlags.Ephemeral] });
 			});
 		}
 	}
