@@ -11,7 +11,7 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"edit.js",
 	"list.js",
 	"post.js",
-	"removecompleters.js",
+	"revoke-turn-in.js",
 	"showcase.js",
 	"swap.js",
 	"takedown.js",

@@ -135,31 +135,31 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 	{
 		type: "User",
 		name: "toastee",
-		description: "The first bounty hunter to whom you are raising a toast",
+		description: "A bounty hunter you are toasting to",
 		required: true
 	},
 	{
 		type: "User",
 		name: "second-toastee",
-		description: "The second bounty hunter to whom you are raising a toast",
+		description: "A bounty hunter you are toasting to",
 		required: false
 	},
 	{
 		type: "User",
 		name: "third-toastee",
-		description: "The third bounty hunter to whom you are raising a toast",
+		description: "A bounty hunter you are toasting to",
 		required: false
 	},
 	{
 		type: "User",
 		name: "fourth-toastee",
-		description: "The fourth bounty hunter to whom you are raising a toast",
+		description: "A bounty hunter you are toasting to",
 		required: false
 	},
 	{
 		type: "User",
 		name: "fifth-toastee",
-		description: "The fifth bounty hunter to whom you are raising a toast",
+		description: "A bounty hunter you are toasting to",
 		required: false
 	},
 	{
