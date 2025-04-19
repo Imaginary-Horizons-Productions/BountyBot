@@ -20,8 +20,8 @@ Edit the title, description, image, or time of one of your bounties
 List all of a hunter's open bounties (default: your own)
 #### /bounty post
 Post your own bounty (+1 XP)
-#### /bounty remove-completers
-Remove hunter(s) from a bounty's list of completers
+#### /bounty revoke-turn-in
+Revoke the turn-ins of up to 5 bounty hunters on one of your bounties
 #### /bounty showcase
 Show the embed for one of your existing bounties and increase the reward
 #### /bounty swap
@@ -268,15 +268,15 @@ Raise a toast to other bounty hunter(s), usually granting +1 XP
 #### message
 The text of the toast to raise
 #### toastee
-The first bounty hunter to whom you are raising a toast
+A bounty hunter you are toasting to
 #### second-toastee (optional)
-The second bounty hunter to whom you are raising a toast
+A bounty hunter you are toasting to
 #### third-toastee (optional)
-The third bounty hunter to whom you are raising a toast
+A bounty hunter you are toasting to
 #### fourth-toastee (optional)
-The fourth bounty hunter to whom you are raising a toast
+A bounty hunter you are toasting to
 #### fifth-toastee (optional)
-The fifth bounty hunter to whom you are raising a toast
+A bounty hunter you are toasting to
 #### image-url (optional)
 The URL to the image to add to the toast
 ### /tutorial
