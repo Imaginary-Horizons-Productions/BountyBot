@@ -5,6 +5,7 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 - `/toast` now requires 1 toastee and up to 4 optional ones. The `message` option has been changed to the first option to group the toastee options.
 - `/bounty add-completers` has been renamed to `/bounty verify-turn-in` and now requires 1 bounty hunter and up to 4 optional ones.
 - `/bounty complete` now accepts up to 5 optional hunters.
+- `/evergreen complete` now requires 1 hunter and up to 4 optional ones. Duplicate hunters are now accepted in case the hunter has multiple turn-ins to be awarded for.
 ### Other Changes
 - Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
 - Fixed BountyBot banned users being able to receive toasts
