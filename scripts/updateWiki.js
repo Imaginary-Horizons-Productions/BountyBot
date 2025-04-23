@@ -1,9 +1,9 @@
 const fs = require('fs');
-const { commandFiles } = require('../commands/_commandDictionary.js');
-const { contextMenuFiles } = require('../context_menus/_contextMenuDictionary.js');
-const { CommandWrapper, ContextMenuWrapper } = require('../classes');
+const { commandFiles } = require('../source/commands/_commandDictionary.js');
+const { contextMenuFiles } = require('../source/context_menus/_contextMenuDictionary.js');
+const { CommandWrapper, ContextMenuWrapper } = require('../source/classes/index.js');
 const { SlashCommandSubcommandBuilder, PermissionsBitField, InteractionContextType, ApplicationCommandType } = require('discord.js');
-const { listifyEN } = require('../util/textUtil.js');
+const { listifyEN } = require('../source/util/textUtil.js');
 
 const contextDictionary = {
 	[InteractionContextType.BotDM]: "DMs",
