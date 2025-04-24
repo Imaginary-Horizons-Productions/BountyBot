@@ -1,10 +1,7 @@
 const { Sequelize, Op } = require("sequelize");
 const { Guild, GuildMember } = require("discord.js");
-const { Bounty } = require("../models/bounties/Bounty");
-const { Hunter } = require("../models/users/Hunter");
-const { rollItemDrop } = require("../util/itemUtil");
-const { dateInPast } = require("../util/textUtil");
-const { premium } = require("../constants");
+const { Bounty, Hunter } = require("../database/models");
+const { buildCompanyLevelUpLine, buildHunterLevelUpLine } = require("../frontend/shared");
 
 /** @type {Sequelize} */
 let db;
@@ -151,27 +148,6 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 }
 
 /**
- * Functionality internal to bounty logic for rolling items on bounty completion.
- * Drop rates vary for completers vs. posters.
- * @param {number} dropRate The drop rate for this roll
- * @param {string} hunterId The ID snowflake of the hunter we are rolling for
- */
-async function rollItemForHunter(dropRate, hunterId) {
-	const itemCutoff = premium.gift.concat(premium.paid).includes(hunterId) ? 4 : 2;
-	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, updatedAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
-	if (itemsDropped >= itemCutoff) return null; // Don't roll items when we've dropped our max
-
-	const droppedItem = rollItemDrop(dropRate);
-	if (!droppedItem) return null;
-
-	const [itemRow, itemWasCreated] = await db.models.Item.findOrCreate({ where: { userId: hunterId, itemName: droppedItem } });
-	if (!itemWasCreated) {
-		itemRow.increment("count");
-	}
-	return `<@${hunterId}> has found a **${droppedItem}**!`;
-}
-
-/**
  * @param {Bounty} bounty
  * @param {Hunter} poster
  * @param {Hunter[]} validatedHunters
@@ -188,10 +164,11 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	const [season] = await db.models.Season.findOrCreate({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
+	const itemRollMap = { hunters: [], poster: [] };
 	for (const hunter of validatedHunters) {
 		const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 		await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
-		const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
+		const hunterLevelLine = buildHunterLevelUpLine(hunter, previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
 		if (hunterLevelLine) {
 			rewardTexts.push(hunterLevelLine);
 		}
@@ -199,21 +176,13 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
-		let dropRate = 1 / 8;
-		if (hunter.itemFindBoost) {
-			dropRate *= 2;
-			hunter.update("itemFindBoost", false);
-		}
-		const rollStr = await rollItemForHunter(dropRate, hunter.userId);
-		if (rollStr) {
-			rewardTexts.push(rollStr);
-		}
+		itemRollMap.hunters.push(hunter.userId);
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
 	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
 	await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
-	const posterLevelLine = poster.buildLevelUpLine(previousPosterLevel, company.xpCoefficient, company.maxSimBounties);
+	const posterLevelLine = buildHunterLevelUpLine(poster, previousPosterLevel, company.xpCoefficient, company.maxSimBounties);
 	if (posterLevelLine) {
 		rewardTexts.push(posterLevelLine);
 	}
@@ -221,15 +190,7 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 	if (!participationCreated) {
 		participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
 	}
-	let dropRate = 1 / 4;
-	if (poster.itemFindBoost) {
-		dropRate *= 2;
-		poster.update("itemFindBoost", false);
-	}
-	const rollStr = await rollItemForHunter(dropRate, poster.userId);
-	if (rollStr) {
-		rewardTexts.push(rollStr);
-	}
+	itemRollMap.poster.push(poster.userId);
 
 	const xpChangedIds = validatedHunters.map(hunter => hunter.userId).concat(poster.userId);
 	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
@@ -239,11 +200,12 @@ async function completeBounty(bounty, poster, validatedHunters, allHunters, guil
 			return hunter;
 		}
 	}))
-	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guildName);
+	const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, reloadedHunters, guildName);
 	if (companyLevelLine) {
 		rewardTexts.push(companyLevelLine);
 	}
 	return {
+		itemRollMap,
 		completerXP: bountyBaseValue,
 		posterXP,
 		rewardTexts
