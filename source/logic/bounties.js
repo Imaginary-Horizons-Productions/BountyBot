@@ -100,8 +100,8 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
 	const bannedIds = [];
 	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
-		if (runMode === "production" && member.user.bot) continue;
 		const memberId = member.id;
+		if (runMode === "production" && (member.user.bot || memberId === bounty.userId)) continue;
 		await db.models.User.findOrCreate({ where: { id: memberId } });
 		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: guild.id } });
 		if (hunter.isBanned) {
@@ -113,7 +113,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 	}
 
 	if (validatedCompleterIds.length < 1) {
-		throw `No new turn-ins were able to be recorded. Bots cannot turn-in bounties. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
+		throw `No new turn-ins were able to be recorded. You cannot turn-in your own bounties or credit bots. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
 	}
 
 	const rawCompletions = [];
