@@ -115,10 +115,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				});
 				const embeds = [];
 				const ranks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
+				const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
 				if (company.scoreboardIsSeasonal) {
-					embeds.push(await seasonalScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks));
+					embeds.push(await seasonalScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
 				} else {
-					embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), ranks));
+					embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), ranks, goalProgress));
 				}
 				updateScoreboard(company, collectedInteraction.guild, embeds);
 			}).catch(error => {

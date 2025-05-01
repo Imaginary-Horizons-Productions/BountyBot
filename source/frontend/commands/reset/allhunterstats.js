@@ -13,10 +13,11 @@ module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset a
 		}
 		const embeds = [];
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (company.scoreboardIsSeasonal) {
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, [], ranks));
+			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, [], ranks, goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(company, interaction.guild, [], ranks));
+			embeds.push(await overallScoreboardEmbed(company, interaction.guild, [], ranks, goalProgress));
 		}
 		updateScoreboard(company, interaction.guild, embeds);
 		interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);

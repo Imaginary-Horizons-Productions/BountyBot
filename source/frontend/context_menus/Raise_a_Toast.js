@@ -88,10 +88,11 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					}
 					const embeds = [];
 					const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(company, modalSubmission.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks));
+						embeds.push(await seasonalScoreboardEmbed(company, modalSubmission.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
 					} else {
-						embeds.push(await overallScoreboardEmbed(company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), ranks));
+						embeds.push(await overallScoreboardEmbed(company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), ranks, goalProgress));
 					}
 					updateScoreboard(company, modalSubmission.guild, embeds);
 				}

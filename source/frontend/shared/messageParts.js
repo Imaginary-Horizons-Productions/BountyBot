@@ -297,20 +297,21 @@ function sendAnnouncement(company, messageOptions) {
  * @param {Guild} guild
  * @param {Participation[]} participations
  * @param {Rank[]} ranks
+ * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
  */
-async function seasonalScoreboardEmbed(company, guild, participations, ranks) {
+async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const participation of participations) {
-		if (participation.xp > 0) {
+		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
 			const hunter = await participation.hunter;
 			scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(ihpAuthorPayload)
+		.setAuthor(module.exports.ihpAuthorPayload)
 		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Season Scoreboard")
 		.setFooter(randomFooterTip())
@@ -334,7 +335,7 @@ async function seasonalScoreboardEmbed(company, guild, participations, ranks) {
 	}
 
 	const fields = [];
-	const { currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+	const { currentGP, requiredGP } = goalProgress;
 	if (currentGP < requiredGP) {
 		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
@@ -356,8 +357,9 @@ async function seasonalScoreboardEmbed(company, guild, participations, ranks) {
  * @param {Guild} guild
  * @param {Hunter[]} hunters
  * @param {Rank[]} ranks
+ * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
  */
-async function overallScoreboardEmbed(company, guild, hunters, ranks) {
+async function overallScoreboardEmbed(company, guild, hunters, ranks, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
@@ -369,7 +371,7 @@ async function overallScoreboardEmbed(company, guild, hunters, ranks) {
 		scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(ihpAuthorPayload)
+		.setAuthor(module.exports.ihpAuthorPayload)
 		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
 		.setTitle("The Scoreboard")
 		.setFooter(randomFooterTip())
@@ -393,7 +395,7 @@ async function overallScoreboardEmbed(company, guild, hunters, ranks) {
 	}
 
 	const fields = [];
-	const { currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(guild.id);
+	const { currentGP, requiredGP } = goalProgress;
 	if (currentGP < requiredGP) {
 		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
@@ -431,7 +433,7 @@ async function statsEmbed(company, guild, allHunters, participantCount, currentL
 	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
 	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(ihpAuthorPayload)
+		.setAuthor(module.exports.ihpAuthorPayload)
 		.setTitle(`${guild.name} is __Level ${company.getLevel(allHunters)}__`)
 		.setThumbnail(guild.iconURL())
 		.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
