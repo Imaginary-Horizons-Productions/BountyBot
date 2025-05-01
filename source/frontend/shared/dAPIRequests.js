@@ -38,22 +38,26 @@ function bountiesToSelectOptions(bounties) {
 	}).slice(0, 25);
 }
 
-/** @param {string} text */
-function trimForSelectOptionDescription(text) {
-	if (text.length > 100) {
-		return `${text.slice(0, 99)}…`;
+/**
+ * @param {string} text
+ * @param {number} length
+ */
+function truncateStringToLength(text, length) {
+	if (text.length > length) {
+		return `${text.slice(0, length - 1)}…`;
 	} else {
 		return text;
 	}
 }
 
 /** @param {string} text */
+function trimForSelectOptionDescription(text) {
+	return truncateStringToLength(text, 100);
+}
+
+/** @param {string} text */
 function trimForModalTitle(text) {
-	if (text.length > 45) {
-		return `${text.slice(0, 44)}…`;
-	} else {
-		return text;
-	}
+	return truncateStringToLength(text, 45);
 }
 
 /**
@@ -123,6 +127,7 @@ async function updateScoreboard(company, guild, embeds) {
 module.exports = {
 	createSubcommandMappings,
 	bountiesToSelectOptions,
+	truncateStringToLength,
 	trimForSelectOptionDescription,
 	trimForModalTitle,
 	generateBountyBoardThread,

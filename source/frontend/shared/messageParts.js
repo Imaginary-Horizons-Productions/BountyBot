@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection } = require("discord.js");
 const { MAX_EMBED_DESCRIPTION_LENGTH, SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH, MAX_EMBED_FIELD_VALUE_LENGTH } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { timeConversion } = require("../../shared");
@@ -601,6 +601,24 @@ function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUp
 	return text;
 }
 
+/**
+ * @param {Rank[]} ranks
+ * @param {Collection<string, Role>} allGuildRoles
+ */
+function rankArrayToSelectOptions(ranks, allGuildRoles) {
+	return ranks.map((rank, index) => {
+		const option = {
+			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
+			description: `Variance Threshold: ${rank.varianceThreshold}`,
+			value: rank.varianceThreshold.toString()
+		};
+		if (rank.rankmoji) {
+			option.emoji = rank.rankmoji;
+		}
+		return option;
+	})
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -625,5 +643,6 @@ module.exports = {
 	generateSecondingActionRow,
 	generateToastRewardString,
 	generateCompletionEmbed,
-	generateSecondingRewardString
+	generateSecondingRewardString,
+	rankArrayToSelectOptions
 };
