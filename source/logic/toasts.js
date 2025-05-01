@@ -1,10 +1,8 @@
 const { Guild, GuildMember } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { dateInPast } = require("../util/textUtil");
-const { Company } = require("../models/companies/Company");
-const { Hunter } = require("../models/users/Hunter");
-const { Toast } = require("../models/toasts/Toast");
-const { Recipient } = require("../models/toasts/Recipient");
+const { dateInPast } = require("../shared");
+const { Company, Hunter, Toast, Recipient } = require("../database/models");
+const { buildCompanyLevelUpLine, buildHunterLevelUpLine } = require("../frontend/shared");
 
 /** @type {Sequelize} */
 let db;
@@ -120,7 +118,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 			rewardedHunterIds.push(hunter.userId);
 			const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 			await hunter.increment({ toastsReceived: 1, xp: xpAwarded }).then(hunter => hunter.reload());
-			const hunterLevelLine = hunter.buildLevelUpLine(previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
+			const hunterLevelLine = buildHunterLevelUpLine(hunter, previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
@@ -171,7 +169,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	if (critValue > 0) {
 		const previousSenderLevel = senderHunter.getLevel(company.xpCoefficient);
 		await senderHunter.increment({ toastsRaised: 1, xp: critValue }).then(senderHunter => senderHunter.reload());
-		const senderLevelLine = senderHunter.buildLevelUpLine(previousSenderLevel, company.xpCoefficient, company.maxSimBounties);
+		const senderLevelLine = buildHunterLevelUpLine(senderHunter, previousSenderLevel, company.xpCoefficient, company.maxSimBounties);
 		if (senderLevelLine) {
 			rewardTexts.push(senderLevelLine);
 		}
@@ -191,7 +189,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 			return hunter;
 		}
 	}))
-	const companyLevelLine = company.buildLevelUpLine(previousCompanyLevel, reloadedHunters, guild.name);
+	const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, reloadedHunters, guild.name);
 	if (companyLevelLine) {
 		rewardTexts.push(companyLevelLine);
 	}

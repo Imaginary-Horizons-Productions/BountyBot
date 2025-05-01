@@ -12,7 +12,7 @@ console.error = function () {
 	error.apply(console, [`<t:${Math.floor(Date.now() / 1000)}> `, ...arguments]);
 }
 
-const manager = new ShardingManager("./source/bot.js", {
+const manager = new ShardingManager("./source", {
 	token: require("./config/auth.json").token,
 	shardArgs: require("node:process").argv
 });

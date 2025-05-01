@@ -1,0 +1,128 @@
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder } = require("discord.js");
+const { SubcommandWrapper } = require("../classes");
+const { Bounty, Company } = require("../../database/models");
+const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
+
+/**
+ * @param {string} mainId
+ * @param {string[]} fileList
+ */
+function createSubcommandMappings(mainId, fileList) {
+	const mappings = {
+		/** @type {import("discord.js").BaseApplicationCommandData[]} */
+		slashData: [],
+		/** @type {Record<string, (interaction: CommandInteraction, runMode: string, ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
+		executeDictionary: {}
+	};
+	for (const fileName of fileList) {
+		/** @type {SubcommandWrapper} */
+		const subcommand = require(`../commands/${mainId}/${fileName}`);
+		mappings.slashData.push(subcommand.data);
+		mappings.executeDictionary[subcommand.data.name] = subcommand.executeSubcommand;
+	};
+	return mappings;
+};
+
+/** @param {Bounty[]} bounties */
+function bountiesToSelectOptions(bounties) {
+	return bounties.map(bounty => {
+		const optionPayload = {
+			emoji: getNumberEmoji(bounty.slotNumber),
+			label: bounty.title,
+			value: bounty.id
+		}
+		if (bounty.description) {
+			optionPayload.description = trimForSelectOptionDescription(bounty.description);
+		}
+		return optionPayload;
+	}).slice(0, 25);
+}
+
+/** @param {string} text */
+function trimForSelectOptionDescription(text) {
+	if (text.length > 100) {
+		return `${text.slice(0, 99)}…`;
+	} else {
+		return text;
+	}
+}
+
+/** @param {string} text */
+function trimForModalTitle(text) {
+	if (text.length > 45) {
+		return `${text.slice(0, 44)}…`;
+	} else {
+		return text;
+	}
+}
+
+/**
+ * @param {GuildTextThreadManager} threadManager
+ * @param {EmbedBuilder[]} embeds
+ * @param {Company} company
+ */
+function generateBountyBoardThread(threadManager, embeds, company) {
+	return threadManager.create({
+		name: "Evergreen Bounties",
+		message: { embeds },
+		appliedTags: [company.bountyBoardOpenTagId]
+	}).then(thread => {
+		company.evergreenThreadId = thread.id;
+		company.save();
+		thread.pin();
+		return thread;
+	})
+}
+
+/** Update the bounty's embed in the bounty board
+ * @param {Guild} guild
+ * @param {Company} company
+ * @param {Bounty} bounty
+ * @param {number} posterLevel
+ * @param {Completion[]} completions
+ */
+async function updatePosting(guild, company, bounty, posterLevel, completions) {
+	if (company.bountyBoardId) {
+		return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+			return bountyBoard.threads.fetch(this.postingId);
+		}).then(async thread => {
+			if (thread.archived) {
+				await thread.setArchived(false, "Unarchived to update posting");
+			}
+			thread.edit({ name: this.title });
+			return thread.fetchStarterMessage();
+		}).then(async posting => {
+			buildBountyEmbed(bounty, guild, posterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(embed => {
+				posting.edit({
+					embeds: [embed],
+					components: generateBountyBoardButtons(bounty)
+				});
+			})
+		})
+	}
+}
+
+/** If the server has a scoreboard reference channel, update the embed in it
+ * @param {Company} company
+ * @param {Guild} guild
+ * @param {EmbedBuilder[]} embeds
+ */
+async function updateScoreboard(company, guild, embeds) {
+	if (company.scoreboardChannelId && company.scoreboardMessageId) {
+		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
+			return scoreboard.messages.fetch(company.scoreboardMessageId);
+		}).then(async scoreboardMessage => {
+			scoreboardMessage.edit({ embeds });
+		});
+	}
+}
+
+module.exports = {
+	createSubcommandMappings,
+	bountiesToSelectOptions,
+	trimForSelectOptionDescription,
+	trimForModalTitle,
+	generateBountyBoardThread,
+	updatePosting,
+	updateScoreboard
+};
