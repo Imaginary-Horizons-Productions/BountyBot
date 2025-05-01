@@ -1,7 +1,7 @@
 const { PermissionFlagsBits, AttachmentBuilder, InteractionContextType, MessageFlags } = require('discord.js');
+const { MessageLimits } = require('@sapphire/discord.js-utilities');
 const { CommandWrapper } = require('../classes');
 const { commandMention } = require('../shared');
-const { MAX_MESSAGE_CONTENT_LENGTH } = require('../../constants.js');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,7 +16,7 @@ module.exports = new CommandWrapper(mainId, "Show your inventory of usable items
 			} else {
 				content += "(None yet, do some bounties to find some!)";
 			}
-			if (content.length < MAX_MESSAGE_CONTENT_LENGTH) {
+			if (content.length < MessageLimits.MaximumLength) {
 				interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
 			} else {
 				interaction.reply({
