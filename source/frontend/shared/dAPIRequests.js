@@ -1,4 +1,4 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
@@ -82,24 +82,27 @@ function generateBountyBoardThread(threadManager, embeds, company) {
  * @param {Completion[]} completions
  */
 async function updatePosting(guild, company, bounty, posterLevel, completions) {
-	if (company.bountyBoardId) {
-		return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
-			return bountyBoard.threads.fetch(this.postingId);
-		}).then(async thread => {
-			if (thread.archived) {
-				await thread.setArchived(false, "Unarchived to update posting");
-			}
-			thread.edit({ name: this.title });
-			return thread.fetchStarterMessage();
-		}).then(async posting => {
-			buildBountyEmbed(bounty, guild, posterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(embed => {
-				posting.edit({
-					embeds: [embed],
-					components: generateBountyBoardButtons(bounty)
-				});
-			})
-		})
+	if (!company.bountyBoardId || !bounty.postingId) {
+		return null;
 	}
+
+	return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+		return bountyBoard.threads.fetch(bounty.postingId);
+	}).then(async thread => {
+		if (thread.archived) {
+			await thread.setArchived(false, "Unarchived to update posting");
+		}
+		thread.edit({ name: bounty.title });
+		return thread.fetchStarterMessage();
+	}).then(async posting => {
+		return buildBountyEmbed(bounty, guild, posterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(embed => {
+			posting.edit({
+				embeds: [embed],
+				components: generateBountyBoardButtons(bounty)
+			});
+			return posting;
+		})
+	})
 }
 
 /** If the server has a scoreboard reference channel, update the embed in it
