@@ -86,9 +86,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 								return thread.fetchStarterMessage();
 							}).then(async message => {
 								existingBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
-								const URLMap = company.getThumbnailURLMap();
-								const multiplierString = company.festivalMultiplierString();
-								message.edit({ embeds: await Promise.all(existingBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, URLMap, multiplierString, []))) });
+								message.edit({ embeds: await Promise.all(existingBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, company, []))) });
 							});
 						})
 					}

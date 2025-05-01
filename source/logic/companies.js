@@ -39,7 +39,7 @@ function resetCompanySettings(id) {
 			openBountyThumbnailURL: null,
 			completedBountyThumbnailURL: null,
 			scoreboardThumbnailURL: null,
-			serverBonusesThumbnailURL: null
+			goalCompletionThumbnailURL: null
 		},
 		{ where: { id } }
 	);

@@ -61,7 +61,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const completions = await logicLayer.bounties.findBountyCompletions(bountyId);
 				const currentPosterLevel = poster.getLevel(company.xpCoefficient);
 				updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, completions);
-				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
+				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, completions).then(async embed => {
 					if (channel.archived) {
 						await channel.setArchived(false, "bounty showcased");
 					}

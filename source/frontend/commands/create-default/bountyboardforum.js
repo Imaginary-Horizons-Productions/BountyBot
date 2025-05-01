@@ -43,7 +43,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 					continue;
 				}
 				const poster = allHunters.find(hunter => hunter.userId === bounty.userId);
-				buildBountyEmbed(bounty, interaction.guild, bounty.userId == interaction.client.user.id ? company.getLevel(allHunters) : poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), await logicLayer.bounties.findBountyCompletions(bounty.id)).then(bountyEmbed => {
+				buildBountyEmbed(bounty, interaction.guild, bounty.userId == interaction.client.user.id ? company.getLevel(allHunters) : poster.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)).then(bountyEmbed => {
 					return bountyBoard.threads.create({
 						name: bounty.title,
 						message: {
@@ -78,9 +78,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 			// make Evergreen Bounty list
 			if (evergreenBounties.length > 0) {
 				const companyLevel = company.getLevel(allHunters);
-				const URLMap = company.getThumbnailURLMap();
-				const multiplierString = company.festivalMultiplierString();
-				Promise.all(evergreenBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, companyLevel, false, URLMap, multiplierString, await logicLayer.bounties.findBountyCompletions(bounty.id)))).then(embeds => {
+				Promise.all(evergreenBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, companyLevel, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id)))).then(embeds => {
 					generateBountyBoardThread(bountyBoard.threads, embeds, company);
 				})
 			}

@@ -181,7 +181,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 
 				// update bounty board
 				const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), await logicLayer.bounties.findBountyCompletions(bountyId));
+				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.findBountyCompletions(bountyId));
 				if (company.bountyBoardId) {
 					interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 						return bountyBoard.threads.fetch(bounty.postingId);

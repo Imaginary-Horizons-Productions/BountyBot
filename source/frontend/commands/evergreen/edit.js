@@ -102,10 +102,8 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
 				const allHunters = await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id);
 				const currentCompanyLevel = company.getLevel(allHunters);
-				const URLMap = company.getThumbnailURLMap();
-				const multiplierString = company.festivalMultiplierString();
 				if (company.bountyBoardId) {
-					const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, modalSubmission.guild, currentCompanyLevel, false, URLMap, multiplierString, [])));
+					const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, modalSubmission.guild, currentCompanyLevel, false, company, [])));
 					const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
 					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 						const message = await thread.fetchStarterMessage();
@@ -113,7 +111,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 					});
 				}
 
-				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, URLMap, multiplierString, []);
+				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, company, []);
 				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
 			});
 		}).catch(error => {

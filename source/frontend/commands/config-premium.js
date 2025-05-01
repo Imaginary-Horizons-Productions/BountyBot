@@ -88,12 +88,12 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 				}
 			}
 
-			const serverBonusesThumbnailURL = interaction.options.getString("server-bonuses-thumbnail-url");
-			if (serverBonusesThumbnailURL) {
+			const goalCompletionThumbnailURL = interaction.options.getString("goal-completion-thumbnail-url");
+			if (goalCompletionThumbnailURL) {
 				try {
-					new URL(serverBonusesThumbnailURL);
-					updatePayload.serverBonusesThumbnailURL = serverBonusesThumbnailURL;
-					content += `\n- The server bonuses thumbnail was set to <${serverBonusesThumbnailURL}>.`;
+					new URL(goalCompletionThumbnailURL);
+					updatePayload.goalCompletionThumbnailURL = goalCompletionThumbnailURL;
+					content += `\n- The server bonuses thumbnail was set to <${goalCompletionThumbnailURL}>.`;
 				} catch (error) {
 					errors.push(error.message);
 				}
@@ -151,8 +151,8 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 	},
 	{
 		type: "String",
-		name: "server-bonuses-thumbnail-url",
-		description: "Configure the image shown in the thumbnail of the server bonuses message",
+		name: "goal-completion-thumbnail-url",
+		description: "Configure the image shown in the thumbnail of the server goal completion message",
 		required: false
 	}
 ).setLogicLinker(logicBlob => {

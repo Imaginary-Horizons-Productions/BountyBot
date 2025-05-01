@@ -74,7 +74,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 		const content = generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
-		buildBountyEmbed(bounty, interaction.guild, poster.getLevel(company.xpCoefficient), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
+		buildBountyEmbed(bounty, interaction.guild, poster.getLevel(company.xpCoefficient), true, company, completions).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {
 				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 				if (goalId !== null) {

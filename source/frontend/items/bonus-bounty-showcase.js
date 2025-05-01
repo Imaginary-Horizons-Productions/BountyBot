@@ -52,7 +52,7 @@ module.exports = new ItemTemplateSet(
 				const completions = await logicLayer.bounties.findBountyCompletions(collectedInteraction.values[0]);
 				const currentPosterLevel = poster.getLevel(company.xpCoefficient);
 				updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, completions);
-				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
+				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, completions).then(async embed => {
 					if (collectedInteraction.channel.archived) {
 						await collectedInteraction.channel.setArchived(false, "bounty showcased");
 					}

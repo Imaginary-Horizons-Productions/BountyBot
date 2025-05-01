@@ -89,7 +89,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 				collectedInteraction.reply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts), flags: MessageFlags.SuppressNotifications });
-				buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions)
+				buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), true, company, completions)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
