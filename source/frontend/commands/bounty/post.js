@@ -210,7 +210,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				// post in bounty board forum
 				await poster.reload();
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), []);
+				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company, []);
 				modalSubmission.reply(sendAnnouncement(company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 					if (company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {

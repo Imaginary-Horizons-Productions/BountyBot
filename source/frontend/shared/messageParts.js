@@ -143,15 +143,14 @@ function randomFooterTip() {
  * @param {Guild} guild
  * @param {number} posterLevel
  * @param {boolean} shouldOmitRewardsField
- * @param {Record<"open" | "complete" | "deleted", string>} thumbnailURLMap
- * @param {string} multiplierString
+ * @param {Company} company
  * @param {Completion[]} completions
  */
-async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, thumbnailURLMap, multiplierString, completions) {
+async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, completions) {
 	const author = await guild.members.fetch(bounty.userId);
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(author.displayColor)
-		.setThumbnail(bounty.thumbnailURL ?? thumbnailURLMap[bounty.state])
+		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
 		.setTitle(bounty.state == "complete" ? `Bounty Complete! ${bounty.title}` : bounty.title)
 		.setTimestamp();
 	if (bounty.description) {
@@ -165,7 +164,7 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 		fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
 	}
 	if (!shouldOmitRewardsField) {
-		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${multiplierString}`, inline: true });
+		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
 	}
 
 	if (bounty.isEvergreen) {
@@ -311,7 +310,7 @@ async function seasonalScoreboardEmbed(company, guild, participations, ranks) {
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+		.setThumbnail(company.scoreboardThumbnailURL)
 		.setTitle("The Season Scoreboard")
 		.setFooter(randomFooterTip())
 		.setTimestamp();
@@ -370,7 +369,7 @@ async function overallScoreboardEmbed(company, guild, hunters, ranks) {
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png")
+		.setThumbnail(company.scoreboardThumbnailURL)
 		.setTitle("The Scoreboard")
 		.setFooter(randomFooterTip())
 		.setTimestamp();

@@ -28,7 +28,7 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 	btnPost.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
 	let starterMessage = await btnPost.fetchStarterMessage();
 	starterMessage.edit({
-		embeds: [await buildBountyEmbed(bounty, guild, poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completers)],
+		embeds: [await buildBountyEmbed(bounty, guild, poster.getLevel(company.xpCoefficient), false, company, completers)],
 		components: generateBountyBoardButtons(bounty)
 	});
 }

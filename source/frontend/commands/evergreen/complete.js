@@ -74,7 +74,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		if (companyLevelLine) {
 			levelTexts.push(companyLevelLine);
 		}
-		buildBountyEmbed(bounty, interaction.guild, company.getLevel(allHunters), true, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
+		buildBountyEmbed(bounty, interaction.guild, company.getLevel(allHunters), true, company, completions).then(async embed => {
 			const acknowledgeOptions = { embeds: [embed], withResponse: true };
 			if (totalGP > 0) {
 				levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);
