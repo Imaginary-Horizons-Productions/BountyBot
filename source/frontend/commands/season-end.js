@@ -69,10 +69,11 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			}
 			await logicLayer.hunters.resetCompanyRanks(company.id);
 			const embeds = [];
+			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 			if (company.scoreboardIsSeasonal) {
-				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, [], ranks));
+				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, [], ranks, goalProgress));
 			} else {
-				embeds.push(await overallScoreboardEmbed(company, interaction.guild, allHunters, ranks));
+				embeds.push(await overallScoreboardEmbed(company, interaction.guild, allHunters, ranks, goalProgress));
 			}
 			updateScoreboard(company, guild, embeds);
 			let announcementText = "A new season has started, ranks and placements have been reset!";

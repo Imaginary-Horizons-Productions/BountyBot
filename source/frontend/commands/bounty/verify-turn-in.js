@@ -1,104 +1,93 @@
-const { userMention, bold, MessageFlags, Guild } = require("discord.js");
+const { userMention, bold, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { Completion, Bounty, Company, Hunter } = require("../../../database/models");
-const { listifyEN, commandMention, congratulationBuilder, buildBountyEmbed, generateBountyBoardButtons } = require("../../shared");
-
-/**
- * Updates the board posting for the bounty after adding the completers
- * @param {Bounty} bounty
- * @param {Company} company
- * @param {Hunter} poster
- * @param {string[]} newCompleterIds
- * @param {Completion[]} completers
- * @param {Guild} guild
- */
-async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild) {
-	let boardId = company.bountyBoardId;
-	let { postingId } = bounty;
-	if (!boardId || !postingId) return;
-	let boardsChannel = await guild.channels.fetch(boardId);
-	let post = await boardsChannel.threads.fetch(postingId);
-	if (post.archived) {
-		await thread.setArchived(false, "Unarchived to update posting");
-	}
-	post.edit({ name: bounty.title });
-	let numCompleters = newCompleterIds.length;
-	post.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
-	(await post.fetchStarterMessage()).edit({
-		embeds: [await buildBountyEmbed(bounty, guild, poster.getLevel(company.xpCoefficient), false, company, completers)],
-		components: generateBountyBoardButtons(bounty)
-	});
-}
+const { listifyEN, commandMention, trimForSelectOptionDescription, updatePosting, congratulationBuilder } = require("../../shared");
+const { timeConversion } = require("../../../shared");
+const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty hunters have turned in one of your bounties",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
-		const slotNumber = interaction.options.getInteger("bounty-slot");
-
-		const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: posterId, companyId: interaction.guild.id });
-		if (!bounty) {
-			interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
+	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
+		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
+		if (openBounties.length < 1) {
+			interaction.reply({ content: `You don't currently have any open bounties. Post one with ${commandMention("bounty post")}?`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 
-		const completerMembers = [];
-		for (const optionalToastee of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
-			const guildMember = interaction.options.getMember(optionalToastee);
-			if (guildMember && guildMember.id !== interaction.user.id) {
-				completerMembers.push(guildMember);
+		const options = openBounties.map(bounty => {
+			const option = { label: bounty.title, value: bounty.id };
+			if (bounty.description) {
+				option.description = trimForSelectOptionDescription(bounty.description);
 			}
-		}
-
-		try {
-			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
-			updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
-			interaction.reply({
-				content: `The following bounty hunters' turn-ins of ${bold(returnedBounty.title)} have been recorded: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nXP and drops will be distributed when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were skipped due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,
-				flags: [MessageFlags.Ephemeral]
-			});
-		} catch (e) {
-			if (typeof e !== 'string') {
-				console.error(e);
-			} else {
-				interaction.reply({ content: e, flags: [MessageFlags.Ephemeral] });
-			}
-			return;
-		}
-	}
-).setOptions(
-	{
-		type: "Integer",
-		name: "bounty-slot",
-		description: "The slot number of your bounty",
-		required: true
-	},
-	{
-		type: "User",
-		name: "bounty-hunter",
-		description: "A bounty hunter who turned in the bounty",
-		required: true
-	},
-	{
-		type: "User",
-		name: "second-bounty-hunter",
-		description: "A bounty hunter who turned in the bounty",
-		required: false
-	},
-	{
-		type: "User",
-		name: "third-bounty-hunter",
-		description: "A bounty hunter who turned in the bounty",
-		required: false
-	},
-	{
-		type: "User",
-		name: "fourth-bounty-hunter",
-		description: "A bounty hunter who turned in the bounty",
-		required: false
-	},
-	{
-		type: "User",
-		name: "fifth-bounty-hunter",
-		description: "A bounty hunter who turned in the bounty",
-		required: false
+			return option;
+		});
+		interaction.reply({
+			content: `Select one of your bounties and some bounty hunters who have turned it in. XP and drops will be distributed to those hunters when you use ${commandMention("bounty complete")}.`,
+			components: [
+				new ActionRowBuilder().addComponents(
+					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}bounty`)
+						.setPlaceholder("Select a bounty...")
+						.addOptions(options)
+				),
+				new ActionRowBuilder().addComponents(
+					new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+						.setPlaceholder("Select bounty hunters...")
+						.setDisabled(true)
+				)
+			],
+			flags: [MessageFlags.Ephemeral],
+			withResponse: true
+		}).then(response => response.resource.message).then(message => {
+			const collector = message.createMessageComponentCollector({ time: timeConversion(2, "m", "ms") });
+			let bounty;
+			collector.on("collect", async collectedInteration => {
+				const [_, stepId] = collectedInteration.customId.split(SAFE_DELIMITER);
+				switch (stepId) {
+					case "bounty":
+						bounty = openBounties.find(bounty => bounty.id === collectedInteration.values[0]);
+						collectedInteration.update({
+							components: [
+								new ActionRowBuilder().addComponents(
+									new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+										.setPlaceholder(bounty.title)
+										.addOptions([{ label: "placeholder", value: "placeholder" }])
+										.setDisabled(true)
+								),
+								new ActionRowBuilder().addComponents(
+									new UserSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}hunters`)
+										.setPlaceholder("Select bounty hunters...")
+										.setMaxValues(5)
+								)
+							]
+						});
+						break;
+					case "hunters":
+						try {
+							let { bounty: returnedBounty, allCompleters, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, [...collectedInteration.members.values()], runMode);
+							const post = await updatePosting(collectedInteration.guild, company, returnedBounty, poster.getLevel(company.xpCoefficient), allCompleters);
+							const sentences = [];
+							if (validatedCompleterIds.length > 0) {
+								sentences.push(`The following bounty hunters' turn-ins of ${bold(returnedBounty.title)} have been recorded: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}`);
+								if (post) {
+									post.channel.send({ content: `${listifyEN(validatedCompleterIds.map(id => userMention(id)))} ${validatedCompleterIds.length === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
+								}
+							}
+							if (bannedIds.length > 0) {
+								sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}`);
+							}
+							collectedInteration.update({
+								content: sentences.join("\n\n"),
+								components: []
+							});
+						} catch (e) {
+							if (typeof e !== 'string') {
+								console.error(e);
+							} else {
+								collectedInteration.update({ content: e, components: [] });
+							}
+							return;
+						}
+						break;
+				}
+			})
+		})
 	}
 );
