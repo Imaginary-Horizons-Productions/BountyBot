@@ -3,8 +3,8 @@ const { SubcommandWrapper } = require("../../classes");
 const { buildBountyEmbed } = require("../../shared");
 
 module.exports = new SubcommandWrapper("list", "List all of a hunter's open bounties (default: your own)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, userId]) {
-		const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? userId;
+	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+		const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? interaction.user.id;
 		if (listUserId === interaction.client.user.id) {
 			// Evergreen
 			logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id).then(async existingBounties => {

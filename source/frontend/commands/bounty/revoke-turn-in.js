@@ -3,9 +3,9 @@ const { SubcommandWrapper } = require("../../classes");
 const { listifyEN, updatePosting } = require("../../shared");
 
 module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
+	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
-		logicLayer.bounties.findBounty({ userId: posterId, companyId: interaction.guild.id, slotNumber }).then(async bounty => {
+		logicLayer.bounties.findBounty({ userId: interaction.user.id, companyId: interaction.guild.id, slotNumber }).then(async bounty => {
 			if (!bounty) {
 				interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 				return;
@@ -21,7 +21,7 @@ module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of
 
 			logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, hunterIds);
 			const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-			updatePosting(interaction.guild, company, bounty, (await logicLayer.hunters.findOneHunter(posterId, interaction.guild.id)).getLevel(company.xpCoefficient), await logicLayer.bounties.findBountyCompletions(bounty.id));
+			updatePosting(interaction.guild, company, bounty, poster.getLevel(company.xpCoefficient), await logicLayer.bounties.findBountyCompletions(bounty.id));
 			if (company.bountyBoardId) {
 				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 					return bountyBoard.threads.fetch(bounty.postingId);

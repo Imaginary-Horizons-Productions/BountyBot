@@ -4,8 +4,8 @@ const { commandMention, getRankUpdates, bountiesToSelectOptions } = require("../
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
-		logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id).then(openBounties => {
+	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
+		logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id).then(openBounties => {
 			interaction.reply({
 				content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
 				components: [
@@ -32,12 +32,10 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				}
 				bounty.destroy();
 
-				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
-					hunter.decrement("xp");
-					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-					logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
-					getRankUpdates(interaction.guild, logicLayer);
-				})
+				hunter.decrement("xp");
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
+				getRankUpdates(interaction.guild, logicLayer);
 
 				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
 			}).catch(error => {

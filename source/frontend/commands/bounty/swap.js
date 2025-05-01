@@ -5,8 +5,8 @@ const { getNumberEmoji, bountiesToSelectOptions, updatePosting, sendAnnouncement
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
-		logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id).then(openBounties => {
+	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
+		logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id).then(openBounties => {
 			if (openBounties.length < 1) {
 				interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 				return;
@@ -27,7 +27,6 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 			}).then(response => {
 				const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
 				collector.on("collect", async (collectedInteraction) => {
-					const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 					if (collectedInteraction.customId.endsWith("bounty")) {
 						const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 						const bountySlotCount = Hunter.getBountySlotCount(hunter.getLevel(company.xpCoefficient), company.maxSimBounties);

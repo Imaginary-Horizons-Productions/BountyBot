@@ -31,10 +31,10 @@ async function updateBoardPosting(bounty, company, poster, newCompleterIds, comp
 }
 
 module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty hunters have turned in one of your bounties",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
+	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 
-		const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: posterId, companyId: interaction.guild.id });
+		const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: interaction.user.id, companyId: interaction.guild.id });
 		if (!bounty) {
 			interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
 			return;
@@ -49,7 +49,7 @@ module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty 
 		}
 
 		try {
-			let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
+			let { bounty: returnedBounty, allCompleters, company, validatedCompleterIds, bannedIds } = await logicLayer.bounties.addCompleters(bounty, interaction.guild, completerMembers, runMode);
 			updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, interaction.guild);
 			interaction.reply({
 				content: `The following bounty hunters' turn-ins of ${bold(returnedBounty.title)} have been recorded: ${listifyEN(validatedCompleterIds.map(id => userMention(id)))}\n\nXP and drops will be distributed when you ${commandMention("bounty complete")}.${bannedIds.length > 0 ? `\n\nThe following users were skipped due to currently being banned from using BountyBot: ${listifyEN(bannedIds.map(id => userMention(id)))}` : ""}`,

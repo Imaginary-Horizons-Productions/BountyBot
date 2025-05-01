@@ -5,8 +5,8 @@ const { textsHaveAutoModInfraction, trimForModalTitle, commandMention, bountiesT
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, posterId]) {
-		const openBounties = await logicLayer.bounties.findOpenBounties(posterId, interaction.guild.id);
+	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
+		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
 			return;
@@ -180,7 +180,6 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				bounty.save();
 
 				// update bounty board
-				const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guild.id);
 				const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
 				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company.getThumbnailURLMap(), company.festivalMultiplierString(), await logicLayer.bounties.findBountyCompletions(bountyId));
 				if (company.bountyBoardId) {
