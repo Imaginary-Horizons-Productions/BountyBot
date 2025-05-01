@@ -113,7 +113,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 	}
 
 	if (validatedCompleterIds.length < 1) {
-		throw `No new turn-ins were able to be recorded. You cannot turn-in your own bounties or credit bots. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
+		throw `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
 	}
 
 	const rawCompletions = [];
