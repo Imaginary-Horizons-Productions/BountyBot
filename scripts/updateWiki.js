@@ -1,9 +1,9 @@
 const fs = require('fs');
-const { commandFiles } = require('../source/commands/_commandDictionary.js');
-const { contextMenuFiles } = require('../source/context_menus/_contextMenuDictionary.js');
-const { CommandWrapper, ContextMenuWrapper } = require('../source/classes/index.js');
 const { SlashCommandSubcommandBuilder, PermissionsBitField, InteractionContextType, ApplicationCommandType } = require('discord.js');
-const { listifyEN } = require('../source/util/textUtil.js');
+const { commandFiles } = require('../source/frontend/commands/_commandDictionary.js');
+const { contextMenuFiles } = require('../source/frontend/context_menus/_contextMenuDictionary.js');
+const { CommandWrapper, ContextMenuWrapper } = require('../source/frontend/classes/index.js');
+const { listifyEN } = require('../source/frontend/shared/messageParts.js');
 
 const contextDictionary = {
 	[InteractionContextType.BotDM]: "DMs",
@@ -17,7 +17,7 @@ if (commandFiles.length > 0) {
 	text += "## Slash Commands\n";
 	commandFiles.forEach(filename => {
 		/** @type {CommandWrapper} */
-		const command = require(`./../commands/${filename}`);
+		const command = require(`./../source/frontend/commands/${filename}`);
 		text += `### /${command.mainId}\n`;
 		if (command.premiumCommand) {
 			text += `> 💎 Premium Command 💎\n\n`
@@ -58,7 +58,7 @@ if (contextMenuFiles.length > 0) {
 	text += "## Context Menu Options\n";
 	for (const file of contextMenuFiles) {
 		/** @type {ContextMenuWrapper} */
-		const contextMenu = require(`./../context_menus/${file}`);
+		const contextMenu = require(`./../source/frontend/context_menus/${file}`);
 		text += `### ${contextMenu.builder.type === ApplicationCommandType.User ? "User -> Apps" : "Message -> Apps"} -> ${contextMenu.mainId}\n`;
 		if (contextMenu.premiumCommand) {
 			text += `> 💎 Premium Feature 💎\n\n`

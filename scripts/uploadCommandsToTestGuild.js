@@ -1,7 +1,7 @@
 const { REST, Routes } = require('discord.js');
 const { token, botId, testGuildId } = require('../config/auth.json');
-const { slashData } = require('../source/commands/_commandDictionary');
-const { contextMenuData } = require('../source/context_menus/_contextMenuDictionary');
+const { slashData } = require('../source/frontend/commands/_commandDictionary');
+const { contextMenuData } = require('../source/frontend/context_menus/_contextMenuDictionary');
 
 const rest = new REST({ version: 10 }).setToken(token);
 
