@@ -107,31 +107,31 @@ function initModel(sequelize) {
 		openBountyThumbnailURL: {
 			type: DataTypes.STRING,
 			get() {
-				return this.openBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png";
+				return this.getDataValue("openBountyThumbnailURL") ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png";
 			}
 		},
 		completedBountyThumbnailURL: {
 			type: DataTypes.STRING,
 			get() {
-				return this.completedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png";
+				return this.getDataValue("completedBountyThumbnailURL") ?? "https://cdn.discordapp.com/attachments/545684759276421120/734092918369026108/completion.png";
 			}
 		},
 		deletedBountyThumbnailURL: {
 			type: DataTypes.STRING,
 			get() {
-				return this.deletedBountyThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png";
+				return this.getDataValue("deletedBountyThumbnailURL") ?? "https://cdn.discordapp.com/attachments/545684759276421120/734093574031016006/bountyboard.png";
 			}
 		},
 		scoreboardThumbnailURL: {
 			type: DataTypes.STRING,
 			get() {
-				return this.scoreboardThumbnailURL ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png";
+				return this.getDataValue("scoreboardThumbnailURL") ?? "https://cdn.discordapp.com/attachments/545684759276421120/734094693217992804/scoreboard.png";
 			}
 		},
 		goalCompletionThumbnailURL: {
 			type: DataTypes.STRING,
 			get() {
-				return this.goalCompletionThumbnailURL ?? "https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&";
+				return this.getDataValue("goalCompletionThumbnailURL") ?? "https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&";
 			}
 		}
 	}, {
