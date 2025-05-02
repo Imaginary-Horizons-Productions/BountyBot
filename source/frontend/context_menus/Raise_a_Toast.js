@@ -48,7 +48,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
 			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 
-			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, [interaction.targetId], season.id, toastText);
+			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, new Set([interaction.targetId]), season.id, toastText);
 			const embeds = [generateToastEmbed(company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member)];
 
 			if (rewardedHunterIds.length > 0) {
