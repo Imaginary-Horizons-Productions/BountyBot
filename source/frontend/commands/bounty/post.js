@@ -1,9 +1,10 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
 const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, getRankUpdates, buildBountyEmbed, generateBountyBoardButtons, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
 const { timeConversion } = require("../../../shared");
-const { SKIP_INTERACTION_HANDLING, MAX_EMBED_TITLE_LENGTH, YEAR_IN_MS } = require("../../../constants");
+const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
@@ -68,7 +69,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 								.setLabel("Title")
 								.setStyle(TextInputStyle.Short)
 								.setPlaceholder("Discord markdown allowed...")
-								.setMaxLength(MAX_EMBED_TITLE_LENGTH)
+								.setMaxLength(EmbedLimits.MaximumTitleLength)
 						),
 						new ActionRowBuilder().addComponents(
 							new TextInputBuilder().setCustomId("description")

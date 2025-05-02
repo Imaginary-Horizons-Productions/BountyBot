@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, AttachmentBuilder, heading } = require('discord.js');
+const { MessageLimits } = require('@sapphire/discord.js-utilities');
 const { CommandWrapper } = require('../classes/index.js');
-const { MAX_MESSAGE_CONTENT_LENGTH } = require('../../constants.js');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -18,7 +18,7 @@ module.exports = new CommandWrapper(mainId, "Look up this server's seasonal rank
 		}).join('\n')}`;
 
 		const messagePayload = { flags: [MessageFlags.Ephemeral] };
-		if (content.length < MAX_MESSAGE_CONTENT_LENGTH) { // Send large content as a text file
+		if (content.length < MessageLimits.MaximumLength) { // Send large content as a text file
 			messagePayload.content = content;
 		} else {
 			messagePayload.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: 'ranks.txt' })];

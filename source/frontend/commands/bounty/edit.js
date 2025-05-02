@@ -1,7 +1,8 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, trimForModalTitle, commandMention, bountiesToSelectOptions, buildBountyEmbed, generateBountyBoardButtons } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, generateBountyBoardButtons, truncateTextToLength } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -51,7 +52,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 			}
 			collectedInteraction.showModal(
 				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
-					.setTitle(trimForModalTitle(`Edit Bounty: ${bounty.title}`))
+					.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
 					.addComponents(
 						new ActionRowBuilder().addComponents(
 							new TextInputBuilder().setCustomId("title")

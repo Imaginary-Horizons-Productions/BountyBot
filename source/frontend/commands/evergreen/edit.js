@@ -1,7 +1,8 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, trimForModalTitle, bountiesToSelectOptions, buildBountyEmbed } = require("../../shared");
+const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
@@ -35,7 +36,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 
 			collectedInteraction.showModal(
 				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
-					.setTitle(trimForModalTitle(`Edit Bounty: ${selectedBounty.title}`))
+					.setTitle(truncateTextToLength(`Edit Bounty: ${selectedBounty.title}`, ModalLimits.MaximumTitleCharacters))
 					.addComponents(
 						new ActionRowBuilder().addComponents(
 							new TextInputBuilder().setCustomId("title")
