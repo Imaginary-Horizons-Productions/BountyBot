@@ -57,13 +57,12 @@ function truncateTextToLength(text, length) {
  * @param {string} filename
  */
 function contentOrFileMessagePayload(content, messageOptions, filename) {
-	const payload = { ...messageOptions };
 	if (content.length < MessageLimits.MaximumLength) {
-		payload.content = content;
+		messageOptions.content = content;
 	} else {
-		payload.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: filename })];
+		messageOptions.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: filename })];
 	}
-	return payload;
+	return messageOptions;
 }
 
 /**
