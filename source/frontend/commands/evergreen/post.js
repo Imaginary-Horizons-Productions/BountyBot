@@ -1,6 +1,7 @@
 const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, DiscordjsErrorCodes } = require("discord.js");
+const { EmbedLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
-const { MAX_EMBEDS_PER_MESSAGE, MAX_EMBED_TITLE_LENGTH, SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { textsHaveAutoModInfraction, commandMention, generateBountyBoardThread, buildBountyEmbed, sendAnnouncement } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 
@@ -8,7 +9,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		let slotNumber = null;
-		for (let slotCandidate = 1; slotCandidate <= MAX_EMBEDS_PER_MESSAGE; slotCandidate++) {
+		for (let slotCandidate = 1; slotCandidate <= MessageLimits.MaximumEmbeds; slotCandidate++) {
 			if (!existingBounties.some(bounty => bounty.slotNumber === slotCandidate)) {
 				slotNumber = slotCandidate;
 				break;
@@ -29,7 +30,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 							.setLabel("Title")
 							.setStyle(TextInputStyle.Short)
 							.setPlaceholder("Discord markdown allowed...")
-							.setMaxLength(MAX_EMBED_TITLE_LENGTH)
+							.setMaxLength(EmbedLimits.MaximumTitleLength)
 					),
 					new ActionRowBuilder().addComponents(
 						new TextInputBuilder().setCustomId("description")

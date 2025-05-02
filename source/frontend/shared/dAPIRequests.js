@@ -2,6 +2,7 @@ const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild } = requ
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
+const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 
 /**
  * @param {string} mainId
@@ -32,7 +33,7 @@ function bountiesToSelectOptions(bounties) {
 			value: bounty.id
 		}
 		if (bounty.description) {
-			optionPayload.description = trimForSelectOptionDescription(bounty.description);
+			optionPayload.description = truncateTextToLength(bounty.description, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
 		}
 		return optionPayload;
 	}).slice(0, 25);
@@ -42,22 +43,12 @@ function bountiesToSelectOptions(bounties) {
  * @param {string} text
  * @param {number} length
  */
-function truncateStringToLength(text, length) {
+function truncateTextToLength(text, length) {
 	if (text.length > length) {
 		return `${text.slice(0, length - 1)}…`;
 	} else {
 		return text;
 	}
-}
-
-/** @param {string} text */
-function trimForSelectOptionDescription(text) {
-	return truncateStringToLength(text, 100);
-}
-
-/** @param {string} text */
-function trimForModalTitle(text) {
-	return truncateStringToLength(text, 45);
 }
 
 /**
@@ -127,9 +118,7 @@ async function updateScoreboard(company, guild, embeds) {
 module.exports = {
 	createSubcommandMappings,
 	bountiesToSelectOptions,
-	truncateStringToLength,
-	trimForSelectOptionDescription,
-	trimForModalTitle,
+	truncateTextToLength,
 	generateBountyBoardThread,
 	updatePosting,
 	updateScoreboard

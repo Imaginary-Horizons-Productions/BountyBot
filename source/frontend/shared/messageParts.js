@@ -1,6 +1,7 @@
 const fs = require("fs");
 const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection } = require("discord.js");
-const { MAX_EMBED_DESCRIPTION_LENGTH, SAFE_DELIMITER, MAX_MESSAGE_CONTENT_LENGTH, MAX_EMBED_FIELD_VALUE_LENGTH } = require("../../constants");
+const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
+const { SAFE_DELIMITER } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { timeConversion } = require("../../shared");
 const { commandIds } = require("../../constants");
@@ -175,7 +176,7 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 	if (completions.length > 0) {
 		const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
 		const completersFieldText = listifyEN([...uniqueCompleters].map(id => userMention(id)));
-		if (completersFieldText.length <= MAX_EMBED_FIELD_VALUE_LENGTH) {
+		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: "Turned in by:", value: completersFieldText });
 		} else {
 			fields.push({ name: "Turned in by:", value: "Too many to display!" });
@@ -208,7 +209,7 @@ function generateBountyRewardString(completerIds, completerReward, posterId, pos
 	if (rewardTexts.length > 0) {
 		text += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
 	}
-	if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
+	if (text.length > MessageLimits.MaximumLength) {
 		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 	}
 	return text;
@@ -254,7 +255,7 @@ async function buildVersionEmbed() {
 		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
 		.setURL('https://discord.gg/JxqE9EpKt9')
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')
-		.setDescription(data.slice(changesStartRegEx.lastIndex, sectionEnd).slice(0, MAX_EMBED_DESCRIPTION_LENGTH))
+		.setDescription(data.slice(changesStartRegEx.lastIndex, sectionEnd).slice(0, EmbedLimits.MaximumDescriptionLength))
 		.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" })
 		.setFooter(randomFooterTip())
 		.setTimestamp(stats.mtime);
@@ -560,7 +561,7 @@ function generateToastRewardString(rewardedHunterIds, rankUpdates, rewardTexts, 
 	if (rewardTexts.length > 0) {
 		rewardString += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
 	}
-	if (rewardString.length > MAX_MESSAGE_CONTENT_LENGTH) {
+	if (rewardString.length > MessageLimits.MaximumLength) {
 		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 	}
 	return rewardString;
@@ -595,7 +596,7 @@ function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUp
 	if (rewardTexts.length > 0) {
 		text += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
 	}
-	if (text.length > MAX_MESSAGE_CONTENT_LENGTH) {
+	if (text.length > MessageLimits.MaximumLength) {
 		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
 	}
 	return text;

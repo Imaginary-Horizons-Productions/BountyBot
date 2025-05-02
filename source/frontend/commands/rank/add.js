@@ -1,7 +1,7 @@
 const { MessageFlags } = require("discord.js");
+const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { getRankUpdates, commandMention } = require("../../shared");
-const { MAX_EMBED_FIELD_COUNT } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing outstanding bounty hunters",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -13,8 +13,8 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 			return;
 		}
 
-		if (ranks.length >= MAX_EMBED_FIELD_COUNT) {
-			interaction.reply({ content: "A server can only have 25 seasonal ranks at a time.", flags: [MessageFlags.Ephemeral] });
+		if (ranks.length >= EmbedLimits.MaximumFields) {
+			interaction.reply({ content: `A server can only have ${EmbedLimits.MaximumFields} seasonal ranks at a time.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 

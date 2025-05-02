@@ -1,6 +1,7 @@
 const { userMention, bold, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
+const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, commandMention, trimForSelectOptionDescription, updatePosting, congratulationBuilder } = require("../../shared");
+const { listifyEN, commandMention, updatePosting, congratulationBuilder, truncateTextToLength } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
@@ -15,7 +16,7 @@ module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty 
 		const options = openBounties.map(bounty => {
 			const option = { label: bounty.title, value: bounty.id };
 			if (bounty.description) {
-				option.description = trimForSelectOptionDescription(bounty.description);
+				option.description = truncateTextToLength(bounty.description, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
 			}
 			return option;
 		});
