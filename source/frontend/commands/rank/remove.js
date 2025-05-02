@@ -1,9 +1,8 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ComponentType, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { rankArrayToSelectOptions, truncateTextToLength, listifyEN, getRankUpdates } = require("../../shared");
+const { rankArrayToSelectOptions, listifyEN, getRankUpdates, disabledSelectRow } = require("../../shared");
 const { timeConversion } = require("../../../shared");
-const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 
 module.exports = new SubcommandWrapper("remove", "Remove an existing seasonal rank",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -41,13 +40,9 @@ module.exports = new SubcommandWrapper("remove", "Remove an existing seasonal ra
 				}));
 				selectInteraction.update({
 					components: [
+						disabledSelectRow(selectedRankNames),
 						new ActionRowBuilder().addComponents(
-							new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-								.setPlaceholder(truncateTextToLength(selectedRankNames, SelectMenuLimits.MaximumPlaceholderCharacters))
-								.setDisabled(true)
-						),
-						new ActionRowBuilder().addComponents(
-							new ButtonBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+							new ButtonBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}confirmation`)
 								.setStyle(ButtonStyle.Danger)
 								.setLabel("Remove")
 						)
@@ -63,9 +58,9 @@ module.exports = new SubcommandWrapper("remove", "Remove an existing seasonal ra
 					}
 				}
 				logicLayer.ranks.deleteRanks(buttonInteraction.guild.id, selectedRanks.map(rank => rank.varianceThreshold)).then(() => {
-					getRankUpdates(buttonCollector.guild, logicLayer);
+					getRankUpdates(buttonInteraction.guild, logicLayer);
 				});
-				interaction.reply({ content: `${selectedRankNames} ${selectedRanks.length > 1 ? "were" : "was"} removed.`, flags: [MessageFlags.Ephemeral] });
+				buttonInteraction.update({ content: `${selectedRankNames} ${selectedRanks.length > 1 ? "were" : "was"} removed.`, components: [] });
 			})
 		});
 	}

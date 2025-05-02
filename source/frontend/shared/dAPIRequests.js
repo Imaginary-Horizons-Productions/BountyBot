@@ -1,8 +1,9 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
-const { Bounty, Company } = require("../../database/models");
+const { Bounty, Company, Rank } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
 const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
+const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /**
  * @param {string} mainId
@@ -36,7 +37,25 @@ function bountiesToSelectOptions(bounties) {
 			optionPayload.description = truncateTextToLength(bounty.description, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
 		}
 		return optionPayload;
-	}).slice(0, 25);
+	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
+}
+
+/**
+ * @param {Rank[]} ranks
+ * @param {Collection<string, Role>} allGuildRoles
+ */
+function rankArrayToSelectOptions(ranks, allGuildRoles) {
+	return ranks.map((rank, index) => {
+		const option = {
+			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
+			description: `Variance Threshold: ${rank.varianceThreshold}`,
+			value: rank.varianceThreshold.toString()
+		};
+		if (rank.rankmoji) {
+			option.emoji = rank.rankmoji;
+		}
+		return option;
+	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
 
 /**
@@ -115,11 +134,23 @@ async function updateScoreboard(company, guild, embeds) {
 	}
 }
 
+/** @param {string} placeholderText */
+function disabledSelectRow(placeholderText) {
+	return new ActionRowBuilder().addComponents(
+		new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
+			.setOptions([{ label: "empty", value: "empty" }])
+			.setDisabled(true)
+	)
+}
+
 module.exports = {
 	createSubcommandMappings,
 	bountiesToSelectOptions,
+	rankArrayToSelectOptions,
 	truncateTextToLength,
 	generateBountyBoardThread,
 	updatePosting,
-	updateScoreboard
+	updateScoreboard,
+	disabledSelectRow
 };
