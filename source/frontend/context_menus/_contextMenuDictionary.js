@@ -31,3 +31,17 @@ exports.setLogic = function (logicBlob) {
 		contextMenuDictionary[contextMenuKey].setLogic?.(logicBlob);
 	}
 }
+
+exports.updateCooldownMap = function(map) {
+	for (const commandKey in contextMenuDictionary) {
+		map[commandKey] = contextMenuDictionary[commandKey].cooldown;
+	}
+}
+
+exports.updatePremiumList = function(list) {
+	for (const commandKey in contextMenuDictionary) {
+		if (contextMenuDictionary[commandKey].premiumCommand) {
+			list.push(commandKey);
+		}
+	}
+}

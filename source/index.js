@@ -18,15 +18,29 @@ const basename = path.basename(__filename);
 const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
 const { MessageComponentWrapper } = require('./frontend/classes');
 
-const { getCommand, slashData, setLogic: setCommandLogic } = require("./frontend/commands/_commandDictionary.js");
-const { getButton, setLogic: setButtonLogic } = require("./frontend/buttons/_buttonDictionary.js");
-const { getSelect, setLogic: setSelectLogic } = require("./frontend/selects/_selectDictionary.js");
-const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic } = require("./frontend/context_menus/_contextMenuDictionary.js");
-const { setLogic: setItemLogic } = require("./frontend/items/_itemDictionary.js");
+const { getCommand, slashData, setLogic: setCommandLogic, updateCooldownMap: updateCommandCooldownMap, updatePremiumList: updatePremiumCommands } = require("./commands/_commandDictionary.js");
+const { getButton, setLogic: setButtonLogic, updateCooldownMap: updateButtonCooldownMap } = require("./buttons/_buttonDictionary.js");
+const { getSelect, setLogic: setSelectLogic, updateCooldownMap: updateSelectCooldownMap } = require("./selects/_selectDictionary.js");
+const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic, updateCooldownMap: updateContextMenuCooldownMap, updatePremiumList: updatePremiumContextMenus } = require("./context_menus/_contextMenuDictionary.js");
+const { setLogic: setItemLogic, updateCooldownMap: updateItemCooldownMap } = require("./items/_itemDictionary.js")
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
-const { buildVersionEmbed, commandMention } = require("./frontend/shared");
+const { buildVersionEmbed } = require("./util/embedUtil.js");
+const { commandMention } = require("./util/textUtil.js");
 const logicBlob = require("./logic");
 const runMode = process.argv[4] || "development";
+const cooldownMap = {};
+const premiumCommandList = [];
+//#endregion
+
+//#region pre-Client Setup
+updateCommandCooldownMap(cooldownMap);
+updateButtonCooldownMap(cooldownMap);
+updateSelectCooldownMap(cooldownMap);
+updateContextMenuCooldownMap(cooldownMap);
+updateItemCooldownMap(cooldownMap);
+
+updatePremiumCommands(premiumCommandList);
+updatePremiumContextMenus(premiumCommandList);
 //#endregion
 
 //#region Shard Instances
@@ -146,12 +160,47 @@ dAPIClient.on(Events.ClientReady, () => {
 
 dAPIClient.on(Events.InteractionCreate, async interaction => {
 	await dbReady;
-	const [interactingHunter] = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
+
+	//#region Ban Check
+	const [interactingHunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 	if (interactingHunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
 		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
+	//#endregion
 
+	//#region Premium Checks
+	if (premiumCommandList.contains(command.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+		interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
+		return;
+	}
+	//#endregion
+
+	// #region Cooldown Management
+	const commandTime = new Date();
+	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicLayer.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
+	if (isOnGeneralCooldown) {
+		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+		return;
+	}
+	if (isOnCommandCooldown) {
+		interaction.reply({ content: `Please wait, \`/${interaction.commandName}\` is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+		return;
+	}
+	logicLayer.cooldowns.updateCooldowns(interaction.user.id, interaction.commandName, commandTime, cooldownMap[interaction.commandName]);
+	if (itemCommands.contains(interaction.commandName)) {
+		const itemName = interaction.options.getString("item-name");
+		const {isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicLayer.cooldowns.checkCooldownState(interaction.user.id, itemName, commandTime);
+		if (isOnCommandCooldown) {
+			interaction.reply({ content: `Please wait, you've used a different instance of ${itemName} too recently and it is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+		logicLayer.cooldowns.updateCooldowns(interaction.user.id, itemName, commandTime, cooldownMap.items[itemName]);
+
+	}
+	//#endregion
+
+	//#region Command execution
 	if (interaction.isAutocomplete()) {
 		const command = getCommand(interaction.commandName);
 		const focusedOption = interaction.options.getFocused(true);
@@ -163,32 +212,9 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			.slice(0, 25);
 		interaction.respond(choices);
 	} else if (interaction.isContextMenuCommand()) {
-		const contextMenu = getContextMenu(interaction.commandName);
-		if (contextMenu.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-			interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-
-		const cooldownTimestamp = contextMenu.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
-		if (cooldownTimestamp) {
-			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-
-		contextMenu.execute(interaction, runMode);
+		getContextMenu(interaction.commandName).execute(interaction, runMode);
 	} else if (interaction.isCommand()) {
-		const command = getCommand(interaction.commandName);
-		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-			interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-
-		const cooldownTimestamp = command.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
-		if (cooldownTimestamp) {
-			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-		command.execute(interaction, runMode);
+		getCommand(interaction.commandName).execute(interaction, runMode);
 	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
 		return;
 	} else {
@@ -200,15 +226,10 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		} else if (interaction.isAnySelectMenu()) {
 			interactionWrapper = getSelect(mainId);
 		}
-		const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
-
-		if (cooldownTimestamp) {
-			interaction.reply({ content: `Please wait, this interaction is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
 
 		interactionWrapper.execute(interaction, runMode, args);
 	}
+	//#endregion
 });
 
 dAPIClient.on(Events.ChannelDelete, async channel => {

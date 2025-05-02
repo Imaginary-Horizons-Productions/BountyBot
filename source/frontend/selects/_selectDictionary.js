@@ -20,3 +20,9 @@ exports.setLogic = function (logicBlob) {
 		selectDictionary[selectKey].setLogic?.(logicBlob);
 	}
 }
+
+exports.updateCooldownMap = function(map) {
+	for (const commandKey in selectDictionary) {
+		map[commandKey] = selectDictionary[commandKey].cooldown;
+	}
+}

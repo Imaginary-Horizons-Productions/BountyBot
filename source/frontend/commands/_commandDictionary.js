@@ -52,3 +52,17 @@ exports.setLogic = function (logicBlob) {
 		commandDictionary[commandKey].setLogic?.(logicBlob);
 	}
 }
+
+exports.updateCooldownMap = function(map) {
+	for (const commandKey in commandDictionary) {
+		map[commandKey] = commandDictionary[commandKey].cooldown;
+	}
+}
+
+exports.updatePremiumList = function(list) {
+	for (const commandKey in commandDictionary) {
+		if (commandDictionary[commandKey].premiumCommand) {
+			list.push(commandKey);
+		}
+	}
+}
