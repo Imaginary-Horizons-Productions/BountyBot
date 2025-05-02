@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ComponentType, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { rankArrayToSelectOptions, truncateStringToLength, listifyEN, getRankUpdates } = require("../../shared");
+const { rankArrayToSelectOptions, truncateTextToLength, listifyEN, getRankUpdates } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 
@@ -43,7 +43,7 @@ module.exports = new SubcommandWrapper("remove", "Remove an existing seasonal ra
 					components: [
 						new ActionRowBuilder().addComponents(
 							new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-								.setPlaceholder(truncateStringToLength(selectedRankNames, SelectMenuLimits.MaximumPlaceholderCharacters))
+								.setPlaceholder(truncateTextToLength(selectedRankNames, SelectMenuLimits.MaximumPlaceholderCharacters))
 								.setDisabled(true)
 						),
 						new ActionRowBuilder().addComponents(
