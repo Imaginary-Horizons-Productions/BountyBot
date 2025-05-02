@@ -69,7 +69,7 @@ function findToastByPK(toastId) {
  * @param {Company} company
  * @param {GuildMember} sender
  * @param {Hunter} senderHunter
- * @param {string[]} toasteeIds
+ * @param {Set<string>} toasteeIds
  * @param {string} seasonId
  * @param {string} toastText
  * @param {string | null} imageURL
@@ -109,7 +109,7 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	const rewardedHunterIds = [];
 	let critValue = 0;
 	const startingSenderLevel = senderHunter.getLevel(company.xpCoefficient);
-	for (const id of toasteeIds) {
+	for (const id of toasteeIds.values()) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
 			const xpAwarded = Math.floor(company.festivalMultiplier);
@@ -181,9 +181,9 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 		participation.increment("toastsRaised");
 	}
 
-	const xpChangedIds = toasteeIds.concat(senderHunter.userId);
+	const xpChangedIds = toasteeIds.union(new Set([senderHunter.userId]));
 	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
-		if (xpChangedIds.includes(hunter.userId)) {
+		if (xpChangedIds.has(hunter.userId)) {
 			return hunter.reload();
 		} else {
 			return hunter;
