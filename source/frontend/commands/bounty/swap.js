@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, bountiesToSelectOptions, updatePosting, sendAnnouncement } = require("../../shared");
+const { getNumberEmoji, bountiesToSelectOptions, updatePosting, sendAnnouncement, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
@@ -55,12 +55,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 						collectedInteraction.update({
 							content: "If there is a bounty in the destination slot, it'll be swapped to the old bounty's slot.",
 							components: [
-								new ActionRowBuilder().addComponents(
-									new StringSelectMenuBuilder().setCustomId("disabled")
-										.setPlaceholder(`Selected Bounty: ${previousBounty.title}`)
-										.setDisabled(true)
-										.addOptions([{ label: "placeholder", value: "placeholder" }])
-								),
+								disabledSelectRow(`Selected Bounty: ${previousBounty.title}`),
 								new ActionRowBuilder().addComponents(
 									new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}${SAFE_DELIMITER}${previousBounty.slotNumber}`)
 										.setPlaceholder("Select a slot to swap the bounty to...")
