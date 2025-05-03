@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 
 /** @type {Sequelize} */
 let db;
@@ -48,7 +48,15 @@ function findAllRanks(companyId) {
 	return db.models.Rank.findAll({ where: { companyId }, order: [["varianceThreshold", "DESC"]] });
 }
 
-/** *Deletes all of a company's ranks*
+/** *Deletes the specified Ranks*
+ * @param {string} companyId
+ * @param {number[]} varianceThresholds
+ */
+function deleteRanks(companyId, varianceThresholds) {
+	return db.models.Rank.destroy({ where: { companyId, varianceThreshold: { [Op.in]: varianceThresholds } } });
+}
+
+/** *Deletes all of a Company's Ranks*
  * @param {string} companyId
  */
 function deleteCompanyRanks(companyId) {
@@ -61,5 +69,6 @@ module.exports = {
 	createCustomRank,
 	findOneRank,
 	findAllRanks,
+	deleteRanks,
 	deleteCompanyRanks
 }

@@ -1,7 +1,7 @@
 const { userMention, bold, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, commandMention, updatePosting, congratulationBuilder, truncateTextToLength } = require("../../shared");
+const { listifyEN, commandMention, updatePosting, congratulationBuilder, truncateTextToLength, disabledSelectRow } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
@@ -46,12 +46,7 @@ module.exports = new SubcommandWrapper("verify-turn-in", "Verify up to 5 bounty 
 						bounty = openBounties.find(bounty => bounty.id === collectedInteration.values[0]);
 						collectedInteration.update({
 							components: [
-								new ActionRowBuilder().addComponents(
-									new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-										.setPlaceholder(bounty.title)
-										.addOptions([{ label: "placeholder", value: "placeholder" }])
-										.setDisabled(true)
-								),
+								disabledSelectRow(bounty.title),
 								new ActionRowBuilder().addComponents(
 									new UserSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}hunters`)
 										.setPlaceholder("Select bounty hunters...")

@@ -1,6 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { rankArrayToSelectOptions } = require("../../shared");
 
 module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a particular rank",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -9,7 +10,6 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			interaction.reply({ content: "This server doesn't have any ranks configured.", flags: [MessageFlags.Ephemeral] });
 			return;
 		}
-		const guildRoles = await interaction.guild.roles.fetch();
 		await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 		interaction.editReply({
 			content: "Select a rank to be the eligibility threshold for this raffle:",
@@ -17,17 +17,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a rank...")
-						.addOptions(ranks.map((rank, index) => {
-							const option = {
-								label: rank.roleId ? guildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
-								description: `Variance Threshold: ${rank.varianceThreshold}`,
-								value: rank.varianceThreshold.toString()
-							};
-							if (rank.rankmoji) {
-								option.emoji = rank.rankmoji;
-							}
-							return option;
-						}))
+						.addOptions(rankArrayToSelectOptions(ranks, await interaction.guild.roles.fetch()))
 				)
 			],
 			withResponse: true

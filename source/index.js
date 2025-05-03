@@ -160,8 +160,9 @@ dAPIClient.on(Events.ClientReady, () => {
 dAPIClient.on(Events.InteractionCreate, async interaction => {
 	await dbReady;
 
+	await logicBlob.companies.findOrCreateCompany(interaction.guild.id);
 	//#region Ban Check
-	const [interactingHunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
+	const [interactingHunter] = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 	if (interactingHunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
 		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 		return;
@@ -177,7 +178,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	// #region Cooldown Management
 	const commandTime = new Date();
-	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicLayer.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
+	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
 	if (isOnGeneralCooldown) {
 		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
@@ -186,15 +187,15 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		interaction.reply({ content: `Please wait, \`/${interaction.commandName}\` is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
-	logicLayer.cooldowns.updateCooldowns(interaction.user.id, interaction.commandName, commandTime, cooldownMap[interaction.commandName]);
+	logicBlob.cooldowns.updateCooldowns(interaction.user.id, interaction.commandName, commandTime, cooldownMap[interaction.commandName]);
 	if (itemCommands.contains(interaction.commandName)) {
 		const itemName = interaction.options.getString("item-name");
-		const {isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicLayer.cooldowns.checkCooldownState(interaction.user.id, itemName, commandTime);
+		const {isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicBlob.cooldowns.checkCooldownState(interaction.user.id, itemName, commandTime);
 		if (isOnCommandCooldown) {
 			interaction.reply({ content: `Please wait, you've used a different instance of ${itemName} too recently and it is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
-		logicLayer.cooldowns.updateCooldowns(interaction.user.id, itemName, commandTime, cooldownMap.items[itemName]);
+		logicBlob.cooldowns.updateCooldowns(interaction.user.id, itemName, commandTime, cooldownMap.items[itemName]);
 
 	}
 	//#endregion

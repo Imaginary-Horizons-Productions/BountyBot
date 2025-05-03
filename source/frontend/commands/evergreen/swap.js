@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { getNumberEmoji, bountiesToSelectOptions, buildBountyEmbed } = require("../../shared");
+const { getNumberEmoji, bountiesToSelectOptions, buildBountyEmbed, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { Bounty } = require("../../../database/models");
 
@@ -50,12 +50,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 
 						collectedInteraction.update({
 							components: [
-								new ActionRowBuilder().addComponents(
-									new StringSelectMenuBuilder().setCustomId("disabled")
-										.setPlaceholder(`Selected Bounty: ${previousBounty.title}`)
-										.setDisabled(true)
-										.addOptions([{ label: "placeholder", value: "placeholder" }])
-								),
+								disabledSelectRow(`Selected Bounty: ${previousBounty.title}`),
 								new ActionRowBuilder().addComponents(
 									new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}${SAFE_DELIMITER}${previousBounty.id}`)
 										.setPlaceholder("Select a bounty to swap with...")
