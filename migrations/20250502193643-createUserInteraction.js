@@ -12,7 +12,7 @@ module.exports = {
 			},
 			interactionName: {
 				primaryKey: true,
-				type: DataTypes.String,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			interactionTime: {

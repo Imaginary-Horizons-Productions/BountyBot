@@ -19,7 +19,7 @@ function initModel(sequelize) {
 		},
 		interactionName: {
 			primaryKey: true,
-			type: DataTypes.String,
+			type: DataTypes.STRING,
 			allowNull: false
 		},
 		interactionTime: {

@@ -1,7 +1,5 @@
-// const { Guild, GuildMember } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
-const { dateInPast } = require("../util/textUtil");
-// const { UserInteraction } = require("../models/users/UserInteraction");
+const { dateInPast } = require("../shared");
 const { GLOBAL_COMMAND_COOLDOWN } = require("../constants");
 
 /** @type {Sequelize} */
