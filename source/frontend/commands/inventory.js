@@ -1,7 +1,6 @@
-const { PermissionFlagsBits, AttachmentBuilder, InteractionContextType, MessageFlags } = require('discord.js');
-const { MessageLimits } = require('@sapphire/discord.js-utilities');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { commandMention } = require('../shared');
+const { commandMention, contentOrFileMessagePayload } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,14 +15,7 @@ module.exports = new CommandWrapper(mainId, "Show your inventory of usable items
 			} else {
 				content += "(None yet, do some bounties to find some!)";
 			}
-			if (content.length < MessageLimits.MaximumLength) {
-				interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
-			} else {
-				interaction.reply({
-					files: [new AttachmentBuilder(Buffer.from(content), { name: "inventory.txt" })],
-					flags: [MessageFlags.Ephemeral]
-				});
-			}
+			interaction.reply(contentOrFileMessagePayload(content, { flags: [MessageFlags.Ephemeral] }, "inventory.txt"));
 		});
 	}
 ).setLogicLinker(logicBlob => {
