@@ -2,7 +2,7 @@ const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionR
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
-const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
+const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /**
@@ -68,6 +68,20 @@ function truncateTextToLength(text, length) {
 	} else {
 		return text;
 	}
+}
+
+/** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't
+ * @param {string} content
+ * @param {import("discord.js").BaseMessageOptionsWithPoll} messageOptions
+ * @param {string} filename
+ */
+function contentOrFileMessagePayload(content, messageOptions, filename) {
+	if (content.length < MessageLimits.MaximumLength) {
+		messageOptions.content = content;
+	} else {
+		messageOptions.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: filename })];
+	}
+	return messageOptions;
 }
 
 /**
@@ -149,6 +163,7 @@ module.exports = {
 	bountiesToSelectOptions,
 	rankArrayToSelectOptions,
 	truncateTextToLength,
+	contentOrFileMessagePayload,
 	generateBountyBoardThread,
 	updatePosting,
 	updateScoreboard,

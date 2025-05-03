@@ -1,6 +1,6 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, AttachmentBuilder, heading } = require('discord.js');
-const { MessageLimits } = require('@sapphire/discord.js-utilities');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, heading } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
+const { contentOrFileMessagePayload } = require('../shared/dAPIRequests.js');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,15 +16,7 @@ module.exports = new CommandWrapper(mainId, "Look up this server's seasonal rank
 		const content = `${heading("Seasonal Ranks", 1)}\nBounty Hunters who earn more XP compared to their contemporaries are given special roles to distinguish themselves for the season. These roles are as follows:\n\n${ranks.map((rank, index) => {
 			return `${rank.rankmoji ? `${rank.rankmoji} ` : ""}${rank.roleId ? roleMention(rank.roleId) : `Rank ${index}`}\nVariance Threshold: ${rank.varianceThreshold}\n`;
 		}).join('\n')}`;
-
-		const messagePayload = { flags: [MessageFlags.Ephemeral] };
-		if (content.length < MessageLimits.MaximumLength) { // Send large content as a text file
-			messagePayload.content = content;
-		} else {
-			messagePayload.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: 'ranks.txt' })];
-		}
-
-		interaction.reply(messagePayload);
+		interaction.reply(contentOrFileMessagePayload(content, { flags: [MessageFlags.Ephemeral] }, "ranks.txt"));
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
