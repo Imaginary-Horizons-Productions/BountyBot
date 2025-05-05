@@ -123,7 +123,7 @@ async function updatePosting(guild, company, bounty, posterLevel, completions) {
 		thread.edit({ name: bounty.title });
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
-		return buildBountyEmbed(bounty, guild, posterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(embed => {
+		return buildBountyEmbed(bounty, guild, posterLevel, false, company, completions).then(embed => {
 			posting.edit({
 				embeds: [embed],
 				components: generateBountyBoardButtons(bounty)
