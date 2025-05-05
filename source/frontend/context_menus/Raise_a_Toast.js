@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, DiscordjsErrorCodes } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, generateTextBar, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed } = require('../shared');
+const { textsHaveAutoModInfraction, generateTextBar, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -79,13 +79,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				}
 
 				if (content) {
-					if (modalSubmission.channel.isThread()) {
-						modalSubmission.channel.send({ content, flags: MessageFlags.SuppressNotifications });
-					} else {
-						response.resource.message.startThread({ name: "Rewards" }).then(thread => {
-							thread.send({ content, flags: MessageFlags.SuppressNotifications });
-						})
-					}
+					sendToRewardsThread(response.resource.message, content, "Rewards");
 					const embeds = [];
 					const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);

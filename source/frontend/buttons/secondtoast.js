@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { getRankUpdates, generateTextBar, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString } = require('../shared');
+const { getRankUpdates, generateTextBar, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendToRewardsThread } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -122,16 +122,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		interaction.update({ embeds: [embed] });
 		getRankUpdates(interaction.guild, logicLayer).then(async rankUpdates => {
-			const content = generateSecondingRewardString(interaction.member.displayName, recipientIds, rankUpdates, rewardTexts);
-			if (interaction.channel.isThread()) {
-				interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });
-			} else if (interaction.message.thread !== null) {
-				interaction.message.thread.send({ content, flags: MessageFlags.SuppressNotifications });
-			} else {
-				interaction.message.startThread({ name: "Rewards" }).then(thread => {
-					thread.send({ content, flags: MessageFlags.SuppressNotifications });
-				})
-			}
+			sendToRewardsThread(interaction.message, generateSecondingRewardString(interaction.member.displayName, recipientIds, rankUpdates, rewardTexts), "Rewards");
 			const embeds = [];
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
