@@ -36,13 +36,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		const previousCompanyLevel = company.getLevel(allHunters);
 		const bountyBaseValue = Bounty.calculateCompleterReward(company.getLevel(allHunters), slotNumber, 0);
 		const bountyValue = bountyBaseValue * company.festivalMultiplier;
-		const rawCompletions = validatedCompleterIds.map(userId => ({
-			bountyId: bounty.id,
-			userId,
-			companyId: interaction.guildId,
-			xpAwarded: bountyValue
-		}));
-		const completions = await logicLayer.bounties.bulkCreateCompletions(rawCompletions);
+		const completions = await logicLayer.bounties.bulkCreateCompletions(bounty.id, interaction.guild.id, validatedCompleterIds, bountyValue);
 
 		const levelTexts = [];
 		let totalGP = 0;
