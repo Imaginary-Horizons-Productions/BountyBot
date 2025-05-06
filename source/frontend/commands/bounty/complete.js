@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed } = require("../../shared");
+const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, buildHunterLevelUpLine } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
@@ -50,28 +50,35 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		await interaction.deferReply();
 
 		const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 
-		const { completerXP, posterXP, rewardTexts, itemRollMap } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), interaction.guild.name);
-		for (const hunterId of itemRollMap.hunters) {
-			const hunter = validatedHunters.find(hunter => hunter.userId === hunterId);
-			const [itemRow] = await logicLayer.items.rollItemForHunter(1 / 8, hunter);
+		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const previousCompanyLevel = company.getLevel(Object.values(hunterMap));
+		const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, season, company);
+		for (const id of validatedHunterIds.concat(poster.userId)) {
+			hunterMap[id] = await hunterMap[id].reload();
+		}
+		const rewardTexts = [];
+		for (const id in hunterResults) {
+			const { previousLevel, dropChance } = hunterResults[id];
+			const hunterLevelLine = buildHunterLevelUpLine(hunterMap[id], previousLevel, company.xpCoefficient, company.maxSimBounties);
+			if (hunterLevelLine) {
+				rewardTexts.push(hunterLevelLine);
+			}
+			const [itemRow] = await logicLayer.items.rollItemForHunter(dropChance, hunterMap[id]);
 			if (itemRow) {
-				rewardTexts.push(`${userMention(hunterId)} has found a ${bold(itemRow.itemName)}`)
+				rewardTexts.push(`${userMention(id)} has found a ${bold(itemRow.itemName)}!`);
 			}
 		}
-		for (const posterId of itemRollMap.poster) {
-			const hunter = validatedHunters.find(hunter => hunter.userId === posterId);
-			const [itemRow] = await logicLayer.items.rollItemForHunter(1 / 4, hunter);
-			if (itemRow) {
-				rewardTexts.push(`${userMention(posterId)} has found a ${bold(itemRow.itemName)}`)
-			}
+		const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
+		if (companyLevelLine) {
+			rewardTexts.push(companyLevelLine);
 		}
 		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", poster, season);
 		if (goalUpdate.gpContributed > 0) {
 			rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 		}
 		const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
-		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 		const content = generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
 		buildBountyEmbed(bounty, interaction.guild, poster.getLevel(company.xpCoefficient), true, company, completions).then(async embed => {

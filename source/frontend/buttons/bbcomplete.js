@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes, bold } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { getRankUpdates, commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed } = require('../shared');
+const { getRankUpdates, commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, buildHunterLevelUpLine } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -60,24 +60,31 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				]
 			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
+				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 
-				const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-				const { completerXP, posterXP, rewardTexts, itemRollMap } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), collectedInteraction.guild.name);
-				for (const hunterId of itemRollMap.hunters) {
-					const hunter = validatedHunters.find(hunter => hunter.userId === hunterId);
-					const [itemRow] = await logicLayer.items.rollItemForHunter(1 / 8, hunter);
+				const hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
+				const previousCompanyLevel = company.getLevel(Object.values(hunterMap));
+				const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, hunterMap[bounty.userId], validatedHunters, season, company);
+				for (const id of validatedHunterIds.concat(bounty.userId)) {
+					hunterMap[id] = await hunterMap[id].reload();
+				}
+				const rewardTexts = [];
+				for (const id in hunterResults) {
+					const { previousLevel, dropChance } = hunterResults[id];
+					const hunterLevelLine = buildHunterLevelUpLine(hunterMap[id], previousLevel, company.xpCoefficient, company.maxSimBounties);
+					if (hunterLevelLine) {
+						rewardTexts.push(hunterLevelLine);
+					}
+					const [itemRow] = await logicLayer.items.rollItemForHunter(dropChance, hunterMap[id]);
 					if (itemRow) {
-						rewardTexts.push(`${userMention(hunterId)} has found a ${bold(itemRow.itemName)}`)
+						rewardTexts.push(`${userMention(id)} has found a ${bold(itemRow.itemName)}!`);
 					}
 				}
-				for (const posterId of itemRollMap.poster) {
-					const hunter = validatedHunters.find(hunter => hunter.userId === posterId);
-					const [itemRow] = await logicLayer.items.rollItemForHunter(1 / 4, hunter);
-					if (itemRow) {
-						rewardTexts.push(`${userMention(posterId)} has found a ${bold(itemRow.itemName)}`)
-					}
+				const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), collectedInteraction.guild.name);
+				if (companyLevelLine) {
+					rewardTexts.push(companyLevelLine);
 				}
-				const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", poster, season);
+				const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", hunterMap[bounty.userId], season);
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				}
@@ -86,10 +93,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (collectedInteraction.channel.archived) {
 					await collectedInteraction.channel.setArchived(false, "bounty complete");
 				}
-				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 				collectedInteraction.reply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts), flags: MessageFlags.SuppressNotifications });
-				buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), true, company, completions)
+				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, completions)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
