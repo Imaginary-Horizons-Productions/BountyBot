@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { getRankUpdates, commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts } = require('../shared');
+const { getRankUpdates, commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -62,12 +62,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 
-				const hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
+				let hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
 				const previousCompanyLevel = company.getLevel(Object.values(hunterMap));
 				const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, hunterMap[bounty.userId], validatedHunters, season, company);
-				for (const id of validatedHunterIds.concat(bounty.userId)) {
-					hunterMap[id] = await hunterMap[id].reload();
-				}
+				hunterMap = await reloadHunterMapSubset(hunterMap, validatedHunterIds.concat(bounty.userId));
 				const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, company);
 				const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), collectedInteraction.guild.name);
 				if (companyLevelLine) {

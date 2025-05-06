@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts } = require("../../shared");
+const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
@@ -52,12 +52,10 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 
-		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 		const previousCompanyLevel = company.getLevel(Object.values(hunterMap));
 		const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, season, company);
-		for (const id of validatedHunterIds.concat(poster.userId)) {
-			hunterMap[id] = await hunterMap[id].reload();
-		}
+		hunterMap = await reloadHunterMapSubset(hunterMap, validatedHunterIds.concat(poster.userId));
 		const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, company);
 		const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
 		if (companyLevelLine) {
