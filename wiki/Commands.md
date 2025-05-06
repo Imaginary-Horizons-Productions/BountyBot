@@ -211,7 +211,7 @@ Add a seasonal rank for showing outstanding bounty hunters
 #### /rank edit
 Change the role or rankmoji for a seasonal rank
 #### /rank remove
-Remove an existing seasonal rank
+Remove one or more existing seasonal ranks
 ### /reset
 > Usable in: Servers
 
