@@ -4,7 +4,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { rankArrayToSelectOptions, listifyEN, getRankUpdates, disabledSelectRow } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 
-module.exports = new SubcommandWrapper("remove", "Remove an existing seasonal rank",
+module.exports = new SubcommandWrapper("remove", "Remove one or more existing seasonal ranks",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const guildRoles = await interaction.guild.roles.fetch();

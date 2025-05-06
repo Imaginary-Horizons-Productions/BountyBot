@@ -1,73 +1,59 @@
-const { MessageFlags, userMention, bold } = require("discord.js");
+const { MessageFlags, userMention, bold, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, updatePosting } = require("../../shared");
+const { listifyEN, updatePosting, bountiesToSelectOptions, disabledSelectRow, commandMention } = require("../../shared");
+const { timeConversion } = require("../../../shared");
+const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
-		const slotNumber = interaction.options.getInteger("bounty-slot");
-		logicLayer.bounties.findBounty({ userId: interaction.user.id, companyId: interaction.guild.id, slotNumber }).then(async bounty => {
-			if (!bounty) {
-				interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
-				return;
-			}
+		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
+		if (openBounties.length < 1) {
+			interaction.reply({ content: `You don't currently have any open bounties. Post one with ${commandMention("bounty post")}?`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
 
-			const hunterIds = [];
-			for (const potentialHunter of ["bounty-hunter", "second-bounty-hunter", "third-bounty-hunter", "fourth-bounty-hunter", "fifth-bounty-hunter"]) {
-				const guildMember = interaction.options.getMember(potentialHunter);
-				if (guildMember) {
-					hunterIds.push(guildMember.id);
+		interaction.reply({
+			content: "Select one of your bounties and some bounty hunters whose turn-ins you'd like to revoke.",
+			components: [
+				new ActionRowBuilder().addComponents(
+					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}bounty`)
+						.setPlaceholder("Select Bounty...")
+						.setOptions(bountiesToSelectOptions(openBounties))
+				),
+				disabledSelectRow("Select Bounty Hunters...")
+			],
+			flags: [MessageFlags.Ephemeral],
+			withResponse: true
+		}).then(response => response.resource.message.createMessageComponentCollector({ time: timeConversion(2, "m", "ms") })).then(collector => {
+			let bounty;
+			collector.on("collect", async collectedInteraction => {
+				const [_, stepId] = collectedInteraction.customId.split(SAFE_DELIMITER);
+				switch (stepId) {
+					case "bounty":
+						bounty = openBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
+						collectedInteraction.update({
+							components: [
+								disabledSelectRow(bounty.title),
+								new ActionRowBuilder().addComponents(
+									new UserSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}hunters`)
+										.setPlaceholder("Select bounty hunters...")
+										.setMaxValues(5)
+								)
+							]
+						});
+						break;
+					case "hunters":
+						await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, collectedInteraction.values);
+						const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guildId);
+						const post = await updatePosting(collectedInteraction.guild, company, bounty, poster.getLevel(company.xpCoefficient), await logicLayer.bounties.findBountyCompletions(bounty.id));
+						if (post) {
+							post.channel.send({ content: `${listifyEN(collectedInteraction.values.map(id => `<@${id}>`))} ${collectedInteraction.values.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
+						}
+
+						collectedInteraction.update({ content: `These bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${listifyEN(collectedInteraction.values.map(id => userMention(id)))}`, components: [] });
+						break;
 				}
-			}
-
-			logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, hunterIds);
-			const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-			updatePosting(interaction.guild, company, bounty, poster.getLevel(company.xpCoefficient), await logicLayer.bounties.findBountyCompletions(bounty.id));
-			if (company.bountyBoardId) {
-				interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
-					return bountyBoard.threads.fetch(bounty.postingId);
-				}).then(posting => {
-					posting.send({ content: `${listifyEN(hunterIds.map(id => `<@${id}>`))} ${hunterIds.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
-				});
-			}
-
-			interaction.reply({ content: `The bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${listifyEN(hunterIds.map(id => userMention(id)))}`, flags: [MessageFlags.Ephemeral] });
-		})
-	}
-).setOptions(
-	{
-		type: "Integer",
-		name: "bounty-slot",
-		description: "The slot number of your bounty",
-		required: true
-	},
-	{
-		type: "User",
-		name: "bounty-hunter",
-		description: "A bounty hunter to uncredit",
-		required: true
-	},
-	{
-		type: "User",
-		name: "second-bounty-hunter",
-		description: "A bounty hunter to uncredit",
-		required: false
-	},
-	{
-		type: "User",
-		name: "third-bounty-hunter",
-		description: "A bounty hunter to uncredit",
-		required: false
-	},
-	{
-		type: "User",
-		name: "fourth-bounty-hunter",
-		description: "A bounty hunter to uncredit",
-		required: false
-	},
-	{
-		type: "User",
-		name: "fifth-bounty-hunter",
-		description: "A bounty hunter to uncredit",
-		required: false
+			})
+		});
 	}
 );
