@@ -1,7 +1,7 @@
-const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes, bold } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { getRankUpdates, commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, buildHunterLevelUpLine } = require('../shared');
+const { getRankUpdates, commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -68,18 +68,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				for (const id of validatedHunterIds.concat(bounty.userId)) {
 					hunterMap[id] = await hunterMap[id].reload();
 				}
-				const rewardTexts = [];
-				for (const id in hunterResults) {
-					const { previousLevel, dropChance } = hunterResults[id];
-					const hunterLevelLine = buildHunterLevelUpLine(hunterMap[id], previousLevel, company.xpCoefficient, company.maxSimBounties);
-					if (hunterLevelLine) {
-						rewardTexts.push(hunterLevelLine);
-					}
-					const [itemRow] = await logicLayer.items.rollItemForHunter(dropChance, hunterMap[id]);
-					if (itemRow) {
-						rewardTexts.push(`${userMention(id)} has found a ${bold(itemRow.itemName)}!`);
-					}
-				}
+				const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, company);
 				const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), collectedInteraction.guild.name);
 				if (companyLevelLine) {
 					rewardTexts.push(companyLevelLine);

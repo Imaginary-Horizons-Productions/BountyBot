@@ -1,6 +1,7 @@
 const { Sequelize, Op } = require("sequelize");
 const { Guild, GuildMember } = require("discord.js");
 const { Bounty, Hunter, Season, Company } = require("../database/models");
+const { rollItemForHunter } = require("./items");
 
 /** @type {Sequelize} */
 let db;
@@ -159,12 +160,13 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
 	const bountyValue = bountyBaseValue * company.festivalMultiplier;
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
-	/** @type {Record<string, { previousLevel: number, dropChance: number }>} */
+	/** @type {Record<string, { previousLevel: number, droppedItem: string | null }>} */
 	const hunterResults = {};
 	for (const hunter of validatedHunters) {
 		hunterResults[hunter.userId] = { previousLevel: hunter.getLevel(company.xpCoefficient) };
 		await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
-		hunterResults[hunter.userId].dropChance = 1 / 8;
+		const [itemRow, wasCreated] = await rollItemForHunter(1 / 8, hunter);
+		hunterResults[hunter.userId].droppedItem = wasCreated ? itemRow.itemName : null;
 		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
@@ -174,7 +176,8 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
 	hunterResults[poster.userId] = { previousLevel: poster.getLevel(company.xpCoefficient) };
 	await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
-	hunterResults[poster.userId].dropChance = 1 / 4;
+	const [itemRow, wasCreated] = await rollItemForHunter(1 / 4, poster);
+	hunterResults[poster.userId].droppedItem = wasCreated ? itemRow.itemName : null;
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });

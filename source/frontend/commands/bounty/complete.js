@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, buildHunterLevelUpLine } = require("../../shared");
+const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
@@ -58,18 +58,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		for (const id of validatedHunterIds.concat(poster.userId)) {
 			hunterMap[id] = await hunterMap[id].reload();
 		}
-		const rewardTexts = [];
-		for (const id in hunterResults) {
-			const { previousLevel, dropChance } = hunterResults[id];
-			const hunterLevelLine = buildHunterLevelUpLine(hunterMap[id], previousLevel, company.xpCoefficient, company.maxSimBounties);
-			if (hunterLevelLine) {
-				rewardTexts.push(hunterLevelLine);
-			}
-			const [itemRow] = await logicLayer.items.rollItemForHunter(dropChance, hunterMap[id]);
-			if (itemRow) {
-				rewardTexts.push(`${userMention(id)} has found a ${bold(itemRow.itemName)}!`);
-			}
-		}
+		const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, company);
 		const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
 		if (companyLevelLine) {
 			rewardTexts.push(companyLevelLine);
