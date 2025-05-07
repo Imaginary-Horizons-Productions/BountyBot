@@ -9,7 +9,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		if (evergreenBounties.length < 1) {
-			interaction.reply({ content: `This server doesn't currently have any evergreen bounties. Post one with ${commandMention("evergreen post")}?`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `This server doesn't currently have any evergreen bounties. Post one with ${commandMention("evergreen post")}?`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 				),
 				disabledSelectRow("Select bounty hunters...")
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.createMessageComponentCollector({ time: timeConversion(2, "m", "ms") })).then(collector => {
 			let bounty;
@@ -54,7 +54,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						}
 
 						if (validatedHunterIds.length < 1) {
-							collectedInteraction.reply({ content: "No valid bounty hunters received. Bots cannot be credited for bounty completion.", flags: [MessageFlags.Ephemeral] })
+							collectedInteraction.reply({ content: "No valid bounty hunters received. Bots cannot be credited for bounty completion.", flags: MessageFlags.Ephemeral })
 							return;
 						}
 
