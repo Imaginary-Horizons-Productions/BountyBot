@@ -28,7 +28,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				flags: MessageFlags.Ephemeral,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
-				await collectedInteraction.deferReply({ flags: MessageFlags.Ephemeral });
 				await bounty.reload();
 				bounty.state = "deleted";
 				bounty.save();
@@ -42,7 +41,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					getRankUpdates(interaction.guild, logicLayer);
 				})
 
-				return collectedInteraction.editReply({ content: "Your bounty has been taken down." });
+				return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);
