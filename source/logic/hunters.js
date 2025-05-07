@@ -46,6 +46,7 @@ function findCompanyHunters(companyId) {
  * @param {string} companyId
  */
 async function getCompanyHunterMap(companyId) {
+	/** @type {Record<string, Hunter} */
 	const hunterMap = {};
 	const hunters = await db.models.Hunter.findAll({ where: { companyId } });
 	for (const hunter of hunters) {
