@@ -111,7 +111,7 @@ Swap the rewards of two evergreen bounties
 #### /evergreen showcase
 Show the embed for an evergreen bounty
 #### /evergreen complete
-Distribute rewards for turn-ins of an evergreen bounty
+Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters
 #### /evergreen take-down
 Take down one of your bounties without awarding XP (forfeit posting XP)
 ### /feedback
