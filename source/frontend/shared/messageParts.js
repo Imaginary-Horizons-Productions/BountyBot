@@ -602,6 +602,27 @@ function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUp
 	return text;
 }
 
+/**
+ * @param {Record<string, { previousLevel: number, droppedItem: string | null }>} hunterResults
+ * @param {Record<string, Hunter>} hunterMap
+ * @param {Company} company
+ */
+function formatHunterResultsToRewardTexts(hunterResults, hunterMap, company) {
+	/** @type {string[]} */
+	const rewardTexts = [];
+	for (const id in hunterResults) {
+		const { previousLevel, droppedItem } = hunterResults[id];
+		const hunterLevelLine = buildHunterLevelUpLine(hunterMap[id], previousLevel, company.xpCoefficient, company.maxSimBounties);
+		if (hunterLevelLine) {
+			rewardTexts.push(hunterLevelLine);
+		}
+		if (droppedItem) {
+			rewardTexts.push(`${userMention(id)} has found a ${bold(droppedItem)}!`);
+		}
+	}
+	return rewardTexts;
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -626,5 +647,6 @@ module.exports = {
 	generateSecondingActionRow,
 	generateToastRewardString,
 	generateCompletionEmbed,
-	generateSecondingRewardString
+	generateSecondingRewardString,
+	formatHunterResultsToRewardTexts
 };

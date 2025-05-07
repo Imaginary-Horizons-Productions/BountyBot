@@ -17,7 +17,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 		}
 
 		if (slotNumber === null) {
-			interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -52,7 +52,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 			const description = interaction.fields.getTextInputValue("description");
 
 			if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [title, description], "evergreen post")) {
-				interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
@@ -74,7 +74,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 					rawBounty.attachmentURL = imageURL;
 				} catch (error) {
 					interaction.message.edit({ components: [] });
-					interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${error.message}`, flags: [MessageFlags.Ephemeral] });
+					interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${error.message}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 			}
@@ -105,7 +105,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 					});
 				} else {
 					if (!interaction.member.manageable) {
-						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: [MessageFlags.Ephemeral] });
+						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 					}
 				}
 			});

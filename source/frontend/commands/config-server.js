@@ -18,7 +18,7 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			}
 
 			company.update(updatePayload);
-			interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content, flags: MessageFlags.Ephemeral });
 		});
 	}
 ).setOptions(

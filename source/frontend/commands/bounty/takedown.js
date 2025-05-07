@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 							.setOptions(bountiesToSelectOptions(openBounties))
 					)
 				],
-				flags: [MessageFlags.Ephemeral],
+				flags: MessageFlags.Ephemeral,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 				const [bountyId] = collectedInteraction.values;
@@ -37,7 +37,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
 				getRankUpdates(interaction.guild, logicLayer);
 
-				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
+				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 			}).catch(error => {
 				if (error.codes !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

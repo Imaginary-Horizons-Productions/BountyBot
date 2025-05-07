@@ -6,7 +6,7 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, company]) {
 		const multiplier = interaction.options.getInteger("multiplier");
 		if (multiplier < 2) {
-			interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, flags: [MessageFlags.Ephemeral] })
+			interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, flags: MessageFlags.Ephemeral })
 			return;
 		}
 		company.update({ "festivalMultiplier": multiplier });

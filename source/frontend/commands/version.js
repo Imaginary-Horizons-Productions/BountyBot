@@ -8,13 +8,13 @@ module.exports = new CommandWrapper(mainId, "Get the most recent changes or the 
 	(interaction, runMode) => {
 		if (interaction.options.getString("notes-length") === "last-version") {
 			buildVersionEmbed(interaction.client.user.displayAvatarURL()).then(embed => {
-				interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 			}).catch(console.error);
 		} else {
 			interaction.reply({
 				content: "Here are all the changes so far: ",
 				files: [new AttachmentBuilder("./ChangeLog.md")],
-				flags: [MessageFlags.Ephemeral]
+				flags: MessageFlags.Ephemeral
 			});
 		}
 	}

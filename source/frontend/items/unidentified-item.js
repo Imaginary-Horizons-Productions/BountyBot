@@ -11,7 +11,7 @@ module.exports = new ItemTemplateSet(
 		async (interaction) => {
 			const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 			const [itemRow] = await logicLayer.items.rollItemForHunter(1, hunter);
-			interaction.reply({ content: `The unidentified item was a ${bold(itemRow.itemName)}! Use it with ${commandMention("item")}?`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `The unidentified item was a ${bold(itemRow.itemName)}! Use it with ${commandMention("item")}?`, flags: MessageFlags.Ephemeral });
 		}
 	)
 ).setLogicLinker(logicBlob => {

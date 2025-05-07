@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
-			interaction.reply({ content: `You don't currently have any open bounties. Post one with ${commandMention("bounty post")}?`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `You don't currently have any open bounties. Post one with ${commandMention("bounty post")}?`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -22,7 +22,7 @@ module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of
 				),
 				disabledSelectRow("Select Bounty Hunters...")
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.createMessageComponentCollector({ time: timeConversion(2, "m", "ms") })).then(collector => {
 			let bounty;

@@ -5,7 +5,7 @@ const { updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed } = re
 module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset all bounty hunter stats on this server",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		logicLayer.hunters.deleteCompanyHunters(interaction.guild.id);
-		interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: MessageFlags.Ephemeral });
 		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 		const season = await logicLayer.seasons.findOneSeason(interaction.guild.id, "current");
 		if (season) {

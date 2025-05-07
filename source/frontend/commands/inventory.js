@@ -15,7 +15,7 @@ module.exports = new CommandWrapper(mainId, "Show your inventory of usable items
 			} else {
 				content += "(None yet, do some bounties to find some!)";
 			}
-			interaction.reply(contentOrFileMessagePayload(content, { flags: [MessageFlags.Ephemeral] }, "inventory.txt"));
+			interaction.reply(contentOrFileMessagePayload(content, { flags: MessageFlags.Ephemeral }, "inventory.txt"));
 		});
 	}
 ).setLogicLinker(logicBlob => {

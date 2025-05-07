@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("by-level", "Select a user at or above a 
 		const eligibleMembers = await interaction.guild.members.fetch({ user: eligibleHunters.map(hunter => hunter.userId) });
 		const eligibleIds = eligibleMembers.filter(member => member.manageable).map(member => member.id);
 		if (eligibleIds.size < 1) {
-			interaction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above level ${levelThreshold}).`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above level ${levelThreshold}).`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 		const winnerId = eligibleIds.at(Math.floor(Math.random() * eligibleIds.size));

@@ -7,7 +7,7 @@ const mainId = "about";
 module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Get BountyBot's description and contributors */
 	(interaction, runMode) => {
-		fs.promises.stat("./source/commands/about.js").then(stats => {
+		fs.promises.stat(__filename).then(stats => {
 			const avatarURL = interaction.client.user.avatarURL();
 			interaction.reply({
 				embeds: [
@@ -26,7 +26,7 @@ module.exports = new CommandWrapper(mainId, "Get BountyBot's description and con
 						.setFooter({ text: "Click \"About BountyBot\" to add BountyBot to your own server! Click \"Imaginary Horizons Productions\" to go to the BountyBot announcements channel!", iconURL: avatarURL })
 						.setTimestamp(stats.mtime)
 				],
-				flags: [MessageFlags.Ephemeral]
+				flags: MessageFlags.Ephemeral
 			})
 		});
 	}

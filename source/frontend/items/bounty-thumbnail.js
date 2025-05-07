@@ -13,7 +13,7 @@ module.exports = new ItemTemplateSet(
 		async (interaction) => {
 			const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 			if (openBounties.length < 1) {
-				interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
 			interaction.showModal(
@@ -34,7 +34,7 @@ module.exports = new ItemTemplateSet(
 					try {
 						new URL(imageURL);
 					} catch (error) {
-						interaction.reply({ content: `${imageURL} is not usable as a URL for a bounty thumbnail.`, flags: [MessageFlags.Ephemeral] });
+						interaction.reply({ content: `${imageURL} is not usable as a URL for a bounty thumbnail.`, flags: MessageFlags.Ephemeral });
 						return true;
 					}
 				}
@@ -48,12 +48,12 @@ module.exports = new ItemTemplateSet(
 								.setOptions(bountiesToSelectOptions(openBounties))
 						)
 					],
-					flags: [MessageFlags.Ephemeral],
+					flags: MessageFlags.Ephemeral,
 					withResponse: true
 				}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 					const bounty = await logicLayer.bounties.findBounty(collectedInteraction.values[0]);
 					if (bounty?.state !== "open") {
-						return collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
+						return collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 					}
 					bounty.thumbnailURL = imageURL;
 					await bounty.save().then(async bounty => {
@@ -61,7 +61,7 @@ module.exports = new ItemTemplateSet(
 						const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 						updatePosting(interaction.guild, company, bounty, (await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id)).getLevel(company.xpCoefficient), bounty.id);
 					});
-					return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: [MessageFlags.Ephemeral] });
+					return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: MessageFlags.Ephemeral });
 				})
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {

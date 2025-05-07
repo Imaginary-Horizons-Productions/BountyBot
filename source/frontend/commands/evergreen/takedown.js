@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
@@ -45,7 +45,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			}
 			bounty.destroy();
 
-			collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
+			collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", flags: MessageFlags.Ephemeral });
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);

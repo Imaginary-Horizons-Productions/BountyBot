@@ -9,7 +9,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		if (openBounties.length < 1) {
-			interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
@@ -83,7 +83,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				}
 
 				if (errors.length > 0) {
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -113,7 +113,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				}
 
 				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, company, []);
-				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
+				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {

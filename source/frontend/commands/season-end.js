@@ -14,7 +14,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 		const guild = interaction.guild;
 		const company = await logicLayer.companies.findCompanyByPK(guild.id);
 		if (!company) {
-			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 

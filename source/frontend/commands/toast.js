@@ -54,13 +54,13 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		// Early-out if any errors
 		if (errors.length > 0) {
-			interaction.reply({ content: `The following errors were encountered while raising your toast:\n- ${errors.join("\n- ")}`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `The following errors were encountered while raising your toast:\n- ${errors.join("\n- ")}`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const toastText = interaction.options.getString("message");
 		if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")) {
-			interaction.reply({ content: "Your toast was blocked by AutoMod.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "Your toast was blocked by AutoMod.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -95,7 +95,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			withResponse: true
 		}).then(async response => {
 			if (bannedText) {
-				interaction.followUp({ content: bannedText, flags: [MessageFlags.Ephemeral] });
+				interaction.followUp({ content: bannedText, flags: MessageFlags.Ephemeral });
 			}
 			let content = "";
 			if (rewardedHunterIds.length > 0) {

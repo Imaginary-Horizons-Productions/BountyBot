@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
 		logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id).then(openBounties => {
 			if (openBounties.length < 1) {
-				interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
@@ -22,7 +22,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 							.setOptions(bountiesToSelectOptions(openBounties))
 					)
 				],
-				flags: [MessageFlags.Ephemeral],
+				flags: MessageFlags.Ephemeral,
 				withResponse: true
 			}).then(response => {
 				const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
@@ -31,7 +31,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 						const company = await logicLayer.companies.findCompanyByPK(interaction.guildId);
 						const bountySlotCount = Hunter.getBountySlotCount(hunter.getLevel(company.xpCoefficient), company.maxSimBounties);
 						if (bountySlotCount < 2) {
-							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: [MessageFlags.Ephemeral] });
+							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: MessageFlags.Ephemeral });
 							return;
 						}
 
@@ -63,7 +63,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 										.setOptions(slotOptions)
 								)
 							],
-							flags: [MessageFlags.Ephemeral]
+							flags: MessageFlags.Ephemeral
 						})
 					} else {
 						const sourceSlot = parseInt(collectedInteraction.customId.split(SAFE_DELIMITER)[1]);

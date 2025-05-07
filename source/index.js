@@ -149,7 +149,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	await logicBlob.companies.findOrCreateCompany(interaction.guild.id);
 	const [interactingHunter] = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 	if (interactingHunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
-		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: MessageFlags.Ephemeral });
 		return;
 	}
 
@@ -166,13 +166,13 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	} else if (interaction.isContextMenuCommand()) {
 		const contextMenu = getContextMenu(interaction.commandName);
 		if (contextMenu.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-			interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const cooldownTimestamp = contextMenu.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 		if (cooldownTimestamp) {
-			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` context menu option is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -180,13 +180,13 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	} else if (interaction.isCommand()) {
 		const command = getCommand(interaction.commandName);
 		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-			interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `The \`/${interaction.commandName}\` command is a premium command. Learn more with ${commandMention("premium")}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const cooldownTimestamp = command.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 		if (cooldownTimestamp) {
-			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 		command.execute(interaction, runMode);
@@ -204,7 +204,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		const cooldownTimestamp = interactionWrapper.getCooldownTimestamp(interaction.user.id, interactionCooldowns);
 
 		if (cooldownTimestamp) {
-			interaction.reply({ content: `Please wait, this interaction is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Please wait, this interaction is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
