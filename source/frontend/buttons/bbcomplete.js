@@ -11,23 +11,22 @@ const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
-			await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 			if (!bounty) {
-				interaction.editReply({ content: "This bounty could not be found." });
+				interaction.reply({ content: "This bounty could not be found.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			if (bounty.userId !== interaction.user.id) {
-				interaction.editReply({ content: "Only the bounty poster can mark a bounty completed." });
+				interaction.reply({ content: "Only the bounty poster can mark a bounty completed.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			// Early-out if no completers
 			const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
-			const completerMembers = (await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) })).values();
+			const hunterCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
 			const validatedHunterIds = [];
 			const validatedHunters = [];
-			for (const member of completerMembers) {
+			hunterCollection.forEach(async member => {
 				if (runMode !== "production" || !member.user.bot) {
 					const memberId = member.id;
 					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
@@ -36,20 +35,20 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						validatedHunters.push(hunter);
 					}
 				}
-			}
+			})
 
 			if (validatedHunters.length < 1) {
-				interaction.editReply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.` })
+				interaction.reply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.`, flags: MessageFlags.Ephemeral })
 				return;
 			}
 
 			// disallow completion within 5 minutes of creating bounty
 			if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
-				interaction.editReply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.` });
+				interaction.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
-			interaction.editReply({
+			interaction.reply({
 				content: `Which channel should the bounty's completion be announced in?\n\nCompleters: <@${validatedHunterIds.join(">, <@")}>`,
 				components: [
 					new ActionRowBuilder().addComponents(
@@ -57,8 +56,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							.setPlaceholder("Select channel...")
 							.setChannelTypes(ChannelType.GuildText)
 					)
-				]
-			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
+				],
+				flags: MessageFlags.Ephemeral,
+				withResponse: true
+			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
+				await collectedInteraction.deferReply({ flags: MessageFlags.SuppressNotifications });
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 
@@ -81,7 +83,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					await collectedInteraction.channel.setArchived(false, "bounty complete");
 				}
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
-				collectedInteraction.reply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts), flags: MessageFlags.SuppressNotifications });
+				collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts) });
 				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, completions)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {

@@ -13,7 +13,6 @@ const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, runMode) => {
 		const itemName = interaction.options.getString("item-name");
-		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 		const itemRow = await logicLayer.items.findUserItemEntry(interaction.user.id, itemName);
 		const hasItem = itemRow !== null && itemRow.count > 0 || runMode !== "production";
 		let embedColor = Colors.Blurple;
@@ -21,7 +20,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			const [color] = itemName.split("Profile Colorizer");
 			embedColor = Colors[color.replace(/ /g, "")];
 		}
-		interaction.editReply({
+		interaction.reply({
 			embeds: [
 				new EmbedBuilder().setColor(embedColor)
 					.setAuthor(ihpAuthorPayload)
@@ -37,8 +36,10 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 						.setLabel(`Use a ${itemName}`)
 						.setDisabled(!hasItem)
 				)
-			]
-		}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteration => {
+			],
+			flags: MessageFlags.Ephemeral,
+			withResponse: true
+		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteration => {
 			if (runMode === "production" && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
 				collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: MessageFlags.Ephemeral });
 				return;
