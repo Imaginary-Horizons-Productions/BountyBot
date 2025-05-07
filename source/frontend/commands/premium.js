@@ -23,7 +23,7 @@ module.exports = new CommandWrapper(mainId, "List perks for supporting IHP devel
 						.setFooter(randomFooterTip())
 						.setTimestamp(stats.mtime)
 				],
-				flags: [MessageFlags.Ephemeral]
+				flags: MessageFlags.Ephemeral
 			});
 		})
 	}

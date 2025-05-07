@@ -9,7 +9,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
@@ -137,7 +137,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 
 				if (errors.length > 0) {
 					interaction.deleteReply();
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 

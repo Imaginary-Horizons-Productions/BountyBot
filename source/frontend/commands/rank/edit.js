@@ -7,7 +7,7 @@ module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for 
 		const varianceThreshold = interaction.options.getNumber("variance-threshold");
 		const rank = await logicLayer.ranks.findOneRank(interaction.guild.id, varianceThreshold);
 		if (!rank) {
-			interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -24,7 +24,7 @@ module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for 
 		}
 		rank.update(updateOptions);
 		getRankUpdates(interaction.guild, logicLayer);
-		interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{

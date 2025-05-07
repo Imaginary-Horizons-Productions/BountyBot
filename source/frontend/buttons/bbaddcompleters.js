@@ -38,10 +38,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	async (interaction, runMode, [bountyId]) => {
 		const bounty = await logicLayer.bounties.findBounty(bountyId);
 		if (!bounty) {
-			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: [MessageFlags.Ephemeral] })
+			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: MessageFlags.Ephemeral })
 		}
 		if (bounty.userId !== interaction.user.id) {
-			interaction.reply({ content: "Only the bounty poster can add completers.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "Only the bounty poster can add completers.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -54,7 +54,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						.setMaxValues(5)
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 			try {
@@ -67,7 +67,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (typeof e !== 'string') {
 					console.error(e);
 				} else {
-					collectedInteraction.reply({ content: e, flags: [MessageFlags.Ephemeral] });
+					collectedInteraction.reply({ content: e, flags: MessageFlags.Ephemeral });
 				}
 				return;
 			}

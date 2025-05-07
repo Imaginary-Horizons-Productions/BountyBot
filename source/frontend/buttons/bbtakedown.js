@@ -10,7 +10,7 @@ const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
-			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+			await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 			if (bounty.userId !== interaction.user.id) {
 				interaction.editReply({ content: "Only the bounty poster can take down their bounty." });
 				return;
@@ -40,7 +40,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					getRankUpdates(interaction.guild, logicLayer);
 				})
 
-				return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
+				return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

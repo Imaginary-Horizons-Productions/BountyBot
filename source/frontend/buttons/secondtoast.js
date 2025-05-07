@@ -11,12 +11,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	async (interaction, runMode, [toastId]) => {
 		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
 		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
-			interaction.reply({ content: "You cannot second your own toast.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You cannot second your own toast.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		if (await logicLayer.toasts.wasAlreadySeconded(toastId, interaction.user.id)) {
-			interaction.reply({ content: "You've already seconded this toast.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You've already seconded this toast.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 

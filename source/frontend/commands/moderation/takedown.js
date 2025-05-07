@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 		const poster = interaction.options.getUser("poster");
 		const openBounties = await logicLayer.bounties.findOpenBounties(poster.id, interaction.guild.id);
 		if (openBounties.length < 1) {
-			interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -22,7 +22,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];

@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 		const bounty = await logicLayer.bounties.findOneEvergreenBounty(interaction.guild.id, slotNumber);
 		if (!bounty) {
-			interaction.reply({ content: "There isn't an evergreen bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "There isn't an evergreen bounty in the `bounty-slot` provided.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -25,7 +25,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 
 		const validatedCompleterIds = hunterMembers.map(member => member.id);
 		if (validatedCompleterIds.length < 1) {
-			interaction.reply({ content: "No valid bounty hunters received. Bots cannot be credited for bounty completion.", flags: [MessageFlags.Ephemeral] })
+			interaction.reply({ content: "No valid bounty hunters received. Bots cannot be credited for bounty completion.", flags: MessageFlags.Ephemeral })
 			return;
 		}
 

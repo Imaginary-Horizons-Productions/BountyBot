@@ -7,13 +7,13 @@ module.exports = new SubcommandWrapper("user-report", "Get the BountyBot moderat
 		const member = interaction.options.getMember("user");
 		const hunter = await logicLayer.hunters.findOneHunter(member.id, interaction.guild.id);
 		if (!hunter) {
-			interaction.reply({ content: `${member} has not interacted with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `${member} has not interacted with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const dqCount = await logicLayer.seasons.getDQCount(member.id, interaction.guild.id);
 		const lastFiveBounties = await logicLayer.bounties.findHuntersLastFiveBounties(member.id, interaction.guildId);
-		interaction.reply({ embeds: [modStatsEmbed(hunter, interaction.guild, member, dqCount, lastFiveBounties)], flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ embeds: [modStatsEmbed(hunter, interaction.guild, member, dqCount, lastFiveBounties)], flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{

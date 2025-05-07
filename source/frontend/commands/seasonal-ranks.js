@@ -10,13 +10,13 @@ module.exports = new CommandWrapper(mainId, "Look up this server's seasonal rank
 	async (interaction, runMode) => {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		if (!ranks || !ranks.length) {
-			interaction.reply({ content: `Could not find any seasonal ranks. Please contact a server admin to make sure this isn't a mistake.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Could not find any seasonal ranks. Please contact a server admin to make sure this isn't a mistake.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 		const content = `${heading("Seasonal Ranks", 1)}\nBounty Hunters who earn more XP compared to their contemporaries are given special roles to distinguish themselves for the season. These roles are as follows:\n\n${ranks.map((rank, index) => {
 			return `${rank.rankmoji ? `${rank.rankmoji} ` : ""}${rank.roleId ? roleMention(rank.roleId) : `Rank ${index}`}\nVariance Threshold: ${rank.varianceThreshold}\n`;
 		}).join('\n')}`;
-		interaction.reply(contentOrFileMessagePayload(content, { flags: [MessageFlags.Ephemeral] }, "ranks.txt"));
+		interaction.reply(contentOrFileMessagePayload(content, { flags: MessageFlags.Ephemeral }, "ranks.txt"));
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

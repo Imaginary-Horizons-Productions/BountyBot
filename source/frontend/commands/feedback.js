@@ -8,7 +8,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 	/** Open the modal associated with the feedback type to prompt more specific information */
 	(interaction, runMode) => {
 		if (!testGuildId || !feedbackChannelId) {
-			interaction.reply({ content: "The test server is not yet configured to receive feedback, thanks for your patience.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "The test server is not yet configured to receive feedback, thanks for your patience.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -76,7 +76,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 					}).then(feedbackChannel => {
 						feedbackChannel.createInvite({ maxAge: 0 }).then(invite => {
 							feedbackChannel.send({ embeds: [embed] });
-							modalSubmission.reply({ content: `Your bug report has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}.You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: [MessageFlags.Ephemeral] })
+							modalSubmission.reply({ content: `Your bug report has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}.You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: MessageFlags.Ephemeral })
 						})
 					})
 				}).catch(error => {
@@ -151,7 +151,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 					}).then(feedbackChannel => {
 						feedbackChannel.createInvite({ maxAge: 0 }).then(invite => {
 							feedbackChannel.send({ embeds: [embed] });
-							modalSubmission.reply({ content: `Your feature request has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}. You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: [MessageFlags.Ephemeral] })
+							modalSubmission.reply({ content: `Your feature request has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}. You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: MessageFlags.Ephemeral })
 						})
 					})
 				}).catch(error => {

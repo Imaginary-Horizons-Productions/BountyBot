@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		if (existingBounties.length < 2) {
-			interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -22,7 +22,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 						.setOptions(bountiesToSelectOptions(existingBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => {
 			const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
@@ -58,7 +58,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 										.setOptions(slotOptions)
 								)
 							],
-							flags: [MessageFlags.Ephemeral]
+							flags: MessageFlags.Ephemeral
 						})
 					})
 				} else {

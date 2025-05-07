@@ -18,7 +18,7 @@ module.exports = new SubcommandWrapper("remove", "Remove one or more existing se
 						.setMaxValues(ranks.length)
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message).then(message => {
 			const selectCollector = message.createMessageComponentCollector({ time: timeConversion(5, "m", "ms"), componentType: ComponentType.StringSelect })

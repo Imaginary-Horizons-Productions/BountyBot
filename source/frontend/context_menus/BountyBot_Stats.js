@@ -24,14 +24,14 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 			statsEmbed(company, interaction.guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
 				interaction.reply({
 					embeds: [embed],
-					flags: [MessageFlags.Ephemeral]
+					flags: MessageFlags.Ephemeral
 				});
 			})
 		} else {
 			// Other Hunter
 			logicLayer.hunters.findOneHunter(target.id, interaction.guild.id).then(async hunter => {
 				if (!hunter) {
-					interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
+					interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -64,7 +64,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 							.setFooter(randomFooterTip())
 							.setTimestamp()
 					],
-					flags: [MessageFlags.Ephemeral]
+					flags: MessageFlags.Ephemeral
 				});
 			})
 		}

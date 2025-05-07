@@ -19,7 +19,7 @@ module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, fals
 		} else {
 			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
 		}
-		interaction.reply({ embeds, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ embeds, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{

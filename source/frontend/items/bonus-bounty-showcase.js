@@ -13,7 +13,7 @@ module.exports = new ItemTemplateSet(
 		async (interaction) => {
 			const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 			if (openBounties.length < 1) {
-				interaction.reply({ content: "You don't have any open bounties on this server to showcase.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "You don't have any open bounties on this server to showcase.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
 
@@ -26,22 +26,22 @@ module.exports = new ItemTemplateSet(
 							.setOptions(bountiesToSelectOptions(openBounties))
 					)
 				],
-				flags: [MessageFlags.Ephemeral],
+				flags: MessageFlags.Ephemeral,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 				if (!collectedInteraction.channel.members.has(collectedInteraction.client.user.id)) {
-					collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: [MessageFlags.Ephemeral] });
+					collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
 					return;
 				}
 
 				if (!collectedInteraction.channel.permissionsFor(collectedInteraction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
-					collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: [MessageFlags.Ephemeral] });
+					collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
 					return;
 				}
 
 				const bounty = await openBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
 				if (bounty.state !== "open") {
-					collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
+					collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 					return;
 				}
 

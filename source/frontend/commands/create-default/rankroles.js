@@ -3,7 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
-		await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 		await Promise.all(
 			(await logicLayer.ranks.findAllRanks(interaction.guild.id))
 				.map(r => r.roleId)

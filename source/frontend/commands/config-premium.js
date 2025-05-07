@@ -103,7 +103,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			if (errors.length > 0) {
 				content += `\n\nThe following errors were encountered:\n- ${errors.join("\n- ")}`;
 			}
-			interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content, flags: MessageFlags.Ephemeral });
 		});
 	}
 ).setOptions(

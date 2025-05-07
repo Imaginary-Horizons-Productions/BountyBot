@@ -7,7 +7,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		if (existingBounties.length < 1) {
-			interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -21,7 +21,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 						.setOptions(bountiesToSelectOptions(existingBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;

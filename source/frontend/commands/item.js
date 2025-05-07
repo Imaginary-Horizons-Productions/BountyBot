@@ -13,7 +13,7 @@ const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, runMode) => {
 		const itemName = interaction.options.getString("item-name");
-		await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 		const itemRow = await logicLayer.items.findUserItemEntry(interaction.user.id, itemName);
 		const hasItem = itemRow !== null && itemRow.count > 0 || runMode !== "production";
 		let embedColor = Colors.Blurple;
@@ -40,13 +40,13 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			]
 		}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteration => {
 			if (runMode === "production" && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
-				collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: [MessageFlags.Ephemeral] });
+				collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			await itemRow?.reload();
 			if (runMode === "production" && itemRow.count < 1) {
-				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: [MessageFlags.Ephemeral] });
+				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
@@ -61,7 +61,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 				const expirationTime = timestamps.get(collectedInteration.user.id) + getItemCooldown(itemName);
 
 				if (now < expirationTime) {
-					collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.round(expirationTime / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
+					collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.round(expirationTime / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
 					return;
 				} else {
 					timestamps.delete(collectedInteration.user.id);

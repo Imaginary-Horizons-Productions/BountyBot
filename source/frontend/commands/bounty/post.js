@@ -26,7 +26,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 		}
 
 		if (slotOptions.length < 1) {
-			interaction.reply({ content: "You don't seem to have any open bounty slots at the moment.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You don't seem to have any open bounty slots at the moment.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -40,7 +40,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 						.setOptions(slotOptions)
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [slotNumber] = collectedInteraction.values;
@@ -106,7 +106,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const description = modalSubmission.fields.getTextInputValue("description");
 
 				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post")) {
-					modalSubmission.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", flags: [MessageFlags.Ephemeral] });
+					modalSubmission.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -168,7 +168,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				}
 
 				if (errors.length > 0) {
-					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
+					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -227,7 +227,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 						});
 					} else {
 						if (!interaction.member.manageable) {
-							interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: [MessageFlags.Ephemeral] });
+							interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 						}
 					}
 				});

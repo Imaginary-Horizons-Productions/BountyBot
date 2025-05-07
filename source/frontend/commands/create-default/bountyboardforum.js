@@ -85,6 +85,6 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 		});
 
 		company.save();
-		interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, flags: MessageFlags.Ephemeral });
 	}
 );

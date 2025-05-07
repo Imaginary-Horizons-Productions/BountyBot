@@ -8,13 +8,13 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const slotNumber = interaction.options.getInteger("bounty-slot");
 		const bounty = await logicLayer.bounties.findBounty({ userId: interaction.user.id, slotNumber, companyId: interaction.guild.id });
 		if (!bounty) {
-			interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You don't have a bounty in the `bounty-slot` provided.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		// disallow completion within 5 minutes of creating bounty
 		if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
-			interaction.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -43,7 +43,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 
 		if (validatedHunterIds.length < 1) {
-			interaction.reply({ content: `No bounty hunters have turn-ins recorded for this bounty. If you'd like to close your bounty without distributng rewards, use ${commandMention("bounty take-down")}.`, flags: [MessageFlags.Ephemeral] })
+			interaction.reply({ content: `No bounty hunters have turn-ins recorded for this bounty. If you'd like to close your bounty without distributng rewards, use ${commandMention("bounty take-down")}.`, flags: MessageFlags.Ephemeral })
 			return;
 		}
 

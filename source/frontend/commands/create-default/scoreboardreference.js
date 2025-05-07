@@ -38,7 +38,7 @@ module.exports = new SubcommandWrapper("scoreboard-reference", "Create a referen
 			company.scoreboardIsSeasonal = isSeasonal;
 			company.save();
 		});
-		interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{

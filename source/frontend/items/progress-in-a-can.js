@@ -11,7 +11,7 @@ module.exports = new ItemTemplateSet(
 		async (interaction) => {
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 			if (!goal) {
-				interaction.reply({ content: "There isn't currently a Server Goal running.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "There isn't currently a Server Goal running.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
 			const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);

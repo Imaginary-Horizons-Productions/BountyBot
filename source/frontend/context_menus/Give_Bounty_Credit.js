@@ -39,18 +39,18 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
 	async (interaction, runMode) => {
 		if (interaction.targetId === interaction.user.id) {
-			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		if (runMode === "production" && interaction.targetUser.bot) {
-			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
 		if (hunter.isBanned) {
-			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -69,18 +69,18 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			const slotNumber = modalSubmission.fields.getTextInputValue("slot-number");
 			const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: interaction.user.id, companyId: modalSubmission.guild.id });
 			if (!bounty) {
-				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, flags: [MessageFlags.Ephemeral] });
+				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 			try {
 				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(bounty, modalSubmission.guild, [interaction.targetUser], runMode);
 				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, modalSubmission.guild);
-				modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(returnedBounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: [MessageFlags.Ephemeral] });
+				modalSubmission.reply({ content: `${userMention(interaction.targetId)} has been added as a completers of ${bold(returnedBounty.title)}! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: MessageFlags.Ephemeral });
 			} catch (e) {
 				if (typeof e !== 'string') {
 					console.error(e);
 				} else {
-					modalSubmission.reply({ content: e, flags: [MessageFlags.Ephemeral] });
+					modalSubmission.reply({ content: e, flags: MessageFlags.Ephemeral });
 				}
 				return;
 			}

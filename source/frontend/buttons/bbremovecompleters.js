@@ -12,7 +12,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (bounty.userId !== interaction.user.id) {
-				interaction.reply({ content: "Only the bounty poster can remove completers.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "Only the bounty poster can remove completers.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
@@ -25,7 +25,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							.setMaxValues(5)
 					)
 				],
-				flags: [MessageFlags.Ephemeral],
+				flags: MessageFlags.Ephemeral,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 				const removedIds = collectedInteraction.members.map((_, key) => key);
@@ -41,7 +41,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					});
 
 				collectedInteraction.channel.send({ content: `${listifyEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
-				return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: [MessageFlags.Ephemeral] });
+				return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: MessageFlags.Ephemeral });
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

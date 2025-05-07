@@ -12,7 +12,7 @@ module.exports = new ItemTemplateSet(
 			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guildId);
 			if (!!goal) {
-				interaction.reply({ content: "This server already has a Server Goal running.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "This server already has a Server Goal running.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
 

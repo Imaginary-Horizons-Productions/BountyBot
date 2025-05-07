@@ -27,14 +27,14 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				statsEmbed(company, guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
 					interaction.reply({
 						embeds: [embed],
-						flags: [MessageFlags.Ephemeral]
+						flags: MessageFlags.Ephemeral
 					});
 				})
 			} else {
 				// Other Hunter
 				logicLayer.hunters.findOneHunter(target.id, guild.id).then(async hunter => {
 					if (!hunter) {
-						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: [MessageFlags.Ephemeral] });
+						interaction.reply({ content: "The specified user doesn't seem to have a profile with this server's BountyBot yet. It'll be created when they gain XP.", flags: MessageFlags.Ephemeral });
 						return;
 					}
 
@@ -67,7 +67,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								.setFooter(randomFooterTip())
 								.setTimestamp()
 						],
-						flags: [MessageFlags.Ephemeral]
+						flags: MessageFlags.Ephemeral
 					});
 				})
 			}
@@ -75,7 +75,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			// Self
 			logicLayer.hunters.findOneHunter(interaction.user.id, guild.id).then(async hunter => {
 				if (!hunter) {
-					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", flags: [MessageFlags.Ephemeral] });
+					interaction.reply({ content: "You don't seem to have a profile with this server's BountyBot yet. It'll be created when you gain XP.", flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -114,7 +114,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							.setFooter(randomFooterTip())
 							.setTimestamp()
 					],
-					flags: [MessageFlags.Ephemeral]
+					flags: MessageFlags.Ephemeral
 				});
 			})
 		}

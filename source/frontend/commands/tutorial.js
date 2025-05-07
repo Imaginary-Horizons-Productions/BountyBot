@@ -38,7 +38,7 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 					break;
 			}
 
-			interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		})
 	}
 ).setOptions(

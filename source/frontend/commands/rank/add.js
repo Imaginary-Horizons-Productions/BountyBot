@@ -9,12 +9,12 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 		const newThreshold = interaction.options.getNumber("variance-threshold");
 		const existingThresholds = ranks.map(rank => rank.varianceThreshold);
 		if (existingThresholds.includes(newThreshold)) {
-			interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use ${commandMention("rank edit")}.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use ${commandMention("rank edit")}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		if (ranks.length >= EmbedLimits.MaximumFields) {
-			interaction.reply({ content: `A server can only have ${EmbedLimits.MaximumFields} seasonal ranks at a time.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `A server can only have ${EmbedLimits.MaximumFields} seasonal ranks at a time.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -36,7 +36,7 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 			logicLayer.ranks.createCustomRank(rawRank);
 		})
 		getRankUpdates(interaction.guild, logicLayer);
-		interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{
