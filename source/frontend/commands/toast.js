@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, generateTextBar, listifyEN, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed } = require('../shared');
+const { textsHaveAutoModInfraction, generateTextBar, listifyEN, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -104,13 +104,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			}
 
 			if (content) {
-				if (interaction.channel.isThread()) {
-					interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });
-				} else {
-					response.resource.message.startThread({ name: "Rewards" }).then(thread => {
-						thread.send({ content, flags: MessageFlags.SuppressNotifications });
-					})
-				}
+				sendToRewardsThread(response.resource.message, content, "Rewards");
 				const embeds = [];
 				const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);

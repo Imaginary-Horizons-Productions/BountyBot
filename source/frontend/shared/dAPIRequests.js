@@ -1,4 +1,4 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank, Completion } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
@@ -158,6 +158,27 @@ function disabledSelectRow(placeholderText) {
 	)
 }
 
+/**
+ * @param {Message} embedMessage
+ * @param {string} content
+ * @param {string} threadTitle
+ */
+function sendToRewardsThread(embedMessage, content, threadTitle) {
+	const rewardsPayload = { content, flags: MessageFlags.SuppressNotifications };
+	if (embedMessage.channel.isThread()) {
+		// If already in thread, send message
+		embedMessage.channel.send(rewardsPayload);
+	} else if (embedMessage.thread !== null) {
+		// If not in thread but thread exists, send in thread
+		embedMessage.thread.send(rewardsPayload);
+	} else {
+		// If not in thread and thread doesn't exist, make one
+		embedMessage.startThread({ name: threadTitle }).then(thread => {
+			thread.send(rewardsPayload);
+		})
+	}
+}
+
 module.exports = {
 	createSubcommandMappings,
 	bountiesToSelectOptions,
@@ -167,5 +188,6 @@ module.exports = {
 	generateBountyBoardThread,
 	updatePosting,
 	updateScoreboard,
-	disabledSelectRow
+	disabledSelectRow,
+	sendToRewardsThread
 };

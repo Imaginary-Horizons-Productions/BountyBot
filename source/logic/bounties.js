@@ -19,10 +19,24 @@ function createBounty(rawBounty) {
 	return db.models.Bounty.create(rawBounty);
 }
 
-/** *Create many Completions*
- * @param {{ bountyId: string, userId: string, companyId: string, xpAwarded?: number}[]} rawCompletions
+/** *Create Completions for multiple Hunters for the same Bounty*
+ * @param {string} bountyId
+ * @param {string} companyId
+ * @param {string[]} userIds
+ * @param {number?} xpAwarded
  */
-function bulkCreateCompletions(rawCompletions) {
+function bulkCreateCompletions(bountyId, companyId, userIds, xpAwarded) {
+	const rawCompletions = userIds.map(id => {
+		const rawCompletion = {
+			bountyId,
+			userId: id,
+			companyId
+		};
+		if (xpAwarded) {
+			rawCompletion.xpAwarded = xpAwarded;
+		}
+		return rawCompletion;
+	});
 	return db.models.Completion.bulkCreate(rawCompletions);
 }
 
@@ -52,14 +66,6 @@ function findOpenBounties(userId, companyId) {
  */
 function bulkFindOpenBounties(userId, companyId, slotNumbers) {
 	return db.models.Bounty.findAll({ where: { userId, companyId, slotNumber: { [Op.in]: slotNumbers }, state: "open" } });
-}
-
-/** *Finds the specified Evergreen Bounty*
- * @param {string} companyId
- * @param {number} slotNumber
- */
-function findOneEvergreenBounty(companyId, slotNumber) {
-	return db.models.Bounty.findOne({ where: { companyId, slotNumber, isEvergreen: true, state: "open" } });
 }
 
 /** @param {string} companyId */
@@ -116,15 +122,7 @@ async function addCompleters(bounty, guild, completerMembers, runMode) {
 		throw `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
 	}
 
-	const rawCompletions = [];
-	for (const userId of validatedCompleterIds) {
-		rawCompletions.push({
-			bountyId: bounty.id,
-			userId,
-			companyId: guild.id
-		})
-	}
-	await bulkCreateCompletions(rawCompletions);
+	await bulkCreateCompletions(bounty.id, guild.id, validatedCompleterIds, null);
 	let allCompleters = await db.models.Completion.findAll({
 		where: {
 			bountyId: bounty.id
@@ -220,7 +218,6 @@ module.exports = {
 	findBounty,
 	findOpenBounties,
 	bulkFindOpenBounties,
-	findOneEvergreenBounty,
 	findEvergreenBounties,
 	findBountyCompletions,
 	findCompanyBountiesByCreationDate,

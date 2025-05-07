@@ -6,13 +6,13 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 - `/bounty add-completers` has been renamed to `/bounty verify-turn-in` and now uses message selects.
 - `/bounty remove-completers` has been renamed to `/bounty revoke-turn-in` and now uses message selects.
 - `/bounty complete` now accepts up to 5 optional hunters.
-- `/evergreen complete` now requires 1 hunter and up to 4 optional ones. Duplicate hunters are now accepted in case the hunter has multiple turn-ins to be awarded for.
+- `/evergreen complete` now uses message selects.
 ### Premium
 - Added the ability to customize the Goal Completion embed's thumbnail with `/config-premium goal-completion-thumbnail-url`
 - Changed `/rank remove` to use a select and confirmation button and accept multiple roles at the same time
 ### Other Changes
 - Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
-- Fixed BountyBot banned users being able to receive toasts
+- Fixed BountyBot banned users being able to receive toasts and credit for evergreen bounties
 
 ## BountyBot Version 2.9.0:
 ### Server Goals

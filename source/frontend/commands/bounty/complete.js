@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset } = require("../../shared");
+const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
@@ -101,13 +101,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			} else {
 				acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
 				interaction.editReply(acknowledgeOptions).then(message => {
-					if (interaction.channel.isThread()) {
-						interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });
-					} else {
-						message.startThread({ name: `${bounty.title} Rewards` }).then(thread => {
-							thread.send({ content, flags: MessageFlags.SuppressNotifications });
-						})
-					}
+					sendToRewardsThread(message, content, `${bounty.title} Rewards`);
 				})
 			}
 
