@@ -26,7 +26,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			const hunterCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
 			const validatedHunterIds = [];
 			const validatedHunters = [];
-			hunterCollection.forEach(async member => {
+			for (const member of hunterCollection.values()) {
 				if (runMode !== "production" || !member.user.bot) {
 					const memberId = member.id;
 					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
@@ -35,7 +35,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 						validatedHunters.push(hunter);
 					}
 				}
-			})
+			}
 
 			if (validatedHunters.length < 1) {
 				interaction.reply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.`, flags: MessageFlags.Ephemeral })
@@ -61,6 +61,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
 				await collectedInteraction.deferReply({ flags: MessageFlags.SuppressNotifications });
+				console.time("TODONOW complete")
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 
@@ -83,6 +84,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					await collectedInteraction.channel.setArchived(false, "bounty complete");
 				}
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
+				console.timeEnd("TODONOW complete")
 				collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts) });
 				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, completions)
 					.then(async embed => {
