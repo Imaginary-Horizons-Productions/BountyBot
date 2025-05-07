@@ -10,8 +10,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			interaction.reply({ content: "This server doesn't have any ranks configured.", flags: MessageFlags.Ephemeral });
 			return;
 		}
-		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-		interaction.editReply({
+		interaction.reply({
 			content: "Select a rank to be the eligibility threshold for this raffle:",
 			components: [
 				new ActionRowBuilder().addComponents(
@@ -20,8 +19,10 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 						.addOptions(rankArrayToSelectOptions(ranks, await interaction.guild.roles.fetch()))
 				)
 			],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			await collectedInteraction.deferUpdate();
 			const varianceThreshold = Number(collectedInteraction.values[0]);
 			const reloadedRanks = await Promise.all(ranks.map(rank => rank.reload()));
 			const rankIndex = reloadedRanks.findIndex(rank => rank.varianceThreshold === varianceThreshold);

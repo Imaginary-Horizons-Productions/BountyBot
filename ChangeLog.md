@@ -13,6 +13,7 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 ### Other Changes
 - Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
 - Fixed BountyBot banned users being able to receive toasts and credit for evergreen bounties
+- Fixed Completing bounties from within their thread on the Bounty Board timing out
 
 ## BountyBot Version 2.9.0:
 ### Server Goals

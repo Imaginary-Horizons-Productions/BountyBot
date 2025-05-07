@@ -10,13 +10,12 @@ const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
 	(interaction, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
-			await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 			if (bounty.userId !== interaction.user.id) {
-				interaction.editReply({ content: "Only the bounty poster can take down their bounty." });
+				interaction.reply({ content: "Only the bounty poster can take down their bounty.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
-			interaction.editReply({
+			interaction.reply({
 				content: `Really take down this bounty?`,
 				components: [
 					new ActionRowBuilder().addComponents(
@@ -25,8 +24,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							.setEmoji("✔")
 							.setLabel("Confirm")
 					)
-				]
-			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
+				],
+				flags: MessageFlags.Ephemeral,
+				withResponse: true
+			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
 				await bounty.reload();
 				bounty.state = "deleted";
 				bounty.save();
