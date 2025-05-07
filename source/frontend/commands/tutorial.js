@@ -8,7 +8,7 @@ const mainId = "tutorial";
 module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBot", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Send the user a embed with tips to start using BountyBot */
 	(interaction, runMode) => {
-		fs.promises.stat("./source/commands/tutorial.js").then(stats => {
+		fs.promises.stat(__filename).then(stats => {
 			const embed = new EmbedBuilder().setColor(Colors.Blurple).setAuthor(ihpAuthorPayload)
 				.setThumbnail(interaction.client.user.avatarURL())
 				.setFooter(randomFooterTip())
