@@ -1,8 +1,7 @@
-const { Guild, GuildMember } = require("discord.js");
+const { Guild } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { dateInPast } = require("../shared");
 const { Company, Hunter, Toast, Recipient } = require("../database/models");
-const { buildCompanyLevelUpLine, buildHunterLevelUpLine } = require("../frontend/shared");
 
 /** @type {Sequelize} */
 let db;
@@ -67,18 +66,16 @@ function findToastByPK(toastId) {
 /**
  * @param {Guild} guild
  * @param {Company} company
- * @param {GuildMember} sender
- * @param {Hunter} senderHunter
+ * @param {string} senderId
  * @param {Set<string>} toasteeIds
+ * @param {Record<string, Hunter>} hunterMap
  * @param {string} seasonId
  * @param {string} toastText
  * @param {string | null} imageURL
  */
-async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seasonId, toastText, imageURL = null) {
-	const allHunters = await db.models.Hunter.findAll({ where: { companyId: company.id } });
-	const previousCompanyLevel = company.getLevel(allHunters);
+async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seasonId, toastText, imageURL) {
 	// Make database entities
-	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId: sender.id, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.models.Toast.Recipients });
+	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.models.Toast.Recipients });
 	let rewardsAvailable = 10;
 	let critToastsAvailable = 2;
 	for (const toast of recentToasts) {
@@ -94,35 +91,30 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > dateInPast({ d: 1 }));
 	const hunterIdsToastedInLastDay = toastsInLastDay.reduce((idSet, toast) => {
 		toast.Recipients.forEach(reciept => {
-			if (!idSet.has(reciept.recipientId)) {
-				idSet.add(reciept.recipientId);
-			}
+			idSet.add(reciept.recipientId);
 		})
 		return idSet;
 	}, new Set());
 
-	const staleToastees = await findStaleToasteeIds(sender.id, guild.id);
+	const staleToastees = await findStaleToasteeIds(senderId, guild.id);
 
-	const rewardTexts = [];
-	const toast = await db.models.Toast.create({ companyId: guild.id, senderId: sender.id, text: toastText, imageURL });
+	const toast = await db.models.Toast.create({ companyId: guild.id, senderId, text: toastText, imageURL });
 	const rawRecipients = [];
 	const rewardedHunterIds = [];
 	let critValue = 0;
-	const startingSenderLevel = senderHunter.getLevel(company.xpCoefficient);
+	const startingSenderLevel = hunterMap[senderId].getLevel(company.xpCoefficient);
+	const hunterResults = {
+		[senderId]: { previousLevel: startingSenderLevel, droppedItem: null }
+	};
 	for (const id of toasteeIds.values()) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
+			rewardedHunterIds.push(id);
+			const hunter = hunterMap[id];
+			hunterResults[id] = { previousLevel: hunter.getLevel(company.xpCoefficient), droppedItem: null };
 			const xpAwarded = Math.floor(company.festivalMultiplier);
-			await db.models.User.findOrCreate({ where: { id } });
-			const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: id, companyId: company.id } });
-			rewardedHunterIds.push(hunter.userId);
-			const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
-			await hunter.increment({ toastsReceived: 1, xp: xpAwarded }).then(hunter => hunter.reload());
-			const hunterLevelLine = buildHunterLevelUpLine(hunter, previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
-			if (hunterLevelLine) {
-				rewardTexts.push(hunterLevelLine);
-			}
-			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: hunter.userId, seasonId }, defaults: { xp: 1 } });
+			await hunter.increment({ toastsReceived: 1, xp: xpAwarded });
+			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: id, seasonId }, defaults: { xp: 1 } });
 			if (!participationCreated) {
 				participation.increment({ xp: xpAwarded });
 			}
@@ -165,36 +157,18 @@ async function raiseToast(guild, company, sender, senderHunter, toasteeIds, seas
 	db.models.Recipient.bulkCreate(rawRecipients);
 
 	// Update sender
-	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: sender.id, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
+	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: senderId, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (critValue > 0) {
-		const previousSenderLevel = senderHunter.getLevel(company.xpCoefficient);
-		await senderHunter.increment({ toastsRaised: 1, xp: critValue }).then(senderHunter => senderHunter.reload());
-		const senderLevelLine = buildHunterLevelUpLine(senderHunter, previousSenderLevel, company.xpCoefficient, company.maxSimBounties);
-		if (senderLevelLine) {
-			rewardTexts.push(senderLevelLine);
-		}
+		await hunterMap[senderId].increment({ toastsRaised: 1, xp: critValue });
 		if (!participationCreated) {
 			participation.increment({ xp: critValue, toastsRaised: 1 });
 		}
 	} else {
-		senderHunter.increment("toastsRaised");
+		hunterMap[senderId].increment("toastsRaised");
 		participation.increment("toastsRaised");
 	}
 
-	const xpChangedIds = toasteeIds.union(new Set([senderHunter.userId]));
-	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
-		if (xpChangedIds.has(hunter.userId)) {
-			return hunter.reload();
-		} else {
-			return hunter;
-		}
-	}))
-	const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, reloadedHunters, guild.name);
-	if (companyLevelLine) {
-		rewardTexts.push(companyLevelLine);
-	}
-
-	return { toastId: toast.id, rewardedHunterIds, rewardTexts, critValue };
+	return { toastId: toast.id, rewardedHunterIds, hunterResults, critValue };
 }
 
 /** *Deletes all Toasts, Recipients, and Secondings for a specified Company*

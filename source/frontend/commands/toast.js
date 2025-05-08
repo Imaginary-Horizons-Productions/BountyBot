@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, generateTextBar, listifyEN, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread } = require('../shared');
+const { textsHaveAutoModInfraction, generateTextBar, listifyEN, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -9,20 +9,16 @@ const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, runMode) => {
-		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-
-		const errors = [];
-
 		// Find valid toastees
 		const bannedIds = new Set();
 		const validatedToasteeIds = new Set();
 		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
 			if (guildMember) {
-				if (hunterMap[guildMember.id]?.isBanned) {
+				const hunter = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, interaction.guild.id);
+				if (hunter.isBanned) {
 					bannedIds.add(guildMember.id);
-				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
+				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.id !== interaction.user.id)) {
 					validatedToasteeIds.add(guildMember.id);
 				}
 			}
@@ -34,6 +30,8 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		} else if (bannedIds.size === 1) {
 			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
+
+		const errors = [];
 		if (validatedToasteeIds.size < 1) {
 			const sentences = ["No valid toastees received. You cannot raise a toast to yourself or a bot."];
 			if (bannedText) {
@@ -64,17 +62,25 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
+		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
-		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, validatedToasteeIds, season.id, toastText, imageURL);
+		const previousCompanyLevel = company.getLevel(Object.values(hunterMap));
+		const { toastId, rewardedHunterIds, hunterResults, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.user.id, validatedToasteeIds, hunterMap, season.id, toastText, imageURL);
+		hunterMap = await reloadHunterMapSubset(hunterMap, rewardedHunterIds.concat(interaction.user.id));
+		const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, company);
+		const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
+		if (companyLevelLine) {
+			rewardTexts.push(companyLevelLine);
+		}
 		const embeds = [generateToastEmbed(company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
 		if (imageURL) {
 			embeds[0].setImage(imageURL);
 		}
 
 		if (rewardedHunterIds.length > 0) {
-			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", sender, season);
+			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", hunterMap[interaction.user.id], season);
 			if (goalUpdate.gpContributed > 0) {
 				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				if (goalUpdate.goalCompleted) {
