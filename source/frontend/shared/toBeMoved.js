@@ -53,7 +53,7 @@ async function calculateRanks(season, allHunters, ranks, participations) {
 				}
 			}
 			hunter.rank = index;
-			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - hunter.seasonXP);
+			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - particpationMap[hunter.userId].xp);
 			hunter.save();
 		}
 	}
