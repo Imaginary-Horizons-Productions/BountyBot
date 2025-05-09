@@ -41,7 +41,7 @@ function findOneRank(companyId, varianceThreshold) {
 	return db.models.Rank.findOne({ where: { companyId, varianceThreshold } });
 }
 
-/** *Finds all of a company's ranks and returns them in the specified order*
+/** *Finds all of a company's ranks and returns them in descending order*
  * @param {string} companyId
  */
 function findAllRanks(companyId) {
