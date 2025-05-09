@@ -1,7 +1,7 @@
 const { MessageFlags } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
-const { getRankUpdates, commandMention } = require("../../shared");
+const { commandMention } = require("../../shared");
 
 module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing outstanding bounty hunters",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -32,10 +32,9 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 		if (newRankmoji) {
 			rawRank.rankmoji = newRankmoji;
 		}
-		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(() => {
-			logicLayer.ranks.createCustomRank(rawRank);
-		})
-		getRankUpdates(interaction.guild, logicLayer);
+		await logicLayer.ranks.createCustomRank(rawRank);
+		const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id));
 		interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
