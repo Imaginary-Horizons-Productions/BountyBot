@@ -102,7 +102,7 @@ function setHunterProfileColor(userId, companyId, color) {
 /** *Resets the ranks on all Hunters in the specified Company*
  * @param {string} companyId
  */
-function resetCompanyRanks(companyId) {
+function resetCompanyRanks(companyId) { //TODONOW move to seasons interface, update property names
 	return db.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId } });
 }
 

@@ -196,8 +196,10 @@ async function updateSeasonalRanks(seasonResults, descendingRanks, guildMemberMa
 	for (const [id, member] of members) {
 		await member.roles.remove(rankRoleIds);
 		if (seasonResults[id].newRankIndex !== null) {
-			const rankRoleId = descendingRanks[seasonResults[id].newRankIndex];
-			await member.roles.add(rankRoleId).catch(console.error);
+			const rankRoleId = descendingRanks[seasonResults[id].newRankIndex].roleId;
+			if (rankRoleId) {
+				await member.roles.add(rankRoleId).catch(console.error);
+			}
 		}
 	}
 }

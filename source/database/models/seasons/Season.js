@@ -48,12 +48,6 @@ function initModel(sequelize) {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false,
 		},
-		xpMean: { //TODONOW does this really need to be cached?
-			type: DataTypes.DOUBLE
-		},
-		xpStandardDeviation: { //TODONOW does this really need to be cached?
-			type: DataTypes.DOUBLE
-		},
 		totalXP: {
 			type: DataTypes.VIRTUAL,
 			async get() {

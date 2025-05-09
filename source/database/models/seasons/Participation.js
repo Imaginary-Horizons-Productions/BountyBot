@@ -1,4 +1,5 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
+const { Season } = require('./Season');
 
 class Participation extends Model {
 	static associate(models) {
@@ -8,10 +9,6 @@ class Participation extends Model {
 		models.Participation.Company = models.Participation.belongsTo(models.Company, {
 			foreignKey: "companyId"
 		})
-	}
-
-	nextRankXP(season, descendingRanks) { //TODONOW replace Hunter.nextRankXP usages
-		return Math.ceil(season.xpStandardDeviation * descendingRanks[this.rankIndex].varianceThreshold + season.xpMean - this.xp);
 	}
 }
 

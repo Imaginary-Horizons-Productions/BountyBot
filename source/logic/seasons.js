@@ -106,6 +106,12 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
 	return participation;
 }
 
+function nextRankXP(participation, season, descendingRanks) { //TODONOW replace Hunter.nextRankXP usages
+	const mean = Season.calculateXPMean();
+	return Math.ceil(season.xpStandardDeviation * descendingRanks[participation.rankIndex].varianceThreshold + mean - participation.xp);
+}
+
+
 /** Recalculate placement and rank changes based on changed XP values on Participations and updates the database
  * @param {Season} season
  * @param {Map<string, Participation>} participationMap
@@ -157,7 +163,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 	const rankChanges = {};
 	if (descendingRanks.length > 0) {
 		for (const [id, participation] of participationMap) {
-			const standardDeviationsFromMean = (participation.xp - mean) / standardDeviation;
+			const standardDeviationsFromMean = (participation.xp - Season.calculateXPMean([...participationMap.values()])) / standardDeviation;
 			let index = -1;
 			for (const rank of descendingRanks) {
 				index++;
@@ -177,7 +183,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 /** *Generates a map of all of a Season's Participations' placement changes*
  * @param {Participation[]} allParticipations
  */
-async function calculatePlacementChanges(allParticipations) {
+async function calculatePlacementChanges(allParticipations) { //TODONOW fix placements showing up as #0?
 	let recentPlacement = allParticipations.length;
 	let previousScore = 0;
 	const placementChanges = {};
