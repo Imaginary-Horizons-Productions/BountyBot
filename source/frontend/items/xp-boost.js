@@ -1,5 +1,5 @@
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { getRankUpdates, buildCompanyLevelUpLine, buildHunterLevelUpLine, formatSeasonResultsToRewardTexts, updateSeasonalRanks } = require("../shared");
+const { buildCompanyLevelUpLine, buildHunterLevelUpLine, formatSeasonResultsToRewardTexts, updateSeasonalRanks } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
