@@ -299,7 +299,7 @@ function sendAnnouncement(company, messageOptions) {
  * @param {Rank[]} ranks
  * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
  */
-async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) { //TODONOW fix undefined rank emoji
+async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
@@ -307,7 +307,7 @@ async function seasonalScoreboardEmbed(company, guild, participations, ranks, go
 	for (const participation of participations) {
 		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
 			const hunter = await participation.hunter;
-			scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
+			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -368,6 +368,7 @@ async function overallScoreboardEmbed(company, guild, hunters, ranks, goalProgre
 		if (hunter.xp < 1) {
 			break;
 		}
+		//TODONOW need participation for rankIndex?
 		scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
