@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty } = require("../../../database/models");
-const { getRankUpdates, generateTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, bountiesToSelectOptions, sendToRewardsThread } = require("../../shared");
+const { generateTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, bountiesToSelectOptions, sendToRewardsThread, updateSeasonalRanks, formatSeasonResultsToRewardTexts } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -114,19 +114,19 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 							await collectedInteraction.update({ components: [] });
 							interaction.deleteReply();
 							return collectedInteraction.channel.send(announcementPayload);
-						}).then(message => {
-							getRankUpdates(collectedInteraction.guild, logicLayer).then(async rankUpdates => {
-								sendToRewardsThread(message, generateBountyRewardString(validatedHunterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), rankUpdates, levelTexts), `${bounty.title} Rewards`);
-								const embeds = [];
-								const ranks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
-								const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
-								if (company.scoreboardIsSeasonal) {
-									embeds.push(await seasonalScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
-								} else {
-									embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), ranks, goalProgress));
-								}
-								updateScoreboard(company, collectedInteraction.guild, embeds);
-							});
+						}).then(async message => {
+							const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
+							const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+							updateSeasonalRanks(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
+							sendToRewardsThread(message, generateBountyRewardString(validatedHunterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch()), levelTexts), `${bounty.title} Rewards`);
+							const embeds = [];
+							const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
+							if (company.scoreboardIsSeasonal) {
+								embeds.push(await seasonalScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), descendingRanks, goalProgress));
+							} else {
+								embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), descendingRanks, goalProgress));
+							}
+							updateScoreboard(company, collectedInteraction.guild, embeds);
 						})
 						break;
 				}

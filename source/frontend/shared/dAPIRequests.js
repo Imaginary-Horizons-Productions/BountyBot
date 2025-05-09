@@ -184,7 +184,7 @@ function sendToRewardsThread(embedMessage, content, threadTitle) {
  * @param {Rank[]} descendingRanks
  * @param {GuildMemberManager} guildMemberManager
  */
-async function updateSeasonalRanks(seasonResults, descendingRanks, guildMemberManager) {
+async function updateSeasonalRanks(seasonResults, descendingRanks, guildMemberManager) { //TODONOW rename to "syncRankRoles"
 	const rankChangeIds = [];
 	for (const id in seasonResults) {
 		if ("newRankIndex" in seasonResults[id] && descendingRanks[seasonResults[id].newRankIndex].roleId) {

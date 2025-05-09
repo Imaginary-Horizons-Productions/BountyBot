@@ -117,7 +117,7 @@ function nextRankXP(participation, season, descendingRanks) { //TODONOW replace 
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} descendingRanks
  */
-async function updateCompanyPlacementsAndRanks(season, participationMap, descendingRanks) {
+async function updateCompanyPlacementsAndRanks(season, participationMap, descendingRanks) { //TODONOW rename to "updateSeasonPlacementsAndRanks"
 	if (participationMap.size < 1) {
 		return {};
 	}
