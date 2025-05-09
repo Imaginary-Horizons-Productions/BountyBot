@@ -50,7 +50,7 @@ function getDQCount(userId, companyId) {
 }
 
 /** *Returns a Map of userId to Participation for all Participations in the specified Season*
- * @param {string} companyId
+ * @param {string} seasonId
  */
 async function getCompanyParticipationMap(seasonId) {
 	/** @type {Record<string, Participation} */
