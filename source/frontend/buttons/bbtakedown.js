@@ -1,9 +1,8 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { getRankUpdates } = require('../shared');
 
-/** @type {typeof import("../logic")} */
+/** @type {typeof import("../../logic")} */
 let logicLayer;
 
 const mainId = "bbtakedown";
@@ -38,7 +37,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					hunter.decrement("xp");
 					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
-					getRankUpdates(interaction.guild, logicLayer);
+					logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id));
 				})
 
 				return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
