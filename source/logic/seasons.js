@@ -106,8 +106,7 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
 	return participation;
 }
 
-/**
- *
+/** Recalculate placement and rank changes based on changed XP values on Participations and updates the database
  * @param {Season} season
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} descendingRanks
@@ -121,7 +120,7 @@ async function updateCompanyPlacementsAndRanks(season, participationMap, descend
 	const xpStandardDeviation = Season.calculateXPStandardDeviation(participationArray);
 	season.update({ xpStandardDeviation });
 	const rankChanges = await calculateRankChanges(xpStandardDeviation, participationMap, descendingRanks);
-	/** @type {Record<string, { newPlacement: number } | { newRankIndex: number, rankIncreased: boolean } |{ newPlacement: number, newRankIndex: number, rankIncreased: boolean }>} */
+	/** @type {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} */
 	const results = {};
 	for (const id of new Set(Object.keys(placementChanges).concat(Object.keys(rankChanges)))) {
 		const updatePayload = {};
@@ -154,7 +153,7 @@ async function updateCompanyPlacementsAndRanks(season, participationMap, descend
  * @param {Rank[]} descendingRanks
  */
 async function calculateRankChanges(standardDeviation, participationMap, descendingRanks) {
-	/** @type {Record<string, {index: number, isIncrease: boolean}>} */
+	/** @type {Record<string, { index: number | null, isIncrease: boolean }>} */
 	const rankChanges = {};
 	if (descendingRanks.length > 0) {
 		for (const [id, participation] of participationMap) {
@@ -165,6 +164,9 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 				if (standardDeviationsFromMean >= rank.varianceThreshold) {
 					break;
 				}
+			}
+			if (index === -1) {
+				index = null;
 			}
 			rankChanges[id] = { index, isIncrease: index > participation.rankIndex };
 		}
@@ -178,7 +180,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 async function calculatePlacementChanges(allParticipations) {
 	let recentPlacement = allParticipations.length;
 	let previousScore = 0;
-	const placementChangeMap = {};
+	const placementChanges = {};
 	// subtract 1 to adjust for array indexes starting from 0
 	for (let i = recentPlacement - 1; i >= 0; i -= 1) {
 		const participation = allParticipations[i];
@@ -186,11 +188,11 @@ async function calculatePlacementChanges(allParticipations) {
 			previousScore = participation.xp;
 			recentPlacement = i + 1;
 			if (participation.placement !== recentPlacement) {
-				placementChangeMap[participation.userId] = recentPlacement;
+				placementChanges[participation.userId] = recentPlacement;
 			}
 		}
 	}
-	return placementChangeMap; //TODONOW add to frontend: `*<@${firstPlaceId}> has reached the #1 spot for this season!*`
+	return placementChanges;
 }
 
 /** *Change the specified Hunter's Seasonal XP*
