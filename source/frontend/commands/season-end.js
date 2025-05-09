@@ -67,7 +67,6 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 					}
 				})
 			}
-			await logicLayer.hunters.resetCompanyRanks(company.id);
 			const embeds = [];
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 			if (company.scoreboardIsSeasonal) {
