@@ -1,5 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
+const { updateSeasonalRanks } = require("../../shared");
 
 module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for a seasonal rank",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -23,7 +24,9 @@ module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for 
 		}
 		rank.update(updateOptions);
 		const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-		logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id));
+		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+		const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+		updateSeasonalRanks(seasonUpdates, descendingRanks, interaction.guild.members);
 		interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(

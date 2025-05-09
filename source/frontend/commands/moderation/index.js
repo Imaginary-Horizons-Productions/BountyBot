@@ -7,13 +7,13 @@ let logicLayer;
 
 const mainId = "moderation";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, [
-	"bountybotban.js",
-	"gppenalty.js",
-	"revokegoalbonus.js",
-	"seasondisqualify.js",
-	"takedown.js",
-	"userreport.js",
-	"xppenalty.js"
+	"bountybot-ban.js",
+	"gp-penalty.js",
+	"revoke-goal-bonus.js",
+	"season-disqualify.js",
+	"take-down.js",
+	"user-report.js",
+	"xp-penalty.js"
 ]);
 module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, [InteractionContextType.Guild], 3000,
 	(interaction, runMode) => {
