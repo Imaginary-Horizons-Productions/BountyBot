@@ -1,4 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
+const { Participation, Rank, Season } = require("../database/models");
 
 /** @type {Sequelize} */
 let db;
@@ -48,6 +49,19 @@ function getDQCount(userId, companyId) {
 	return db.models.Participation.sum("dqCount", { where: { userId, companyId } }) ?? 0;
 }
 
+/** *Returns a Map of userId to Participation for all Participations in the specified Season*
+ * @param {string} companyId
+ */
+async function getCompanyParticipationMap(seasonId) {
+	/** @type {Record<string, Participation} */
+	const participationMap = new Map();
+	const participations = await db.models.Participation.findAll({ where: { seasonId } });
+	for (const participation of participations) {
+		participationMap.set(participation.userId, participation);
+	}
+	return participationMap;
+}
+
 /** *Get all of a Season's Participations*
  * @param {string} seasonId
  */
@@ -82,14 +96,101 @@ function findFirstPlaceParticipation(companyId, seasonId) {
 /** *Finds the Participation of the specified Season's Hunter with the most of the specified Participation property*
  * @param {string} companyId
  * @param {string} seasonId
- * @param {string} particiaptionProperty
+ * @param {string} participationProperty
  */
-async function findParticipationWithTopParticipationStat(companyId, seasonId, particiaptionProperty) {
-	const participation = await db.models.Participation.findOne({ where: { companyId, seasonId }, order: [[particiaptionProperty, "DESC"]] });
-	if (participation === null || participation[particiaptionProperty] === 0) {
+async function findParticipationWithTopParticipationStat(companyId, seasonId, participationProperty) {
+	const participation = await db.models.Participation.findOne({ where: { companyId, seasonId }, order: [[participationProperty, "DESC"]] });
+	if (participation === null || participation[participationProperty] === 0) {
 		return null;
 	}
 	return participation;
+}
+
+/**
+ *
+ * @param {Season} season
+ * @param {Map<string, Participation>} participationMap
+ * @param {Rank[]} descendingRanks
+ */
+async function updateCompanyPlacementsAndRanks(season, participationMap, descendingRanks) {
+	if (participationMap.size < 1) {
+		return {};
+	}
+	const participationArray = [...participationMap.values()];
+	const placementChanges = await calculatePlacementChanges(participationArray);
+	const xpStandardDeviation = Season.calculateXPStandardDeviation(participationArray);
+	season.update({ xpStandardDeviation });
+	const rankChanges = await calculateRankChanges(xpStandardDeviation, participationMap, descendingRanks);
+	/** @type {Record<string, { newPlacement: number } | { newRankIndex: number, rankIncreased: boolean } |{ newPlacement: number, newRankIndex: number, rankIncreased: boolean }>} */
+	const results = {};
+	for (const id of new Set(Object.keys(placementChanges).concat(Object.keys(rankChanges)))) {
+		const updatePayload = {};
+		if (id in placementChanges) {
+			updatePayload.placement = placementChanges[id];
+			if (id in results) {
+				results[id].newPlacement = placementChanges[id];
+			} else {
+				results[id] = { newPlacement: placementChanges[id] };
+			}
+		}
+		if (id in rankChanges) {
+			const { index, isIncrease } = rankChanges[id];
+			updatePayload.rankIndex = index;
+			if (id in results) {
+				results[id].newRankIndex = index;
+				results[id].rankIncreased = isIncrease;
+			} else {
+				results[id] = { newRankIndex: index, rankIncreased: isIncrease };
+			}
+		}
+		await participationMap.get(id).update(updatePayload);
+	}
+	return results;
+}
+
+/**
+ * @param {number} standardDeviation
+ * @param {Map<string, Participation>} participationMap
+ * @param {Rank[]} descendingRanks
+ */
+async function calculateRankChanges(standardDeviation, participationMap, descendingRanks) {
+	/** @type {Record<string, {index: number, isIncrease: boolean}>} */
+	const rankChanges = {};
+	if (descendingRanks.length > 0) {
+		for (const [id, participation] of participationMap) {
+			const standardDeviationsFromMean = (participation.xp - mean) / standardDeviation;
+			let index = -1;
+			for (const rank of descendingRanks) {
+				index++;
+				if (standardDeviationsFromMean >= rank.varianceThreshold) {
+					break;
+				}
+			}
+			rankChanges[id] = { index, isIncrease: index > participation.rankIndex };
+		}
+	}
+	return rankChanges;
+}
+
+/** *Generates a map of all of a Season's Participations' placement changes*
+ * @param {Participation[]} allParticipations
+ */
+async function calculatePlacementChanges(allParticipations) {
+	let recentPlacement = allParticipations.length;
+	let previousScore = 0;
+	const placementChangeMap = {};
+	// subtract 1 to adjust for array indexes starting from 0
+	for (let i = recentPlacement - 1; i >= 0; i -= 1) {
+		const participation = allParticipations[i];
+		if (participation.xp > previousScore) {
+			previousScore = participation.xp;
+			recentPlacement = i + 1;
+			if (participation.placement !== recentPlacement) {
+				placementChangeMap[participation.userId] = recentPlacement;
+			}
+		}
+	}
+	return placementChangeMap; //TODONOW add to frontend: `*<@${firstPlaceId}> has reached the #1 spot for this season!*`
 }
 
 /** *Change the specified Hunter's Seasonal XP*
@@ -152,11 +253,13 @@ module.exports = {
 	findOneSeason,
 	getParticipantCount,
 	getDQCount,
+	getCompanyParticipationMap,
 	findSeasonParticipations,
 	bulkFindParticipations,
 	findHunterParticipations,
 	findFirstPlaceParticipation,
 	findParticipationWithTopParticipationStat,
+	updateCompanyPlacementsAndRanks,
 	changeSeasonXP,
 	incrementSeasonStat,
 	toggleHunterSeasonDisqualification,
