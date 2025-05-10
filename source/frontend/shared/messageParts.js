@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
@@ -299,7 +299,7 @@ function sendAnnouncement(company, messageOptions) {
  * @param {Rank[]} ranks
  * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
  */
-async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) {
+async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) { //TODONOW use ParticipatinMap instead of Array to decomission findSeasonParticipations
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
@@ -307,7 +307,7 @@ async function seasonalScoreboardEmbed(company, guild, participations, ranks, go
 	for (const participation of participations) {
 		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
 			const hunter = await participation.hunter;
-			scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
+			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -368,6 +368,7 @@ async function overallScoreboardEmbed(company, guild, hunters, ranks, goalProgre
 		if (hunter.xp < 1) {
 			break;
 		}
+		//TODONOW need participation for rankIndex?
 		scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -623,6 +624,28 @@ function formatHunterResultsToRewardTexts(hunterResults, hunterMap, company) {
 	return rewardTexts;
 }
 
+/**
+ * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
+ * @param {Rank[]} descendingRanks
+ * @param {Collection<string, Role>} allGuildRoles
+ */
+function formatSeasonResultsToRewardTexts(seasonResults, descendingRanks, allGuildRoles) {
+	/** @type {string[]} */
+	const rewardTexts = [];
+	for (const id in seasonResults) {
+		const result = seasonResults[id];
+		if (result.newPlacement === 1) {
+			rewardTexts.push(italic(`${userMention(id)} has reached the #1 spot for this season!`));
+		}
+		if (result.rankIncreased) {
+			const rank = descendingRanks[result.newRankIndex];
+			const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${result.newRankIndex + 1}`;
+			rewardTexts.push(`${congratulationBuilder()}, ${userMention(id)}! You've risen to ${bold(rankName)}!`);
+		}
+	}
+	return rewardTexts;
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -648,5 +671,6 @@ module.exports = {
 	generateToastRewardString,
 	generateCompletionEmbed,
 	generateSecondingRewardString,
-	formatHunterResultsToRewardTexts
+	formatHunterResultsToRewardTexts,
+	formatSeasonResultsToRewardTexts
 };

@@ -55,17 +55,6 @@ function initModel(sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 0
 		},
-		rank: {
-			type: DataTypes.INTEGER,
-			defaultValue: null
-		},
-		lastRank: {
-			type: DataTypes.INTEGER,
-			defaultValue: null
-		},
-		nextRankXP: {
-			type: DataTypes.BIGINT,
-		},
 		lastShowcaseTimestamp: {
 			type: DataTypes.DATE
 		},
