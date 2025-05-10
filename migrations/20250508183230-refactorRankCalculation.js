@@ -3,19 +3,28 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 	async up(queryInterface, Sequelize) {
-		const tableDescription = await queryInterface.describeTable("Participation");
-		if (!("rankIndex" in tableDescription)) {
+		const participationTable = await queryInterface.describeTable("Participation");
+		if (!("rankIndex" in participationTable)) {
 			//TODONOW initialize based on Hunter.rank
 			await queryInterface.addColumn("Participation", "rankIndex", Sequelize.INTEGER);
 		}
-		//TODONOW remove Hunter.rank
-		//TODONOW remove Hunter.lastRank
-		//TODONOW remove Hunter.nextRankXP
+		const hunterTable = await queryInterface.describeTable("Hunter");
+		if ("rank" in hunterTable) {
+			await queryInterface.sequelize.query("ALTER TABLE Hunter DROP COLUMN rank");
+		}
+		if ("lastRank" in hunterTable) {
+			await queryInterface.sequelize.query("ALTER TABLE Hunter DROP COLUMN lastRank");
+		}
+		if ("nextRankXP" in hunterTable) {
+			await queryInterface.sequelize.query("ALTER TABLE Hunter DROP COLUMN nextRankXP");
+		}
 	},
 
 	async down(queryInterface, Sequelize) {
-		//TODONOW remove Season.xpStandardDeviation
-		//TODONOW remove Participation.rankIndex
+		const participationTable = await queryInterface.describeTable("Participation");
+		if ("rankIndex" in participationTable) {
+			await queryInterface.sequelize.query("ALTER TABLE Participation DROP COLUMN rankIndex");
+		}
 		//TODONOW recalculate Hunter.rank
 		//TODONOW recalculate Hunter.lastRank
 		//TODONOW recalculate Hunter.nextRankXP

@@ -1,5 +1,6 @@
 const { Sequelize, Op } = require("sequelize");
 const { Participation, Rank, Season } = require("../database/models");
+const { descendingByProperty } = require("./shared");
 
 /** @type {Sequelize} */
 let db;
@@ -53,7 +54,7 @@ function getDQCount(userId, companyId) {
  * @param {string} seasonId
  */
 async function getCompanyParticipationMap(seasonId) {
-	/** @type {Record<string, Participation} */
+	/** @type {Map<string, Participation>} */
 	const participationMap = new Map();
 	const participations = await db.models.Participation.findAll({ where: { seasonId } });
 	for (const participation of participations) {
@@ -106,8 +107,18 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
 	return participation;
 }
 
-function nextRankXP(participation, season, descendingRanks) { //TODONOW replace Hunter.nextRankXP usages
-	const mean = Season.calculateXPMean();
+/** Calculates the XP required for the specified Hunter to reach the next Rank
+ * @param {string} userId
+ * @param {Season} season
+ * @param {Rank[]} descendingRanks
+ */
+async function nextRankXP(userId, season, descendingRanks) {
+	const participationMap = await getCompanyParticipationMap(season.id);
+	const mean = Participation.calculateXPMean(participationMap);
+	const participation = participationMap.get(userId);
+	if (participation?.rankIndex === null) {
+		return 0;
+	}
 	return Math.ceil(season.xpStandardDeviation * descendingRanks[participation.rankIndex].varianceThreshold + mean - participation.xp);
 }
 
@@ -121,9 +132,8 @@ async function updatePlacementsAndRanks(season, participationMap, descendingRank
 	if (participationMap.size < 1) {
 		return {};
 	}
-	const participationArray = [...participationMap.values()];
-	const placementChanges = await calculatePlacementChanges(participationArray);
-	const xpStandardDeviation = Season.calculateXPStandardDeviation(participationArray);
+	const placementChanges = await calculatePlacementChanges(participationMap);
+	const xpStandardDeviation = Participation.calculateXPStandardDeviation(participationMap);
 	season.update({ xpStandardDeviation });
 	const rankChanges = await calculateRankChanges(xpStandardDeviation, participationMap, descendingRanks);
 	/** @type {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} */
@@ -163,7 +173,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 	const rankChanges = {};
 	if (descendingRanks.length > 0) {
 		for (const [id, participation] of participationMap) {
-			const standardDeviationsFromMean = (participation.xp - Season.calculateXPMean([...participationMap.values()])) / standardDeviation;
+			const standardDeviationsFromMean = (participation.xp - Participation.calculateXPMean(participationMap)) / standardDeviation;
 			let index = -1;
 			for (const rank of descendingRanks) {
 				index++;
@@ -181,15 +191,16 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 }
 
 /** *Generates a map of all of a Season's Participations' placement changes*
- * @param {Participation[]} allParticipations
+ * @param {Map<any, Participation>} participationMap
  */
-async function calculatePlacementChanges(allParticipations) { //TODONOW fix placements showing up as #0?
-	let recentPlacement = allParticipations.length;
+async function calculatePlacementChanges(participationMap) { //TODONOW fix placements showing up as #0?
+	const participationArray = [...participationMap.values()].sort(descendingByProperty("xp"));
+	let recentPlacement = participationMap.size;
 	let previousScore = 0;
 	const placementChanges = {};
 	// subtract 1 to adjust for array indexes starting from 0
 	for (let i = recentPlacement - 1; i >= 0; i -= 1) {
-		const participation = allParticipations[i];
+		const participation = participationArray[i];
 		if (participation.xp > previousScore) {
 			previousScore = participation.xp;
 			recentPlacement = i + 1;
@@ -267,6 +278,7 @@ module.exports = {
 	findHunterParticipations,
 	findFirstPlaceParticipation,
 	findParticipationWithTopParticipationStat,
+	nextRankXP,
 	updatePlacementsAndRanks,
 	changeSeasonXP,
 	incrementSeasonStat,

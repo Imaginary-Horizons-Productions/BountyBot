@@ -91,6 +91,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 				const rankName = ranks[currentParticipation.rankIndex]?.roleId ? `<@&${ranks[currentParticipation.rankIndex].roleId}>` : `Rank ${currentParticipation.rankIndex + 1}`;
 				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, guild.id);
+				const nextRankXP = await logicLayer.seasons.nextRankXP(interaction.user.id, currentSeason, ranks);
 
 				interaction.reply({
 					embeds: [
@@ -100,7 +101,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							.setTitle(`You are __Level ${currentHunterLevel}__ in ${guild.name}`)
 							.setDescription(
 								`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - hunter.xp} XP\n\
-								You have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex != null ? ` which qualifies for ${rankName}` : ""}.${hunter.nextRankXP > 0 ? `You need ${hunter.nextRankXP} XP to reach the next rank.` : ""}\n\n\
+								You have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex != null ? ` which qualifies for ${rankName}` : ""}.${nextRankXP > 0 ? `You need ${nextRankXP} XP to reach the next rank.` : ""}\n\n\
 								You have ${bountySlots} bounty slot${bountySlots === 1 ? '' : 's'}!`
 							)
 							.addFields(

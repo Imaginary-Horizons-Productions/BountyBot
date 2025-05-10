@@ -299,7 +299,7 @@ function sendAnnouncement(company, messageOptions) {
  * @param {Rank[]} ranks
  * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
  */
-async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) {
+async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) { //TODONOW use ParticipatinMap instead of Array to decomission findSeasonParticipations
 	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
