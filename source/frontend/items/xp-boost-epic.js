@@ -1,5 +1,5 @@
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { buildCompanyLevelUpLine, buildHunterLevelUpLine, updateSeasonalRanks, formatSeasonResultsToRewardTexts } = require("../shared");
+const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -18,8 +18,8 @@ module.exports = new ItemTemplateSet(
 				const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 				await hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-				const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
-				updateSeasonalRanks(seasonUpdates, descendingRanks, interaction.guild.members);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				const additionalRewards = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 				let content = `${interaction.member} used an ${itemName} and gained ${xpValue} XP.`;
 				const hunterLevelLine = buildHunterLevelUpLine(hunter, previousHunterLevel, company.xpCoefficient, company.maxSimBounties);

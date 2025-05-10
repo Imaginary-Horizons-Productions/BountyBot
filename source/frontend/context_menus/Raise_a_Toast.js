@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, DiscordjsErrorCodes } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, generateTextBar, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, updateSeasonalRanks, formatSeasonResultsToRewardTexts } = require('../shared');
+const { textsHaveAutoModInfraction, generateTextBar, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -81,8 +81,8 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}).then(async response => {
 				if (rewardedHunterIds.length > 0) {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
-					updateSeasonalRanks(seasonUpdates, descendingRanks, interaction.guild.members);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 					const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
 					sendToRewardsThread(response.resource.message, rewardString, "Rewards");
 					const embeds = [];

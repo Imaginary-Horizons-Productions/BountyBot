@@ -117,7 +117,7 @@ function nextRankXP(participation, season, descendingRanks) { //TODONOW replace 
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} descendingRanks
  */
-async function updateCompanyPlacementsAndRanks(season, participationMap, descendingRanks) { //TODONOW rename to "updateSeasonPlacementsAndRanks"
+async function updatePlacementsAndRanks(season, participationMap, descendingRanks) {
 	if (participationMap.size < 1) {
 		return {};
 	}
@@ -267,7 +267,7 @@ module.exports = {
 	findHunterParticipations,
 	findFirstPlaceParticipation,
 	findParticipationWithTopParticipationStat,
-	updateCompanyPlacementsAndRanks,
+	updatePlacementsAndRanks,
 	changeSeasonXP,
 	incrementSeasonStat,
 	toggleHunterSeasonDisqualification,

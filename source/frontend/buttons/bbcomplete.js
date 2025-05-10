@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, updateSeasonalRanks, formatSeasonResultsToRewardTexts } = require('../shared');
+const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -78,8 +78,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				}
 				const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
-				const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
-				updateSeasonalRanks(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
 				const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch());
 
 				if (collectedInteraction.channel.archived) {
@@ -96,7 +96,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							} else {
 								embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
 							}
-
 						}
 						interaction.message.edit({ embeds: [embed], components: [] });
 						collectedInteraction.channel.setArchived(true, "bounty completed");

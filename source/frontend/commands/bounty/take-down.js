@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, bountiesToSelectOptions, updateSeasonalRanks } = require("../../shared");
+const { commandMention, bountiesToSelectOptions, syncRankRoles } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
@@ -36,8 +36,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1); //TODONOW check for async problems
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-				const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
-				updateSeasonalRanks(seasonUpdates, descendingRanks, interaction.guild.members);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 
 				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 			}).catch(error => {

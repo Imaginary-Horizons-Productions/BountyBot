@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { generateTextBar, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendToRewardsThread, formatSeasonResultsToRewardTexts, updateSeasonalRanks } = require('../shared');
+const { generateTextBar, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendToRewardsThread, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -122,8 +122,8 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 		interaction.update({ embeds: [embed] });
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-		const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
-		updateSeasonalRanks(seasonUpdates, descendingRanks, interaction.guild.members);
+		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 		const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 		sendToRewardsThread(interaction.message, generateSecondingRewardString(interaction.member.displayName, recipientIds, rankUpdates, rewardTexts), "Rewards");
 		const embeds = [];

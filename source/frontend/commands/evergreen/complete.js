@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty } = require("../../../database/models");
-const { generateTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, bountiesToSelectOptions, sendToRewardsThread, updateSeasonalRanks, formatSeasonResultsToRewardTexts } = require("../../shared");
+const { generateTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, bountiesToSelectOptions, sendToRewardsThread, syncRankRoles, formatSeasonResultsToRewardTexts } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -116,8 +116,8 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 							return collectedInteraction.channel.send(announcementPayload);
 						}).then(async message => {
 							const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
-							const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
-							updateSeasonalRanks(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
+							const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+							syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
 							sendToRewardsThread(message, generateBountyRewardString(validatedHunterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch()), levelTexts), `${bounty.title} Rewards`);
 							const embeds = [];
 							const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);

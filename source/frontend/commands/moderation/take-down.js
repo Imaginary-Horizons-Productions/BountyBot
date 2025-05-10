@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, updateSeasonalRanks } = require("../../shared");
+const { bountiesToSelectOptions, syncRankRoles } = require("../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down another user's bounty",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -44,8 +44,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 					logicLayer.seasons.changeSeasonXP(posterId, interaction.guildId, season.id, -1); //TODONOW check for async problems
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonUpdates = await logicLayer.seasons.updateCompanyPlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
-					updateSeasonalRanks(seasonUpdates, descendingRanks, interaction.guild.members);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				})
 				collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
 			});
