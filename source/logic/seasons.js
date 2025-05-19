@@ -186,7 +186,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 /** *Generates a map of all of a Season's Participations' placement changes*
  * @param {Map<any, Participation>} participationMap
  */
-async function calculatePlacementChanges(participationMap) { //TODONOW fix placements showing up as #0?
+async function calculatePlacementChanges(participationMap) {
 	const participationArray = [...participationMap.values()].sort(descendingByProperty("xp"));
 	let recentPlacement = participationMap.size;
 	let previousScore = 0;
@@ -197,9 +197,9 @@ async function calculatePlacementChanges(participationMap) { //TODONOW fix place
 		if (participation.xp > previousScore) {
 			previousScore = participation.xp;
 			recentPlacement = i + 1;
-			if (participation.placement !== recentPlacement) {
-				placementChanges[participation.userId] = recentPlacement;
-			}
+		}
+		if (participation.placement !== recentPlacement) {
+			placementChanges[participation.userId] = recentPlacement;
 		}
 	}
 	return placementChanges;
