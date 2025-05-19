@@ -44,7 +44,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 					await logicLayer.seasons.changeSeasonXP(posterId, interaction.guildId, season.id, -1);
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				})
 				collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });

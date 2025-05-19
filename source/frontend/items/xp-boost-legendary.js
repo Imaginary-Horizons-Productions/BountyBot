@@ -19,7 +19,7 @@ module.exports = new ItemTemplateSet(
 				await hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, participationMap, descendingRanks);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				const additionalRewards = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 				let content = `${interaction.member} used a ${itemName} and gained ${xpValue} XP.`;

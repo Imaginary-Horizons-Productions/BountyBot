@@ -22,12 +22,14 @@ function calculateXPMean(participations) {
 	return totalXP / participations.size;
 }
 
-/** @param {Map<any, Participation>} participations */
-function calculateXPStandardDeviation(participations) {
+/**
+ * @param {Map<any, Participation>} participations
+ * @param {number} mean
+ */
+function calculateXPStandardDeviation(participations, mean) {
 	if (participations.size < 1) {
 		return null;
 	}
-	const mean = calculateXPMean(participations);
 	let squareSum = 0;
 	for (const [_, participation] of participations) {
 		squareSum += (participation.xp - mean) ** 2;

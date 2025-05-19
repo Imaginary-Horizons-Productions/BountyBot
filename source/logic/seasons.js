@@ -107,27 +107,27 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
  */
 async function nextRankXP(userId, season, descendingRanks) {
 	const participationMap = await getParticipationMap(season.id);
-	const mean = calculateXPMean(participationMap);
 	const participation = participationMap.get(userId);
 	if (participation?.rankIndex === null) {
 		return 0;
 	}
-	return Math.ceil(season.xpStandardDeviation * descendingRanks[participation.rankIndex].varianceThreshold + mean - participation.xp);
+	const mean = calculateXPMean(participationMap);
+	const xpStandardDeviation = calculateXPStandardDeviation(participationMap, mean);
+	return Math.ceil(xpStandardDeviation * descendingRanks[participation.rankIndex].varianceThreshold + mean - participation.xp);
 }
 
 
 /** Recalculate placement and rank changes based on changed XP values on Participations and updates the database
- * @param {Season} season
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} descendingRanks
  */
-async function updatePlacementsAndRanks(season, participationMap, descendingRanks) {
+async function updatePlacementsAndRanks(participationMap, descendingRanks) {
 	if (participationMap.size < 1) {
 		return {};
 	}
 	const placementChanges = await calculatePlacementChanges(participationMap);
-	const xpStandardDeviation = calculateXPStandardDeviation(participationMap);
-	season.update({ xpStandardDeviation });
+	const mean = calculateXPMean(participationMap);
+	const xpStandardDeviation = calculateXPStandardDeviation(participationMap, mean);
 	const rankChanges = await calculateRankChanges(xpStandardDeviation, participationMap, descendingRanks);
 	/** @type {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} */
 	const results = {};

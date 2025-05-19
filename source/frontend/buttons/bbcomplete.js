@@ -79,7 +79,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 				const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, participationMap, descendingRanks);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 				syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
 				const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch());
 

@@ -117,7 +117,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						}).then(async message => {
 							const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 							const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-							const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, participationMap, descendingRanks);
+							const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 							syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
 							sendToRewardsThread(message, generateBountyRewardString(validatedHunterIds, bountyBaseValue, null, null, company.festivalMultiplierString(), formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch()), levelTexts), `${bounty.title} Rewards`);
 							const embeds = [];

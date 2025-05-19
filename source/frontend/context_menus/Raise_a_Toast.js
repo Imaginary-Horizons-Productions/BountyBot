@@ -82,7 +82,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				if (rewardedHunterIds.length > 0) {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, participationMap, descendingRanks);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 					const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
 					sendToRewardsThread(response.resource.message, rewardString, "Rewards");

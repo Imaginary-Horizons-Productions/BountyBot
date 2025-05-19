@@ -9,7 +9,7 @@ module.exports = new SubcommandWrapper("season-disqualify", "Toggle disqualifica
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 		const participation = await logicLayer.seasons.toggleHunterSeasonDisqualification(member.id, interaction.guildId, season.id);
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 		interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, flags: MessageFlags.Ephemeral });
 		if (!member.user.bot) {
