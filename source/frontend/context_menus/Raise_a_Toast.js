@@ -91,7 +91,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					if (company.scoreboardIsSeasonal) {
 						embeds.push(await seasonalScoreboardEmbed(company, modalSubmission.guild, participationMap, descendingRanks, goalProgress));
 					} else {
-						embeds.push(await overallScoreboardEmbed(company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), descendingRanks, goalProgress));
+						embeds.push(await overallScoreboardEmbed(company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), goalProgress));
 					}
 					updateScoreboard(company, modalSubmission.guild, embeds);
 				}

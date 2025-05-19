@@ -297,7 +297,7 @@ function sendAnnouncement(company, messageOptions) {
  * @param {Guild} guild
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} ranks
- * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
+ * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
  */
 async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: [...participationMap.keys()] });
@@ -357,19 +357,17 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
  * @param {Guild} guild
  * @param {Hunter[]} hunters
  * @param {Rank[]} ranks
- * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
+ * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
  */
-async function overallScoreboardEmbed(company, guild, hunters, ranks, goalProgress) {
+async function overallScoreboardEmbed(company, guild, hunters, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
 	for (const hunter of hunters.sort((a, b) => b.xp - a.xp)) {
 		if (hunter.xp < 1) {
 			break;
 		}
-		//TODONOW need participation for rankIndex?
-		scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
+		scorelines.push(`**${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)

@@ -132,7 +132,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		if (company.scoreboardIsSeasonal) {
 			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, participationMap, descendingRanks, goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), descendingRanks, goalProgress));
+			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
 		updateScoreboard(company, interaction.guild, embeds);
 

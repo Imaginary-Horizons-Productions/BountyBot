@@ -72,7 +72,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			if (company.scoreboardIsSeasonal) {
 				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, new Map(), ranks, goalProgress));
 			} else {
-				embeds.push(await overallScoreboardEmbed(company, interaction.guild, allHunters, ranks, goalProgress));
+				embeds.push(await overallScoreboardEmbed(company, interaction.guild, allHunters, goalProgress));
 			}
 			updateScoreboard(company, guild, embeds);
 			let announcementText = "A new season has started, ranks and placements have been reset!";

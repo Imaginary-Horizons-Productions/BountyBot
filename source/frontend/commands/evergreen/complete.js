@@ -125,7 +125,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 							if (company.scoreboardIsSeasonal) {
 								embeds.push(await seasonalScoreboardEmbed(company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
 							} else {
-								embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), descendingRanks, goalProgress));
+								embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), goalProgress));
 							}
 							updateScoreboard(company, collectedInteraction.guild, embeds);
 						})
