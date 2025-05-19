@@ -1,6 +1,6 @@
 const { Sequelize, Op } = require("sequelize");
 const { Participation, Rank, Season } = require("../database/models");
-const { descendingByProperty } = require("./shared");
+const { descendingByProperty, calculateXPMean, calculateXPStandardDeviation } = require("./shared");
 
 /** @type {Sequelize} */
 let db;
@@ -107,7 +107,7 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
  */
 async function nextRankXP(userId, season, descendingRanks) {
 	const participationMap = await getParticipationMap(season.id);
-	const mean = Participation.calculateXPMean(participationMap);
+	const mean = calculateXPMean(participationMap);
 	const participation = participationMap.get(userId);
 	if (participation?.rankIndex === null) {
 		return 0;
@@ -126,7 +126,7 @@ async function updatePlacementsAndRanks(season, participationMap, descendingRank
 		return {};
 	}
 	const placementChanges = await calculatePlacementChanges(participationMap);
-	const xpStandardDeviation = Participation.calculateXPStandardDeviation(participationMap);
+	const xpStandardDeviation = calculateXPStandardDeviation(participationMap);
 	season.update({ xpStandardDeviation });
 	const rankChanges = await calculateRankChanges(xpStandardDeviation, participationMap, descendingRanks);
 	/** @type {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} */
@@ -166,7 +166,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 	const rankChanges = {};
 	if (descendingRanks.length > 0) {
 		for (const [id, participation] of participationMap) {
-			const standardDeviationsFromMean = (participation.xp - Participation.calculateXPMean(participationMap)) / standardDeviation;
+			const standardDeviationsFromMean = (participation.xp - calculateXPMean(participationMap)) / standardDeviation;
 			let index = -1;
 			for (const rank of descendingRanks) {
 				index++;

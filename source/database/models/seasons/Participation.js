@@ -1,5 +1,4 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
-const { Season } = require('./Season');
 
 class Participation extends Model {
 	static associate(models) {
@@ -9,31 +8,6 @@ class Participation extends Model {
 		models.Participation.Company = models.Participation.belongsTo(models.Company, {
 			foreignKey: "companyId"
 		})
-	}
-
-	/** @param {Map<any, Participation>} participations */
-	static calculateXPMean(participations) {
-		if (participations.size < 1) {
-			return null;
-		}
-		let totalXP = 0;
-		for (const [_, particpation] of participations) {
-			totalXP += particpation.xp;
-		}
-		return totalXP / participations.size;
-	}
-
-	/** @param {Map<any, Participation>} participations */
-	static calculateXPStandardDeviation(participations) {
-		if (participations.size < 1) {
-			return null;
-		}
-		const mean = Participation.calculateXPMean(participations);
-		let squareSum = 0;
-		for (const [_, participation] of participations) {
-			squareSum += (participation.xp - mean) ** 2;
-		}
-		return Math.sqrt(squareSum / participations.size);
 	}
 }
 
