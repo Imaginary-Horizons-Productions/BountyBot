@@ -108,12 +108,12 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
 async function nextRankXP(userId, season, descendingRanks) {
 	const participationMap = await getParticipationMap(season.id);
 	const participation = participationMap.get(userId);
-	if (participation?.rankIndex === null) {
+	if (participation?.rankIndex === null || participation.rankIndex === 0) {
 		return 0;
 	}
 	const mean = calculateXPMean(participationMap);
 	const xpStandardDeviation = calculateXPStandardDeviation(participationMap, mean);
-	return Math.ceil(xpStandardDeviation * descendingRanks[participation.rankIndex].varianceThreshold + mean - participation.xp);
+	return Math.ceil(xpStandardDeviation * descendingRanks[participation.rankIndex - 1].varianceThreshold + mean - participation.xp);
 }
 
 
