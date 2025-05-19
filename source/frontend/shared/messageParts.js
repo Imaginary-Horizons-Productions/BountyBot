@@ -304,7 +304,7 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
-	for (const [id, participation] of participationMap) {
+	for (const [id, participation] of participationMap) { //TODONOW sort descending by season XP
 		if (participation.xp > 0 && hunterMembers.has(id)) {
 			const hunter = await participation.hunter;
 			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);

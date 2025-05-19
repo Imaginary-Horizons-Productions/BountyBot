@@ -211,12 +211,12 @@ async function calculatePlacementChanges(participationMap) { //TODONOW fix place
  * @param {string} seasonId
  * @param {number} xp negative numbers allowed
  */
-function changeSeasonXP(userId, companyId, seasonId, xp) {
-	db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } }).then(([participation, participationCreated]) => {
-		if (!participationCreated) {
-			participation.increment({ xp });
-		}
-	});
+async function changeSeasonXP(userId, companyId, seasonId, xp) {
+	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { userId, companyId, seasonId }, defaults: { xp } });
+	if (!participationCreated) {
+		await participation.increment({ xp });
+	}
+	return participationCreated;
 }
 
 /**

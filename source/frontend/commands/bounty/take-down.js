@@ -34,7 +34,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 
 				hunter.decrement("xp");
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1); //TODONOW check for async problems
+				await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
