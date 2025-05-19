@@ -81,14 +81,15 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}).then(async response => {
 				if (rewardedHunterIds.length > 0) {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, participationMap, descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 					const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
 					sendToRewardsThread(response.resource.message, rewardString, "Rewards");
 					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(company, modalSubmission.guild, await logicLayer.seasons.findSeasonParticipations(season.id), descendingRanks, goalProgress));
+						embeds.push(await seasonalScoreboardEmbed(company, modalSubmission.guild, participationMap, descendingRanks, goalProgress));
 					} else {
 						embeds.push(await overallScoreboardEmbed(company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), descendingRanks, goalProgress));
 					}

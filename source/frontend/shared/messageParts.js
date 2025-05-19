@@ -295,19 +295,19 @@ function sendAnnouncement(company, messageOptions) {
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Company} company
  * @param {Guild} guild
- * @param {Participation[]} participations
+ * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} ranks
  * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
  */
-async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) { //TODONOW use ParticipatinMap instead of Array to decomission findSeasonParticipations
-	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
+async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
+	const hunterMembers = await guild.members.fetch({ user: [...participationMap.keys()] });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
-	for (const participation of participations) {
-		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
+	for (const [id, participation] of participationMap) {
+		if (participation.xp > 0 && hunterMembers.has(id)) {
 			const hunter = await participation.hunter;
-			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
+			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)

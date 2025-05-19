@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's X
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 		logicLayer.seasons.changeSeasonXP(member.id, interaction.guildId, season.id, penaltyValue * -1); //TODONOW check for async problems
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 		interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, flags: MessageFlags.Ephemeral });
 		if (!member.user.bot) {

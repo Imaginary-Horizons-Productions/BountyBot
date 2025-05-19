@@ -53,7 +53,7 @@ function getDQCount(userId, companyId) {
 /** *Returns a Map of userId to Participation for all Participations in the specified Season*
  * @param {string} seasonId
  */
-async function getCompanyParticipationMap(seasonId) {
+async function getParticipationMap(seasonId) {
 	/** @type {Map<string, Participation>} */
 	const participationMap = new Map();
 	const participations = await db.models.Participation.findAll({ where: { seasonId } });
@@ -61,13 +61,6 @@ async function getCompanyParticipationMap(seasonId) {
 		participationMap.set(participation.userId, participation);
 	}
 	return participationMap;
-}
-
-/** *Get all of a Season's Participations*
- * @param {string} seasonId
- */
-function findSeasonParticipations(seasonId) {
-	return db.models.Participation.findAll({ where: { seasonId }, order: [["xp", "DESC"]] });
 }
 
 /** *Get Participations of the specified Users in the specified Season*
@@ -113,7 +106,7 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
  * @param {Rank[]} descendingRanks
  */
 async function nextRankXP(userId, season, descendingRanks) {
-	const participationMap = await getCompanyParticipationMap(season.id);
+	const participationMap = await getParticipationMap(season.id);
 	const mean = Participation.calculateXPMean(participationMap);
 	const participation = participationMap.get(userId);
 	if (participation?.rankIndex === null) {
@@ -272,8 +265,7 @@ module.exports = {
 	findOneSeason,
 	getParticipantCount,
 	getDQCount,
-	getCompanyParticipationMap,
-	findSeasonParticipations,
+	getParticipationMap,
 	bulkFindParticipations,
 	findHunterParticipations,
 	findFirstPlaceParticipation,

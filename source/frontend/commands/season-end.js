@@ -70,7 +70,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			const embeds = [];
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 			if (company.scoreboardIsSeasonal) {
-				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, [], ranks, goalProgress));
+				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, new Map(), ranks, goalProgress));
 			} else {
 				embeds.push(await overallScoreboardEmbed(company, interaction.guild, allHunters, ranks, goalProgress));
 			}

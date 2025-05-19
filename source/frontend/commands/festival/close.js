@@ -13,7 +13,7 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (company.scoreboardIsSeasonal) {
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), ranks, goalProgress));
 		} else {
 			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
 		}

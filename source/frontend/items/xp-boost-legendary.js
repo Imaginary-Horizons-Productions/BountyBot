@@ -18,7 +18,7 @@ module.exports = new ItemTemplateSet(
 				const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 				await hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				const additionalRewards = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 				let content = `${interaction.member} used a ${itemName} and gained ${xpValue} XP.`;
@@ -41,6 +41,7 @@ module.exports = new ItemTemplateSet(
 					content += `\n- ${additionalRewards.join("\n- ")}`;
 				}
 				interaction.reply({ content });
+				//TODONOW should update scoreboard
 			})
 		}
 	)

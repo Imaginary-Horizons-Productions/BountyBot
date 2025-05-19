@@ -39,7 +39,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1); //TODONOW test for async problems
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getCompanyParticipationMap(season.id), descendingRanks);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.id);
 				})
 

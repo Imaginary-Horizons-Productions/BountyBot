@@ -15,7 +15,7 @@ module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset a
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (company.scoreboardIsSeasonal) {
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, [], ranks, goalProgress));
+			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, new Map(), ranks, goalProgress));
 		} else {
 			embeds.push(await overallScoreboardEmbed(company, interaction.guild, [], ranks, goalProgress));
 		}

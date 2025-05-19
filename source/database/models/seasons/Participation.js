@@ -28,7 +28,7 @@ class Participation extends Model {
 		if (participations.size < 1) {
 			return null;
 		}
-		const mean = Season.calculateXPMean(participations);
+		const mean = Participation.calculateXPMean(participations);
 		let squareSum = 0;
 		for (const [_, participation] of participations) {
 			squareSum += (participation.xp - mean) ** 2;
