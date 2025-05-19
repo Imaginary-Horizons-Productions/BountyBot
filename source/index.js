@@ -170,7 +170,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	//#endregion
 
 	//#region Premium Checks
-	if (premiumCommandList.contains(command.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+	if (premiumCommandList.includes(command.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
 		interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
