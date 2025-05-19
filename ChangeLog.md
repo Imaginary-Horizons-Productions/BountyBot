@@ -15,6 +15,7 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 - Fixed BountyBot banned users being able to receive toasts and credit for evergreen bounties
 - Fixed Completing bounties from within their thread on the Bounty Board timing out
 - The Overall Scoreboard no longer shows bounty hunter rank
+- Fixed XP Boosts not updating the scoreboard
 
 ## BountyBot Version 2.9.0:
 ### Server Goals

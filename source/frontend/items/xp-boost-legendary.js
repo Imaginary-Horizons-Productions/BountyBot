@@ -1,5 +1,5 @@
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts } = require("../shared");
+const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -18,7 +18,8 @@ module.exports = new ItemTemplateSet(
 				const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 				await hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, participationMap, descendingRanks);
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				const additionalRewards = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 				let content = `${interaction.member} used a ${itemName} and gained ${xpValue} XP.`;
@@ -41,7 +42,14 @@ module.exports = new ItemTemplateSet(
 					content += `\n- ${additionalRewards.join("\n- ")}`;
 				}
 				interaction.reply({ content });
-				//TODONOW should update scoreboard
+				const embeds = [];
+				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
+				if (company.scoreboardIsSeasonal) {
+					embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, participationMap, descendingRanks, goalProgress));
+				} else {
+					embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+				}
+				updateScoreboard(company, interaction.guild, embeds);
 			})
 		}
 	)
