@@ -37,7 +37,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
 					hunter.decrement("xp");
 					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-					logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1); //TODONOW test for async problems
+					await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(season, await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.id);
