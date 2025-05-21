@@ -23,15 +23,15 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			await collectedInteraction.deferUpdate();
-			const varianceThreshold = Number(collectedInteraction.values[0]);
+			const threshold = Number(collectedInteraction.values[0]);
 			const reloadedRanks = await Promise.all(ranks.map(rank => rank.reload()));
-			const rankIndex = reloadedRanks.findIndex(rank => rank.varianceThreshold === varianceThreshold);
+			const rankIndex = reloadedRanks.findIndex(rank => rank.threshold === threshold);
 			const rank = reloadedRanks[rankIndex];
 			const qualifiedHunterIds = await logicLayer.hunters.findHunterIdsAtOrAboveRank(interaction.guildId, rankIndex);
 			const unvalidatedMembers = await interaction.guild.members.fetch({ user: qualifiedHunterIds });
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
 			if (eligibleMembers.size < 1) {
-				collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${varianceThreshold + 1}`}).`, flags: MessageFlags.Ephemeral });
+				collectedInteraction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${threshold + 1}`}).`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));

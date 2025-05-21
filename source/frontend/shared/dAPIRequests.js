@@ -48,8 +48,8 @@ function rankArrayToSelectOptions(ranks, allGuildRoles) {
 	return ranks.map((rank, index) => {
 		const option = {
 			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
-			description: `Variance Threshold: ${rank.varianceThreshold}`,
-			value: rank.varianceThreshold.toString()
+			description: `Variance Threshold: ${rank.threshold}`,
+			value: rank.threshold.toString()
 		};
 		if (rank.rankmoji) {
 			option.emoji = rank.rankmoji;
