@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, getRankUpdates, buildBountyEmbed, generateBountyBoardButtons, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
+const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyBoardButtons, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
 
@@ -177,14 +177,16 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const company = await logicLayer.companies.findCompanyByPK(modalSubmission.guild.id);
 				const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guildId);
 				poster.increment({ xp: 1 }).then(async () => {
-					getRankUpdates(modalSubmission.guild, logicLayer);
+					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 					const embeds = [];
-					const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+						embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, participationMap, descendingRanks, goalProgress));
 					} else {
-						embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
+						embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 					}
 					updateScoreboard(company, interaction.guild, embeds);
 				});

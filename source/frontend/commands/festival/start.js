@@ -18,14 +18,13 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 			}
 		})
 		interaction.reply(sendAnnouncement(company, { content: `An XP multiplier festival has started. Bounty and toast XP will be multiplied by ${multiplier}.` }));
-		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const embeds = [];
-		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (company.scoreboardIsSeasonal) {
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
+			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
 		updateScoreboard(company, interaction.guild, embeds);
 	}

@@ -114,7 +114,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 			hunterResults[id] = { previousLevel: hunter.getLevel(company.xpCoefficient), droppedItem: null };
 			const xpAwarded = Math.floor(company.festivalMultiplier);
 			await hunter.increment({ toastsReceived: 1, xp: xpAwarded });
-			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: id, seasonId }, defaults: { xp: 1 } });
+			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: id, seasonId }, defaults: { xp: xpAwarded } });
 			if (!participationCreated) {
 				participation.increment({ xp: xpAwarded });
 			}

@@ -24,13 +24,12 @@ module.exports = new SubcommandWrapper("scoreboard-reference", "Create a referen
 		});
 		const isSeasonal = interaction.options.getString("scoreboard-type") === "season";
 		const embeds = [];
-		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (isSeasonal) {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
+			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
 		scoreboard.send({ embeds }).then(message => {
 			company.scoreboardChannelId = scoreboard.id;
