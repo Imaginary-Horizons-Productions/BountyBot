@@ -48,12 +48,12 @@ async function calculateRanks(season, allHunters, ranks, participations) {
 			let index = -1;
 			for (const rank of ranks) {
 				index++;
-				if (variance >= rank.varianceThreshold) {
+				if (variance >= rank.threshold) {
 					break;
 				}
 			}
 			hunter.rank = index;
-			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].varianceThreshold + mean - particpationMap[hunter.userId].xp);
+			hunter.nextRankXP = Math.ceil(stdDev * ranks[hunter.rank].threshold + mean - particpationMap[hunter.userId].xp);
 			hunter.save();
 		}
 	}

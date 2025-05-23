@@ -27,8 +27,8 @@ module.exports = new SubcommandWrapper("remove", "Remove one or more existing se
 			selectCollector.on("collect", selectInteraction => {
 				for (const varianceString of selectInteraction.values) {
 					selectedRanks.push(ranks.find(rank => {
-						const varianceThreshold = parseFloat(varianceString);
-						return rank.varianceThreshold === varianceThreshold;
+						const threshold = parseFloat(varianceString);
+						return rank.threshold === threshold;
 					}))
 				}
 				selectedRankNames = listifyEN(selectedRanks.map(rank => {
@@ -57,7 +57,7 @@ module.exports = new SubcommandWrapper("remove", "Remove one or more existing se
 						interaction.guild.roles.delete(rank.roleId, 'Removing rank role during rank removal.')
 					}
 				}
-				logicLayer.ranks.deleteRanks(buttonInteraction.guild.id, selectedRanks.map(rank => rank.varianceThreshold)).then(() => {
+				logicLayer.ranks.deleteRanks(buttonInteraction.guild.id, selectedRanks.map(rank => rank.threshold)).then(() => {
 					getRankUpdates(buttonInteraction.guild, logicLayer);
 				});
 				buttonInteraction.update({ content: `${selectedRankNames} ${selectedRanks.length > 1 ? "were" : "was"} removed.`, components: [] });

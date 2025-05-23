@@ -7,7 +7,7 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const newThreshold = interaction.options.getNumber("variance-threshold");
-		const existingThresholds = ranks.map(rank => rank.varianceThreshold);
+		const existingThresholds = ranks.map(rank => rank.threshold);
 		if (existingThresholds.includes(newThreshold)) {
 			interaction.reply({ content: `There is already a rank at the ${newThreshold} standard deviations threshold for this server. If you'd like to change the role or rankmoji for that rank, you can use ${commandMention("rank edit")}.`, flags: MessageFlags.Ephemeral });
 			return;
@@ -20,7 +20,7 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 
 		const rawRank = {
 			companyId: interaction.guildId,
-			varianceThreshold: newThreshold
+			threshold: newThreshold
 		};
 
 		const newRole = interaction.options.getRole("role");

@@ -12,7 +12,7 @@ function initModel(sequelize) {
 			primaryKey: true,
 			type: DataTypes.STRING
 		},
-		varianceThreshold: {
+		threshold: {
 			primaryKey: true,
 			type: DataTypes.REAL
 		},
