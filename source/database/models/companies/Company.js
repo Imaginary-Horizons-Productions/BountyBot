@@ -70,7 +70,7 @@ function initModel(sequelize) {
 			defaultValue: 3600000
 		},
 		festivalMultiplier: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.REAL,
 			defaultValue: 1
 		},
 		xpCoefficient: {

@@ -4,9 +4,9 @@ const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScor
 
 module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, company]) {
-		const multiplier = interaction.options.getInteger("multiplier");
-		if (multiplier < 2) {
-			interaction.reply({ content: `Multiplier must be an integer that is 2 or more.`, flags: MessageFlags.Ephemeral })
+		const multiplier = interaction.options.getNumber("multiplier");
+		if (!(multiplier >= 1)) {
+			interaction.reply({ content: `Multiplier must be greater than 1.`, flags: MessageFlags.Ephemeral })
 			return;
 		}
 		company.update({ "festivalMultiplier": multiplier });
@@ -30,7 +30,7 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 	}
 ).setOptions(
 	{
-		type: "Integer",
+		type: "Number",
 		name: "multiplier",
 		description: "The amount to multiply XP by",
 		required: true

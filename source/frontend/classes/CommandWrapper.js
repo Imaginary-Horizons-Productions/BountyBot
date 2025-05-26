@@ -88,7 +88,7 @@ class SubcommandWrapper {
 		this.executeSubcommand = executeFunction;
 	}
 
-	/** @param  {...{ type: "", name: string, description: string, required: boolean, autocomplete?: { name: string, value: string }[], choices?: { name: string, value: string }[] } } options */
+	/** @param  {...{ type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: { name: string, value: string }[], choices?: { name: string, value: string }[] } } options */
 	setOptions(...options) {
 		this.data.optionsInput = options;
 		return this;
