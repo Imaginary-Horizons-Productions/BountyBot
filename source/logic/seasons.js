@@ -113,7 +113,7 @@ async function nextRankXP(userId, season, descendingRanks) {
 	}
 	const mean = calculateXPMean(participationMap);
 	const xpStandardDeviation = calculateXPStandardDeviation(participationMap, mean);
-	return Math.ceil(xpStandardDeviation * descendingRanks[participation.rankIndex - 1].varianceThreshold + mean - participation.xp);
+	return Math.ceil(xpStandardDeviation * descendingRanks[participation.rankIndex - 1].threshold + mean - participation.xp);
 }
 
 
@@ -170,7 +170,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
 			let index = -1;
 			for (const rank of descendingRanks) {
 				index++;
-				if (standardDeviationsFromMean >= rank.varianceThreshold) {
+				if (standardDeviationsFromMean >= rank.threshold) {
 					break;
 				}
 			}
