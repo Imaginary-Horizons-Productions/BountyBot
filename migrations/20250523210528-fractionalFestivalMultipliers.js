@@ -10,7 +10,6 @@ module.exports = {
 	},
 	async down(queryInterface, Sequelize) {
 		const [companies] = await queryInterface.sequelize.query("SELECT * from Company;");
-		console.log(companies);
 		await queryInterface.sequelize.query("ALTER TABLE Company DROP COLUMN festivalMultiplier");
 		await queryInterface.addColumn("Company", "festivalMultiplier", Sequelize.INTEGER, { defaultValue: 1 });
 		for (const company of companies) {
