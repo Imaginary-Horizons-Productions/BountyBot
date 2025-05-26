@@ -191,12 +191,12 @@ List perks for supporting IHP development
 
 > Permission Level: ManageGuild
 
-#### /raffle by-rank
-Select a user at or above a particular rank
-#### /raffle by-level
-Select a user at or above a particular level
 #### /raffle announce-upcoming
 Announce an upcoming raffle
+#### /raffle by-level
+Select a user at or above a particular level
+#### /raffle by-rank
+Select a user at or above a particular rank
 ### /rank
 > 💎 Premium Command 💎
 
