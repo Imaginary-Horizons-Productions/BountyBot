@@ -156,7 +156,7 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	bounty.update({ state: "completed", completedAt: new Date() });
 
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
-	const bountyValue = bountyBaseValue * company.festivalMultiplier;
+	const bountyValue = Math.floor(bountyBaseValue * company.festivalMultiplier);
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	/** @type {Record<string, { previousLevel: number, droppedItem: string | null }>} */
 	const hunterResults = {};

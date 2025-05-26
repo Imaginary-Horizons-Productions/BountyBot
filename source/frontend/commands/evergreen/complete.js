@@ -64,7 +64,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						const previousCompanyLevel = company.getLevel(allHunters);
 						// Evergreen bounties are not eligible for showcase bonuses
 						const bountyBaseValue = Bounty.calculateCompleterReward(previousCompanyLevel, bounty.slotNumber, 0);
-						const bountyValue = bountyBaseValue * company.festivalMultiplier;
+						const bountyValue = Math.floor(bountyBaseValue * company.festivalMultiplier);
 						const completions = await logicLayer.bounties.bulkCreateCompletions(bounty.id, collectedInteraction.guild.id, validatedHunterIds, bountyValue);
 
 						const levelTexts = [];
