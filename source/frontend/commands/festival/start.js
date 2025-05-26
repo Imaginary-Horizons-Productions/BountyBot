@@ -31,7 +31,7 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 	}
 ).setOptions(
 	{
-		type: "Integer",
+		type: "Number",
 		name: "multiplier",
 		description: "The amount to multiply XP by",
 		required: true
