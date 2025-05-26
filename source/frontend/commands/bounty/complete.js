@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, getRankUpdates, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset } = require("../../shared");
+const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
@@ -65,7 +65,11 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		if (goalUpdate.gpContributed > 0) {
 			rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 		}
-		const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
+		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+		const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 		const content = generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
 		buildBountyEmbed(bounty, interaction.guild, poster.getLevel(company.xpCoefficient), true, company, completions).then(async embed => {
@@ -106,12 +110,11 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			}
 
 			const embeds = [];
-			const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 			if (company.scoreboardIsSeasonal) {
-				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, participationMap, descendingRanks, goalProgress));
 			} else {
-				embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
+				embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 			}
 			updateScoreboard(company, interaction.guild, embeds);
 		});

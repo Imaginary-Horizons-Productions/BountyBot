@@ -1,5 +1,5 @@
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { getRankUpdates, buildCompanyLevelUpLine, buildHunterLevelUpLine } = require("../shared");
+const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -17,11 +17,15 @@ module.exports = new ItemTemplateSet(
 				const previousCompanyLevel = company.getLevel(allHunters);
 				const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 				await hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
-				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
-				let result = `${interaction.member} used a ${itemName} and gained ${xpValue} XP.`;
+				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+				const additionalRewards = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
+				let content = `${interaction.member} used a ${itemName} and gained ${xpValue} XP.`;
 				const hunterLevelLine = buildHunterLevelUpLine(hunter, previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
 				if (hunterLevelLine) {
-					rankUpdates.push(hunterLevelLine);
+					additionalRewards.push(hunterLevelLine);
 				}
 				const reloadedHunters = await Promise.all(allHunters.map(hunter => {
 					if (hunter.userId === interaction.user.id) {
@@ -32,12 +36,20 @@ module.exports = new ItemTemplateSet(
 				}))
 				const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, reloadedHunters, interaction.guild.name);
 				if (companyLevelLine) {
-					rankUpdates.push(companyLevelLine);
+					additionalRewards.push(companyLevelLine);
 				}
-				if (rankUpdates.length > 0) {
-					result += `\n- ${rankUpdates.join("\n- ")}`;
+				if (additionalRewards.length > 0) {
+					content += `\n- ${additionalRewards.join("\n- ")}`;
 				}
-				interaction.reply({ content: result });
+				interaction.reply({ content });
+				const embeds = [];
+				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
+				if (company.scoreboardIsSeasonal) {
+					embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, participationMap, descendingRanks, goalProgress));
+				} else {
+					embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+				}
+				updateScoreboard(company, interaction.guild, embeds);
 			})
 		}
 	)

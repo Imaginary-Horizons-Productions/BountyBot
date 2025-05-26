@@ -44,7 +44,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
-				const rankName = ranks[hunter.rank]?.roleId ? `<@&${ranks[hunter.rank].roleId}>` : `Rank ${hunter.rank + 1}`;
+				const rankName = ranks[currentParticipation.rankIndex]?.roleId ? `<@&${ranks[currentParticipation.rankIndex].roleId}>` : `Rank ${currentParticipation.rankIndex + 1}`;
 				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
 
 				interaction.reply({
@@ -53,7 +53,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 							.setAuthor(ihpAuthorPayload)
 							.setThumbnail(target.user.avatarURL())
 							.setTitle(`${target.displayName} is __Level ${currentHunterLevel}__`)
-							.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${hunter.rank !== null ? ` which qualifies for ${rankName}` : ""}.`)
+							.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex !== null ? ` which qualifies for ${rankName}` : ""}.`)
 							.addFields(
 								{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 								{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },

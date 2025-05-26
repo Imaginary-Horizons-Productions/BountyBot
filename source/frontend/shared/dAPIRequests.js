@@ -1,4 +1,4 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank, Completion } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
@@ -179,6 +179,31 @@ function sendToRewardsThread(embedMessage, content, threadTitle) {
 	}
 }
 
+/** Requests dAPI change the roles on guild members based on the provided `seasonResults`
+ * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
+ * @param {Rank[]} descendingRanks
+ * @param {GuildMemberManager} guildMemberManager
+ */
+async function syncRankRoles(seasonResults, descendingRanks, guildMemberManager) {
+	const rankChangeIds = [];
+	for (const id in seasonResults) {
+		if ("newRankIndex" in seasonResults[id] && descendingRanks[seasonResults[id].newRankIndex].roleId) {
+			rankChangeIds.push(id);
+		}
+	}
+	const rankRoleIds = descendingRanks.map(rank => rank.roleId).filter(id => !!id);
+	const members = await guildMemberManager.fetch({ user: rankChangeIds });
+	for (const [id, member] of members) {
+		await member.roles.remove(rankRoleIds);
+		if (seasonResults[id].newRankIndex !== null) {
+			const rankRoleId = descendingRanks[seasonResults[id].newRankIndex].roleId;
+			if (rankRoleId) {
+				await member.roles.add(rankRoleId).catch(console.error);
+			}
+		}
+	}
+}
+
 module.exports = {
 	createSubcommandMappings,
 	bountiesToSelectOptions,
@@ -189,5 +214,6 @@ module.exports = {
 	updatePosting,
 	updateScoreboard,
 	disabledSelectRow,
-	sendToRewardsThread
+	sendToRewardsThread,
+	syncRankRoles
 };

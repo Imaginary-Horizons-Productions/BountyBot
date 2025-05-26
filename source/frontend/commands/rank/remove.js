@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ComponentType, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { rankArrayToSelectOptions, listifyEN, getRankUpdates, disabledSelectRow } = require("../../shared");
+const { rankArrayToSelectOptions, listifyEN, disabledSelectRow, syncRankRoles } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("remove", "Remove one or more existing seasonal ranks",
@@ -57,8 +57,11 @@ module.exports = new SubcommandWrapper("remove", "Remove one or more existing se
 						interaction.guild.roles.delete(rank.roleId, 'Removing rank role during rank removal.')
 					}
 				}
-				logicLayer.ranks.deleteRanks(buttonInteraction.guild.id, selectedRanks.map(rank => rank.threshold)).then(() => {
-					getRankUpdates(buttonInteraction.guild, logicLayer);
+				logicLayer.ranks.deleteRanks(buttonInteraction.guild.id, selectedRanks.map(rank => rank.threshold)).then(async () => {
+					const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				});
 				buttonInteraction.update({ content: `${selectedRankNames} ${selectedRanks.length > 1 ? "were" : "was"} removed.`, components: [] });
 			})
