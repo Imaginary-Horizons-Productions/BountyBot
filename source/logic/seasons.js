@@ -1,6 +1,7 @@
 const { Sequelize, Op } = require("sequelize");
 const { Participation, Rank, Season } = require("../database/models");
-const { descendingByProperty, calculateXPMean, calculateXPStandardDeviation } = require("./shared");
+const { calculateXPMean, calculateXPStandardDeviation } = require("./shared");
+const { descendingByProperty } = require("../shared");
 
 /** @type {Sequelize} */
 let db;

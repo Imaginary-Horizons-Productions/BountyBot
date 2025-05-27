@@ -1,15 +1,5 @@
 const { Participation } = require("../../database/models");
 
-/** @param {string} property */
-function ascendingByProperty(property) {
-	return (a, b) => a[property] - b[property];
-}
-
-/** @param {string} property */
-function descendingByProperty(property) {
-	return (a, b) => b[property] - a[property];
-}
-
 /** @param {Map<any, Participation>} participations */
 function calculateXPMean(participations) {
 	if (participations.size < 1) {
@@ -38,8 +28,6 @@ function calculateXPStandardDeviation(participations, mean) {
 }
 
 module.exports = {
-	ascendingByProperty,
-	descendingByProperty,
 	calculateXPMean,
 	calculateXPStandardDeviation
 };

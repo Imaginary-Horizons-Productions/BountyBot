@@ -3,7 +3,7 @@ const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyl
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
-const { timeConversion } = require("../../shared");
+const { timeConversion, descendingByProperty } = require("../../shared");
 const { commandIds } = require("../../constants");
 
 /** generates a command mention, which users can click to shortcut them to using the command
@@ -362,7 +362,7 @@ async function overallScoreboardEmbed(company, guild, hunters, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
 
 	const scorelines = [];
-	for (const hunter of hunters.sort((a, b) => b.xp - a.xp)) {
+	for (const hunter of hunters.sort(descendingByProperty("xp"))) {
 		if (hunter.xp < 1) {
 			break;
 		}

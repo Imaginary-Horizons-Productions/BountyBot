@@ -3,7 +3,7 @@ const { EmbedLimits, MessageLimits } = require("@sapphire/discord.js-utilities")
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { textsHaveAutoModInfraction, commandMention, generateBountyBoardThread, buildBountyEmbed, sendAnnouncement } = require("../../shared");
-const { timeConversion } = require("../../../shared");
+const { timeConversion, ascendingByProperty } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 10",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -89,7 +89,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 			interaction.reply(sendAnnouncement(company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
 				if (company.bountyBoardId) {
 					interaction.guild.channels.fetch(company.bountyBoardId).then(async bountyBoard => {
-						const embeds = await Promise.all(existingBounties.sort((a, b) => a.slotNumber - b.slotNumber).map(async bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id))));
+						const embeds = await Promise.all(existingBounties.sort(ascendingByProperty("slotNumber")).map(async bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, company, await logicLayer.bounties.findBountyCompletions(bounty.id))));
 						if (company.evergreenThreadId) {
 							return bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
 								const message = await thread.fetchStarterMessage();

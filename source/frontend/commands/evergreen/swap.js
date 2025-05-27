@@ -3,6 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { getNumberEmoji, bountiesToSelectOptions, buildBountyEmbed, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { Bounty } = require("../../../database/models");
+const { ascendingByProperty } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergreen bounties",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
@@ -80,7 +81,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 							bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
 								return thread.fetchStarterMessage();
 							}).then(async message => {
-								existingBounties.sort((bountyA, bountyB) => bountyA.slotNumber - bountyB.slotNumber);
+								existingBounties.sort(ascendingByProperty("slotNumber"));
 								message.edit({ embeds: await Promise.all(existingBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, company, []))) });
 							});
 						})
