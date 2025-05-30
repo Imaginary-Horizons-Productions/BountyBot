@@ -17,6 +17,7 @@ const path = require('path');
 const basename = path.basename(__filename);
 const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
 const { MessageComponentWrapper } = require('./frontend/classes');
+const cron = require('node-cron');
 
 const { getCommand, slashData, setLogic: setCommandLogic, updateCooldownMap: updateCommandCooldownMap, updatePremiumList: updatePremiumCommands } = require("./frontend/commands/_commandDictionary.js");
 const { getButton, setLogic: setButtonLogic, updateCooldownMap: updateButtonCooldownMap } = require("./frontend/buttons/_buttonDictionary.js");
@@ -161,8 +162,8 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	await dbReady;
 
 	await logicBlob.companies.findOrCreateCompany(interaction.guild.id);
+	const interactingHunter = (await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id))[0];
 	//#region Ban Check
-	const [interactingHunter] = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 	if (interactingHunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
 		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
 		return;
@@ -284,5 +285,10 @@ dAPIClient.on(Events.GuildDelete, async guild => {
 		.forEach(id => guild.roles.delete(id, 'Cleaning up BountyBot roles during kick.'));
 	logicBlob.ranks.deleteCompanyRanks(guild.id);
 	logicBlob.companies.deleteCompany(guild.id);
+});
+
+cron.schedule('0 0 */1 * *', async runTime => { // Runs daily currently
+	await dbReady;
+	logicBlob.cooldowns.cleanCooldownData();
 });
 //#endregion

@@ -31,7 +31,8 @@ module.exports = {
 		}, {
 			sequelize: queryInterface.sequelize,
 			modelName: "UserInteraction",
-			freezeTableName: true
+			freezeTableName: true,
+			timestamps: false
 		});
 	},
 	async down(queryInterface, Sequelize) {

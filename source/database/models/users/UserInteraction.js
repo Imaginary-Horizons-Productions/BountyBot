@@ -38,7 +38,8 @@ function initModel(sequelize) {
 	}, {
 		sequelize,
 		modelName: "UserInteraction",
-		freezeTableName: true
+		freezeTableName: true,
+		timestamps: false
 	});
 }
 
