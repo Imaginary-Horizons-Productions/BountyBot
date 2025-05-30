@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Guild, GuildMember } = require("discord.js");
+const { GuildMember } = require("discord.js");
 const { Bounty, Hunter, Season, Company } = require("../database/models");
 const { rollItemForHunter } = require("./items");
 

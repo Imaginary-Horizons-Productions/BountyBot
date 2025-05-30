@@ -1,6 +1,6 @@
 const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
-const { Bounty, Company, Rank, Completion } = require("../../database/models");
+const { Bounty, Company, Rank } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
