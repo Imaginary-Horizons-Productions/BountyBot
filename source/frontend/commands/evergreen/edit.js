@@ -104,6 +104,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				const allHunters = await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id);
 				const currentCompanyLevel = company.getLevel(allHunters);
 				if (company.bountyBoardId) {
+					//TODONOW fix bug of turn-ins clearing
 					const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, modalSubmission.guild, currentCompanyLevel, false, company, new Set())));
 					const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
 					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
@@ -112,6 +113,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 					});
 				}
 
+				//TODONOW fix bug of turn-ins clearing
 				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, company, new Set());
 				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
 			});

@@ -26,6 +26,7 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 		} else {
 			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
+		//TODONOW update evergreen bounty board
 		updateScoreboard(company, interaction.guild, embeds);
 	}
 ).setOptions(

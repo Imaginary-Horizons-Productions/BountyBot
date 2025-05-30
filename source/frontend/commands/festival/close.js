@@ -16,6 +16,7 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 		} else {
 			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
+		//TODONOW update evergreen bounty board
 		updateScoreboard(company, interaction.guild, embeds);
 	}
 );
