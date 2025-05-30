@@ -53,10 +53,10 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 			poster.lastShowcaseTimestamp = new Date();
 			poster.save();
 			const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
-			const completions = await logicLayer.bounties.findBountyCompletions(collectedInteraction.values[0]);
+			const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 			const currentPosterLevel = poster.getLevel(company.xpCoefficient);
-			updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, completions);
-			return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, completions).then(async embed => {
+			updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, hunterIdSet);
+			return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, hunterIdSet).then(async embed => {
 				if (interaction.channel.archived) {
 					await interaction.channel.setArchived(false, "bounty showcased");
 				}

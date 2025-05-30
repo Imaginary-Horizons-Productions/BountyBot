@@ -27,7 +27,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 			if (openBounties.length > 0) {
 				const currentCompanyLevel = company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
-				const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, company, [])));
+				const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, company, new Set())));
 				if (company.bountyBoardId) {
 					const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
 					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {

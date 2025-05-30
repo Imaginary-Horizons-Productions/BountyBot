@@ -1,0 +1,72 @@
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, DiscordjsErrorCodes } = require('discord.js');
+const { UserContextMenuWrapper } = require('../classes');
+const { SKIP_INTERACTION_HANDLING } = require('../../constants');
+const { commandMention, congratulationBuilder, buildBountyEmbed, generateBountyBoardButtons } = require('../shared');
+
+/** @type {typeof import("../../logic")} */
+let logicLayer;
+
+const mainId = "Record Bounty Turn-In";
+module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
+	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
+	async (interaction, runMode) => {
+		if (interaction.targetId === interaction.user.id) {
+			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		if (runMode === "production" && interaction.targetUser.bot) {
+			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
+		if (hunter.isBanned) {
+			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		const modalId = `${SKIP_INTERACTION_HANDLING}${interaction.id}`;
+		interaction.showModal(new ModalBuilder().setCustomId(modalId)
+			.setTitle("Select a Bounty")
+			.addComponents(
+				new ActionRowBuilder().addComponents(
+					new TextInputBuilder().setCustomId("slot-number")
+						.setLabel("Bounty Slot Number")
+						.setStyle(TextInputStyle.Short)
+				)
+			)
+		);
+		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
+			const slotNumber = modalSubmission.fields.getTextInputValue("slot-number");
+			const bounty = await logicLayer.bounties.findBounty({ slotNumber, userId: interaction.user.id, companyId: modalSubmission.guild.id });
+			if (!bounty) {
+				modalSubmission.reply({ content: `You don't appear to have an open bounty in slot ${slotNumber}.`, flags: MessageFlags.Ephemeral });
+				return;
+			}
+			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, [interaction.targetId], null);
+			const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
+			const company = await logicLayer.companies.findCompanyByPK(bounty.companyId);
+			const boardId = company.bountyBoardId;
+			const { postingId } = bounty;
+			if (!boardId || !postingId) return;
+			const boardChannel = await modalSubmission.guild.channels.fetch(boardId);
+			const post = await boardChannel.threads.fetch(postingId);
+			if (post.archived) {
+				await thread.setArchived(false, "Unarchived to update posting");
+			}
+			post.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${congratulationBuilder()}!` });
+			(await post.fetchStarterMessage()).edit({
+				embeds: [await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company, new Set([interaction.targetId]))],
+				components: generateBountyBoardButtons(bounty)
+			});
+			modalSubmission.reply({ content: `${userMention(interaction.targetId)}'s turn-in of ${bold(bounty.title)} has been recorded! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: MessageFlags.Ephemeral });
+		}).catch(error => {
+			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
+				console.error(error);
+			}
+		})
+	}
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});

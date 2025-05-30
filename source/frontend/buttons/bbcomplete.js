@@ -49,7 +49,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 
 			interaction.reply({
-				content: `Which channel should the bounty's completion be announced in?\n\nCompleters: <@${validatedHunterIds.join(">, <@")}>`,
+				content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: <@${validatedHunterIds.join(">, <@")}>`,
 				components: [
 					new ActionRowBuilder().addComponents(
 						new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
@@ -88,7 +88,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 				collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts) });
-				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, completions)
+				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, new Set(validatedHunterIds))
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);

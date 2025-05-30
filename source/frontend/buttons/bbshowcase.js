@@ -58,10 +58,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				poster.lastShowcaseTimestamp = new Date();
 				poster.save();
 				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
-				const completions = await logicLayer.bounties.findBountyCompletions(bountyId);
+				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
 				const currentPosterLevel = poster.getLevel(company.xpCoefficient);
-				updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, completions);
-				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, completions).then(async embed => {
+				updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, hunterIdSet);
+				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, hunterIdSet).then(async embed => {
 					if (channel.archived) {
 						await channel.setArchived(false, "bounty showcased");
 					}

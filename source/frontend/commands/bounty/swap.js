@@ -77,13 +77,13 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 						await sourceBounty.save();
 						await sourceBounty.reload();
 						const hunterLevel = hunter.getLevel(company.xpCoefficient);
-						updatePosting(interaction.guild, company, sourceBounty, hunterLevel, await logicLayer.bounties.findBountyCompletions(sourceBounty.id));
+						updatePosting(interaction.guild, company, sourceBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(sourceBounty.id));
 
 						if (destinationBounty) {
 							destinationBounty.slotNumber = sourceSlot;
 							await destinationBounty.save();
 							await destinationBounty.reload();
-							updatePosting(interaction.guild, company, destinationBounty, hunterLevel, await logicLayer.bounties.findBountyCompletions(destinationBounty.id));
+							updatePosting(interaction.guild, company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 						}
 
 						interaction.channel.send(sendAnnouncement(company, { content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, sourceBounty.showcaseCount)} XP.` }));

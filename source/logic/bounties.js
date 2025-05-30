@@ -23,7 +23,7 @@ function createBounty(rawBounty) {
  * @param {string} bountyId
  * @param {string} companyId
  * @param {string[]} userIds
- * @param {number?} xpAwarded
+ * @param {number?} xpAwarded null for pending completion
  */
 function bulkCreateCompletions(bountyId, companyId, userIds, xpAwarded) {
 	const rawCompletions = userIds.map(id => {
@@ -80,6 +80,45 @@ function findBountyCompletions(bountyId) {
 	return db.models.Completion.findAll({ where: { bountyId } });
 }
 
+/** *Get a Set with the userIds of the specified Bounty's hunters*
+ * @param {string} bountyId
+ */
+async function getHunterIdSet(bountyId) {
+	const completions = await db.models.Completion.findAll({ where: { bountyId } });
+	return completions.reduce((set, completion) => set.add(completion.userId), new Set());
+}
+
+/** Filter out the Bounty's poster, bots, and banned Hunters
+ * @param {Bounty} bounty
+ * @param {GuildMember[]} completerMembers
+ * @param {string} runMode
+ */
+async function checkTurnInEligibility(bounty, completerMembers, runMode) {
+	/** @type {{ eligibleTurnInIds: Set<string>, newTurnInIds: Set<string>, bannedTurnInIds: Set<string> }} */
+	const results = {
+		eligibleTurnInIds: new Set(),
+		newTurnInIds: new Set(),
+		bannedTurnInIds: new Set()
+	};
+	for (const completion of await db.models.Completion.findAll({ where: { bountyId: bounty.id } })) {
+		results.eligibleTurnInIds.add(completion.userId);
+	}
+	for (const member of completerMembers) {
+		const memberId = member.id;
+		if (results.eligibleTurnInIds.has(memberId)) continue;
+		if (runMode === "production" && (member.user.bot || memberId === bounty.userId)) continue;
+		await db.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: bounty.companyId } });
+		if (hunter.isBanned) {
+			results.bannedTurnInIds.add(memberId);
+			continue;
+		}
+		results.eligibleTurnInIds.add(memberId);
+		results.newTurnInIds.add(memberId);
+	}
+	return results;
+}
+
 /** @param {string} companyId */
 function findCompanyBountiesByCreationDate(companyId) {
 	return db.models.Bounty.findAll({ where: { companyId, state: "open" }, order: [["createdAt", "DESC"]] });
@@ -91,58 +130,6 @@ function findCompanyBountiesByCreationDate(companyId) {
  */
 function findHuntersLastFiveBounties(userId, companyId) {
 	return db.models.Bounty.findAll({ where: { userId, companyId, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: db.models.Bounty.Completions });
-}
-
-/**
- * @param {Bounty} bounty
- * @param {Guild} guild
- * @param {GuildMember[]} completerMembers
- * @param {string} runMode
- */
-async function addCompleters(bounty, guild, completerMembers, runMode) {
-	// Validate completer IDs
-	const validatedCompleterIds = [];
-	const existingCompletions = await db.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: guild.id } });
-	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
-	const bannedIds = [];
-	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
-		const memberId = member.id;
-		if (runMode === "production" && (member.user.bot || memberId === bounty.userId)) continue;
-		await db.models.User.findOrCreate({ where: { id: memberId } });
-		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: guild.id } });
-		if (hunter.isBanned) {
-			bannedIds.push(memberId);
-			continue;
-		}
-		existingCompleterIds.push(memberId);
-		validatedCompleterIds.push(memberId);
-	}
-
-	if (validatedCompleterIds.length < 1) {
-		throw `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
-	}
-
-	await bulkCreateCompletions(bounty.id, guild.id, validatedCompleterIds, null);
-	let allCompleters = await db.models.Completion.findAll({
-		where: {
-			bountyId: bounty.id
-		}
-	});
-	let poster = await db.models.Hunter.findOne({
-		where: {
-			userId: bounty.userId,
-			companyId: bounty.companyId
-		}
-	});
-	let company = await db.models.Company.findByPk(bounty.companyId);
-	return {
-		bounty,
-		allCompleters,
-		poster,
-		company,
-		validatedCompleterIds,
-		bannedIds
-	};
 }
 
 /**
@@ -220,9 +207,10 @@ module.exports = {
 	bulkFindOpenBounties,
 	findEvergreenBounties,
 	findBountyCompletions,
+	getHunterIdSet,
+	checkTurnInEligibility,
 	findCompanyBountiesByCreationDate,
 	findHuntersLastFiveBounties,
-	addCompleters,
 	completeBounty,
 	deleteCompanyBounties,
 	deleteSelectedBountyCompletions,

@@ -107,9 +107,9 @@ function generateBountyBoardThread(threadManager, embeds, company) {
  * @param {Company} company
  * @param {Bounty} bounty
  * @param {number} posterLevel
- * @param {Completion[]} completions
+ * @param {Set<string>} hunterIdSet
  */
-async function updatePosting(guild, company, bounty, posterLevel, completions) {
+async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
 	if (!company.bountyBoardId || !bounty.postingId) {
 		return null;
 	}
@@ -123,7 +123,7 @@ async function updatePosting(guild, company, bounty, posterLevel, completions) {
 		thread.edit({ name: bounty.title });
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
-		return buildBountyEmbed(bounty, guild, posterLevel, false, company, completions).then(embed => {
+		return buildBountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
 			posting.edit({
 				embeds: [embed],
 				components: generateBountyBoardButtons(bounty)

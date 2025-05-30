@@ -49,10 +49,10 @@ module.exports = new ItemTemplateSet(
 				await bounty.reload();
 				const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guildId);
 				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
-				const completions = await logicLayer.bounties.findBountyCompletions(collectedInteraction.values[0]);
+				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 				const currentPosterLevel = poster.getLevel(company.xpCoefficient);
-				updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, completions);
-				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, completions).then(async embed => {
+				updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, hunterIdSet);
+				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, hunterIdSet).then(async embed => {
 					if (collectedInteraction.channel.archived) {
 						await collectedInteraction.channel.setArchived(false, "bounty showcased");
 					}

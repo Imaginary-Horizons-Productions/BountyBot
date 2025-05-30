@@ -42,7 +42,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			}
 		}
 
-		if (validatedHunterIds.length < 1) {
+		if (validatedHunters.length < 1) {
 			interaction.reply({ content: `No bounty hunters have turn-ins recorded for this bounty. If you'd like to close your bounty without distributng rewards, use ${commandMention("bounty take-down")}.`, flags: MessageFlags.Ephemeral })
 			return;
 		}
@@ -72,7 +72,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 		const content = generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
-		buildBountyEmbed(bounty, interaction.guild, poster.getLevel(company.xpCoefficient), true, company, completions).then(async embed => {
+		buildBountyEmbed(bounty, interaction.guild, poster.getLevel(company.xpCoefficient), true, company, new Set(validatedHunterIds)).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {
 				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 				if (goalId !== null) {

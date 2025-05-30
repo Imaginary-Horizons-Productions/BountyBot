@@ -3,8 +3,8 @@
 ### User Options in Slash Commands
 Slash commands originally accepted users as a string (instead of Discord's user filtering) to allow users to mention as many users as they wanted. However, this doesn't work on mobile, so those slash commands have been remade to use Discord's user filtering or message selects.
 - `/toast` now requires 1 toastee and up to 4 optional ones. The `message` option has been changed to the first option to group the toastee options.
-- `/bounty add-completers` has been renamed to `/bounty verify-turn-in` and now uses message selects.
-- `/bounty remove-completers` has been renamed to `/bounty revoke-turn-in` and now uses message selects.
+- `/bounty add-completers` has been renamed to `/bounty record-turn-ins` and now uses message selects.
+- `/bounty remove-completers` has been renamed to `/bounty revoke-turn-ins` and now uses message selects.
 - `/bounty complete` now accepts up to 5 optional hunters.
 - `/evergreen complete` now uses message selects.
 ### Premium
@@ -18,6 +18,7 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 - The Overall Scoreboard no longer shows bounty hunter rank
 - The Seasonal Scoreboard no longer shows bounty hunter level
 - Fixed XP Boosts not updating the scoreboard
+- "Give Bounty Credit" was renamed to "Record Bounty Turn-In"
 
 ## BountyBot Version 2.9.0:
 ### Server Goals
