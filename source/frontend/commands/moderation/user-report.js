@@ -3,9 +3,9 @@ const { SubcommandWrapper } = require("../../classes");
 const { modStatsEmbed } = require("../../shared");
 
 module.exports = new SubcommandWrapper("user-report", "Get the BountyBot moderation stats for a user",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const member = interaction.options.getMember("user");
-		const hunter = await logicLayer.hunters.findOneHunter(member.id, interaction.guild.id);
+		const hunter = member.id === origin.hunter.userId ? origin.hunter : await logicLayer.hunters.findOneHunter(member.id, interaction.guild.id);
 		if (!hunter) {
 			interaction.reply({ content: `${member} has not interacted with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 			return;

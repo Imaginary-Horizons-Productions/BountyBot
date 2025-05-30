@@ -9,19 +9,18 @@ let logicLayer;
 
 const mainId = "BountyBot Stats";
 module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
-	async (interaction, runMode) => {
+	async (interaction, origin, runMode) => {
 		const target = interaction.targetMember;
 		if (target.id == interaction.client.user.id) {
 			// BountyBot
-			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 			const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
-			const currentCompanyLevel = company.getLevel(allHunters);
+			const currentCompanyLevel = origin.company.getLevel(allHunters);
 			const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
 			const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
 			const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 			const lastSeason = await logicLayer.seasons.findOneSeason(interaction.guild.id, "previous");
 			const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-			statsEmbed(company, interaction.guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+			statsEmbed(origin.company, interaction.guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
 				interaction.reply({
 					embeds: [embed],
 					flags: MessageFlags.Ephemeral
@@ -35,10 +34,9 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 					return;
 				}
 
-				const { xpCoefficient } = await logicLayer.companies.findCompanyByPK(interaction.guildId);
-				const currentHunterLevel = hunter.getLevel(xpCoefficient);
-				const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, xpCoefficient);
-				const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, xpCoefficient);
+				const currentHunterLevel = hunter.getLevel(origin.company.xpCoefficient);
+				const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, origin.company.xpCoefficient);
+				const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, origin.company.xpCoefficient);
 				const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);

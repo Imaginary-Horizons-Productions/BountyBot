@@ -4,7 +4,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { commandMention, syncRankRoles } = require("../../shared");
 
 module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing outstanding bounty hunters",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const newThreshold = interaction.options.getNumber("variance-threshold");
 		const existingThresholds = ranks.map(rank => rank.threshold);

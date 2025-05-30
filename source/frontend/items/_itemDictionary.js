@@ -1,5 +1,5 @@
 const { CommandInteraction } = require("discord.js");
-const { ItemTemplateSet, ItemTemplate } = require("../classes");
+const { ItemTemplateSet, ItemTemplate, InteractionOrigin } = require("../classes");
 
 /** @type {Record<string, ItemTemplate>} */
 const ITEMS = {};
@@ -47,10 +47,11 @@ exports.getItemCooldown = function (itemName) {
 /**
  * @param {string} itemName
  * @param {CommandInteraction} interaction
+ * @param {InteractionOrigin} origin
  * @returns {Promise<boolean>} whether to skip decrementing the item count
  */
-exports.useItem = function (itemName, interaction) {
-	return ITEMS[itemName].effect(interaction);
+exports.useItem = function (itemName, interaction, origin) {
+	return ITEMS[itemName].effect(interaction, origin);
 }
 
 exports.setLogic = function (logicBlob) {

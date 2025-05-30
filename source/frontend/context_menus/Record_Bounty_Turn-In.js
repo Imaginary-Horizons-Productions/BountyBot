@@ -9,7 +9,7 @@ let logicLayer;
 const mainId = "Record Bounty Turn-In";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
-	async (interaction, runMode) => {
+	async (interaction, origin, runMode) => {
 		if (interaction.targetId === interaction.user.id) {
 			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", flags: MessageFlags.Ephemeral });
 			return;
@@ -20,7 +20,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
+		const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guild.id);
 		if (hunter.isBanned) {
 			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 			return;
@@ -45,9 +45,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, [interaction.targetId], null);
-			const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-			const company = await logicLayer.companies.findCompanyByPK(bounty.companyId);
-			const boardId = company.bountyBoardId;
+			const boardId = origin.company.bountyBoardId;
 			const { postingId } = bounty;
 			if (!boardId || !postingId) return;
 			const boardChannel = await modalSubmission.guild.channels.fetch(boardId);
@@ -57,7 +55,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}
 			post.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${congratulationBuilder()}!` });
 			(await post.fetchStarterMessage()).edit({
-				embeds: [await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company, new Set([interaction.targetId]))],
+				embeds: [await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]))],
 				components: generateBountyBoardButtons(bounty)
 			});
 			modalSubmission.reply({ content: `${userMention(interaction.targetId)}'s turn-in of ${bold(bounty.title)} has been recorded! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: MessageFlags.Ephemeral });

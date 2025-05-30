@@ -8,7 +8,7 @@ let logicLayer;
 
 const mainId = "bbtakedown";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, runMode, [bountyId]) => {
+	(interaction, origin, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (bounty.userId !== interaction.user.id) {
 				interaction.reply({ content: "Only the bounty poster can take down their bounty.", flags: MessageFlags.Ephemeral });
@@ -34,14 +34,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
 				bounty.destroy();
 
-				logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id).then(async hunter => {
-					hunter.decrement("xp");
-					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-					await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
-					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
-					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.id);
-				})
+				origin.hunter.decrement("xp");
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+				await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
+				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.id);
 
 				return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 			}).catch(error => {

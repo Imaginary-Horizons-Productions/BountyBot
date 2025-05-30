@@ -12,8 +12,8 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"by-rank.js"
 ]);
 module.exports = new CommandWrapper(mainId, "Randomly select a bounty hunter from a variety of pools", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
-	(interaction, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
+	(interaction, origin, runMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, origin, runMode, logicLayer);
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
