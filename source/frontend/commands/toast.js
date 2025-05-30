@@ -15,7 +15,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
 			if (guildMember) {
-				const hunter = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, interaction.guild.id);
+				const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, interaction.guild.id);
 				if (hunter.isBanned) {
 					bannedIds.add(guildMember.id);
 				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.id !== interaction.user.id)) {

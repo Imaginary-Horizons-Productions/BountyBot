@@ -47,7 +47,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
 						const validatedHunterIds = [];
 						for (const guildMember of collectedInteraction.members.values()) {
-							const hunter = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, guildMember.guild.id);
+							const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, guildMember.guild.id);
 							if (runMode !== "production" || (!guildMember.user.bot && !hunter.isBanned)) {
 								validatedHunterIds.push(guildMember.id);
 							}
