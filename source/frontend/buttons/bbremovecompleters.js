@@ -1,4 +1,4 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, DiscordjsErrorCodes, ComponentType, MessageFlags, userMention } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { listifyEN, buildBountyEmbed, generateBountyBoardButtons } = require('../shared');
@@ -29,7 +29,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 				const removedIds = collectedInteraction.members.map((_, key) => key);
-				logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
+				await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
 				const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guild.id);
 				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guildId);
 				buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.findBountyCompletions(bountyId))
