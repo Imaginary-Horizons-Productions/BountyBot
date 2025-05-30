@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts } = require('../shared');
+const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, listifyEN } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -48,8 +48,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				return;
 			}
 
+			const hunterIdSet = new Set(validatedHunterIds);
 			interaction.reply({
-				content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: <@${validatedHunterIds.join(">, <@")}>`,
+				content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${listifyEN(hunterIdSet.values().map(id => userMention(id)))}`,
 				components: [
 					new ActionRowBuilder().addComponents(
 						new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
@@ -88,7 +89,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
 				collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts) });
-				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, new Set(validatedHunterIds))
+				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, hunterIdSet)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
