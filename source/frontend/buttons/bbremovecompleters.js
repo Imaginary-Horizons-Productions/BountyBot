@@ -1,4 +1,4 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, DiscordjsErrorCodes, ComponentType, MessageFlags, userMention } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { listifyEN, buildBountyEmbed, generateBountyBoardButtons } = require('../shared');
