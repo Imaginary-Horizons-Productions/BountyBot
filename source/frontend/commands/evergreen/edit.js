@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength } = require("../../shared");
+const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
@@ -104,17 +104,17 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				const allHunters = await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id);
 				const currentCompanyLevel = company.getLevel(allHunters);
 				if (company.bountyBoardId) {
-					//TODONOW fix bug of turn-ins clearing
-					const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, modalSubmission.guild, currentCompanyLevel, false, company, new Set())));
+					const hunterIdMap = {};
+					for (const bounty of openBounties) {
+						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+					}
 					const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
-					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
-						const message = await thread.fetchStarterMessage();
-						message.edit({ embeds });
-					});
+					updateEvergreenBountyBoard(bountyBoard, openBounties, company, currentCompanyLevel, modalSubmission.guild, hunterIdMap);
+				} else if (!modalSubmission.member.manageable) {
+					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 
-				//TODONOW fix bug of turn-ins clearing
-				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, company, new Set());
+				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, company, await logicLayer.bounties.getHunterIdSet(bountyId));
 				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(error => {
