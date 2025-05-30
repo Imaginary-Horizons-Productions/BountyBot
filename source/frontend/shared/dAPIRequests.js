@@ -1,6 +1,6 @@
 const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
-const { Bounty, Company, Rank, Completion } = require("../../database/models");
+const { Bounty, Company, Rank } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -107,9 +107,9 @@ function generateBountyBoardThread(threadManager, embeds, company) {
  * @param {Company} company
  * @param {Bounty} bounty
  * @param {number} posterLevel
- * @param {Completion[]} completions
+ * @param {Set<string>} hunterIdSet
  */
-async function updatePosting(guild, company, bounty, posterLevel, completions) {
+async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
 	if (!company.bountyBoardId || !bounty.postingId) {
 		return null;
 	}
@@ -123,7 +123,7 @@ async function updatePosting(guild, company, bounty, posterLevel, completions) {
 		thread.edit({ name: bounty.title });
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
-		return buildBountyEmbed(bounty, guild, posterLevel, false, company, completions).then(embed => {
+		return buildBountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
 			posting.edit({
 				embeds: [embed],
 				components: generateBountyBoardButtons(bounty)

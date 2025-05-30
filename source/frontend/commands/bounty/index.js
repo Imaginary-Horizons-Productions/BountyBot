@@ -11,11 +11,11 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"edit.js",
 	"list.js",
 	"post.js",
-	"revoke-turn-in.js",
+	"record-turn-ins.js",
+	"revoke-turn-ins.js",
 	"showcase.js",
 	"swap.js",
 	"take-down.js",
-	"verify-turn-in.js",
 ]);
 module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, runMode) => {

@@ -145,9 +145,9 @@ function randomFooterTip() {
  * @param {number} posterLevel
  * @param {boolean} shouldOmitRewardsField
  * @param {Company} company
- * @param {Completion[]} completions
+ * @param {Set<string>} hunterIdSet
  */
-async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, completions) {
+async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet) {
 	const author = await guild.members.fetch(bounty.userId);
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(author.displayColor)
@@ -173,9 +173,8 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 	} else {
 		embed.setAuthor({ name: `${author.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
 	}
-	if (completions.length > 0) {
-		const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
-		const completersFieldText = listifyEN([...uniqueCompleters].map(id => userMention(id)));
+	if (hunterIdSet.size > 0) {
+		const completersFieldText = listifyEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: "Turned in by:", value: completersFieldText });
 		} else {
@@ -225,13 +224,13 @@ function generateBountyBoardButtons(bounty) {
 				.setDisabled(new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))),
 			new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Primary)
-				.setLabel("Credit Hunters"),
+				.setLabel("Record Turn-Ins"),
 			new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Secondary)
-				.setLabel("Uncredit Hunters"),
+				.setLabel("Revoke Turn-Ins"),
 			new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Primary)
-				.setLabel("Showcase this Bounty"),
+				.setLabel("Showcase"),
 			new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Danger)
 				.setLabel("Take Down")

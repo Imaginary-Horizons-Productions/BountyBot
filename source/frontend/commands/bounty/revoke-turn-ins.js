@@ -4,7 +4,7 @@ const { listifyEN, updatePosting, bountiesToSelectOptions, disabledSelectRow, co
 const { timeConversion } = require("../../../shared");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
-module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
+module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
 	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
@@ -45,7 +45,7 @@ module.exports = new SubcommandWrapper("revoke-turn-in", "Revoke the turn-ins of
 					case "hunters":
 						await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, collectedInteraction.values);
 						const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guildId);
-						const post = await updatePosting(collectedInteraction.guild, company, bounty, poster.getLevel(company.xpCoefficient), await logicLayer.bounties.findBountyCompletions(bounty.id));
+						const post = await updatePosting(collectedInteraction.guild, company, bounty, poster.getLevel(company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id));
 						if (post) {
 							post.channel.send({ content: `${listifyEN(collectedInteraction.values.map(id => `<@${id}>`))} ${collectedInteraction.values.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
 						}

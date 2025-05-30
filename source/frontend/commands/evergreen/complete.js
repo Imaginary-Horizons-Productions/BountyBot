@@ -65,7 +65,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						// Evergreen bounties are not eligible for showcase bonuses
 						const bountyBaseValue = Bounty.calculateCompleterReward(previousCompanyLevel, bounty.slotNumber, 0);
 						const bountyValue = Math.floor(bountyBaseValue * company.festivalMultiplier);
-						const completions = await logicLayer.bounties.bulkCreateCompletions(bounty.id, collectedInteraction.guild.id, validatedHunterIds, bountyValue);
+						await logicLayer.bounties.bulkCreateCompletions(bounty.id, collectedInteraction.guild.id, validatedHunterIds, bountyValue);
 
 						const levelTexts = [];
 						let totalGP = 0;
@@ -87,7 +87,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						}
 
 						const reloadedHunters = await Promise.all(allHunters.map(hunter => {
-							if (validatedHunterIds.includes(hunter.userId)) {
+							if (finalContributorIds.has(hunter.userId)) {
 								return hunter.reload();
 							} else {
 								return hunter;
@@ -97,7 +97,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						if (companyLevelLine) {
 							levelTexts.push(companyLevelLine);
 						}
-						buildBountyEmbed(bounty, collectedInteraction.guild, company.getLevel(allHunters), true, company, completions).then(async embed => {
+						buildBountyEmbed(bounty, collectedInteraction.guild, company.getLevel(allHunters), true, company, new Set(validatedHunterIds)).then(async embed => {
 							const announcementPayload = { embeds: [embed], withResponse: true };
 							if (totalGP > 0) {
 								levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);

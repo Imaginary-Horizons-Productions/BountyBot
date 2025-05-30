@@ -1,37 +1,11 @@
-const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags, Guild, ThreadChannel } = require('discord.js');
+const { ActionRowBuilder, UserSelectMenuBuilder, userMention, DiscordjsErrorCodes, ComponentType, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
-const { Bounty, Company, Completion, Hunter } = require('../../database/models');
 const { timeConversion } = require('../../shared');
 const { buildBountyEmbed, listifyEN, congratulationBuilder, generateBountyBoardButtons } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
-
-/**
- * Updates the board posting for the bounty after adding the completers
- * @param {Bounty} bounty
- * @param {Company} company
- * @param {Hunter} poster
- * @param {string[]} newCompleterIds
- * @param {Completion[]} completers
- * @param {Guild} guild
- * @param {ThreadChannel} btnPost
- */
-async function updateBoardPosting(bounty, company, poster, newCompleterIds, completers, guild, btnPost) {
-	if (!btnPost) return;
-	if (btnPost.archived) {
-		await btnPost.setArchived(false, "Unarchived to update posting");
-	}
-	btnPost.edit({ name: bounty.title });
-	let numCompleters = newCompleterIds.length;
-	btnPost.send({ content: `${listifyEN(newCompleterIds.map(id => userMention(id)))} ${numCompleters === 1 ? "has" : "have"} been added as ${numCompleters === 1 ? "a completer" : "completers"} of this bounty! ${congratulationBuilder()}!` });
-	let starterMessage = await btnPost.fetchStarterMessage();
-	starterMessage.edit({
-		embeds: [await buildBountyEmbed(bounty, guild, poster.getLevel(company.xpCoefficient), false, company, completers)],
-		components: generateBountyBoardButtons(bounty)
-	});
-}
 
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
@@ -57,20 +31,28 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
-			try {
-				let { bounty: returnedBounty, allCompleters, poster, company, validatedCompleterIds } = await logicLayer.bounties.addCompleters(bounty, collectedInteraction.guild, Array.from(collectedInteraction.members.values()), runMode);
-				updateBoardPosting(returnedBounty, company, poster, validatedCompleterIds, allCompleters, collectedInteraction.guild, interaction.channel);
-				return collectedInteraction.update({
-					components: []
-				});
-			} catch (e) {
-				if (typeof e !== 'string') {
-					console.error(e);
-				} else {
-					collectedInteraction.reply({ content: e, flags: MessageFlags.Ephemeral });
-				}
+			const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(collectedInteraction.members.values()), runMode);
+			if (newTurnInIds.size < 1) {
+				collectedInteraction.reply({ content: `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedTurnInIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`, flags: MessageFlags.Ephemeral });
 				return;
 			}
+
+			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
+			const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
+			const company = await logicLayer.companies.findCompanyByPK(bounty.companyId);
+			if (!collectedInteraction.channel) return;
+			if (collectedInteraction.channel.archived) {
+				await collectedInteraction.channel.setArchived(false, "Unarchived to update posting");
+			}
+			collectedInteraction.channel.send({ content: `${listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
+			const starterMessage = await collectedInteraction.channel.fetchStarterMessage();
+			starterMessage.edit({
+				embeds: [await buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), false, company, eligibleTurnInIds)],
+				components: generateBountyBoardButtons(bounty)
+			});
+			return collectedInteraction.update({
+				components: []
+			});
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 				console.error(error);
