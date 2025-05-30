@@ -8,7 +8,7 @@ let logicLayer;
 const mainId = "secondtoast";
 module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
-	async (interaction, runMode, [toastId]) => {
+	async (interaction, origin, runMode, [toastId]) => {
 		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
 		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: MessageFlags.Ephemeral });
@@ -20,11 +20,10 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		const [seconder] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
-		seconder.increment("toastsSeconded");
+		origin.hunter.increment("toastsSeconded");
 		originalToast.increment("secondings");
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", seconder, season);
+		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", origin.hunter, season);
 		const rewardTexts = [];
 		if (progressData.gpContributed != 0) {
 			rewardTexts.push(`This seconding contributed ${progressData.gpContributed} GP to the Server Goal!`);
@@ -36,15 +35,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		const company = await logicLayer.companies.findCompanyByPK(interaction.guild.id);
 		const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
-		const previousCompanyLevel = company.getLevel(allHunters);
+		const previousCompanyLevel = origin.company.getLevel(allHunters);
 		for (const userId of recipientIds) {
 			logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, 1);
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
-			const previousLevel = hunter.getLevel(company.xpCoefficient);
+			const previousLevel = hunter.getLevel(origin.company.xpCoefficient);
 			await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
-			const hunterLevelLine = buildHunterLevelUpLine(hunter, previousLevel, company.xpCoefficient, company.maxSimBounties);
+			const hunterLevelLine = buildHunterLevelUpLine(hunter, previousLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
@@ -62,7 +60,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		}
 
 		let critSeconds = 0;
-		const startingSeconderLevel = seconder.getLevel(company.xpCoefficient);
+		const startingSeconderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 		if (critSecondsAvailable > 0) {
 			const staleToastees = await logicLayer.toasts.findStaleToasteeIds(interaction.user.id, interaction.guild.id);
 			let lowestEffectiveToastLevel = startingSeconderLevel + 2;
@@ -89,15 +87,15 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(interaction.user.id);
 			}
 		}
-		const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), interaction.guild.name);
+		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), interaction.guild.name);
 		if (companyLevelLine) {
 			rewardTexts.push(companyLevelLine);
 		}
 
 		logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, critSeconds > 0);
 		if (critSeconds > 0) {
-			await seconder.increment({ xp: critSeconds }).then(seconder => seconder.reload());
-			const hunterLevelLine = buildHunterLevelUpLine(seconder, startingSeconderLevel, company.xpCoefficient, company.maxSimBounties);
+			await origin.hunter.increment({ xp: critSeconds }).then(seconder => seconder.reload());
+			const hunterLevelLine = buildHunterLevelUpLine(origin.hunter, startingSeconderLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
@@ -129,12 +127,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		sendToRewardsThread(interaction.message, generateSecondingRewardString(interaction.member.displayName, recipientIds, rankUpdates, rewardTexts), "Rewards");
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-		if (company.scoreboardIsSeasonal) {
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, participationMap, descendingRanks, goalProgress));
+		if (origin.company.scoreboardIsSeasonal) {
+			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
-		updateScoreboard(company, interaction.guild, embeds);
+		updateScoreboard(origin.company, interaction.guild, embeds);
 
 		if (progressData.goalCompleted) {
 			interaction.channel.send({

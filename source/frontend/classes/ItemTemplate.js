@@ -1,4 +1,5 @@
 const { CommandInteraction } = require("discord.js");
+const { InteractionOrigin } = require("./InteractionWrapper");
 
 class ItemTemplateSet {
 	/** @param {ItemTemplate[]} itemTemplates */
@@ -18,7 +19,7 @@ class ItemTemplate {
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: CommandInteraction) => Promise<boolean>} effectFunction
+	 * @param {(interaction: CommandInteraction, origin: InteractionOrigin) => Promise<boolean>} effectFunction
 	 */
 	constructor(nameInput, descriptionInput, cooldownInMS, effectFunction) {
 		this.name = nameInput;

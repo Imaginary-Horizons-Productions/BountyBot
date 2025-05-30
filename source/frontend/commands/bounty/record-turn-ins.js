@@ -5,7 +5,7 @@ const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
 			interaction.reply({ content: `You don't currently have any open bounties. Post one with ${commandMention("bounty post")}?`, flags: MessageFlags.Ephemeral });
@@ -57,10 +57,9 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 							sentences.unshift("No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties.");
 						} else {
 							await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
-							const company = await logicLayer.companies.findCompanyByPK(bounty.companyId);
 							const newTurnInList = listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
 							sentences.unshift(`Turn-ins of ${bold(bounty.title)} have been recorded for the following hunters: ${newTurnInList}`);
-							const post = await updatePosting(collectedInteraction.guild, company, bounty, poster.getLevel(company.xpCoefficient), eligibleTurnInIds);
+							const post = await updatePosting(collectedInteraction.guild, origin.company, bounty, origin.hunter.getLevel(origin.company.xpCoefficient), eligibleTurnInIds);
 							if (post) {
 								post.channel.send({ content: `${newTurnInList} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
 							}

@@ -4,7 +4,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { rankArrayToSelectOptions } = require("../../shared");
 
 module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a particular rank",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		if (ranks.length < 1) {
 			interaction.reply({ content: "This server doesn't have any ranks configured.", flags: MessageFlags.Ephemeral });
@@ -37,9 +37,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
 			collectedInteraction.update({ components: [] });
 			collectedInteraction.channel.send(`The winner of this raffle is: ${winner}`);
-			logicLayer.companies.findCompanyByPK(interaction.guild.id).then(company => {
-				company.update("nextRaffleString", null);
-			});
+			origin.company.update("nextRaffleString", null);
 		}).catch(error => {
 			if (error.code === DiscordjsErrorCodes.InteractionCollectorError) {
 				return;

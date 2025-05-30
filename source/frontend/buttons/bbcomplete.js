@@ -9,7 +9,7 @@ let logicLayer;
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, runMode, [bountyId]) => {
+	(interaction, origin, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (!bounty) {
 				interaction.reply({ content: "This bounty could not be found.", flags: MessageFlags.Ephemeral });
@@ -29,7 +29,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			for (const member of hunterCollection.values()) {
 				if (runMode !== "production" || !member.user.bot) {
 					const memberId = member.id;
-					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
+					const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 					if (!hunter.isBanned) {
 						validatedHunterIds.push(memberId);
 						validatedHunters.push(hunter);
@@ -63,14 +63,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
 				await collectedInteraction.deferReply({ flags: MessageFlags.SuppressNotifications });
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
-				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
 
 				let hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
-				const previousCompanyLevel = company.getLevel(Object.values(hunterMap));
-				const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, hunterMap[bounty.userId], validatedHunters, season, company);
+				const previousCompanyLevel = origin.company.getLevel(Object.values(hunterMap));
+				const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, hunterMap[bounty.userId], validatedHunters, season, origin.company);
 				hunterMap = await reloadHunterMapSubset(hunterMap, validatedHunterIds.concat(bounty.userId));
-				const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, company);
-				const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, Object.values(hunterMap), collectedInteraction.guild.name);
+				const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
+				const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, Object.values(hunterMap), collectedInteraction.guild.name);
 				if (companyLevelLine) {
 					rewardTexts.push(companyLevelLine);
 				}
@@ -87,9 +86,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				if (collectedInteraction.channel.archived) {
 					await collectedInteraction.channel.setArchived(false, "bounty complete");
 				}
-				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
-				collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts) });
-				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(company.xpCoefficient), true, company, hunterIdSet)
+				collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
+				collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
+				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(origin.company.xpCoefficient), true, origin.company, hunterIdSet)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
@@ -114,12 +113,12 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				});
 				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
-				if (company.scoreboardIsSeasonal) {
-					embeds.push(await seasonalScoreboardEmbed(company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
+				if (origin.company.scoreboardIsSeasonal) {
+					embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
 				} else {
-					embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), goalProgress));
+					embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), goalProgress));
 				}
-				updateScoreboard(company, collectedInteraction.guild, embeds);
+				updateScoreboard(origin.company, collectedInteraction.guild, embeds);
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);
