@@ -19,7 +19,7 @@ module.exports = new CommandWrapper(mainId, "Get BountyBot's description and con
 						.setDescription("BountyBot is a Discord bot that facilitates community interaction by allowing users to create server-wide quests and rewarding active server particpation.")
 						.addFields(
 							{ name: "Design & Engineering", value: "Nathaniel Tseng ( <@106122478715150336> | [Twitch](https://www.twitch.tv/arcane_ish) )" },
-							{ name: "Engineering", value: "Lucas Ensign ( <@112785244733628416> ) )" },
+							{ name: "Engineering", value: "Lucas Ensign ( <@112785244733628416> )" },
 							{ name: "Art", value: "Ryan Rivera ( [Twitter](https://twitter.com/rymmage) )\nAngela Lee ( [Website](https://www.angelasylee.com/) )" },
 							{ name: "Embed Thumbnails", value: "[game-icons.net](https://game-icons.net/)" }
 						)
