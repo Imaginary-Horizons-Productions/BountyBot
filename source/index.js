@@ -30,6 +30,7 @@ const logicBlob = require("./logic");
 const runMode = process.argv[4] || "development";
 const cooldownMap = {};
 const premiumCommandList = [];
+const itemCommands = ["item"];
 //#endregion
 
 //#region pre-Client Setup
@@ -171,7 +172,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	//#endregion
 
 	//#region Premium Checks
-	if (premiumCommandList.includes(command.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+	if (premiumCommandList.includes(interaction.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
 		interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
@@ -189,7 +190,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 	logicBlob.cooldowns.updateCooldowns(interaction.user.id, interaction.commandName, commandTime, cooldownMap[interaction.commandName]);
-	if (itemCommands.contains(interaction.commandName)) {
+	if (itemCommands.includes(interaction.commandName)) {
 		const itemName = interaction.options.getString("item-name");
 		const {isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicBlob.cooldowns.checkCooldownState(interaction.user.id, itemName, commandTime);
 		if (isOnCommandCooldown) {

@@ -15,7 +15,7 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 		return {
 			isOnGeneralCooldown: true,
 			isOnCommandCooldown: false,
-			cooldownTimestamp: allInteractions.interactionTime + GCD,
+			cooldownTimestamp: allInteractions.interactionTime + GLOBAL_COMMAND_COOLDOWN,
 			lastCommandName: allInteractions.interactionName
 		};
 	}
