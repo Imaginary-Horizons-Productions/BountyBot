@@ -180,8 +180,9 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	// #region Cooldown Management
 	const commandTime = new Date();
-	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
+	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
 	if (isOnGeneralCooldown) {
+		console.log("GO HERE AND STOP!");
 		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}

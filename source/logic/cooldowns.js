@@ -9,18 +9,27 @@ function setDB(database) {
 	db = database;
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} interactionName 
+ * @param {Date} interactionTime 
+ * @returns 
+ */
 async function checkCooldownState(userId, interactionName, interactionTime) {
 	const allInteractions = await db.models.UserInteraction.findOne({ where: { userId }, order: [[ "cooldownTime", "DESC" ]] });
-	if (allInteractions && allInteractions.interactionTime + GLOBAL_COMMAND_COOLDOWN < interactionTime) {
+	const gcdCooldown = !allInteractions ? new Date(0) : new Date(allInteractions.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
+	if (gcdCooldown > interactionTime) {
 		return {
 			isOnGeneralCooldown: true,
 			isOnCommandCooldown: false,
-			cooldownTimestamp: allInteractions.interactionTime + GLOBAL_COMMAND_COOLDOWN,
+			cooldownTimestamp: gcdCooldown,
 			lastCommandName: allInteractions.interactionName
 		};
 	}
 	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName } , order: [[ "cooldownTime", "DESC" ]]});
-	if (thisInteractions && thisInteractions.cooldownTime < interactionTime) {
+	if (thisInteractions && thisInteractions.cooldownTime > interactionTime) {
+		thisInteractions.increment("hitTimes");
 		return {
 			isOnGeneralCooldown: false,
 			isOnCommandCooldown: true,
@@ -28,17 +37,27 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 			lastCommandName: interactionName
 		};
 	}
+	return {
+		isOnGeneralCooldown: false,
+		isOnCommandCooldown: false
+	};
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} interactionName 
+ * @param {Date} interactionTime 
+ * @param {Date} interactionCooldown 
+ */
 async function updateCooldowns(userId, interactionName, interactionTime, interactionCooldown) {
 	const [interaction, wasCreated] = await db.models.UserInteraction.findOrCreate({ where: { userId, interactionName } });
 	interaction.lastInteractTime = interactionTime;
 	if (wasCreated) {
 		interaction.interactionTime = interactionTime;
 		interaction.cooldownTime = interactionTime + interactionCooldown;
-	} else {
-		interaction.increment("hitTimes");
 	}
+	interaction.save();
 }
 
 async function cleanCooldownData() {
