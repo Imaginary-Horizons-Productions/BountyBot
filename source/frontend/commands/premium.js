@@ -5,7 +5,7 @@ const { ihpAuthorPayload, randomFooterTip } = require("../shared");
 
 const mainId = "premium";
 module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
-	async (interaction, runMode) => {
+	async (interaction, origin, runMode) => {
 		fs.promises.stat(__filename).then(stats => {
 			interaction.reply({
 				embeds: [

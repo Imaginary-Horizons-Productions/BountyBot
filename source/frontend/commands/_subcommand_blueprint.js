@@ -1,7 +1,7 @@
 const { SubcommandWrapper } = require("../classes");
 
 module.exports = new SubcommandWrapper("", "",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 
 	}
 ).setOptions(

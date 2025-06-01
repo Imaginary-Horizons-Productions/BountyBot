@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, CommandInteraction, SlashCommandBuilder, InteractionContextType } = require("discord.js");
 const { BuildError } = require("./BuildError.js");
-const { InteractionWrapper } = require("./InteractionWrapper.js");
+const { InteractionWrapper, InteractionOrigin } = require("./InteractionWrapper.js");
 
 class CommandWrapper extends InteractionWrapper {
 	/** Additional wrapper properties for command parsing
@@ -10,7 +10,7 @@ class CommandWrapper extends InteractionWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: CommandInteraction, runMode: "development" | "test" | "production") => void} executeFunction
+	 * @param {(interaction: CommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -78,7 +78,7 @@ class SubcommandWrapper {
 	/**
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
-	 * @param {(interaction: CommandInteraction, runMode: string, ...args: [typeof import("../../logic/index.js"), unknown]) => Promise<void>} executeFunction
+	 * @param {(interaction: CommandInteraction, origin: InteractionOrigin, runMode: string, logicLayer: typeof import("../../logic/index.js")) => Promise<void>} executeFunction
 	 */
 	constructor(nameInput, descriptionInput, executeFunction) {
 		this.data = {

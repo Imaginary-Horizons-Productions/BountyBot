@@ -9,7 +9,7 @@ let logicLayer;
 
 const mainId = "bbremovecompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, runMode, [bountyId]) => {
+	(interaction, origin, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
 			if (bounty.userId !== interaction.user.id) {
 				interaction.reply({ content: "Only the bounty poster can remove completers.", flags: MessageFlags.Ephemeral });
@@ -30,9 +30,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 				const removedIds = collectedInteraction.members.map((_, key) => key);
 				await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
-				const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guild.id);
-				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guildId);
-				buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.getHunterIdSet(bountyId))
+				buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))
 					.then(async embed => {
 						if (collectedInteraction.channel.archived) {
 							await collectedInteraction.channel.setArchived(false, "completers removed from bounty");

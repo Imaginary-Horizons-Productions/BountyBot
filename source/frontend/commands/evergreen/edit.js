@@ -6,7 +6,7 @@ const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, t
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		if (openBounties.length < 1) {
 			interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: MessageFlags.Ephemeral });
@@ -100,19 +100,18 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				selectedBounty.save();
 
 				// update bounty board
-				const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
 				const allHunters = await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id);
-				const currentCompanyLevel = company.getLevel(allHunters);
-				if (company.bountyBoardId) {
-					const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, modalSubmission.guild, currentCompanyLevel, false, company, new Set())));
-					const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
-					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
+				const currentCompanyLevel = origin.company.getLevel(allHunters);
+				if (origin.company.bountyBoardId) {
+					const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set())));
+					const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
+					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(async thread => {
 						const message = await thread.fetchStarterMessage();
 						message.edit({ embeds });
 					});
 				}
 
-				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, company, new Set());
+				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set());
 				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(error => {

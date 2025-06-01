@@ -9,7 +9,7 @@ const mainId = "";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, []);
 module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Command specifications go here */
-	(interaction, runMode) => {
+	(interaction, origin, runMode) => {
 
 	}
 ).setOptions(

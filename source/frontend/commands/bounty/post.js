@@ -7,12 +7,11 @@ const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
-		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
 		const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
-		const currentHunterLevel = hunter.getLevel(company.xpCoefficient);
-		const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, company.maxSimBounties);
+		const currentHunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+		const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, origin.company.maxSimBounties);
 		const slotOptions = [];
 		for (let slotNumber = 1; slotNumber <= bountySlots; slotNumber++) {
 			if (!occupiedSlots.includes(slotNumber)) {
@@ -45,9 +44,9 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [slotNumber] = collectedInteraction.values;
 			// Check user actually has slot
-			await company.reload();
-			await hunter.reload();
-			const reloadedBountySlotCount = Hunter.getBountySlotCount(hunter.getLevel(company.xpCoefficient), company.maxSimBounties);
+			await origin.company.reload();
+			await origin.hunter.reload();
+			const reloadedBountySlotCount = Hunter.getBountySlotCount(origin.hunter.getLevel(origin.company.xpCoefficient), origin.company.maxSimBounties);
 			if (parseInt(slotNumber) > reloadedBountySlotCount) {
 				interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 				return;
@@ -174,21 +173,19 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(modalSubmission.guild.id);
 				logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
-				const company = await logicLayer.companies.findCompanyByPK(modalSubmission.guild.id);
-				const poster = await logicLayer.hunters.findOneHunter(modalSubmission.user.id, modalSubmission.guildId);
-				poster.increment({ xp: 1 }).then(async () => {
+				origin.hunter.increment({ xp: 1 }).then(async () => {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-					if (company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, participationMap, descendingRanks, goalProgress));
+					if (origin.company.scoreboardIsSeasonal) {
+						embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
 					} else {
-						embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+						embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 					}
-					updateScoreboard(company, interaction.guild, embeds);
+					updateScoreboard(origin.company, interaction.guild, embeds);
 				});
 
 				if (shouldMakeEvent) {
@@ -213,15 +210,15 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const bounty = await logicLayer.bounties.createBounty(rawBounty);
 
 				// post in bounty board forum
-				await poster.reload();
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company, new Set());
-				modalSubmission.reply(sendAnnouncement(company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
-					if (company.bountyBoardId) {
-						modalSubmission.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+				await origin.hunter.reload();
+				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set());
+				modalSubmission.reply(sendAnnouncement(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
+					if (origin.company.bountyBoardId) {
+						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
 								name: bounty.title,
 								message: { embeds: [bountyEmbed], components: generateBountyBoardButtons(bounty) },
-								appliedTags: [company.bountyBoardOpenTagId]
+								appliedTags: [origin.company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {
 							bounty.postingId = posting.id;

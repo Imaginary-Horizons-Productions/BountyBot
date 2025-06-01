@@ -3,7 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { syncRankRoles } = require("../../shared");
 
 module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for a seasonal rank",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const threshold = interaction.options.getNumber("variance-threshold");
 		const rank = await logicLayer.ranks.findOneRank(interaction.guild.id, threshold);
 		if (!rank) {

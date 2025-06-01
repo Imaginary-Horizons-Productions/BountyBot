@@ -3,7 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { commandMention } = require("../../shared");
 
 module.exports = new SubcommandWrapper("gp-penalty", "Reduce the GP of the open Server Goal",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const penaltyValue = Math.abs(interaction.options.get("penalty", true).value);
 		const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 		if (!goal) {

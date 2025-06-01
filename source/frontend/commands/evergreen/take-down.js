@@ -4,7 +4,7 @@ const { commandMention, bountiesToSelectOptions, buildBountyEmbed } = require(".
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		interaction.reply({
 			content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,
@@ -24,23 +24,22 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			bounty.state = "deleted";
 			bounty.save();
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
-			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
 			if (openBounties.length > 0) {
-				const currentCompanyLevel = company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
-				const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, company, new Set())));
-				if (company.bountyBoardId) {
-					const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
-					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
+				const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
+				const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set())));
+				if (origin.company.bountyBoardId) {
+					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
+					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(async thread => {
 						const message = await thread.fetchStarterMessage();
 						message.edit({ embeds });
 					});
 				}
-			} else if (company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
-				bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
+			} else if (origin.company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
+				bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
 					thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
-					company.evergreenThreadId = null;
-					company.save();
+					origin.company.evergreenThreadId = null;
+					origin.company.save();
 				});
 			}
 			bounty.destroy();
