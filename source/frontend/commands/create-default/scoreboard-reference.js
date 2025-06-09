@@ -3,7 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
 
 module.exports = new SubcommandWrapper("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, company]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const scoreboard = await interaction.guild.channels.create({
 			parent: interaction.channel.parentId,
 			name: "bountybot-scoreboard",
@@ -27,15 +27,15 @@ module.exports = new SubcommandWrapper("scoreboard-reference", "Create a referen
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (isSeasonal) {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
+			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
 		scoreboard.send({ embeds }).then(message => {
-			company.scoreboardChannelId = scoreboard.id;
-			company.scoreboardMessageId = message.id;
-			company.scoreboardIsSeasonal = isSeasonal;
-			company.save();
+			origin.company.scoreboardChannelId = scoreboard.id;
+			origin.company.scoreboardMessageId = message.id;
+			origin.company.scoreboardIsSeasonal = isSeasonal;
+			origin.company.save();
 		});
 		interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, flags: MessageFlags.Ephemeral });
 	}

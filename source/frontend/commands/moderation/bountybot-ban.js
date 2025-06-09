@@ -2,10 +2,15 @@ const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("bountybot-ban", "Toggle whether the provided user can interact with bounties or toasts",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const discordUser = interaction.options.getUser("user");
 		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(discordUser.id, interaction.guild.id);
+		let hunter;
+		if (discordUser.id === origin.hunter.userId) {
+			hunter = origin.hunter;
+		} else {
+			hunter = (await logicLayer.hunters.findOrCreateBountyHunter(discordUser.id, interaction.guild.id)).hunter[0];
+		}
 		hunter.isBanned = !hunter.isBanned;
 		if (hunter.isBanned) {
 			hunter.hasBeenBanned = true;

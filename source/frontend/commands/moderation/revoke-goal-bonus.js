@@ -2,9 +2,9 @@ const { MessageFlags, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("revoke-goal-bonus", "Revoke Goal contribution item find bonus",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const revokeOption = interaction.options.get("revokee", true);
-		const hunter = await logicLayer.hunters.findOneHunter(revokeOption.value, interaction.guild.id);
+		const hunter = revokeOption.value === origin.hunter.userId ? origin.hunter : await logicLayer.hunters.findOneHunter(revokeOption.value, interaction.guild.id);
 		if (!hunter) {
 			interaction.reply({ content: `${userMention(revokeOption.value)} hasn't interacted with BountyBot yet.`, flags: MessageFlags.Ephemeral });
 			return;

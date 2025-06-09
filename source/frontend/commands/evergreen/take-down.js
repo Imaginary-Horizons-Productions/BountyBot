@@ -1,10 +1,10 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, bountiesToSelectOptions, buildBountyEmbed, updateEvergreenBountyBoard } = require("../../shared");
+const { commandMention, bountiesToSelectOptions, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		interaction.reply({
 			content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,
@@ -24,21 +24,20 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			bounty.state = "deleted";
 			bounty.save();
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
-			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
-			if (company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+			if (origin.company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 				if (openBounties.length > 0) {
-					const currentCompanyLevel = company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
+					const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
 					const hunterIdMap = {};
 					for (const bounty of openBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					updateEvergreenBountyBoard(bountyBoard, openBounties, company, currentCompanyLevel, interaction.guild, hunterIdMap);
+					updateEvergreenBountyBoard(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
 				} else {
-					bountyBoard.threads.fetch(company.evergreenThreadId).then(thread => {
+					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
 						thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
-						company.evergreenThreadId = null;
-						company.save();
+						origin.company.evergreenThreadId = null;
+						origin.company.save();
 					});
 				}
 			} else if (!collectedInteraction.member.manageable) {

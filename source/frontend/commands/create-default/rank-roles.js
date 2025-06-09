@@ -2,7 +2,7 @@ const { GuildPremiumTier, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 		await Promise.all(
 			(await logicLayer.ranks.findAllRanks(interaction.guild.id))
@@ -21,28 +21,28 @@ module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks f
 					{
 						name: "Platinum Rank",
 						color: "#669999",
-						icon: "./source/images/BountyBotIcon.jpg",
+						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						hoist: true,
 						reason: "/create-default rank-roles"
 					},
 					{
 						name: "Gold Rank",
 						color: "#daa520",
-						icon: "./source/images/BountyBotIcon.jpg",
+						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						hoist: true,
 						reason: "/create-default rank-roles"
 					},
 					{
 						name: "Silver Rank",
 						color: "#ccccff",
-						icon: "./source/images/BountyBotIcon.jpg",
+						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						hoist: true,
 						reason: "/create-default rank-roles"
 					},
 					{
 						name: "Bronze Rank",
 						color: "#b9722d",
-						icon: "./source/images/BountyBotIcon.jpg",
+						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						reason: "/create-default rank-roles"
 					}
 				].map((roleCreateOptions, index) => {

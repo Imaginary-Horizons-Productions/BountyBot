@@ -5,8 +5,8 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { bountiesToSelectOptions, buildBountyEmbed, updatePosting } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
-		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+		const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (runMode === "production" && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
 			return;
@@ -49,14 +49,12 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 
 			bounty.increment("showcaseCount");
 			await bounty.reload();
-			const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guildId);
-			poster.lastShowcaseTimestamp = new Date();
-			poster.save();
-			const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
+			origin.hunter.lastShowcaseTimestamp = new Date();
+			origin.hunter.save();
 			const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
-			const currentPosterLevel = poster.getLevel(company.xpCoefficient);
-			updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, hunterIdSet);
-			return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, hunterIdSet).then(async embed => {
+			const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+			updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+			return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 				if (interaction.channel.archived) {
 					await interaction.channel.setArchived(false, "bounty showcased");
 				}

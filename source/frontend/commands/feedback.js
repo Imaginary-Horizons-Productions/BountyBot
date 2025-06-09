@@ -6,7 +6,7 @@ const { testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('.
 const mainId = "feedback";
 module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Open the modal associated with the feedback type to prompt more specific information */
-	(interaction, runMode) => {
+	(interaction, origin, runMode) => {
 		if (!testGuildId || !feedbackChannelId) {
 			interaction.reply({ content: "The test server is not yet configured to receive feedback, thanks for your patience.", flags: MessageFlags.Ephemeral });
 			return;
