@@ -1,7 +1,7 @@
 const { MAX_SET_TIMEOUT } = require("../../constants.js");
 const { Interaction, PermissionFlagsBits, InteractionContextType, ContextMenuCommandBuilder, ApplicationCommandType, ContextMenuCommandInteraction, UserContextMenuCommandInteraction, MessageContextMenuCommandInteraction } = require("discord.js");
 const { BuildError } = require("./BuildError.js");
-const { Company, User, Hunter } = require("../../database/models/index.js");
+const { Company, User, Hunter } = require("../../database/models");
 
 class InteractionOrigin {
 	/** @type {Company} */
