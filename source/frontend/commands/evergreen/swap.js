@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { getNumberEmoji, bountiesToSelectOptions, buildBountyEmbed, disabledSelectRow, updateEvergreenBountyBoard } = require("../../shared");
+const { getNumberEmoji, bountiesToSelectOptions, disabledSelectRow, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { Bounty } = require("../../../database/models");
 
