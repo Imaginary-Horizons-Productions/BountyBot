@@ -75,8 +75,12 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 
 					const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id));
 					if (origin.company.bountyBoardId) {
+						const hunterIdMap = {};
+						for (const bounty of existingBounties) {
+							hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+						}
 						collectedInteraction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-							updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, new Set());
+							updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
 						})
 					} else if (!collectedInteraction.member.manageable) {
 						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
