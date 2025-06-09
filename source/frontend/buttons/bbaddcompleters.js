@@ -9,7 +9,7 @@ let logicLayer;
 
 const mainId = "bbaddcompleters";
 module.exports = new ButtonWrapper(mainId, 3000,
-	async (interaction, runMode, [bountyId]) => {
+	async (interaction, origin, runMode, [bountyId]) => {
 		const bounty = await logicLayer.bounties.findBounty(bountyId);
 		if (!bounty) {
 			interaction.reply({ content: "This bounty appears to no longer exist. Has this bounty already been completed?", flags: MessageFlags.Ephemeral })
@@ -38,8 +38,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 
 			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
-			const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-			const company = await logicLayer.companies.findCompanyByPK(bounty.companyId);
 			if (!collectedInteraction.channel) return;
 			if (collectedInteraction.channel.archived) {
 				await collectedInteraction.channel.setArchived(false, "Unarchived to update posting");
@@ -47,7 +45,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			collectedInteraction.channel.send({ content: `${listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
 			const starterMessage = await collectedInteraction.channel.fetchStarterMessage();
 			starterMessage.edit({
-				embeds: [await buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), false, company, eligibleTurnInIds)],
+				embeds: [await buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)],
 				components: generateBountyBoardButtons(bounty)
 			});
 			return collectedInteraction.update({

@@ -16,7 +16,7 @@ const { Sequelize } = require('sequelize');
 const path = require('path');
 const basename = path.basename(__filename);
 const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
-const { MessageComponentWrapper } = require('./frontend/classes');
+const { MessageComponentWrapper, InteractionOrigin } = require('./frontend/classes');
 
 const { getCommand, slashData, setLogic: setCommandLogic } = require("./frontend/commands/_commandDictionary.js");
 const { getButton, setLogic: setButtonLogic } = require("./frontend/buttons/_buttonDictionary.js");
@@ -146,9 +146,12 @@ dAPIClient.on(Events.ClientReady, () => {
 
 dAPIClient.on(Events.InteractionCreate, async interaction => {
 	await dbReady;
-	await logicBlob.companies.findOrCreateCompany(interaction.guild.id);
-	const [interactingHunter] = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
-	if (interactingHunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
+	/** @type {InteractionOrigin} */
+	const origin = { company: (await logicBlob.companies.findOrCreateCompany(interaction.guild.id))[0] };
+	const { user: [user], hunter: [hunter] } = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
+	origin.user = user;
+	origin.hunter = hunter;
+	if (origin.hunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
 		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: MessageFlags.Ephemeral });
 		return;
 	}
@@ -176,7 +179,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			return;
 		}
 
-		contextMenu.execute(interaction, runMode);
+		contextMenu.execute(interaction, origin, runMode);
 	} else if (interaction.isCommand()) {
 		const command = getCommand(interaction.commandName);
 		if (command.premiumCommand && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
@@ -189,7 +192,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			interaction.reply({ content: `Please wait, the \`/${interaction.commandName}\` command is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
-		command.execute(interaction, runMode);
+		command.execute(interaction, origin, runMode);
 	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
 		return;
 	} else {
@@ -208,7 +211,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			return;
 		}
 
-		interactionWrapper.execute(interaction, runMode, args);
+		interactionWrapper.execute(interaction, origin, runMode, args);
 	}
 });
 

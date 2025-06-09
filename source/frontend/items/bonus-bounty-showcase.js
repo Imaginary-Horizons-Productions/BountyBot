@@ -10,7 +10,7 @@ let logicLayer;
 const itemName = "Bonus Bounty Showcase";
 module.exports = new ItemTemplateSet(
 	new ItemTemplate(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
-		async (interaction) => {
+		async (interaction, origin) => {
 			const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 			if (openBounties.length < 1) {
 				interaction.reply({ content: "You don't have any open bounties on this server to showcase.", flags: MessageFlags.Ephemeral });
@@ -47,12 +47,10 @@ module.exports = new ItemTemplateSet(
 
 				bounty.increment("showcaseCount");
 				await bounty.reload();
-				const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guildId);
-				const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
 				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
-				const currentPosterLevel = poster.getLevel(company.xpCoefficient);
-				updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, hunterIdSet);
-				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company, hunterIdSet).then(async embed => {
+				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+				updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 					if (collectedInteraction.channel.archived) {
 						await collectedInteraction.channel.setArchived(false, "bounty showcased");
 					}

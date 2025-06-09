@@ -8,15 +8,14 @@ let logicLayer;
 const itemName = "Progress-in-a-Can";
 module.exports = new ItemTemplateSet(
 	new ItemTemplate(itemName, "Add a contribution to the currently running Server Goal", 3000,
-		async (interaction) => {
+		async (interaction, origin) => {
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 			if (!goal) {
 				interaction.reply({ content: "There isn't currently a Server Goal running.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
-			const hunter = await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id);
 			const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
-			const progressData = await logicLayer.goals.progressGoal(interaction.guildId, goal.type, hunter, season);
+			const progressData = await logicLayer.goals.progressGoal(interaction.guildId, goal.type, origin.hunter, season);
 			const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${progressData.gpContributed} GP the Server Goal!` };
 			if (progressData.goalCompleted) {
 				resultPayload.embeds = [generateCompletionEmbed(progressData.contributorIds)];

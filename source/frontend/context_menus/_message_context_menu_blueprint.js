@@ -7,7 +7,7 @@ let logicLayer;
 const mainId = "";
 module.exports = new MessageContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
 	/** Specs */
-	(interaction, runMode) => {
+	(interaction, origin, runMode) => {
 
 	}
 ).setLogicLinker(logicBlob => {

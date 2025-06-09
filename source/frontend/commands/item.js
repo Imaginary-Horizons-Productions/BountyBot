@@ -11,7 +11,7 @@ const ITEM_COOLDOWNS = new Map();
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
-	async (interaction, runMode) => {
+	async (interaction, origin, runMode) => {
 		const itemName = interaction.options.getString("item-name");
 		const itemRow = await logicLayer.items.findUserItemEntry(interaction.user.id, itemName);
 		const hasItem = itemRow !== null && itemRow.count > 0 || runMode !== "production";
@@ -72,7 +72,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 				setTimeout(() => timestamps.delete(collectedInteration.user.id), getItemCooldown(itemName));
 			}
 
-			return useItem(itemName, collectedInteration).then(shouldSkipDecrement => {
+			return useItem(itemName, collectedInteration, origin).then(shouldSkipDecrement => {
 				if (!shouldSkipDecrement && runMode === "production") {
 					itemRow.decrement("count");
 				}

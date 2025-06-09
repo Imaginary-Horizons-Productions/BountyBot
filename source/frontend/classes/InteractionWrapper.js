@@ -1,12 +1,22 @@
 const { MAX_SET_TIMEOUT } = require("../../constants.js");
 const { Interaction, PermissionFlagsBits, InteractionContextType, ContextMenuCommandBuilder, ApplicationCommandType, ContextMenuCommandInteraction, UserContextMenuCommandInteraction, MessageContextMenuCommandInteraction } = require("discord.js");
 const { BuildError } = require("./BuildError.js");
+const { Company, User, Hunter } = require("../../database/models/index.js");
+
+class InteractionOrigin {
+	/** @type {Company} */
+	company;
+	/** @type {User} */
+	user;
+	/** @type {Hunter} */
+	hunter;
+}
 
 class InteractionWrapper {
 	/** IHP wrapper for interaction responses
 	 * @param {string} mainIdInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: Interaction, args: string[]) => void} executeFunction
+	 * @param {(interaction: Interaction, origin: InteractionOrigin, args: string[]) => void} executeFunction
 	*/
 	constructor(mainIdInput, cooldownInMS, executeFunction) {
 		if (cooldownInMS > MAX_SET_TIMEOUT) {
@@ -59,7 +69,7 @@ class ContextMenuWrapper extends InteractionWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: ContextMenuCommandInteraction, runMode: "development" | "test" | "production") => void} executeFunction
+	 * @param {(interaction: ContextMenuCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, cooldownInMS, executeFunction);
@@ -81,7 +91,7 @@ class UserContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: UserContextMenuCommandInteraction, runMode: "development" | "test" | "production") => void} executeFunction
+	 * @param {(interaction: UserContextMenuCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);
@@ -97,7 +107,7 @@ class MessageContextMenuWrapper extends ContextMenuWrapper {
 	 * @param {boolean} isPremiumCommand
 	 * @param {InteractionContextType[]} contextEnums
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: MessageContextMenuCommandInteraction, runMode: "development" | "test" | "production") => void} executeFunction
+	 * @param {(interaction: MessageContextMenuCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production") => void} executeFunction
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);
@@ -105,4 +115,4 @@ class MessageContextMenuWrapper extends ContextMenuWrapper {
 	}
 };
 
-module.exports = { InteractionWrapper, ContextMenuWrapper, UserContextMenuWrapper, MessageContextMenuWrapper };
+module.exports = { InteractionOrigin, InteractionWrapper, ContextMenuWrapper, UserContextMenuWrapper, MessageContextMenuWrapper };

@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Hunter } = require("../database/models");
+const { Hunter, User } = require("../database/models");
 
 /** @type {Sequelize} */
 let db;
@@ -16,11 +16,13 @@ function setDB(database) {
  * Requires that the Company housing the Hunter exists
  * @param {string} userId
  * @param {string} companyId
- * @returns {Promise<[Hunter, boolean]>}
+ * @returns {Promise<{ user: [User, boolean], hunter: [Hunter, boolean] }>}
  */
 async function findOrCreateBountyHunter(userId, companyId) {
-	await db.models.User.findOrCreate({ where: { id: userId } });
-	return db.models.Hunter.findOrCreate({ where: { userId, companyId } });
+	return {
+		user: await db.models.User.findOrCreate({ where: { id: userId } }),
+		hunter: await db.models.Hunter.findOrCreate({ where: { userId, companyId } })
+	}
 }
 
 /** *Queries directly for a Hunter*
