@@ -182,12 +182,11 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	const commandTime = new Date();
 	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
 	if (isOnGeneralCooldown) {
-		console.log("GO HERE AND STOP!");
-		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	if (isOnCommandCooldown) {
-		interaction.reply({ content: `Please wait, \`/${interaction.commandName}\` is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `Please wait, \`/${interaction.commandName}\` is on cooldown. It can be used again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	logicBlob.cooldowns.updateCooldowns(interaction.user.id, interaction.commandName, commandTime, cooldownMap[interaction.commandName]);
@@ -195,7 +194,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		const itemName = interaction.options.getString("item-name");
 		const {isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicBlob.cooldowns.checkCooldownState(interaction.user.id, itemName, commandTime);
 		if (isOnCommandCooldown) {
-			interaction.reply({ content: `Please wait, you've used a different instance of ${itemName} too recently and it is on cooldown. It can be used again <t:${cooldownTimestamp}:R>.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Please wait, you've used a different instance of ${itemName} too recently and it is on cooldown. It can be used again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 			return;
 		}
 		logicBlob.cooldowns.updateCooldowns(interaction.user.id, itemName, commandTime, cooldownMap.items[itemName]);

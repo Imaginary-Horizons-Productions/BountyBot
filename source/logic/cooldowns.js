@@ -10,11 +10,11 @@ function setDB(database) {
 }
 
 /**
- * 
+ * Check cooldown information based on the given user, intraction, and interaction time.
  * @param {string} userId 
  * @param {string} interactionName 
  * @param {Date} interactionTime 
- * @returns 
+ * @returns {{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp: Date, lastCommandName: string}}
  */
 async function checkCooldownState(userId, interactionName, interactionTime) {
 	const allInteractions = await db.models.UserInteraction.findOne({ where: { userId }, order: [[ "cooldownTime", "DESC" ]] });
@@ -44,7 +44,8 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 }
 
 /**
- * 
+ * Update cooldown information based on known interaction information.
+ * Should be run after all relevant cooldown information has been checked independently using checkCooldownState.
  * @param {string} userId 
  * @param {string} interactionName 
  * @param {Date} interactionTime 
@@ -55,11 +56,16 @@ async function updateCooldowns(userId, interactionName, interactionTime, interac
 	interaction.lastInteractTime = interactionTime;
 	if (wasCreated) {
 		interaction.interactionTime = interactionTime;
-		interaction.cooldownTime = interactionTime + interactionCooldown;
+	}
+	if (interaction.cooldownTime <= interactionTime) { // Only update the cooldown if it is currently off cooldown
+		interaction.cooldownTime = new Date(interactionTime.getTime() + interactionCooldown);
 	}
 	interaction.save();
 }
 
+/**
+ * Clean cooldown data. Intended to be run periodically.
+ */
 async function cleanCooldownData() {
 	await db.models.UserInteraction.destroy({ where: {
 		cooldownTime: {
