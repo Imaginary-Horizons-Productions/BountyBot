@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { generateBountyBoardThread, buildBountyEmbed } = require("../../shared");
+const { createEvergreenBountyThread, buildBountyEmbed } = require("../../shared");
 const { SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -79,7 +79,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 			if (evergreenBounties.length > 0) {
 				const companyLevel = origin.company.getLevel(allHunters);
 				Promise.all(evergreenBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
-					generateBountyBoardThread(bountyBoard.threads, embeds, origin.company);
+					createEvergreenBountyThread(bountyBoard.threads, embeds, origin.company);
 				})
 			}
 		});

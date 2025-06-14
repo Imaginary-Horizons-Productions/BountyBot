@@ -1,5 +1,5 @@
 const { SubcommandWrapper } = require("../../classes");
-const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
+const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, updateEvergreenBountyBoard } = require("../../shared");
 
 module.exports = new SubcommandWrapper("close", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -17,5 +17,14 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
 		updateScoreboard(origin.company, interaction.guild, embeds);
+		if (origin.company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
+			const existingBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
+			const hunterIdMap = {};
+			for (const bounty of existingBounties) {
+				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+			}
+			updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(origin.company.id)), interaction.guild, hunterIdMap);
+		}
 	}
 );

@@ -1,9 +1,10 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { ascendingByProperty } = require("../../shared");
 
 /**
  * @param {string} mainId
@@ -89,7 +90,7 @@ function contentOrFileMessagePayload(content, messageOptions, filename) {
  * @param {EmbedBuilder[]} embeds
  * @param {Company} company
  */
-function generateBountyBoardThread(threadManager, embeds, company) {
+function createEvergreenBountyThread(threadManager, embeds, company) {
 	return threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds },
@@ -100,6 +101,27 @@ function generateBountyBoardThread(threadManager, embeds, company) {
 		thread.pin();
 		return thread;
 	})
+}
+
+/**
+ * @param {ForumChannel} bountyBoardChannel
+ * @param {Bounty[]} evergreenBounties
+ * @param {Company} company
+ * @param {number} companyLevel
+ * @param {Guild} guild
+ * @param {Record<string, Set<string>>} hunterIdMap
+ */
+async function updateEvergreenBountyBoard(bountyBoardChannel, evergreenBounties, company, companyLevel, guild, hunterIdMap) {
+	const embeds = await Promise.all(evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => buildBountyEmbed(bounty, guild, companyLevel, false, company, hunterIdMap[bounty.id])));
+	if (company.evergreenThreadId) {
+		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
+			const message = await thread.fetchStarterMessage();
+			message.edit({ embeds });
+			return thread;
+		});
+	} else {
+		return createEvergreenBountyThread(bountyBoardChannel.threads, embeds, company);
+	}
 }
 
 /** Update the bounty's embed in the bounty board
@@ -210,7 +232,8 @@ module.exports = {
 	rankArrayToSelectOptions,
 	truncateTextToLength,
 	contentOrFileMessagePayload,
-	generateBountyBoardThread,
+	updateEvergreenBountyBoard,
+	createEvergreenBountyThread,
 	updatePosting,
 	updateScoreboard,
 	disabledSelectRow,

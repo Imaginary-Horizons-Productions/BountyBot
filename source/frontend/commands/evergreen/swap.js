@@ -1,9 +1,8 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { getNumberEmoji, bountiesToSelectOptions, buildBountyEmbed, disabledSelectRow } = require("../../shared");
+const { getNumberEmoji, bountiesToSelectOptions, disabledSelectRow, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { Bounty } = require("../../../database/models");
-const { ascendingByProperty } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergreen bounties",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -76,14 +75,15 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 
 					const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id));
 					if (origin.company.bountyBoardId) {
-						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-							bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
-								return thread.fetchStarterMessage();
-							}).then(async message => {
-								existingBounties.sort(ascendingByProperty("slotNumber"));
-								message.edit({ embeds: await Promise.all(existingBounties.map(bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set()))) });
-							});
+						const hunterIdMap = {};
+						for (const bounty of existingBounties) {
+							hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+						}
+						collectedInteraction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
+							updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
 						})
+					} else if (!collectedInteraction.member.manageable) {
+						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 					}
 
 					// Evergreen bounties are not eligible for showcase bonuses

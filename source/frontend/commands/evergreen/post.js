@@ -2,8 +2,8 @@ const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, Messag
 const { EmbedLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { textsHaveAutoModInfraction, commandMention, generateBountyBoardThread, buildBountyEmbed, sendAnnouncement } = require("../../shared");
-const { timeConversion, ascendingByProperty } = require("../../../shared");
+const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, updateEvergreenBountyBoard } = require("../../shared");
+const { timeConversion } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 10",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -85,27 +85,18 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 			// post in bounty board forum
 			const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
 			const bountyEmbed = await buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set());
-			interaction.reply(sendAnnouncement(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(() => {
+			interaction.reply(sendAnnouncement(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(async () => {
 				if (origin.company.bountyBoardId) {
-					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(async bountyBoard => {
-						const embeds = await Promise.all(existingBounties.sort(ascendingByProperty("slotNumber")).map(async bounty => buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id))));
-						if (origin.company.evergreenThreadId) {
-							return bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(async thread => {
-								const message = await thread.fetchStarterMessage();
-								message.edit({ embeds });
-								return thread;
-							});
-						} else {
-							return generateBountyBoardThread(bountyBoard.threads, embeds, origin.company);
-						}
-					}).then(thread => {
+					const hunterIdMap = {};
+					for (const bounty of existingBounties) {
+						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+					}
+					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap)).then(thread => {
 						bounty.postingId = thread.id;
 						bounty.save()
 					});
-				} else {
-					if (!interaction.member.manageable) {
-						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
-					}
+				} else if (!interaction.member.manageable) {
+					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 			});
 		}).catch(error => {
