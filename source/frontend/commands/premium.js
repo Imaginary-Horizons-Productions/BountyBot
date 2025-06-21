@@ -5,8 +5,8 @@ const { ihpAuthorPayload, randomFooterTip } = require("../shared");
 
 const mainId = "premium";
 module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
-	async (interaction, runMode) => {
-		fs.promises.stat("./source/frontend/commands/premium.js").then(stats => {
+	async (interaction, origin, runMode) => {
+		fs.promises.stat(__filename).then(stats => {
 			interaction.reply({
 				embeds: [
 					new EmbedBuilder().setColor(Colors.Blurple)
@@ -23,7 +23,7 @@ module.exports = new CommandWrapper(mainId, "List perks for supporting IHP devel
 						.setFooter(randomFooterTip())
 						.setTimestamp(stats.mtime)
 				],
-				flags: [MessageFlags.Ephemeral]
+				flags: MessageFlags.Ephemeral
 			});
 		})
 	}

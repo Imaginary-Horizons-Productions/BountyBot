@@ -2,8 +2,8 @@ const { GuildPremiumTier, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
-		await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 		await Promise.all(
 			(await logicLayer.ranks.findAllRanks(interaction.guild.id))
 				.map(r => r.roleId)
@@ -56,6 +56,6 @@ module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks f
 		});
 
 		const ranks = await logicLayer.ranks.createDefaultRanks(interaction.guildId, roles.map(role => role.id));
-		interaction.editReply({ content: `Created roles: ${roles.map((role, index) => `${ranks[index].rankmoji} ${role} at ${ranks[index].varianceThreshold} standard deviations`).join(", ")}${deletedCount > 0 ? `\n\nThe previous ${deletedCount} ranks and their roles were deleted.` : ""}` });
+		interaction.editReply({ content: `Created roles: ${roles.map((role, index) => `${ranks[index].rankmoji} ${role} at ${ranks[index].threshold} standard deviations`).join(", ")}${deletedCount > 0 ? `\n\nThe previous ${deletedCount} ranks and their roles were deleted.` : ""}` });
 	}
 );

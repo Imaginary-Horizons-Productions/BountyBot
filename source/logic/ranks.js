@@ -20,14 +20,14 @@ const DEFAULT_RANKMOJI = ["🏆", "🥇", "🥈", "🥉"];
 function createDefaultRanks(companyId, roleIds) {
 	return db.models.Rank.bulkCreate(roleIds.map((roleId, index) => ({
 		companyId,
-		varianceThreshold: DEFAULT_VARIANCE_THRESHOLDS[index],
+		threshold: DEFAULT_VARIANCE_THRESHOLDS[index],
 		roleId,
 		rankmoji: DEFAULT_RANKMOJI[index]
 	})));
 }
 
 /**
- * @param {{ companyId: string, varianceThreshold: number, roleId?: string, rankmoji?: string }} rawRank
+ * @param {{ companyId: string, threshold: number, roleId?: string, rankmoji?: string }} rawRank
  */
 function createCustomRank(rawRank) {
 	return db.models.Rank.create(rawRank);
@@ -35,25 +35,25 @@ function createCustomRank(rawRank) {
 
 /**
  * @param {string} companyId
- * @param {number} varianceThreshold
+ * @param {number} threshold
  */
-function findOneRank(companyId, varianceThreshold) {
-	return db.models.Rank.findOne({ where: { companyId, varianceThreshold } });
+function findOneRank(companyId, threshold) {
+	return db.models.Rank.findOne({ where: { companyId, threshold } });
 }
 
-/** *Finds all of a company's ranks and returns them in the specified order*
+/** *Finds all of a company's ranks and returns them in descending order*
  * @param {string} companyId
  */
 function findAllRanks(companyId) {
-	return db.models.Rank.findAll({ where: { companyId }, order: [["varianceThreshold", "DESC"]] });
+	return db.models.Rank.findAll({ where: { companyId }, order: [["threshold", "DESC"]] });
 }
 
 /** *Deletes the specified Ranks*
  * @param {string} companyId
- * @param {number[]} varianceThresholds
+ * @param {number[]} thresholds
  */
-function deleteRanks(companyId, varianceThresholds) {
-	return db.models.Rank.destroy({ where: { companyId, varianceThreshold: { [Op.in]: varianceThresholds } } });
+function deleteRanks(companyId, thresholds) {
+	return db.models.Rank.destroy({ where: { companyId, threshold: { [Op.in]: thresholds } } });
 }
 
 /** *Deletes all of a Company's Ranks*

@@ -12,11 +12,11 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"swap.js",
 	"showcase.js",
 	"complete.js",
-	"takedown.js"
+	"take-down.js"
 ]);
 module.exports = new CommandWrapper(mainId, "Evergreen Bounties are not closed after completion; ideal for server-wide objectives", PermissionFlagsBits.ManageChannels, true, [InteractionContextType.Guild], 3000,
-	(interaction, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer);
+	(interaction, origin, runMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, origin, runMode, logicLayer);
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

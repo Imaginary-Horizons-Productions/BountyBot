@@ -6,10 +6,10 @@ const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, bui
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, poster]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
@@ -137,7 +137,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 
 				if (errors.length > 0) {
 					interaction.deleteReply();
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -181,10 +181,9 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				bounty.save();
 
 				// update bounty board
-				const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, poster.getLevel(company.xpCoefficient), false, company, await logicLayer.bounties.findBountyCompletions(bountyId));
-				if (company.bountyBoardId) {
-					interaction.guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
+				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
+				if (origin.company.bountyBoardId) {
+					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 						return bountyBoard.threads.fetch(bounty.postingId);
 					}).then(async thread => {
 						if (thread.archived) {

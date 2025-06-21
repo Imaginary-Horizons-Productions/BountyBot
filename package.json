@@ -6,11 +6,11 @@
 		"initialize": "npm ci && node scripts/initialize"
 	},
 	"dependencies": {
-		"@sapphire/discord.js-utilities": "^7.3.2",
-		"discord.js": "^14.18.0",
+		"@sapphire/discord.js-utilities": "7.3.3",
+		"discord.js": "14.20.0",
 		"node-cron": "3.0.3",
-		"sequelize": "^6.37.7",
-		"sequelize-cli": "^6.6.2",
-		"sqlite3": "^5.1.7"
+		"sequelize": "6.37.7",
+		"sequelize-cli": "6.6.3",
+		"sqlite3": "5.1.7"
 	}
 }

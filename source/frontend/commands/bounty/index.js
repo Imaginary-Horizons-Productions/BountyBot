@@ -11,17 +11,15 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"edit.js",
 	"list.js",
 	"post.js",
-	"revoke-turn-in.js",
+	"record-turn-ins.js",
+	"revoke-turn-ins.js",
 	"showcase.js",
 	"swap.js",
-	"takedown.js",
-	"verify-turn-in.js",
+	"take-down.js",
 ]);
 module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
-	async (interaction, runMode) => {
-		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, runMode, logicLayer, hunter);
+	async (interaction, origin, runMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, origin, runMode, logicLayer);
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

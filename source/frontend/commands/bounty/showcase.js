@@ -5,16 +5,16 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { bountiesToSelectOptions, buildBountyEmbed, updatePosting } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
-		const nextShowcaseInMS = new Date(hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+		const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (runMode === "production" && Date.now() < nextShowcaseInMS) {
-			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
 		if (existingBounties.length < 1) {
-			interaction.reply({ content: "You doesn't have any open bounties posted.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You doesn't have any open bounties posted.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -28,35 +28,33 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 						.setOptions(bountiesToSelectOptions(existingBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			if (!interaction.channel.members.has(collectedInteraction.client.user.id)) {
-				collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: [MessageFlags.Ephemeral] });
+				collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			if (!interaction.channel.permissionsFor(collectedInteraction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
-				collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: [MessageFlags.Ephemeral] });
+				collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			const bounty = await existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
 			if (bounty.state !== "open") {
-				collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: [MessageFlags.Ephemeral] });
+				collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			bounty.increment("showcaseCount");
 			await bounty.reload();
-			const poster = await logicLayer.hunters.findOneHunter(collectedInteraction.user.id, collectedInteraction.guildId);
-			poster.lastShowcaseTimestamp = new Date();
-			poster.save();
-			const company = await logicLayer.companies.findCompanyByPK(collectedInteraction.guild.id);
-			const completions = await logicLayer.bounties.findBountyCompletions(collectedInteraction.values[0]);
-			const currentPosterLevel = poster.getLevel(company.xpCoefficient);
-			updatePosting(collectedInteraction.guild, company, bounty, currentPosterLevel, completions);
-			return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, company.getThumbnailURLMap(), company.festivalMultiplierString(), completions).then(async embed => {
+			origin.hunter.lastShowcaseTimestamp = new Date();
+			origin.hunter.save();
+			const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
+			const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+			updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+			return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 				if (interaction.channel.archived) {
 					await interaction.channel.setArchived(false, "bounty showcased");
 				}

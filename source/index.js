@@ -16,7 +16,7 @@ const { Sequelize } = require('sequelize');
 const path = require('path');
 const basename = path.basename(__filename);
 const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
-const { MessageComponentWrapper } = require('./frontend/classes');
+const { MessageComponentWrapper, InteractionOrigin } = require('./frontend/classes');
 const cron = require('node-cron');
 
 const { getCommand, slashData, setLogic: setCommandLogic, updateCooldownMap: updateCommandCooldownMap, updatePremiumList: updatePremiumCommands } = require("./frontend/commands/_commandDictionary.js");
@@ -162,18 +162,22 @@ dAPIClient.on(Events.ClientReady, () => {
 dAPIClient.on(Events.InteractionCreate, async interaction => {
 	await dbReady;
 
-	await logicBlob.companies.findOrCreateCompany(interaction.guild.id);
-	const interactingHunter = (await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id))[0];
+		/** @type {InteractionOrigin} */
+	const origin = { company: (await logicBlob.companies.findOrCreateCompany(interaction.guild.id))[0] };
+	const { user: [user], hunter: [hunter] } = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
+	origin.user = user;
+	origin.hunter = hunter;
 	//#region Ban Check
-	if (interactingHunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
-		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: [MessageFlags.Ephemeral] });
+	if (origin.hunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
+		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: MessageFlags.Ephemeral });
+
 		return;
 	}
 	//#endregion
 
 	//#region Premium Checks
 	if (premiumCommandList.includes(interaction.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-		interaction.reply({ content: `The \`/${interaction.commandName}\` context menu option is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `The \`/${interaction.commandName}\` BountyBot function is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	//#endregion
@@ -204,9 +208,9 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			.slice(0, 25);
 		interaction.respond(choices);
 	} else if (interaction.isContextMenuCommand()) {
-		getContextMenu(interaction.commandName).execute(interaction, runMode);
+		getContextMenu(interaction.commandName).execute(interaction, origin, runMode);
 	} else if (interaction.isCommand()) {
-		getCommand(interaction.commandName).execute(interaction, runMode);
+		getCommand(interaction.commandName).execute(interaction, origin, runMode);
 	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
 		return;
 	} else {
@@ -219,7 +223,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 			interactionWrapper = getSelect(mainId);
 		}
 
-		interactionWrapper.execute(interaction, runMode, args);
+		interactionWrapper.execute(interaction, origin, runMode, args);
 	}
 	//#endregion
 });

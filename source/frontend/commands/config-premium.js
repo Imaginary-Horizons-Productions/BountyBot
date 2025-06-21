@@ -2,109 +2,104 @@ const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('d
 const { CommandWrapper } = require('../classes');
 const { GLOBAL_MAX_BOUNTY_SLOTS } = require('../../constants');
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
-
 const mainId = "config-premium";
 module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
-	(interaction, runMode) => {
-		logicLayer.companies.findOrCreateCompany(interaction.guild.id).then(([company]) => {
-			const updatePayload = {};
-			let content = "The following server settings have been configured:";
-			const errors = [];
+	(interaction, origin, runMode) => {
+		const updatePayload = {};
+		let content = "The following server settings have been configured:";
+		const errors = [];
 
-			const xpCoefficient = interaction.options.getNumber("level-threshold-multiplier");
-			if (xpCoefficient !== null) {
-				if (xpCoefficient <= 0) {
-					errors.push(`${xpCoefficient} could not be set for Level Threshold Multiplier. It must be a number greater than 0.`)
-				} else {
-					updatePayload.xpCoefficient = xpCoefficient;
-					content += `\n- The Level Threshold Multiplier has been set to ${xpCoefficient}.`;
-				}
+		const xpCoefficient = interaction.options.getNumber("level-threshold-multiplier");
+		if (xpCoefficient !== null) {
+			if (xpCoefficient <= 0) {
+				errors.push(`${xpCoefficient} could not be set for Level Threshold Multiplier. It must be a number greater than 0.`)
+			} else {
+				updatePayload.xpCoefficient = xpCoefficient;
+				content += `\n- The Level Threshold Multiplier has been set to ${xpCoefficient}.`;
 			}
+		}
 
-			const slots = interaction.options.getInteger("bounty-slots");
-			if (slots !== null) {
-				if (slots < 1 || slots > GLOBAL_MAX_BOUNTY_SLOTS) {
-					errors.push(`${slots} could not be set for Bounty Slots. It must be a number between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS} (inclusive).`);
-				} else {
-					updatePayload.maxSimBounties = slots;
-					content += `\n- Max bounty slots a bounty hunter can have (including earned slots) has been set to ${slots}.`;
-				}
+		const slots = interaction.options.getInteger("bounty-slots");
+		if (slots !== null) {
+			if (slots < 1 || slots > GLOBAL_MAX_BOUNTY_SLOTS) {
+				errors.push(`${slots} could not be set for Bounty Slots. It must be a number between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS} (inclusive).`);
+			} else {
+				updatePayload.maxSimBounties = slots;
+				content += `\n- Max bounty slots a bounty hunter can have (including earned slots) has been set to ${slots}.`;
 			}
+		}
 
-			const toastThumbnailURL = interaction.options.getString("toast-thumbnail-url");
-			if (toastThumbnailURL) {
-				try {
-					new URL(toastThumbnailURL);
-					updatePayload.toastThumbnailURL = toastThumbnailURL;
-					content += `\n- The toast thumbnail was set to <${toastThumbnailURL}>.`;
-				} catch (error) {
-					errors.push(error.message);
-				}
+		const toastThumbnailURL = interaction.options.getString("toast-thumbnail-url");
+		if (toastThumbnailURL) {
+			try {
+				new URL(toastThumbnailURL);
+				updatePayload.toastThumbnailURL = toastThumbnailURL;
+				content += `\n- The toast thumbnail was set to <${toastThumbnailURL}>.`;
+			} catch (error) {
+				errors.push(error.message);
 			}
+		}
 
-			const openBountyThumbnailURL = interaction.options.getString("open-bounty-thumbnail-url");
-			if (openBountyThumbnailURL) {
-				try {
-					new URL(openBountyThumbnailURL);
-					updatePayload.openBountyThumbnailURL = openBountyThumbnailURL;
-					content += `\n- The open bounty thumbnail was set to <${openBountyThumbnailURL}>.`;
-				} catch (error) {
-					errors.push(error.message);
-				}
+		const openBountyThumbnailURL = interaction.options.getString("open-bounty-thumbnail-url");
+		if (openBountyThumbnailURL) {
+			try {
+				new URL(openBountyThumbnailURL);
+				updatePayload.openBountyThumbnailURL = openBountyThumbnailURL;
+				content += `\n- The open bounty thumbnail was set to <${openBountyThumbnailURL}>.`;
+			} catch (error) {
+				errors.push(error.message);
 			}
+		}
 
-			const completedBountyThumbnailURL = interaction.options.getString("completed-bounty-thumbnail-url");
-			if (completedBountyThumbnailURL) {
-				try {
-					new URL(completedBountyThumbnailURL);
-					updatePayload.completedBountyThumbnailURL = completedBountyThumbnailURL;
-					content += `\n- The completed bounty thumbnail was set to <${completedBountyThumbnailURL}>.`;
-				} catch (error) {
-					errors.push(error.message);
-				}
+		const completedBountyThumbnailURL = interaction.options.getString("completed-bounty-thumbnail-url");
+		if (completedBountyThumbnailURL) {
+			try {
+				new URL(completedBountyThumbnailURL);
+				updatePayload.completedBountyThumbnailURL = completedBountyThumbnailURL;
+				content += `\n- The completed bounty thumbnail was set to <${completedBountyThumbnailURL}>.`;
+			} catch (error) {
+				errors.push(error.message);
 			}
+		}
 
-			const deletedBountyThumbnailURL = interaction.options.getString("deleted-bounty-thumbnail-url");
-			if (deletedBountyThumbnailURL) {
-				try {
-					new URL(deletedBountyThumbnailURL);
-					updatePayload.deletedBountyThumbnailURL = deletedBountyThumbnailURL;
-					content += `\n- The deleted bounty thumbnail was set to <${deletedBountyThumbnailURL}>.`;
-				} catch (error) {
-					errors.push(error.message);
-				}
+		const deletedBountyThumbnailURL = interaction.options.getString("deleted-bounty-thumbnail-url");
+		if (deletedBountyThumbnailURL) {
+			try {
+				new URL(deletedBountyThumbnailURL);
+				updatePayload.deletedBountyThumbnailURL = deletedBountyThumbnailURL;
+				content += `\n- The deleted bounty thumbnail was set to <${deletedBountyThumbnailURL}>.`;
+			} catch (error) {
+				errors.push(error.message);
 			}
+		}
 
-			const scoreboardThumbnailURL = interaction.options.getString("scoreboard-thumbnail-url");
-			if (scoreboardThumbnailURL) {
-				try {
-					new URL(scoreboardThumbnailURL);
-					updatePayload.scoreboardThumbnailURL = scoreboardThumbnailURL;
-					content += `\n- The scoreboard thumbnail was set to <${scoreboardThumbnailURL}>.`;
-				} catch (error) {
-					errors.push(error.message);
-				}
+		const scoreboardThumbnailURL = interaction.options.getString("scoreboard-thumbnail-url");
+		if (scoreboardThumbnailURL) {
+			try {
+				new URL(scoreboardThumbnailURL);
+				updatePayload.scoreboardThumbnailURL = scoreboardThumbnailURL;
+				content += `\n- The scoreboard thumbnail was set to <${scoreboardThumbnailURL}>.`;
+			} catch (error) {
+				errors.push(error.message);
 			}
+		}
 
-			const goalCompletionThumbnailURL = interaction.options.getString("goal-completion-thumbnail-url");
-			if (goalCompletionThumbnailURL) {
-				try {
-					new URL(goalCompletionThumbnailURL);
-					updatePayload.goalCompletionThumbnailURL = goalCompletionThumbnailURL;
-					content += `\n- The server bonuses thumbnail was set to <${goalCompletionThumbnailURL}>.`;
-				} catch (error) {
-					errors.push(error.message);
-				}
+		const goalCompletionThumbnailURL = interaction.options.getString("goal-completion-thumbnail-url");
+		if (goalCompletionThumbnailURL) {
+			try {
+				new URL(goalCompletionThumbnailURL);
+				updatePayload.goalCompletionThumbnailURL = goalCompletionThumbnailURL;
+				content += `\n- The server bonuses thumbnail was set to <${goalCompletionThumbnailURL}>.`;
+			} catch (error) {
+				errors.push(error.message);
 			}
+		}
 
-			company.update(updatePayload);
-			if (errors.length > 0) {
-				content += `\n\nThe following errors were encountered:\n- ${errors.join("\n- ")}`;
-			}
-			interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
-		});
+		origin.company.update(updatePayload);
+		if (errors.length > 0) {
+			content += `\n\nThe following errors were encountered:\n- ${errors.join("\n- ")}`;
+		}
+		interaction.reply({ content, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{
@@ -155,6 +150,4 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 		description: "Configure the image shown in the thumbnail of the server goal completion message",
 		required: false
 	}
-).setLogicLinker(logicBlob => {
-	logicLayer = logicBlob;
-});
+);

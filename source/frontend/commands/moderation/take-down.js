@@ -1,14 +1,14 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { getRankUpdates, bountiesToSelectOptions } = require("../../shared");
+const { bountiesToSelectOptions, syncRankRoles } = require("../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down another user's bounty",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const poster = interaction.options.getUser("poster");
 		const openBounties = await logicLayer.bounties.findOpenBounties(poster.id, interaction.guild.id);
 		if (openBounties.length < 1) {
-			interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `${poster} doesn't seem to have any open bounties at the moment.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -22,7 +22,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
@@ -31,20 +31,25 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
 				bounty.state = "deleted";
 				bounty.save();
-				const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
-				if (company.bountyBoardId) {
-					const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+				if (origin.company.bountyBoardId) {
+					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 					postingThread.delete("Bounty taken down by moderator");
 				}
 				bounty.destroy();
 
-				logicLayer.hunters.findOneHunter(posterId, interaction.guild.id).then(async poster => {
-					poster.decrement("xp");
-					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
-					logicLayer.seasons.changeSeasonXP(posterId, interaction.guildId, season.id, -1);
-					getRankUpdates(interaction.guild, logicLayer);
-				})
+				let poster;
+				if (posterId === origin.hunter.userId) {
+					poster = origin.hunter;
+				} else {
+					poster = (await logicLayer.hunters.findOrCreateBountyHunter(posterId, interaction.guild.id)).hunter[0];
+				}
+				poster.decrement("xp");
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
+				await logicLayer.seasons.changeSeasonXP(posterId, interaction.guildId, season.id, -1);
+				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
 			});
 		}).catch(error => {

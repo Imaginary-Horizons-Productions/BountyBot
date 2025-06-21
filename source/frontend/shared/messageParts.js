@@ -1,9 +1,9 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
-const { timeConversion } = require("../../shared");
+const { timeConversion, descendingByProperty } = require("../../shared");
 const { commandIds } = require("../../constants");
 
 /** generates a command mention, which users can click to shortcut them to using the command
@@ -145,9 +145,9 @@ function randomFooterTip() {
  * @param {number} posterLevel
  * @param {boolean} shouldOmitRewardsField
  * @param {Company} company
- * @param {Completion[]} completions
+ * @param {Set<string>} hunterIdSet
  */
-async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, completions) {
+async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet) {
 	const author = await guild.members.fetch(bounty.userId);
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(author.displayColor)
@@ -173,9 +173,8 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 	} else {
 		embed.setAuthor({ name: `${author.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
 	}
-	if (completions.length > 0) {
-		const uniqueCompleters = new Set(completions.map(reciept => reciept.userId));
-		const completersFieldText = listifyEN([...uniqueCompleters].map(id => userMention(id)));
+	if (hunterIdSet.size > 0) {
+		const completersFieldText = listifyEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: "Turned in by:", value: completersFieldText });
 		} else {
@@ -225,13 +224,13 @@ function generateBountyBoardButtons(bounty) {
 				.setDisabled(new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))),
 			new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Primary)
-				.setLabel("Credit Hunters"),
+				.setLabel("Record Turn-Ins"),
 			new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Secondary)
-				.setLabel("Uncredit Hunters"),
+				.setLabel("Revoke Turn-Ins"),
 			new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Primary)
-				.setLabel("Showcase this Bounty"),
+				.setLabel("Showcase"),
 			new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
 				.setStyle(ButtonStyle.Danger)
 				.setLabel("Take Down")
@@ -295,19 +294,18 @@ function sendAnnouncement(company, messageOptions) {
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Company} company
  * @param {Guild} guild
- * @param {Participation[]} participations
+ * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} ranks
- * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
+ * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
  */
-async function seasonalScoreboardEmbed(company, guild, participations, ranks, goalProgress) {
-	const hunterMembers = await guild.members.fetch({ user: participations.map(participation => participation.userId) });
+async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
+	const hunterMembers = await guild.members.fetch({ user: [...participationMap.keys()] });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
-	for (const participation of participations) {
-		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
-			const hunter = await participation.hunter;
-			scorelines.push(`${!(hunter.rank === null || participation.isRankDisqualified) ? `${rankmojiArray[hunter.rank]} ` : ""}#${participation.placement} **${hunterMembers.get(participation.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${participation.xp} season XP*`);
+	for (const [id, participation] of [...participationMap.entries()].sort((a, b) => b[1].xp - a[1].xp)) {
+		if (participation.xp > 0 && hunterMembers.has(id)) {
+			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** ${participation.xp} season XP`);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -357,18 +355,17 @@ async function seasonalScoreboardEmbed(company, guild, participations, ranks, go
  * @param {Guild} guild
  * @param {Hunter[]} hunters
  * @param {Rank[]} ranks
- * @param {{ goalId: any, requiredGP: any, currentGP: number}} goalProgress
+ * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
  */
-async function overallScoreboardEmbed(company, guild, hunters, ranks, goalProgress) {
+async function overallScoreboardEmbed(company, guild, hunters, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
-	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
-	for (const hunter of hunters.sort((a, b) => b.xp - a.xp)) {
+	for (const hunter of hunters.sort(descendingByProperty("xp"))) {
 		if (hunter.xp < 1) {
 			break;
 		}
-		scorelines.push(`${hunter.rank !== null ? `${rankmojiArray[hunter.rank]} ` : ""} **${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
+		scorelines.push(`**${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)
@@ -602,6 +599,49 @@ function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUp
 	return text;
 }
 
+/**
+ * @param {Record<string, { previousLevel: number, droppedItem: string | null }>} hunterResults
+ * @param {Record<string, Hunter>} hunterMap
+ * @param {Company} company
+ */
+function formatHunterResultsToRewardTexts(hunterResults, hunterMap, company) {
+	/** @type {string[]} */
+	const rewardTexts = [];
+	for (const id in hunterResults) {
+		const { previousLevel, droppedItem } = hunterResults[id];
+		const hunterLevelLine = buildHunterLevelUpLine(hunterMap[id], previousLevel, company.xpCoefficient, company.maxSimBounties);
+		if (hunterLevelLine) {
+			rewardTexts.push(hunterLevelLine);
+		}
+		if (droppedItem) {
+			rewardTexts.push(`${userMention(id)} has found a ${bold(droppedItem)}!`);
+		}
+	}
+	return rewardTexts;
+}
+
+/**
+ * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
+ * @param {Rank[]} descendingRanks
+ * @param {Collection<string, Role>} allGuildRoles
+ */
+function formatSeasonResultsToRewardTexts(seasonResults, descendingRanks, allGuildRoles) {
+	/** @type {string[]} */
+	const rewardTexts = [];
+	for (const id in seasonResults) {
+		const result = seasonResults[id];
+		if (result.newPlacement === 1) {
+			rewardTexts.push(italic(`${userMention(id)} has reached the #1 spot for this season!`));
+		}
+		if (result.rankIncreased) {
+			const rank = descendingRanks[result.newRankIndex];
+			const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${result.newRankIndex + 1}`;
+			rewardTexts.push(`${congratulationBuilder()}, ${userMention(id)}! You've risen to ${bold(rankName)}!`);
+		}
+	}
+	return rewardTexts;
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -626,5 +666,7 @@ module.exports = {
 	generateSecondingActionRow,
 	generateToastRewardString,
 	generateCompletionEmbed,
-	generateSecondingRewardString
+	generateSecondingRewardString,
+	formatHunterResultsToRewardTexts,
+	formatSeasonResultsToRewardTexts
 };

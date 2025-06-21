@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, DiscordjsErrorCodes } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, generateTextBar, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed } = require('../shared');
+const { textsHaveAutoModInfraction, generateTextBar, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -9,20 +9,20 @@ let logicLayer;
 const mainId = "Raise a Toast";
 module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive toast text, then raise the toast to the user */
-	async (interaction, runMode) => {
+	async (interaction, origin, runMode) => {
 		if (interaction.targetId === interaction.user.id) {
-			interaction.reply({ content: "You cannot raise a toast to yourself.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You cannot raise a toast to yourself.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		if (runMode === "production" && interaction.targetUser.bot) {
-			interaction.reply({ content: "You cannot raist a toast to a bot.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "You cannot raist a toast to a bot.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		const [toastee] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
+		const { hunter: [toastee] } = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, interaction.guildId);
 		if (toastee.isBanned) {
-			interaction.reply({ content: `${userMention(interaction.targetId)} cannot receive toasts because they are banned from interacting with BountyBot on this server.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `${userMention(interaction.targetId)} cannot receive toasts because they are banned from interacting with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -40,19 +40,25 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
 			const toastText = modalSubmission.fields.getTextInputValue("message");
 			if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [toastText], "toast")) {
-				modalSubmission.reply({ content: "Your toast was blocked by AutoMod.", flags: [MessageFlags.Ephemeral] });
+				modalSubmission.reply({ content: "Your toast was blocked by AutoMod.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
-			const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
-			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guildId);
+			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-			const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, company, modalSubmission.member, sender, new Set([interaction.targetId]), season.id, toastText);
-			const embeds = [generateToastEmbed(company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member)];
+			const previousCompanyLevel = origin.company.getLevel(Object.values(hunterMap));
+			const { toastId, rewardedHunterIds, hunterResults, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, origin.company, interaction.user.id, new Set([interaction.targetId]), hunterMap, season.id, toastText, null);
+			hunterMap = await reloadHunterMapSubset(hunterMap, rewardedHunterIds.concat(interaction.user.id));
+			const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
+			const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
+			if (companyLevelLine) {
+				rewardTexts.push(companyLevelLine);
+			}
+			const embeds = [generateToastEmbed(origin.company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member)];
 
 			if (rewardedHunterIds.length > 0) {
-				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", sender, season);
+				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", hunterMap[interaction.user.id], season);
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 					if (goalUpdate.goalCompleted) {
@@ -72,29 +78,21 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				components: [generateSecondingActionRow(toastId)],
 				withResponse: true
 			}).then(async response => {
-				let content = "";
 				if (rewardedHunterIds.length > 0) {
-					const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
-					content = generateToastRewardString(rewardedHunterIds, rankUpdates, rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
-				}
-
-				if (content) {
-					if (modalSubmission.channel.isThread()) {
-						modalSubmission.channel.send({ content, flags: MessageFlags.SuppressNotifications });
-					} else {
-						response.resource.message.startThread({ name: "Rewards" }).then(thread => {
-							thread.send({ content, flags: MessageFlags.SuppressNotifications });
-						})
-					}
+					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+					const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
+					sendToRewardsThread(response.resource.message, rewardString, "Rewards");
 					const embeds = [];
-					const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-					if (company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(company, modalSubmission.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+					if (origin.company.scoreboardIsSeasonal) {
+						embeds.push(await seasonalScoreboardEmbed(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress));
 					} else {
-						embeds.push(await overallScoreboardEmbed(company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), ranks, goalProgress));
+						embeds.push(await overallScoreboardEmbed(origin.company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), goalProgress));
 					}
-					updateScoreboard(company, modalSubmission.guild, embeds);
+					updateScoreboard(origin.company, modalSubmission.guild, embeds);
 				}
 			});
 		}).catch(error => {

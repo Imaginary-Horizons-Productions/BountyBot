@@ -47,6 +47,9 @@ function initModel(sequelize) {
 			type: DataTypes.INTEGER,
 			defaultValue: 0
 		},
+		rankIndex: {
+			type: DataTypes.INTEGER
+		},
 		postingsCompleted: {
 			type: DataTypes.INTEGER,
 			defaultValue: 0

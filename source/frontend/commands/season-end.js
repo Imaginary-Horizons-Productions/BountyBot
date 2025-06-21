@@ -10,22 +10,16 @@ let logicLayer;
 const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
-	async (interaction, runMode) => {
+	async (interaction, origin, runMode) => {
 		const guild = interaction.guild;
-		const company = await logicLayer.companies.findCompanyByPK(guild.id);
-		if (!company) {
-			interaction.reply({ content: "This server hasn't used BountyBot yet, so it doesn't have a season to end.", flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-
 		const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
-		const currentCompanyLevel = company.getLevel(allHunters);
+		const currentCompanyLevel = origin.company.getLevel(allHunters);
 		const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
 		const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
 		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 		const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
 		const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-		statsEmbed(company, guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
+		statsEmbed(origin.company, guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(async embed => {
 			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
@@ -67,20 +61,19 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 					}
 				})
 			}
-			await logicLayer.hunters.resetCompanyRanks(company.id);
 			const embeds = [];
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-			if (company.scoreboardIsSeasonal) {
-				embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, [], ranks, goalProgress));
+			if (origin.company.scoreboardIsSeasonal) {
+				embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, new Map(), ranks, goalProgress));
 			} else {
-				embeds.push(await overallScoreboardEmbed(company, interaction.guild, allHunters, ranks, goalProgress));
+				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, allHunters, goalProgress));
 			}
-			updateScoreboard(company, guild, embeds);
+			updateScoreboard(origin.company, guild, embeds);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;
 			}
-			interaction.reply(sendAnnouncement(company, { content: announcementText, embeds: [embed] }));
+			interaction.reply(sendAnnouncement(origin.company, { content: announcementText, embeds: [embed] }));
 		})
 	}
 ).setLogicLinker(logicBlob => {

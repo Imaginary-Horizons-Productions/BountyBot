@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, generateTextBar, listifyEN, getRankUpdates, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed } = require('../shared');
+const { textsHaveAutoModInfraction, generateTextBar, listifyEN, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -8,21 +8,17 @@ let logicLayer;
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
-	async (interaction, runMode) => {
-		const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
-		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-
-		const errors = [];
-
+	async (interaction, origin, runMode) => {
 		// Find valid toastees
 		const bannedIds = new Set();
 		const validatedToasteeIds = new Set();
 		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
 			if (guildMember) {
-				if (hunterMap[guildMember.id]?.isBanned) {
+				const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, interaction.guild.id);
+				if (hunter.isBanned) {
 					bannedIds.add(guildMember.id);
-				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.user.id !== interaction.user.id)) {
+				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.id !== interaction.user.id)) {
 					validatedToasteeIds.add(guildMember.id);
 				}
 			}
@@ -34,6 +30,8 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		} else if (bannedIds.size === 1) {
 			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
+
+		const errors = [];
 		if (validatedToasteeIds.size < 1) {
 			const sentences = ["No valid toastees received. You cannot raise a toast to yourself or a bot."];
 			if (bannedText) {
@@ -54,27 +52,34 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		// Early-out if any errors
 		if (errors.length > 0) {
-			interaction.reply({ content: `The following errors were encountered while raising your toast:\n- ${errors.join("\n- ")}`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `The following errors were encountered while raising your toast:\n- ${errors.join("\n- ")}`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const toastText = interaction.options.getString("message");
 		if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")) {
-			interaction.reply({ content: "Your toast was blocked by AutoMod.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "Your toast was blocked by AutoMod.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
-		const [sender] = await logicLayer.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guildId);
+		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-		const { toastId, rewardedHunterIds, rewardTexts, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, company, interaction.member, sender, validatedToasteeIds, season.id, toastText, imageURL);
-		const embeds = [generateToastEmbed(company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
+		const previousCompanyLevel = origin.company.getLevel(Object.values(hunterMap));
+		const { toastId, rewardedHunterIds, hunterResults, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, origin.company, interaction.user.id, validatedToasteeIds, hunterMap, season.id, toastText, imageURL);
+		hunterMap = await reloadHunterMapSubset(hunterMap, rewardedHunterIds.concat(interaction.user.id));
+		const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
+		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
+		if (companyLevelLine) {
+			rewardTexts.push(companyLevelLine);
+		}
+		const embeds = [generateToastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
 		if (imageURL) {
 			embeds[0].setImage(imageURL);
 		}
 
 		if (rewardedHunterIds.length > 0) {
-			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", sender, season);
+			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", hunterMap[interaction.user.id], season);
 			if (goalUpdate.gpContributed > 0) {
 				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				if (goalUpdate.goalCompleted) {
@@ -95,31 +100,23 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			withResponse: true
 		}).then(async response => {
 			if (bannedText) {
-				interaction.followUp({ content: bannedText, flags: [MessageFlags.Ephemeral] });
+				interaction.followUp({ content: bannedText, flags: MessageFlags.Ephemeral });
 			}
-			let content = "";
 			if (rewardedHunterIds.length > 0) {
-				const rankUpdates = await getRankUpdates(interaction.guild, logicLayer);
-				content = generateToastRewardString(rewardedHunterIds, rankUpdates, rewardTexts, interaction.member.toString(), company.festivalMultiplierString(), critValue);
-			}
-
-			if (content) {
-				if (interaction.channel.isThread()) {
-					interaction.channel.send({ content, flags: MessageFlags.SuppressNotifications });
-				} else {
-					response.resource.message.startThread({ name: "Rewards" }).then(thread => {
-						thread.send({ content, flags: MessageFlags.SuppressNotifications });
-					})
-				}
+				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+				const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
+				sendToRewardsThread(response.resource.message, rewardString, "Rewards");
 				const embeds = [];
-				const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-				if (company.scoreboardIsSeasonal) {
-					embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+				if (origin.company.scoreboardIsSeasonal) {
+					embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
 				} else {
-					embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
+					embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 				}
-				updateScoreboard(company, interaction.guild, embeds);
+				updateScoreboard(origin.company, interaction.guild, embeds);
 			}
 		});
 	}

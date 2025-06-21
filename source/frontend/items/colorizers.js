@@ -10,9 +10,9 @@ class Colorizer extends ItemTemplate {
 		const itemName = `${color} Profile Colorizer`;
 		super(itemName, `Changes the color of your stats profile embed to ${color.toLowerCase()}`, 3000,
 			/** Sets the user's Hunter profile to the specfied color in the used guild */
-			async (interaction) => {
+			async (interaction, origin) => {
 				await logicLayer.hunters.setHunterProfileColor(interaction.user.id, interaction.guild.id, color.replace(/ /g, ""));
-				interaction.reply({ content: `Your profile color has been set to ${color === "Default" ? "black" : color} in this server.`, flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: `Your profile color has been set to ${color === "Default" ? "black" : color} in this server.`, flags: MessageFlags.Ephemeral });
 			}
 		);
 	}

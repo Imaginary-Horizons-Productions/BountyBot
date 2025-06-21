@@ -3,16 +3,22 @@
 ### User Options in Slash Commands
 Slash commands originally accepted users as a string (instead of Discord's user filtering) to allow users to mention as many users as they wanted. However, this doesn't work on mobile, so those slash commands have been remade to use Discord's user filtering or message selects.
 - `/toast` now requires 1 toastee and up to 4 optional ones. The `message` option has been changed to the first option to group the toastee options.
-- `/bounty add-completers` has been renamed to `/bounty verify-turn-in`. It receives both its bounty and hunter inputs from message selects.
+- `/bounty add-completers` has been renamed to `/bounty record-turn-ins` and now uses message selects.
+- `/bounty remove-completers` has been renamed to `/bounty revoke-turn-ins` and now uses message selects.
 - `/bounty complete` now accepts up to 5 optional hunters.
-- `/bounty remove-completers` has been renamed to `/bounty revoke-turn-in` and now requires 1 hunter and up to 4 optional ones.
-- `/evergreen complete` now requires 1 hunter and up to 4 optional ones. Duplicate hunters are now accepted in case the hunter has multiple turn-ins to be awarded for.
+- `/evergreen complete` now uses message selects.
 ### Premium
 - Added the ability to customize the Goal Completion embed's thumbnail with `/config-premium goal-completion-thumbnail-url`
 - Changed `/rank remove` to use a select and confirmation button and accept multiple roles at the same time
+- XP Multiplier Festivals can now be started with multipliers with decimal parts
 ### Other Changes
 - Added `/seasonal-ranks`, which allows all bounty hunters to look up the server's list of seasonal ranks (removed `/rank info` which was only usable by Premium users)
-- Fixed BountyBot banned users being able to receive toasts
+- Fixed BountyBot banned users being able to receive toasts and credit for evergreen bounties
+- Fixed Completing bounties from within their thread on the Bounty Board timing out
+- The Overall Scoreboard no longer shows bounty hunter rank
+- The Seasonal Scoreboard no longer shows bounty hunter level
+- Fixed XP Boosts not updating the scoreboard
+- "Give Bounty Credit" was renamed to "Record Bounty Turn-In"
 
 ## BountyBot Version 2.9.0:
 ### Server Goals

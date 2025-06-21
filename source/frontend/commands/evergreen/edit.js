@@ -2,14 +2,14 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength } = require("../../shared");
+const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		if (openBounties.length < 1) {
-			interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 						.setOptions(bountiesToSelectOptions(openBounties))
 				)
 			],
-			flags: [MessageFlags.Ephemeral],
+			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
@@ -83,7 +83,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				}
 
 				if (errors.length > 0) {
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: [MessageFlags.Ephemeral] });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -100,20 +100,21 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				selectedBounty.save();
 
 				// update bounty board
-				const [company] = await logicLayer.companies.findOrCreateCompany(modalSubmission.guildId);
 				const allHunters = await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id);
-				const currentCompanyLevel = company.getLevel(allHunters);
-				if (company.bountyBoardId) {
-					const embeds = await Promise.all(openBounties.map(bounty => buildBountyEmbed(bounty, modalSubmission.guild, currentCompanyLevel, false, company, [])));
-					const bountyBoard = await modalSubmission.guild.channels.fetch(company.bountyBoardId);
-					bountyBoard.threads.fetch(company.evergreenThreadId).then(async thread => {
-						const message = await thread.fetchStarterMessage();
-						message.edit({ embeds });
-					});
+				const currentCompanyLevel = origin.company.getLevel(allHunters);
+				if (origin.company.bountyBoardId) {
+					const hunterIdMap = {};
+					for (const bounty of openBounties) {
+						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+					}
+					const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
+					updateEvergreenBountyBoard(bountyBoard, openBounties, origin.company, currentCompanyLevel, modalSubmission.guild, hunterIdMap);
+				} else if (!modalSubmission.member.manageable) {
+					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 
-				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, company, []);
-				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: [MessageFlags.Ephemeral] });
+				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set());
+				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {

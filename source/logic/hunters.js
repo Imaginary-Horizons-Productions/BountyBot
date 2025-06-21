@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Hunter } = require("../database/models");
+const { Hunter, User } = require("../database/models");
 
 /** @type {Sequelize} */
 let db;
@@ -16,11 +16,13 @@ function setDB(database) {
  * Requires that the Company housing the Hunter exists
  * @param {string} userId
  * @param {string} companyId
- * @returns {Promise<[Hunter, boolean]>}
+ * @returns {Promise<{ user: [User, boolean], hunter: [Hunter, boolean] }>}
  */
 async function findOrCreateBountyHunter(userId, companyId) {
-	await db.models.User.findOrCreate({ where: { id: userId } });
-	return db.models.Hunter.findOrCreate({ where: { userId, companyId } });
+	return {
+		user: await db.models.User.findOrCreate({ where: { id: userId } }),
+		hunter: await db.models.Hunter.findOrCreate({ where: { userId, companyId } })
+	}
 }
 
 /** *Queries directly for a Hunter*
@@ -46,6 +48,7 @@ function findCompanyHunters(companyId) {
  * @param {string} companyId
  */
 async function getCompanyHunterMap(companyId) {
+	/** @type {Record<string, Hunter} */
 	const hunterMap = {};
 	const hunters = await db.models.Hunter.findAll({ where: { companyId } });
 	for (const hunter of hunters) {
@@ -98,13 +101,6 @@ function setHunterProfileColor(userId, companyId, color) {
 	return db.models.Hunter.update({ profileColor: color }, { where: { userId, companyId } });
 }
 
-/** *Resets the ranks on all Hunters in the specified Company*
- * @param {string} companyId
- */
-function resetCompanyRanks(companyId) {
-	return db.models.Hunter.update({ rank: null, nextRankXP: null }, { where: { companyId } });
-}
-
 /** *Destroys all of the specified Company's Hunters*
  * @param {string} companyId
  */
@@ -122,6 +118,5 @@ module.exports = {
 	findCompanyHuntersByDescendingXP,
 	findHuntersAtOrAboveLevel,
 	setHunterProfileColor,
-	resetCompanyRanks,
 	deleteCompanyHunters
 }

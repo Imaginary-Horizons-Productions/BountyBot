@@ -8,11 +8,10 @@ let logicLayer;
 const itemName = "Goal Initializer";
 module.exports = new ItemTemplateSet(
 	new ItemTemplate(itemName, "Begin a Server Goal if there isn't already one running", 3000,
-		async (interaction) => {
-			const [company] = await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
+		async (interaction, origin) => {
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guildId);
 			if (!!goal) {
-				interaction.reply({ content: "This server already has a Server Goal running.", flags: [MessageFlags.Ephemeral] });
+				interaction.reply({ content: "This server already has a Server Goal running.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
 
@@ -21,9 +20,8 @@ module.exports = new ItemTemplateSet(
 			const previousSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			const activeHunters = previousSeason ? await logicLayer.seasons.getParticipantCount(previousSeason.id) : 0;
 			const requiredGP = Math.max(activeHunters * 20, 60);
-			await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 			await logicLayer.goals.createGoal(interaction.guildId, goalType, requiredGP);
-			interaction.channel.send(sendAnnouncement(company, { content: `${interaction.member} has started a Server Goal! This time **${goalType} are worth double GP**!` }));
+			interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member} has started a Server Goal! This time **${goalType} are worth double GP**!` }));
 		}
 	)
 ).setLogicLinker(logicBlob => {

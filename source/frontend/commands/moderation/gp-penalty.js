@@ -3,11 +3,11 @@ const { SubcommandWrapper } = require("../../classes");
 const { commandMention } = require("../../shared");
 
 module.exports = new SubcommandWrapper("gp-penalty", "Reduce the GP of the open Server Goal",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const penaltyValue = Math.abs(interaction.options.get("penalty", true).value);
 		const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 		if (!goal) {
-			interaction.reply({ content: `There isn't an open Server Goal to penalize. You can use ${commandMention("moderation revoke-goal-bonus")} to revoke Goal Completion Item Find Bonus for bounty hunters.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `There isn't an open Server Goal to penalize. You can use ${commandMention("moderation revoke-goal-bonus")} to revoke Goal Completion Item Find Bonus for bounty hunters.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 		await logicLayer.goals.createGoalContribution(goal.id, interaction.user.id, -1 * penaltyValue);

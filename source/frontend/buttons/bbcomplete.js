@@ -1,7 +1,7 @@
-const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes, bold } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, ChannelType, ChannelSelectMenuBuilder, userMention, ComponentType, DiscordjsErrorCodes } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { getRankUpdates, commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed } = require('../shared');
+const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, listifyEN } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -9,28 +9,27 @@ let logicLayer;
 
 const mainId = "bbcomplete";
 module.exports = new ButtonWrapper(mainId, 3000,
-	(interaction, runMode, [bountyId]) => {
+	(interaction, origin, runMode, [bountyId]) => {
 		logicLayer.bounties.findBounty(bountyId).then(async bounty => {
-			await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 			if (!bounty) {
-				interaction.editReply({ content: "This bounty could not be found." });
+				interaction.reply({ content: "This bounty could not be found.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			if (bounty.userId !== interaction.user.id) {
-				interaction.editReply({ content: "Only the bounty poster can mark a bounty completed." });
+				interaction.reply({ content: "Only the bounty poster can mark a bounty completed.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			// Early-out if no completers
 			const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
-			const completerMembers = (await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) })).values();
+			const hunterCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
 			const validatedHunterIds = [];
 			const validatedHunters = [];
-			for (const member of completerMembers) {
+			for (const member of hunterCollection.values()) {
 				if (runMode !== "production" || !member.user.bot) {
 					const memberId = member.id;
-					const [hunter] = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
+					const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
 					if (!hunter.isBanned) {
 						validatedHunterIds.push(memberId);
 						validatedHunters.push(hunter);
@@ -39,57 +38,57 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 
 			if (validatedHunters.length < 1) {
-				interaction.editReply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.` })
+				interaction.reply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.`, flags: MessageFlags.Ephemeral })
 				return;
 			}
 
 			// disallow completion within 5 minutes of creating bounty
 			if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
-				interaction.editReply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.` });
+				interaction.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty add-completers")} so you won't forget instead.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
-			interaction.editReply({
-				content: `Which channel should the bounty's completion be announced in?\n\nCompleters: <@${validatedHunterIds.join(">, <@")}>`,
+			const hunterIdSet = new Set(validatedHunterIds);
+			interaction.reply({
+				content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${listifyEN(hunterIdSet.values().map(id => userMention(id)))}`,
 				components: [
 					new ActionRowBuilder().addComponents(
 						new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 							.setPlaceholder("Select channel...")
 							.setChannelTypes(ChannelType.GuildText)
 					)
-				]
-			}).then(message => message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
+				],
+				flags: MessageFlags.Ephemeral,
+				withResponse: true
+			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
+				await collectedInteraction.deferReply({ flags: MessageFlags.SuppressNotifications });
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
-				const poster = await logicLayer.hunters.findOneHunter(bounty.userId, bounty.companyId);
-				const { completerXP, posterXP, rewardTexts, itemRollMap } = await logicLayer.bounties.completeBounty(bounty, poster, validatedHunters, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), collectedInteraction.guild.name);
-				for (const hunterId of itemRollMap.hunters) {
-					const hunter = validatedHunters.find(hunter => hunter.userId === hunterId);
-					const [itemRow] = await logicLayer.items.rollItemForHunter(1 / 8, hunter);
-					if (itemRow) {
-						rewardTexts.push(`${userMention(hunterId)} has found a ${bold(itemRow.itemName)}`)
-					}
+				let hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
+				const previousCompanyLevel = origin.company.getLevel(Object.values(hunterMap));
+				const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, hunterMap[bounty.userId], validatedHunters, season, origin.company);
+				hunterMap = await reloadHunterMapSubset(hunterMap, validatedHunterIds.concat(bounty.userId));
+				const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
+				const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, Object.values(hunterMap), collectedInteraction.guild.name);
+				if (companyLevelLine) {
+					rewardTexts.push(companyLevelLine);
 				}
-				for (const posterId of itemRollMap.poster) {
-					const hunter = validatedHunters.find(hunter => hunter.userId === posterId);
-					const [itemRow] = await logicLayer.items.rollItemForHunter(1 / 4, hunter);
-					if (itemRow) {
-						rewardTexts.push(`${userMention(posterId)} has found a ${bold(itemRow.itemName)}`)
-					}
-				}
-				const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", poster, season);
+				const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", hunterMap[bounty.userId], season);
 				if (goalUpdate.gpContributed > 0) {
 					rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				}
-				const rankUpdates = await getRankUpdates(collectedInteraction.guild, logicLayer);
+				const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
+				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
+				const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch());
 
 				if (collectedInteraction.channel.archived) {
 					await collectedInteraction.channel.setArchived(false, "bounty complete");
 				}
-				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
-				collectedInteraction.channel.setAppliedTags([company.bountyBoardCompletedTagId]);
-				collectedInteraction.reply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, company.festivalMultiplierString(), rankUpdates, rewardTexts), flags: MessageFlags.SuppressNotifications });
-				buildBountyEmbed(bounty, collectedInteraction.guild, poster.getLevel(company.xpCoefficient), true, company, completions)
+				collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
+				collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunterIds, completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
+				buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap[bounty.userId].getLevel(origin.company.xpCoefficient), true, origin.company, hunterIdSet)
 					.then(async embed => {
 						if (goalUpdate.gpContributed > 0) {
 							const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
@@ -98,7 +97,6 @@ module.exports = new ButtonWrapper(mainId, 3000,
 							} else {
 								embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
 							}
-
 						}
 						interaction.message.edit({ embeds: [embed], components: [] });
 						collectedInteraction.channel.setArchived(true, "bounty completed");
@@ -114,14 +112,13 @@ module.exports = new ButtonWrapper(mainId, 3000,
 					}
 				});
 				const embeds = [];
-				const ranks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
-				if (company.scoreboardIsSeasonal) {
-					embeds.push(await seasonalScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+				if (origin.company.scoreboardIsSeasonal) {
+					embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
 				} else {
-					embeds.push(await overallScoreboardEmbed(company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), ranks, goalProgress));
+					embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id), goalProgress));
 				}
-				updateScoreboard(company, collectedInteraction.guild, embeds);
+				updateScoreboard(origin.company, collectedInteraction.guild, embeds);
 			}).catch(error => {
 				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

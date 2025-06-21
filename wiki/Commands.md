@@ -20,7 +20,9 @@ Edit the title, description, image, or time of one of your bounties
 List all of a hunter's open bounties (default: your own)
 #### /bounty post
 Post your own bounty (+1 XP)
-#### /bounty revoke-turn-in
+#### /bounty record-turn-ins
+Record turn-ins of one of your bounties for up to 5 bounty hunters
+#### /bounty revoke-turn-ins
 Revoke the turn-ins of up to 5 bounty hunters on one of your bounties
 #### /bounty showcase
 Show the embed for one of your existing bounties and increase the reward
@@ -28,8 +30,6 @@ Show the embed for one of your existing bounties and increase the reward
 Move one of your bounties to another slot to change its reward
 #### /bounty take-down
 Take down one of your bounties without awarding XP (forfeit posting XP)
-#### /bounty verify-turn-in
-Verify up to 5 bounty hunters have turned in one of your bounties
 ### /commands
 > Usable in: DMs, Servers, and Group DMs
 
@@ -111,7 +111,7 @@ Swap the rewards of two evergreen bounties
 #### /evergreen showcase
 Show the embed for an evergreen bounty
 #### /evergreen complete
-Distribute rewards for turn-ins of an evergreen bounty
+Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters
 #### /evergreen take-down
 Take down one of your bounties without awarding XP (forfeit posting XP)
 ### /feedback
@@ -191,12 +191,12 @@ List perks for supporting IHP development
 
 > Permission Level: ManageGuild
 
-#### /raffle by-rank
-Select a user at or above a particular rank
-#### /raffle by-level
-Select a user at or above a particular level
 #### /raffle announce-upcoming
 Announce an upcoming raffle
+#### /raffle by-level
+Select a user at or above a particular level
+#### /raffle by-rank
+Select a user at or above a particular rank
 ### /rank
 > 💎 Premium Command 💎
 
@@ -211,7 +211,7 @@ Add a seasonal rank for showing outstanding bounty hunters
 #### /rank edit
 Change the role or rankmoji for a seasonal rank
 #### /rank remove
-Remove an existing seasonal rank
+Remove one or more existing seasonal ranks
 ### /reset
 > Usable in: Servers
 
@@ -305,14 +305,14 @@ Get the changes in last version or the full change log
 
 > Cooldown: 3 seconds
 
-### User -> Apps -> Give Bounty Credit
+### User -> Apps -> Raise a Toast
 > Usable in: Servers
 
 > Cooldown: 3 seconds
 
 > Permission Level: SendMessages
 
-### User -> Apps -> Raise a Toast
+### User -> Apps -> Record Bounty Turn-In
 > Usable in: Servers
 
 > Cooldown: 3 seconds

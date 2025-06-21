@@ -1,7 +1,7 @@
 const { Sequelize, Op } = require("sequelize");
-const { Guild, GuildMember } = require("discord.js");
-const { Bounty, Hunter } = require("../database/models");
-const { buildCompanyLevelUpLine, buildHunterLevelUpLine } = require("../frontend/shared");
+const { GuildMember } = require("discord.js");
+const { Bounty, Hunter, Season, Company } = require("../database/models");
+const { rollItemForHunter } = require("./items");
 
 /** @type {Sequelize} */
 let db;
@@ -19,10 +19,24 @@ function createBounty(rawBounty) {
 	return db.models.Bounty.create(rawBounty);
 }
 
-/** *Create many Completions*
- * @param {{ bountyId: string, userId: string, companyId: string, xpAwarded?: number}[]} rawCompletions
+/** *Create Completions for multiple Hunters for the same Bounty*
+ * @param {string} bountyId
+ * @param {string} companyId
+ * @param {string[]} userIds
+ * @param {number?} xpAwarded null for pending completion
  */
-function bulkCreateCompletions(rawCompletions) {
+function bulkCreateCompletions(bountyId, companyId, userIds, xpAwarded) {
+	const rawCompletions = userIds.map(id => {
+		const rawCompletion = {
+			bountyId,
+			userId: id,
+			companyId
+		};
+		if (xpAwarded) {
+			rawCompletion.xpAwarded = xpAwarded;
+		}
+		return rawCompletion;
+	});
 	return db.models.Completion.bulkCreate(rawCompletions);
 }
 
@@ -54,14 +68,6 @@ function bulkFindOpenBounties(userId, companyId, slotNumbers) {
 	return db.models.Bounty.findAll({ where: { userId, companyId, slotNumber: { [Op.in]: slotNumbers }, state: "open" } });
 }
 
-/** *Finds the specified Evergreen Bounty*
- * @param {string} companyId
- * @param {number} slotNumber
- */
-function findOneEvergreenBounty(companyId, slotNumber) {
-	return db.models.Bounty.findOne({ where: { companyId, slotNumber, isEvergreen: true, state: "open" } });
-}
-
 /** @param {string} companyId */
 function findEvergreenBounties(companyId) {
 	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
@@ -72,6 +78,45 @@ function findEvergreenBounties(companyId) {
  */
 function findBountyCompletions(bountyId) {
 	return db.models.Completion.findAll({ where: { bountyId } });
+}
+
+/** *Get a Set with the userIds of the specified Bounty's hunters*
+ * @param {string} bountyId
+ */
+async function getHunterIdSet(bountyId) {
+	const completions = await db.models.Completion.findAll({ where: { bountyId } });
+	return completions.reduce((set, completion) => set.add(completion.userId), new Set());
+}
+
+/** Filter out the Bounty's poster, bots, and banned Hunters
+ * @param {Bounty} bounty
+ * @param {GuildMember[]} completerMembers
+ * @param {string} runMode
+ */
+async function checkTurnInEligibility(bounty, completerMembers, runMode) {
+	/** @type {{ eligibleTurnInIds: Set<string>, newTurnInIds: Set<string>, bannedTurnInIds: Set<string> }} */
+	const results = {
+		eligibleTurnInIds: new Set(),
+		newTurnInIds: new Set(),
+		bannedTurnInIds: new Set()
+	};
+	for (const completion of await db.models.Completion.findAll({ where: { bountyId: bounty.id } })) {
+		results.eligibleTurnInIds.add(completion.userId);
+	}
+	for (const member of completerMembers) {
+		const memberId = member.id;
+		if (results.eligibleTurnInIds.has(memberId)) continue;
+		if (runMode === "production" && (member.user.bot || memberId === bounty.userId)) continue;
+		await db.models.User.findOrCreate({ where: { id: memberId } });
+		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: bounty.companyId } });
+		if (hunter.isBanned) {
+			results.bannedTurnInIds.add(memberId);
+			continue;
+		}
+		results.eligibleTurnInIds.add(memberId);
+		results.newTurnInIds.add(memberId);
+	}
+	return results;
 }
 
 /** @param {string} companyId */
@@ -89,126 +134,44 @@ function findHuntersLastFiveBounties(userId, companyId) {
 
 /**
  * @param {Bounty} bounty
- * @param {Guild} guild
- * @param {GuildMember[]} completerMembers
- * @param {string} runMode
- */
-async function addCompleters(bounty, guild, completerMembers, runMode) {
-	// Validate completer IDs
-	const validatedCompleterIds = [];
-	const existingCompletions = await db.models.Completion.findAll({ where: { bountyId: bounty.id, companyId: guild.id } });
-	const existingCompleterIds = existingCompletions.map(completion => completion.userId);
-	const bannedIds = [];
-	for (const member of completerMembers.filter(member => !existingCompleterIds.includes(member.id))) {
-		const memberId = member.id;
-		if (runMode === "production" && (member.user.bot || memberId === bounty.userId)) continue;
-		await db.models.User.findOrCreate({ where: { id: memberId } });
-		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: guild.id } });
-		if (hunter.isBanned) {
-			bannedIds.push(memberId);
-			continue;
-		}
-		existingCompleterIds.push(memberId);
-		validatedCompleterIds.push(memberId);
-	}
-
-	if (validatedCompleterIds.length < 1) {
-		throw `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`;
-	}
-
-	const rawCompletions = [];
-	for (const userId of validatedCompleterIds) {
-		rawCompletions.push({
-			bountyId: bounty.id,
-			userId,
-			companyId: guild.id
-		})
-	}
-	await bulkCreateCompletions(rawCompletions);
-	let allCompleters = await db.models.Completion.findAll({
-		where: {
-			bountyId: bounty.id
-		}
-	});
-	let poster = await db.models.Hunter.findOne({
-		where: {
-			userId: bounty.userId,
-			companyId: bounty.companyId
-		}
-	});
-	let company = await db.models.Company.findByPk(bounty.companyId);
-	return {
-		bounty,
-		allCompleters,
-		poster,
-		company,
-		validatedCompleterIds,
-		bannedIds
-	};
-}
-
-/**
- * @param {Bounty} bounty
  * @param {Hunter} poster
  * @param {Hunter[]} validatedHunters
- * @param {Hunter[]} allHunters
- * @param {string} guildName
+ * @param {Season} season
+ * @param {Company} company
  */
-async function completeBounty(bounty, poster, validatedHunters, allHunters, guildName) {
+async function completeBounty(bounty, poster, validatedHunters, season, company) {
 	bounty.update({ state: "completed", completedAt: new Date() });
-	const rewardTexts = [];
 
-	const company = await db.models.Company.findByPk(bounty.companyId);
-	const previousCompanyLevel = company.getLevel(allHunters);
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
-	const bountyValue = bountyBaseValue * company.festivalMultiplier;
-	const [season] = await db.models.Season.findOrCreate({ where: { companyId: bounty.companyId, isCurrentSeason: true } });
+	const bountyValue = Math.floor(bountyBaseValue * company.festivalMultiplier);
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
-	const itemRollMap = { hunters: [], poster: [] };
+	/** @type {Record<string, { previousLevel: number, droppedItem: string | null }>} */
+	const hunterResults = {};
 	for (const hunter of validatedHunters) {
-		const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
+		hunterResults[hunter.userId] = { previousLevel: hunter.getLevel(company.xpCoefficient) };
 		await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
-		const hunterLevelLine = buildHunterLevelUpLine(hunter, previousHunterLevel, company.xpCoefficient, company.maxSimBounties);
-		if (hunterLevelLine) {
-			rewardTexts.push(hunterLevelLine);
-		}
+		const [itemRow, wasCreated] = await rollItemForHunter(1 / 8, hunter);
+		hunterResults[hunter.userId].droppedItem = wasCreated ? itemRow.itemName : null;
 		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
-		itemRollMap.hunters.push(hunter.userId);
 	}
 
 	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
-	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
+	hunterResults[poster.userId] = { previousLevel: poster.getLevel(company.xpCoefficient) };
 	await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
-	const posterLevelLine = buildHunterLevelUpLine(poster, previousPosterLevel, company.xpCoefficient, company.maxSimBounties);
-	if (posterLevelLine) {
-		rewardTexts.push(posterLevelLine);
-	}
+	const [itemRow, wasCreated] = await rollItemForHunter(1 / 4, poster);
+	hunterResults[poster.userId].droppedItem = wasCreated ? itemRow.itemName : null;
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
 	}
-	itemRollMap.poster.push(poster.userId);
 
-	const xpChangedIds = validatedHunters.map(hunter => hunter.userId).concat(poster.userId);
-	const reloadedHunters = await Promise.all(allHunters.map(hunter => {
-		if (xpChangedIds.includes(hunter.userId)) {
-			return hunter.reload();
-		} else {
-			return hunter;
-		}
-	}))
-	const companyLevelLine = buildCompanyLevelUpLine(company, previousCompanyLevel, reloadedHunters, guildName);
-	if (companyLevelLine) {
-		rewardTexts.push(companyLevelLine);
-	}
 	return {
-		itemRollMap,
 		completerXP: bountyBaseValue,
 		posterXP,
-		rewardTexts
+		hunterResults
 	};
 }
 
@@ -242,12 +205,12 @@ module.exports = {
 	findBounty,
 	findOpenBounties,
 	bulkFindOpenBounties,
-	findOneEvergreenBounty,
 	findEvergreenBounties,
 	findBountyCompletions,
+	getHunterIdSet,
+	checkTurnInEligibility,
 	findCompanyBountiesByCreationDate,
 	findHuntersLastFiveBounties,
-	addCompleters,
 	completeBounty,
 	deleteCompanyBounties,
 	deleteSelectedBountyCompletions,

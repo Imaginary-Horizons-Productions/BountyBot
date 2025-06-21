@@ -38,6 +38,7 @@ function createGoalContribution(goalId, contributorId, gpContributed) {
 
 /** *Queries for a Company's most recent Goal and the GP contributed to it*
  * @param {string} companyId
+ * @returns {Promise<{ goalId: string | null, requiredGP: number, currentGP: number }>}
  */
 async function findLatestGoalProgress(companyId) {
 	const goal = await db.models.Goal.findOne({ where: { companyId }, order: [["createdAt", "DESC"]] });

@@ -1,10 +1,10 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, getRankUpdates, bountiesToSelectOptions } = require("../../shared");
+const { commandMention, bountiesToSelectOptions, syncRankRoles } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, hunter]) {
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id).then(openBounties => {
 			interaction.reply({
 				content: `If you'd like to change the title, description, image, or time of your bounty, you can use ${commandMention("bounty edit")} instead.`,
@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 							.setOptions(bountiesToSelectOptions(openBounties))
 					)
 				],
-				flags: [MessageFlags.Ephemeral],
+				flags: MessageFlags.Ephemeral,
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 				const [bountyId] = collectedInteraction.values;
@@ -24,20 +24,21 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				bounty.state = "deleted";
 				bounty.save();
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
-				const [company] = await logicLayer.companies.findOrCreateCompany(collectedInteraction.guildId);
-				if (company.bountyBoardId) {
-					const bountyBoard = await interaction.guild.channels.fetch(company.bountyBoardId);
+				if (origin.company.bountyBoardId) {
+					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 					postingThread.delete("Bounty taken down by poster");
 				}
 				bounty.destroy();
 
-				hunter.decrement("xp");
+				origin.hunter.decrement("xp");
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-				logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
-				getRankUpdates(interaction.guild, logicLayer);
+				await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
+				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 
-				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: [MessageFlags.Ephemeral] });
+				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 			}).catch(error => {
 				if (error.codes !== DiscordjsErrorCodes.InteractionCollectorError) {
 					console.error(error);

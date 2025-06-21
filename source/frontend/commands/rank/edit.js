@@ -1,13 +1,13 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { getRankUpdates } = require("../../shared");
+const { syncRankRoles } = require("../../shared");
 
 module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for a seasonal rank",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer]) {
-		const varianceThreshold = interaction.options.getNumber("variance-threshold");
-		const rank = await logicLayer.ranks.findOneRank(interaction.guild.id, varianceThreshold);
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+		const threshold = interaction.options.getNumber("variance-threshold");
+		const rank = await logicLayer.ranks.findOneRank(interaction.guild.id, threshold);
 		if (!rank) {
-			interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${varianceThreshold}.`, flags: [MessageFlags.Ephemeral] });
+			interaction.reply({ content: `Could not find a seasonal rank with variance threshold of ${threshold}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -23,8 +23,11 @@ module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for 
 			updateOptions.rankmoji = newRankmoji;
 		}
 		rank.update(updateOptions);
-		getRankUpdates(interaction.guild, logicLayer);
-		interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${varianceThreshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: [MessageFlags.Ephemeral] });
+		const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
+		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
+		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+		interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${threshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{

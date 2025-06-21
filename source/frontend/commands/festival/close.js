@@ -1,22 +1,30 @@
 const { SubcommandWrapper } = require("../../classes");
-const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
+const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, updateEvergreenBountyBoard } = require("../../shared");
 
 module.exports = new SubcommandWrapper("close", "End the festival, returning to normal XP",
-	async function executeSubcommand(interaction, runMode, ...[logicLayer, company]) {
-		company.update({ "festivalMultiplier": 1 });
+	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+		origin.company.update({ "festivalMultiplier": 1 });
 		interaction.guild.members.fetchMe().then(bountyBot => {
 			bountyBot.setNickname(null);
 		})
-		interaction.reply(sendAnnouncement(company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
-		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		interaction.reply(sendAnnouncement(origin.company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
 		const embeds = [];
-		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-		if (company.scoreboardIsSeasonal) {
-			embeds.push(await seasonalScoreboardEmbed(company, interaction.guild, await logicLayer.seasons.findSeasonParticipations(season.id), ranks, goalProgress));
+		if (origin.company.scoreboardIsSeasonal) {
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), ranks, goalProgress));
+			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
 		}
-		updateScoreboard(company, interaction.guild, embeds);
+		updateScoreboard(origin.company, interaction.guild, embeds);
+		if (origin.company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
+			const existingBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
+			const hunterIdMap = {};
+			for (const bounty of existingBounties) {
+				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+			}
+			updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(origin.company.id)), interaction.guild, hunterIdMap);
+		}
 	}
 );
