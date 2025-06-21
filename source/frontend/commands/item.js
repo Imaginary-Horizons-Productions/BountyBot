@@ -7,7 +7,6 @@ const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
-const ITEM_COOLDOWNS = new Map();
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,

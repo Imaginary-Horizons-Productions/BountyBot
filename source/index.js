@@ -160,6 +160,8 @@ dAPIClient.on(Events.ClientReady, () => {
 });
 
 dAPIClient.on(Events.InteractionCreate, async interaction => {
+	if (interaction.customId?.startsWith(SKIP_INTERACTION_HANDLING)) return; // Early out for interactions that do not require direct handling
+
 	await dbReady;
 
 		/** @type {InteractionOrigin} */
@@ -174,14 +176,14 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 	//#endregion
-
+	
 	//#region Premium Checks
 	if (premiumCommandList.includes(interaction.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
 		interaction.reply({ content: `The \`/${interaction.commandName}\` BountyBot function is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	//#endregion
-
+	
 	// #region General Cooldown Management
 	const commandTime = new Date();
 	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
@@ -211,8 +213,6 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		getContextMenu(interaction.commandName).execute(interaction, origin, runMode);
 	} else if (interaction.isCommand()) {
 		getCommand(interaction.commandName).execute(interaction, origin, runMode);
-	} else if (interaction.customId.startsWith(SKIP_INTERACTION_HANDLING)) {
-		return;
 	} else {
 		const [mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
 		/** @type {MessageComponentWrapper} */

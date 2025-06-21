@@ -14,11 +14,11 @@ function setDB(database) {
  * @param {string} userId 
  * @param {string} interactionName 
  * @param {Date} interactionTime 
- * @returns {{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}}
+ * @returns {Promise<{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}>}
  */
 async function checkCooldownState(userId, interactionName, interactionTime) {
 	const allInteractions = await db.models.UserInteraction.findOne({ where: { userId }, order: [[ "cooldownTime", "DESC" ]] });
-	const gcdCooldown = !allInteractions ? new Date(0) : new Date(allInteractions.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN); // TODO this sometimes returns an invalid date. Why?
+	const gcdCooldown = !allInteractions ? new Date(0) : new Date(allInteractions.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
 	if (gcdCooldown > interactionTime) {
 		return {
 			isOnGeneralCooldown: true,
@@ -31,7 +31,6 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 }
 
 async function checkCommandCooldownState(userId, interactionName, interactionTime) {
-	console.log(interactionName); // TODO find why this is `undefined` for cooldown checks coming from `commands/item.js`
 	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName } , order: [[ "cooldownTime", "DESC" ]]});
 	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
 		thisInteractions.increment("hitTimes");
@@ -62,7 +61,7 @@ async function updateCooldowns(userId, interactionName, interactionTime, interac
 	if (wasCreated) {
 		interaction.interactionTime = interactionTime;
 	}
-	if (interaction.cooldownTime <= interactionTime) { // Only update the cooldown if it is currently off cooldown
+	if (wasCreated || interaction.cooldownTime <= interactionTime) { // Only update the cooldown if it is currently off cooldown or new
 		interaction.cooldownTime = new Date(interactionTime.getTime() + interactionCooldown);
 	}
 	interaction.save();
