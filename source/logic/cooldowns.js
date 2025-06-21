@@ -14,11 +14,11 @@ function setDB(database) {
  * @param {string} userId 
  * @param {string} interactionName 
  * @param {Date} interactionTime 
- * @returns {{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp: Date, lastCommandName: string}}
+ * @returns {{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}}
  */
 async function checkCooldownState(userId, interactionName, interactionTime) {
 	const allInteractions = await db.models.UserInteraction.findOne({ where: { userId }, order: [[ "cooldownTime", "DESC" ]] });
-	const gcdCooldown = !allInteractions ? new Date(0) : new Date(allInteractions.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
+	const gcdCooldown = !allInteractions ? new Date(0) : new Date(allInteractions.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN); // TODO this sometimes returns an invalid date. Why?
 	if (gcdCooldown > interactionTime) {
 		return {
 			isOnGeneralCooldown: true,

@@ -178,7 +178,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	}
 	//#endregion
 
-	// #region Cooldown Management
+	// #region General Cooldown Management
 	const commandTime = new Date();
 	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
 	if (isOnGeneralCooldown) {
@@ -190,16 +190,6 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 	logicBlob.cooldowns.updateCooldowns(interaction.user.id, interaction.commandName, commandTime, cooldownMap[interaction.commandName]);
-	if (itemCommands.includes(interaction.commandName)) {
-		const itemName = interaction.options.getString("item-name");
-		const {isOnCommandCooldown, cooldownTimestamp, lastCommandName} = logicBlob.cooldowns.checkCooldownState(interaction.user.id, itemName, commandTime);
-		if (isOnCommandCooldown) {
-			interaction.reply({ content: `Please wait, you've used a different instance of ${itemName} too recently and it is on cooldown. It can be used again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
-			return;
-		}
-		logicBlob.cooldowns.updateCooldowns(interaction.user.id, itemName, commandTime, cooldownMap.items[itemName]);
-
-	}
 	//#endregion
 
 	//#region Command execution
