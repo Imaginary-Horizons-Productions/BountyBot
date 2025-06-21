@@ -31,7 +31,7 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 }
 
 async function checkCommandCooldownState(userId, interactionName, interactionTime) {
-	console.log(interactionName);
+	console.log(interactionName); // TODO find why this is `undefined` for cooldown checks coming from `commands/item.js`
 	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName } , order: [[ "cooldownTime", "DESC" ]]});
 	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
 		thisInteractions.increment("hitTimes");
