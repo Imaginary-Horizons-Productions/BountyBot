@@ -10,7 +10,7 @@ function setDB(database) {
 }
 
 /**
- * Check cooldown information based on the given user, intraction, and interaction time.
+ * Check all cooldown information based on the given user, intraction, and interaction time.
  * @param {string} userId 
  * @param {string} interactionName 
  * @param {Date} interactionTime 
@@ -30,6 +30,14 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 	return checkCommandCooldownState(userId, interactionName, interactionTime);
 }
 
+
+/**
+ * Check cooldown information for a given command/item based on the given user, intraction, and interaction time.
+ * @param {string} userId 
+ * @param {string} interactionName 
+ * @param {Date} interactionTime 
+ * @returns {Promise<{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}>}
+ */
 async function checkCommandCooldownState(userId, interactionName, interactionTime) {
 	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName } , order: [[ "cooldownTime", "DESC" ]]});
 	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
