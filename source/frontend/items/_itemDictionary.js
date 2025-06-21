@@ -59,3 +59,12 @@ exports.setLogic = function (logicBlob) {
 		setter(logicBlob);
 	}
 }
+
+exports.updateCooldownMap = function(map) {
+	if (!map.items) {
+		map.items = {};
+	}
+	for (const itemKey in ITEMS) {
+		map.items[itemKey] = ITEMS[itemKey].cooldown;
+	}
+}
