@@ -50,11 +50,11 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 				return;
 			}
 
-			const now = Date.now();
+			const now = new Date();
 
 			const {isOnCommandCooldown, cooldownTimestamp} = logicLayer.cooldowns.checkCooldownState(collectedInteration.user.id, `item-${itemName}`, now);
 			if (isOnCommandCooldown) {
-				collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.floor(cooldownTimestamp / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
+				collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 				return;
 			}
 			logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, `item-${itemName}`, now, getItemCooldown(itemName));
