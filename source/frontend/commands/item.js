@@ -55,7 +55,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			const now = new Date();
 
 			const cooldownName = `item-${itemName}`;
-			const {isOnCommandCooldown, cooldownTimestamp} = logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
+			const {isOnCommandCooldown, cooldownTimestamp} = await logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
 			if (isOnCommandCooldown) {
 				collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
 				return;
