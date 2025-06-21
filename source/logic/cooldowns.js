@@ -27,8 +27,13 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 			lastCommandName: allInteractions.interactionName
 		};
 	}
+	return checkCommandCooldownState(userId, interactionName, interactionTime);
+}
+
+async function checkCommandCooldownState(userId, interactionName, interactionTime) {
+	console.log(interactionName);
 	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName } , order: [[ "cooldownTime", "DESC" ]]});
-	if (thisInteractions && thisInteractions.cooldownTime > interactionTime) {
+	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
 		thisInteractions.increment("hitTimes");
 		return {
 			isOnGeneralCooldown: false,
@@ -77,6 +82,7 @@ async function cleanCooldownData() {
 module.exports = {
 	setDB,
 	checkCooldownState,
+	checkCommandCooldownState,
 	updateCooldowns,
 	cleanCooldownData
 }
