@@ -36,7 +36,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
 			collectedInteraction.update({ components: [] });
-			collectedInteraction.channel.send(`The winner of this raffle is: ${winner}`);
+			collectedInteraction.channel.send(`The winner of this raffle is: ${winner}`); //TODONOW response embed
 			origin.company.update("nextRaffleString", null);
 		}).catch(error => {
 			if (error.code === DiscordjsErrorCodes.InteractionCollectorError) {
