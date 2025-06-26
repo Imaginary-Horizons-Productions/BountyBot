@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Hunter, User } = require("../database/models");
+const { Hunter, User, Company } = require("../database/models");
 
 /** @type {Sequelize} */
 let db;
@@ -85,11 +85,11 @@ function findCompanyHuntersByDescendingXP(companyId) {
 }
 
 /** *Find all Hunters in the specified Company at or above the level threshold*
- * @param {string} companyId
+ * @param {Company} company
  * @param {number} levelThreshold
  */
-function findHuntersAtOrAboveLevel(companyId, levelThreshold) {
-	return db.models.Hunter.findAll({ where: { companyId, level: { [Op.gte]: levelThreshold } } });
+async function findHuntersAtOrAboveLevel(company, levelThreshold) {
+	return (await db.models.Hunter.findAll({ where: { companyId: company.id } })).filter(hunter => hunter.getLevel(company.xpCoefficient) >= levelThreshold);
 }
 
 /** *Sets a Hunter's Profile Color*
