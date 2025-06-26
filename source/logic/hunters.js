@@ -61,20 +61,18 @@ async function getCompanyHunterMap(companyId) {
  * @param {string} companyId
  * @param {number} rankIndex
  */
-async function findHunterIdsAtOrAboveRank(companyId, rankIndex) {
-	const hunters = await db.models.Hunter.findAll({ where: { companyId, rank: { [Op.lte]: rankIndex } } });
+async function createHunterMapAtOrAboveRank(companyId, rankIndex) {
+	const hunterMap = new Map();
 	const season = await db.models.Season.findOne({ where: { companyId, isCurrentSeason: true } });
 	if (!season) {
-		return hunters.map(hunter => hunter.userId);
+		return hunterMap;
 	}
-	const participations = await db.models.Participation.findAll({ where: { seasonId: season.id, userId: { [Op.in]: hunters.map(hunter => hunter.userId) } } });
-	const qualifiedHunterIds = [];
-	for (const participation of participations) {
-		if (!participation.isRankDisqualified) {
-			qualifiedHunterIds.push(participation.userId);
-		}
+	const participations = await db.models.Participation.findAll({ where: { seasonId: season.id, rankIndex: { [Op.lte]: rankIndex }, isRankDisqualified: false } });
+	const hunters = await db.models.Hunter.findAll({ where: { companyId, userId: { [Op.in]: participations.map(participation => participation.userId) } } });
+	for (const hunter of hunters) {
+		hunterMap.set(hunter.userId, hunter);
 	}
-	return qualifiedHunterIds;
+	return hunterMap;
 }
 
 /** *Find all Hunters in the specified Company, ordered by descending XP*
@@ -114,7 +112,7 @@ module.exports = {
 	findOneHunter,
 	findCompanyHunters,
 	getCompanyHunterMap,
-	findHunterIdsAtOrAboveRank,
+	createHunterMapAtOrAboveRank,
 	findCompanyHuntersByDescendingXP,
 	findHuntersAtOrAboveLevel,
 	setHunterProfileColor,
