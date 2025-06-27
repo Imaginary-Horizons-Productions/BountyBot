@@ -12,7 +12,7 @@ module.exports = new SubcommandWrapper("by-level", "Select a user at or above a 
 			return;
 		}
 		const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
-		interaction.reply({ embeds: [raffleResultEmbed(eligibleHunters.find(hunter => hunter.userId === winner.id).profileColor, interaction.guild, winner, `Level ${levelThreshold} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
+		interaction.reply({ embeds: [raffleResultEmbed(eligibleHunters.find(hunter => hunter.userId === winner.id).profileColor, interaction.guild, origin.company.raffleThumbnailURL, winner, `Level ${levelThreshold} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
 		origin.company.update("nextRaffleString", null);
 	}
 ).setOptions(

@@ -37,7 +37,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
 			collectedInteraction.editReply({ components: [] });
-			collectedInteraction.channel.send({ embeds: [raffleResultEmbed(hunterMap.get(winner.id).profileColor, collectedInteraction.guild, winner, `Rank ${rank.roleId ? roleMention(rank.roleId) : `Rank ${ranks.reduce((checkedRank, matchingIndex, index) => rank.threshold === checkedRank.threshold ? index : matchingIndex, 0) + 1}`} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
+			collectedInteraction.channel.send({ embeds: [raffleResultEmbed(hunterMap.get(winner.id).profileColor, collectedInteraction.guild, origin.company.raffleThumbnailURL, winner, `Rank ${rank.roleId ? roleMention(rank.roleId) : `Rank ${ranks.reduce((checkedRank, matchingIndex, index) => rank.threshold === checkedRank.threshold ? index : matchingIndex, 0) + 1}`} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
 			origin.company.update("nextRaffleString", null);
 		}).catch(error => {
 			if (error.code === DiscordjsErrorCodes.InteractionCollectorError) {

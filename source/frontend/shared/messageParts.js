@@ -446,15 +446,15 @@ async function statsEmbed(company, guild, allHunters, participantCount, currentL
 /**
  * @param {keyof Colors} profileColor
  * @param {Guild} guild
+ * @param {string} thumbnailURL
  * @param {GuildMember} winner
  * @param {string} qualificationText
  */
-function raffleResultEmbed(profileColor, guild, winner, qualificationText) {
+function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificationText) {
 	const embed = new EmbedBuilder().setColor(Colors[profileColor])
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle("Raffle Results")
-		//TODONOW customizable thumbnail
-		.setThumbnail("https://cdn.discordapp.com/attachments/545684759276421120/1387920759870984283/ticket.png?ex=685f196f&is=685dc7ef&hm=a8e49b311c5c8854b0fc68ef9d2cf00aead714a0d21438b1b9fa2089f8e7a3de&")
+		.setThumbnail(thumbnailURL)
 		.setDescription(`The winner of this raffle is: ${winner}`)
 		.addFields({ name: "Qualifications", value: qualificationText })
 		.setTimestamp();
@@ -538,14 +538,14 @@ function modStatsEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 }
 
 /**
- * @param {string?} thumbnailURL
+ * @param {string} thumbnailURL
  * @param {string} toastText
  * @param {Set<string>} recipientIdSet
  * @param {GuildMember} senderMember
  */
 function generateToastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
 	return new EmbedBuilder().setColor("e5b271")
-		.setThumbnail(thumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
+		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
 		.setDescription(`A toast to ${listifyEN([...recipientIdSet.values()].map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
