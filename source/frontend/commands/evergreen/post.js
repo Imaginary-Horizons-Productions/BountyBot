@@ -4,6 +4,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, updateEvergreenBountyBoard } = require("../../shared");
 const { timeConversion } = require("../../../shared");
+const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 10",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -83,7 +84,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 			existingBounties.push(bounty);
 
 			// post in bounty board forum
-			const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
+			const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 			const bountyEmbed = await buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set());
 			interaction.reply(sendAnnouncement(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(async () => {
 				if (origin.company.bountyBoardId) {

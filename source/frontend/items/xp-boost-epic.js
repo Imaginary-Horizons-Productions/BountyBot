@@ -1,3 +1,4 @@
+const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard } = require("../shared");
 
@@ -11,8 +12,8 @@ module.exports = new ItemTemplateSet(
 		async (interaction, origin) => {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 			logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, xpValue);
-			const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
-			const previousCompanyLevel = origin.company.getLevel(allHunters);
+			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+			const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 			const previousHunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 			await origin.hunter.increment({ xp: xpValue }).then(hunter => hunter.reload());
 			const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
@@ -25,14 +26,8 @@ module.exports = new ItemTemplateSet(
 			if (hunterLevelLine) {
 				additionalRewards.push(hunterLevelLine);
 			}
-			const reloadedHunters = await Promise.all(allHunters.map(hunter => {
-				if (hunter.userId === interaction.user.id) {
-					return hunter.reload();
-				} else {
-					return hunter;
-				}
-			}))
-			const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, reloadedHunters, interaction.guild.name);
+			hunterMap.set(interaction.user.id, await hunterMap.get(interaction.user.id).reload());
+			const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
 			if (companyLevelLine) {
 				additionalRewards.push(companyLevelLine);
 			}
@@ -45,7 +40,7 @@ module.exports = new ItemTemplateSet(
 			if (origin.company.scoreboardIsSeasonal) {
 				embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
 			} else {
-				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
 			}
 			updateScoreboard(origin.company, interaction.guild, embeds);
 		}

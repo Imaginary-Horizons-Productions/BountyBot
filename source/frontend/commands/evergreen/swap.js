@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("dis
 const { SubcommandWrapper } = require("../../classes");
 const { getNumberEmoji, bountiesToSelectOptions, disabledSelectRow, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
-const { Bounty } = require("../../../database/models");
+const { Bounty, Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergreen bounties",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -73,7 +73,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 					destinationBounty.slotNumber = sourceSlot;
 					await destinationBounty.save();
 
-					const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id));
+					const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id)));
 					if (origin.company.bountyBoardId) {
 						const hunterIdMap = {};
 						for (const bounty of existingBounties) {

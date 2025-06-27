@@ -1,8 +1,7 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../../database/models');
-const { randomFooterTip, ihpAuthorPayload, generateTextBar, statsEmbed, getHunterLevelUpRewards } = require('../shared');
-const { COMPANY_XP_COEFFICIENT } = require('../../constants');
+const { randomFooterTip, ihpAuthorPayload, generateTextBar, companyStatsEmbed, getHunterLevelUpRewards } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,14 +15,11 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 		if (target) {
 			if (target.id === interaction.client.user.id) {
 				// BountyBot
-				const allHunters = await logicLayer.hunters.findCompanyHunters(guild.id);
-				const currentCompanyLevel = origin.company.getLevel(allHunters);
-				const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
-				const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
+				const hunterMap = await logicLayer.hunters.getCompanyHunterMap(guild.id);
 				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 				const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
 				const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-				statsEmbed(origin.company, guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason).then(embed => {
+				companyStatsEmbed(guild, origin.company.getXP(hunterMap), participantCount, currentSeason, lastSeason).then(embed => {
 					interaction.reply({
 						embeds: [embed],
 						flags: MessageFlags.Ephemeral

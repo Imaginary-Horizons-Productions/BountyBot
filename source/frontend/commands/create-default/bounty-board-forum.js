@@ -3,6 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { createEvergreenBountyThread, buildBountyEmbed } = require("../../shared");
 const { SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
+const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -36,14 +37,13 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 
 		const evergreenBounties = [];
 		logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(async bounties => {
-			const allHunters = await logicLayer.hunters.findCompanyHunters(origin.company.id);
+			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(origin.company.id);
 			for (const bounty of bounties) {
 				if (bounty.isEvergreen) {
 					evergreenBounties.unshift(bounty);
 					continue;
 				}
-				const poster = allHunters.find(hunter => hunter.userId === bounty.userId);
-				buildBountyEmbed(bounty, interaction.guild, bounty.userId == interaction.client.user.id ? origin.company.getLevel(allHunters) : poster.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)).then(bountyEmbed => {
+				buildBountyEmbed(bounty, interaction.guild, bounty.userId == interaction.client.user.id ? Company.getLevel(origin.company.getXP(hunterMap)) : hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)).then(bountyEmbed => {
 					return bountyBoard.threads.create({
 						name: bounty.title,
 						message: {
@@ -77,7 +77,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 
 			// make Evergreen Bounty list
 			if (evergreenBounties.length > 0) {
-				const companyLevel = origin.company.getLevel(allHunters);
+				const companyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 				Promise.all(evergreenBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
 					createEvergreenBountyThread(bountyBoard.threads, embeds, origin.company);
 				})

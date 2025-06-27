@@ -188,7 +188,7 @@ async function calculateRankChanges(standardDeviation, participationMap, descend
  * @param {Map<any, Participation>} participationMap
  */
 async function calculatePlacementChanges(participationMap) {
-	const participationArray = [...participationMap.values()].sort(descendingByProperty("xp"));
+	const participationArray = Array.from(participationMap.values()).sort(descendingByProperty("xp"));
 	let recentPlacement = participationMap.size;
 	let previousScore = 0;
 	const placementChanges = {};

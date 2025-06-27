@@ -48,7 +48,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 						});
 						break;
 					case "hunters":
-						const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, [...collectedInteraction.members.values()], runMode);
+						const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(collectedInteraction.members.values()), runMode);
 						const sentences = [];
 						if (bannedTurnInIds.size > 0) {
 							sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${listifyEN(Array.from(bannedTurnInIds.values().map(id => userMention(id))))}`);

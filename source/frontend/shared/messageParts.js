@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
-const { SAFE_DELIMITER } = require("../../constants");
+const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { timeConversion, descendingByProperty } = require("../../shared");
 const { commandIds } = require("../../constants");
@@ -189,7 +189,7 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 }
 
 /**
- * @param {string[]} completerIds
+ * @param {MapIterator<string>} completerIds
  * @param {number} completerReward
  * @param {string?} posterId null for evergreen bounties
  * @param {number?} posterReward null for evergreen bounties
@@ -263,11 +263,11 @@ async function buildVersionEmbed() {
 /**
  * @param {Company} company
  * @param {number} previousLevel
- * @param {Hunter[]} allHunters
+ * @param {Map<string, Hunter>} hunterMap
  * @param {string} guildName
  */
-function buildCompanyLevelUpLine(company, previousLevel, allHunters, guildName) {
-	const currentLevel = company.getLevel(allHunters);
+function buildCompanyLevelUpLine(company, previousLevel, hunterMap, guildName) {
+	const currentLevel = Company.getLevel(company.getXP(hunterMap));
 	if (currentLevel > previousLevel) {
 		return `${guildName} is now level ${currentLevel}! Evergreen bounties now award more XP!`;
 	}
@@ -299,11 +299,11 @@ function sendAnnouncement(company, messageOptions) {
  * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
  */
 async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
-	const hunterMembers = await guild.members.fetch({ user: [...participationMap.keys()] });
+	const hunterMembers = await guild.members.fetch({ user: Array.from(participationMap.keys()) });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
-	for (const [id, participation] of [...participationMap.entries()].sort((a, b) => b[1].xp - a[1].xp)) {
+	for (const [id, participation] of Array.from(participationMap.entries()).sort((a, b) => b[1].xp - a[1].xp)) {
 		if (participation.xp > 0 && hunterMembers.has(id)) {
 			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** ${participation.xp} season XP`);
 		}
@@ -353,15 +353,15 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 /** An overall scoreboard orders a company's hunters by total xp
  * @param {Company} company
  * @param {Guild} guild
- * @param {Hunter[]} hunters
+ * @param {Map<string, Hunter>} hunterMap
  * @param {Rank[]} ranks
  * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
  */
-async function overallScoreboardEmbed(company, guild, hunters, goalProgress) {
-	const hunterMembers = await guild.members.fetch({ user: hunters.map(hunter => hunter.userId) });
+async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
+	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
 
 	const scorelines = [];
-	for (const hunter of hunters.sort(descendingByProperty("xp"))) {
+	for (const hunter of Array.from(hunter.values()).sort(descendingByProperty("xp"))) {
 		if (hunter.xp < 1) {
 			break;
 		}
@@ -411,17 +411,16 @@ async function overallScoreboardEmbed(company, guild, hunters, goalProgress) {
 }
 
 /**
- * @param {Company} company
  * @param {Guild} guild
- * @param {Hunter[]} allHunters
+ * @param {number} companyXP
  * @param {number} participantCount
- * @param {number} currentLevelThreshold
- * @param {number} nextLevelThreshold
  * @param {Season} currentSeason
  * @param {Season} lastSeason
  */
-async function statsEmbed(company, guild, allHunters, participantCount, currentLevelThreshold, nextLevelThreshold, currentSeason, lastSeason) {
-	const companyXP = company.getXP(allHunters);
+async function companyStatsEmbed(guild, companyXP, participantCount, currentSeason, lastSeason) {
+	const currentCompanyLevel = Company.getLevel(companyXP);
+	const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
+	const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
 	const currentSeasonXP = await currentSeason.totalXP;
 	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
 
@@ -431,7 +430,7 @@ async function statsEmbed(company, guild, allHunters, participantCount, currentL
 	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)
-		.setTitle(`${guild.name} is __Level ${company.getLevel(allHunters)}__`)
+		.setTitle(`${guild.name} is __Level ${currentCompanyLevel}__`)
 		.setThumbnail(guild.iconURL())
 		.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
 		.addFields(
@@ -525,7 +524,7 @@ function generateToastEmbed(thumbnailURL, toastText, recipientIdSet, senderMembe
 	return new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
 		.setTitle(toastText)
-		.setDescription(`A toast to ${listifyEN([...recipientIdSet.values()].map(id => userMention(id)))}!`)
+		.setDescription(`A toast to ${listifyEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
 }
 
@@ -601,7 +600,7 @@ function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUp
 
 /**
  * @param {Record<string, { previousLevel: number, droppedItem: string | null }>} hunterResults
- * @param {Record<string, Hunter>} hunterMap
+ * @param {Map<string, Hunter>} hunterMap
  * @param {Company} company
  */
 function formatHunterResultsToRewardTexts(hunterResults, hunterMap, company) {
@@ -609,7 +608,7 @@ function formatHunterResultsToRewardTexts(hunterResults, hunterMap, company) {
 	const rewardTexts = [];
 	for (const id in hunterResults) {
 		const { previousLevel, droppedItem } = hunterResults[id];
-		const hunterLevelLine = buildHunterLevelUpLine(hunterMap[id], previousLevel, company.xpCoefficient, company.maxSimBounties);
+		const hunterLevelLine = buildHunterLevelUpLine(hunterMap.get(id), previousLevel, company.xpCoefficient, company.maxSimBounties);
 		if (hunterLevelLine) {
 			rewardTexts.push(hunterLevelLine);
 		}
@@ -658,7 +657,7 @@ module.exports = {
 	buildCompanyLevelUpLine,
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
-	statsEmbed,
+	companyStatsEmbed,
 	getHunterLevelUpRewards,
 	buildHunterLevelUpLine,
 	modStatsEmbed,
