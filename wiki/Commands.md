@@ -51,17 +51,19 @@ Configure the XP coefficient for bounty hunter levels (default 3)
 #### bounty-slots (optional)
 Configure the max number (between 1 and 10) of bounty slots hunters can have (default 5)
 #### toast-thumbnail-url (optional)
-Configure the image shown in the thumbnail of toasts
+Set a url pointing to an image to use as thumbnail on toasts
 #### open-bounty-thumbnail-url (optional)
-Configure the image shown in the thumbnail of open bounties
+Set a url pointing to an image to use as thumbnail on open bounties
 #### completed-bounty-thumbnail-url (optional)
-Configure the image shown in the thumbnail of completed bounties
+Set a url pointing to an image to use as thumbnail on completed bounties
 #### deleted-bounty-thumbnail-url (optional)
-Configure the image shown in the thumbnail of deleted bounties
+Set a url pointing to an image to use as thumbnail on deleted bounties
 #### scoreboard-thumbnail-url (optional)
-Configure the image shown in the thumbnail of the scoreboard
+Set a url pointing to an image to use as thumbnail on the scoreboard
 #### goal-completion-thumbnail-url (optional)
-Configure the image shown in the thumbnail of the server goal completion message
+Set a url pointing to an image to use as thumbnail in server goal completion messages
+#### raffle-thumbnail-url (optional)
+Set a url pointing to an image to use as thumbnail in raffle winner messages
 ### /config-server
 > Usable in: Servers
 
