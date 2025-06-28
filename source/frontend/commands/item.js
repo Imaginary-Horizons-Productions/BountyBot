@@ -7,7 +7,6 @@ const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
-const ITEM_COOLDOWNS = new Map();
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -46,35 +45,25 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			}
 
 			await itemRow?.reload();
-			if (runMode === "production" && itemRow.count < 1) {
+
+			if (runMode === "production" && itemRow?.count < 1) {
 				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
-			const now = Date.now();
+			const now = new Date();
 
-			if (!ITEM_COOLDOWNS.has(itemName)) {
-				ITEM_COOLDOWNS.set(itemName, new Map());
+			const cooldownName = `item-${itemName}`;
+			const {isOnCommandCooldown, cooldownTimestamp} = await logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
+			if (isOnCommandCooldown) {
+				collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
+				return;
 			}
-
-			const timestamps = ITEM_COOLDOWNS.get(itemName);
-			if (timestamps.has(collectedInteration.user.id)) {
-				const expirationTime = timestamps.get(collectedInteration.user.id) + getItemCooldown(itemName);
-
-				if (now < expirationTime) {
-					collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.round(expirationTime / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
-					return;
-				} else {
-					timestamps.delete(collectedInteration.user.id);
-				}
-			} else {
-				timestamps.set(collectedInteration.user.id, now);
-				setTimeout(() => timestamps.delete(collectedInteration.user.id), getItemCooldown(itemName));
-			}
+			logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
 
 			return useItem(itemName, collectedInteration, origin).then(shouldSkipDecrement => {
 				if (!shouldSkipDecrement && runMode === "production") {
-					itemRow.decrement("count");
+					itemRow?.decrement("count");
 				}
 			});
 		}).catch(error => {
