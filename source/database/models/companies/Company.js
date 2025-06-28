@@ -106,7 +106,10 @@ function initModel(sequelize) {
 			type: DataTypes.STRING
 		},
 		toastThumbnailURL: {
-			type: DataTypes.STRING
+			type: DataTypes.STRING,
+			get() {
+				return this.getDataValue("toastThumbnailURL") ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png';
+			}
 		},
 		openBountyThumbnailURL: {
 			type: DataTypes.STRING,
@@ -136,6 +139,12 @@ function initModel(sequelize) {
 			type: DataTypes.STRING,
 			get() {
 				return this.getDataValue("goalCompletionThumbnailURL") ?? "https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&";
+			}
+		},
+		raffleThumbnailURL: {
+			type: DataTypes.STRING,
+			get() {
+				return this.getDataValue("raffleThumbnailURL") ?? "https://cdn.discordapp.com/attachments/545684759276421120/1387920759870984283/ticket.png?ex=685f196f&is=685dc7ef&hm=a8e49b311c5c8854b0fc68ef9d2cf00aead714a0d21438b1b9fa2089f8e7a3de&";
 			}
 		}
 	}, {

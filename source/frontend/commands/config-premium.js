@@ -95,6 +95,17 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			}
 		}
 
+		const raffleThumbnailURL = interaction.options.getString("raffle-thumbnail-url");
+		if (raffleThumbnailURL) {
+			try {
+				new URL(raffleThumbnailURL);
+				updatePayload.raffleThumbnailURL = raffleThumbnailURL;
+				content += `\n- The server bonuses thumbnail was set to <${raffleThumbnailURL}>.`;
+			} catch (error) {
+				errors.push(error.message);
+			}
+		}
+
 		origin.company.update(updatePayload);
 		if (errors.length > 0) {
 			content += `\n\nThe following errors were encountered:\n- ${errors.join("\n- ")}`;
@@ -117,37 +128,43 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 	{
 		type: "String",
 		name: "toast-thumbnail-url",
-		description: "Configure the image shown in the thumbnail of toasts",
+		description: "Set a url pointing to an image to use as thumbnail on toasts",
 		required: false
 	},
 	{
 		type: "String",
 		name: "open-bounty-thumbnail-url",
-		description: "Configure the image shown in the thumbnail of open bounties",
+		description: "Set a url pointing to an image to use as thumbnail on open bounties",
 		required: false
 	},
 	{
 		type: "String",
 		name: "completed-bounty-thumbnail-url",
-		description: "Configure the image shown in the thumbnail of completed bounties",
+		description: "Set a url pointing to an image to use as thumbnail on completed bounties",
 		required: false
 	},
 	{
 		type: "String",
 		name: "deleted-bounty-thumbnail-url",
-		description: "Configure the image shown in the thumbnail of deleted bounties",
+		description: "Set a url pointing to an image to use as thumbnail on deleted bounties",
 		required: false
 	},
 	{
 		type: "String",
 		name: "scoreboard-thumbnail-url",
-		description: "Configure the image shown in the thumbnail of the scoreboard",
+		description: "Set a url pointing to an image to use as thumbnail on the scoreboard",
 		required: false
 	},
 	{
 		type: "String",
 		name: "goal-completion-thumbnail-url",
-		description: "Configure the image shown in the thumbnail of the server goal completion message",
+		description: "Set a url pointing to an image to use as thumbnail in server goal completion messages",
+		required: false
+	},
+	{
+		type: "String",
+		name: "raffle-thumbnail-url",
+		description: "Set a url pointing to an image to use as thumbnail in raffle winner messages",
 		required: false
 	}
 );

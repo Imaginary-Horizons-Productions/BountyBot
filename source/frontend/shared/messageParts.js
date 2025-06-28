@@ -443,6 +443,28 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
 }
 
 /**
+ * @param {keyof Colors} profileColor
+ * @param {Guild} guild
+ * @param {string} thumbnailURL
+ * @param {GuildMember} winner
+ * @param {string} qualificationText
+ */
+function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificationText) {
+	const embed = new EmbedBuilder().setColor(Colors[profileColor])
+		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setTitle("Raffle Results")
+		.setThumbnail(thumbnailURL)
+		.setDescription(`The winner of this raffle is: ${winner}`)
+		.addFields({ name: "Qualifications", value: qualificationText })
+		.setTimestamp();
+
+	if (guild.bannerURL()) {
+		embed.setImage(guild.bannerURL());
+	}
+	return embed;
+}
+
+/**
  * @param {number} level
  * @param {number} maxSlots
  * @param {boolean} futureReward
@@ -515,14 +537,14 @@ function modStatsEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 }
 
 /**
- * @param {string?} thumbnailURL
+ * @param {string} thumbnailURL
  * @param {string} toastText
  * @param {Set<string>} recipientIdSet
  * @param {GuildMember} senderMember
  */
 function generateToastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
 	return new EmbedBuilder().setColor("e5b271")
-		.setThumbnail(thumbnailURL ?? 'https://cdn.discordapp.com/attachments/545684759276421120/751876927723143178/glass-celebration.png')
+		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
 		.setDescription(`A toast to ${listifyEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
@@ -658,6 +680,7 @@ module.exports = {
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
 	companyStatsEmbed,
+	raffleResultEmbed,
 	getHunterLevelUpRewards,
 	buildHunterLevelUpLine,
 	modStatsEmbed,
