@@ -15,7 +15,7 @@ module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset a
 		if (origin.company.scoreboardIsSeasonal) {
 			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, new Map(), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, [], goalProgress));
+			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, new Map(), goalProgress));
 		}
 		updateScoreboard(origin.company, interaction.guild, embeds);
 		interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);

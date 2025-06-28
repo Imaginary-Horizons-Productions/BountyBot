@@ -1,6 +1,7 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { textsHaveAutoModInfraction, generateTextBar, listifyEN, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -26,7 +27,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		let bannedText;
 		if (bannedIds.size > 1) {
-			bannedText = `${listifyEN([...bannedIds.values()].map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+			bannedText = `${listifyEN(Array.from(bannedIds).map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
 		} else if (bannedIds.size === 1) {
 			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
@@ -65,11 +66,11 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-		const previousCompanyLevel = origin.company.getLevel(Object.values(hunterMap));
+		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 		const { toastId, rewardedHunterIds, hunterResults, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, origin.company, interaction.user.id, validatedToasteeIds, hunterMap, season.id, toastText, imageURL);
 		hunterMap = await reloadHunterMapSubset(hunterMap, rewardedHunterIds.concat(interaction.user.id));
 		const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
-		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
+		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
 		if (companyLevelLine) {
 			rewardTexts.push(companyLevelLine);
 		}
@@ -79,7 +80,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}
 
 		if (rewardedHunterIds.length > 0) {
-			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", hunterMap[interaction.user.id], season);
+			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", hunterMap.get(interaction.user.id), season);
 			if (goalUpdate.gpContributed > 0) {
 				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				if (goalUpdate.goalCompleted) {
@@ -114,7 +115,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				if (origin.company.scoreboardIsSeasonal) {
 					embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
 				} else {
-					embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+					embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
 				}
 				updateScoreboard(origin.company, interaction.guild, embeds);
 			}

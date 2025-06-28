@@ -31,14 +31,18 @@ class Company extends Model {
 		})
 	}
 
-	/** @param {Hunter[]} hunters */
-	getXP(hunters) {
-		return hunters.reduce((total, hunter) => total + hunter.getLevel(this.xpCoefficient), 0);
+	/** @param {Map<string, Hunter>} hunterMap */
+	getXP(hunterMap) {
+		let xp = 0;
+		for (const [_, hunter] of hunterMap) {
+			xp += hunter.getLevel(this.xpCoefficient);
+		}
+		return xp;
 	}
 
-	/** @param {Hunter[]} hunters */
-	getLevel(hunters) {
-		return Math.floor(Math.sqrt(this.getXP(hunters) / 3) + 1);
+	/** @param {number} xp */
+	static getLevel(xp) {
+		return Math.floor(Math.sqrt(xp / 3) + 1);
 	}
 
 	festivalMultiplierString() {

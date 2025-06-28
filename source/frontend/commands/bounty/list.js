@@ -1,6 +1,7 @@
 const { MessageFlags, heading, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { buildBountyEmbed } = require("../../shared");
+const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("list", "List all of a hunter's open bounties (default: your own)",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -12,8 +13,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 					interaction.reply({ content: `${interaction.guild.name} doesn't have any evergreen bounties posted.`, flags: MessageFlags.Ephemeral });
 					return;
 				}
-				const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
-				const companyLevel = origin.company.getLevel(allHunters);
+				const companyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 				interaction.reply({ content: heading(`Evergreen Bounties on ${interaction.guild.name}`, 2), embeds: await Promise.all(existingBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))), flags: MessageFlags.Ephemeral });
 			});
 		} else {

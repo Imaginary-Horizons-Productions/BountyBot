@@ -135,7 +135,7 @@ function findHuntersLastFiveBounties(userId, companyId) {
 /**
  * @param {Bounty} bounty
  * @param {Hunter} poster
- * @param {Hunter[]} validatedHunters
+ * @param {Map<string, Hunter>} validatedHunters
  * @param {Season} season
  * @param {Company} company
  */
@@ -147,12 +147,12 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	/** @type {Record<string, { previousLevel: number, droppedItem: string | null }>} */
 	const hunterResults = {};
-	for (const hunter of validatedHunters) {
-		hunterResults[hunter.userId] = { previousLevel: hunter.getLevel(company.xpCoefficient) };
+	for (const [hunterId, hunter] of validatedHunters) {
+		hunterResults[hunterId] = { previousLevel: hunter.getLevel(company.xpCoefficient) };
 		await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
 		const [itemRow, wasCreated] = await rollItemForHunter(1 / 8, hunter);
-		hunterResults[hunter.userId].droppedItem = wasCreated ? itemRow.itemName : null;
-		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunter.userId, seasonId: season.id }, defaults: { xp: bountyValue } });
+		hunterResults[hunterId].droppedItem = wasCreated ? itemRow.itemName : null;
+		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunterId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}

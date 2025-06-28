@@ -1,6 +1,7 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, updateEvergreenBountyBoard } = require("../../shared");
+const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -24,7 +25,7 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 		}
 		updateScoreboard(origin.company, interaction.guild, embeds);
 		if (origin.company.bountyBoardId) {
@@ -34,7 +35,7 @@ module.exports = new SubcommandWrapper("start", "Start an XP multiplier festival
 			for (const bounty of existingBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(origin.company.id)), interaction.guild, hunterIdMap);
+			updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild, hunterIdMap);
 		}
 	}
 ).setOptions(
