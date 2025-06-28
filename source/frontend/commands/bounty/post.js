@@ -183,7 +183,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					if (origin.company.scoreboardIsSeasonal) {
 						embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+						embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 					}
 					updateScoreboard(origin.company, interaction.guild, embeds);
 				});

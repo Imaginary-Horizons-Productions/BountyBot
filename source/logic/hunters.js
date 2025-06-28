@@ -36,23 +36,15 @@ function findOneHunter(userId, companyId) {
 	return db.models.Hunter.findOne({ where: { userId, companyId } });
 }
 
-/** *Find all Hunters in the specified Company*
- * @param {string} companyId
- */
-function findCompanyHunters(companyId) {
-	return db.models.Hunter.findAll({ where: { companyId } });
-}
-
-
 /** *Returns a map of userId to Hunter for all Hunters in the specified Company*
  * @param {string} companyId
  */
 async function getCompanyHunterMap(companyId) {
-	/** @type {Record<string, Hunter} */
-	const hunterMap = {};
+	/** @type {Map<string, Hunter} */
+	const hunterMap = new Map();
 	const hunters = await db.models.Hunter.findAll({ where: { companyId } });
 	for (const hunter of hunters) {
-		hunterMap[hunter.userId] = hunter;
+		hunterMap.set(hunter.userId, hunter);
 	}
 	return hunterMap;
 }
@@ -110,7 +102,6 @@ module.exports = {
 	setDB,
 	findOrCreateBountyHunter,
 	findOneHunter,
-	findCompanyHunters,
 	getCompanyHunterMap,
 	createHunterMapAtOrAboveRank,
 	findCompanyHuntersByDescendingXP,

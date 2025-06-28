@@ -1,6 +1,7 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { generateTextBar, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendToRewardsThread, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -35,8 +36,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		const allHunters = await logicLayer.hunters.findCompanyHunters(interaction.guild.id);
-		const previousCompanyLevel = origin.company.getLevel(allHunters);
+		const previousCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 		for (const userId of recipientIds) {
 			logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, 1);
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
@@ -87,7 +87,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(interaction.user.id);
 			}
 		}
-		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), interaction.guild.name);
+		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), interaction.guild.name);
 		if (companyLevelLine) {
 			rewardTexts.push(companyLevelLine);
 		}
@@ -130,7 +130,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		if (origin.company.scoreboardIsSeasonal) {
 			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 		}
 		updateScoreboard(origin.company, interaction.guild, embeds);
 

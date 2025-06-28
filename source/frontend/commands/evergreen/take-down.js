@@ -2,6 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, 
 const { SubcommandWrapper } = require("../../classes");
 const { commandMention, bountiesToSelectOptions, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -27,7 +28,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			if (origin.company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 				if (openBounties.length > 0) {
-					const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(interaction.guild.id));
+					const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 					const hunterIdMap = {};
 					for (const bounty of openBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);

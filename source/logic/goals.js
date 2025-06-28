@@ -80,7 +80,7 @@ async function progressGoal(companyId, progressType, hunter, season) {
 		const contributions = await db.models.Contribution.findAll({ where: { goalId: goal.id } });
 		returnData.goalCompleted = goal.requiredGP <= contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
 		if (returnData.goalCompleted) {
-			returnData.contributorIds = [...new Set(contributions.map(contribution => contribution.userId))];
+			returnData.contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
 			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: returnData.contributorIds } } });
 			goal.update({ state: "completed" });
 		} else {

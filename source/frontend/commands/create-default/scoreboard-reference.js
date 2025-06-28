@@ -29,7 +29,7 @@ module.exports = new SubcommandWrapper("scoreboard-reference", "Create a referen
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.findCompanyHunters(interaction.guild.id), goalProgress));
+			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 		}
 		scoreboard.send({ embeds }).then(message => {
 			origin.company.scoreboardChannelId = scoreboard.id;

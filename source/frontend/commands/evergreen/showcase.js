@@ -2,6 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, 
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { bountiesToSelectOptions, buildBountyEmbed } = require("../../shared");
+const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -30,7 +31,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 					return collectedInteraction;
 				}
 
-				const currentCompanyLevel = origin.company.getLevel(await logicLayer.hunters.findCompanyHunters(collectedInteraction.guild.id));
+				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id)));
 				buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set()).then(embed => {
 					const payload = { embeds: [embed] };
 					const extraText = interaction.options.get("extra-text");

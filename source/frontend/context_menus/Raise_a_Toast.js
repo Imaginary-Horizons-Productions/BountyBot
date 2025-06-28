@@ -2,6 +2,7 @@ const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuil
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { textsHaveAutoModInfraction, generateTextBar, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts } = require('../shared');
+const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -47,11 +48,11 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-			const previousCompanyLevel = origin.company.getLevel(Object.values(hunterMap));
+			const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 			const { toastId, rewardedHunterIds, hunterResults, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, origin.company, interaction.user.id, new Set([interaction.targetId]), hunterMap, season.id, toastText, null);
 			hunterMap = await reloadHunterMapSubset(hunterMap, rewardedHunterIds.concat(interaction.user.id));
 			const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
-			const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, Object.values(hunterMap), interaction.guild.name);
+			const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
 			if (companyLevelLine) {
 				rewardTexts.push(companyLevelLine);
 			}
@@ -90,7 +91,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					if (origin.company.scoreboardIsSeasonal) {
 						embeds.push(await seasonalScoreboardEmbed(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress));
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, modalSubmission.guild, await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id), goalProgress));
+						embeds.push(await overallScoreboardEmbed(origin.company, modalSubmission.guild, hunterMap, goalProgress));
 					}
 					updateScoreboard(origin.company, modalSubmission.guild, embeds);
 				}

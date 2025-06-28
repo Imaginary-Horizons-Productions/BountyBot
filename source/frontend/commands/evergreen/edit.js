@@ -4,6 +4,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
 const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -100,8 +101,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				selectedBounty.save();
 
 				// update bounty board
-				const allHunters = await logicLayer.hunters.findCompanyHunters(modalSubmission.guild.id);
-				const currentCompanyLevel = origin.company.getLevel(allHunters);
+				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
 				if (origin.company.bountyBoardId) {
 					const hunterIdMap = {};
 					for (const bounty of openBounties) {
