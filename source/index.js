@@ -30,7 +30,6 @@ const logicBlob = require("./logic");
 const runMode = process.argv[4] || "development";
 const cooldownMap = {};
 const premiumCommandList = [];
-const itemCommands = ["item"];
 //#endregion
 
 //#region pre-Client Setup
@@ -58,8 +57,6 @@ const dAPIClient = new Client({
 	},
 	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages]
 });
-/** @type {Map<string, Map<string, number>>} */
-const interactionCooldowns = new Map();
 //#endregion
 
 //#region Database Setup
@@ -164,7 +161,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	await dbReady;
 
-		/** @type {InteractionOrigin} */
+	/** @type {InteractionOrigin} */
 	const origin = { company: (await logicBlob.companies.findOrCreateCompany(interaction.guild.id))[0] };
 	const { user: [user], hunter: [hunter] } = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 	origin.user = user;
@@ -176,17 +173,17 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 	//#endregion
-	
+
 	//#region Premium Checks
 	if (premiumCommandList.includes(interaction.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
 		interaction.reply({ content: `The \`/${interaction.commandName}\` BountyBot function is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	//#endregion
-	
+
 	// #region General Cooldown Management
 	const commandTime = new Date();
-	const {isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName} = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
+	const { isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName } = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
 	if (isOnGeneralCooldown) {
 		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
