@@ -3,8 +3,8 @@ const { Model, DataTypes, Sequelize } = require('sequelize');
 /** This class stores global information for bot users */
 class UserInteraction extends Model {
 	static associate(models) {
-		models.UserInteraction.User = models.User.hasOne(models.User, {
-			foreignKey: "userId"
+		models.UserInteraction.User = models.UserInteraction.hasOne(models.User, {
+			foreignKey: "id"
 		})
 	}
 }
