@@ -41,7 +41,6 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 async function checkCommandCooldownState(userId, interactionName, interactionTime) {
 	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName } , order: [[ "cooldownTime", "DESC" ]]});
 	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
-		thisInteractions.increment("hitTimes");
 		return {
 			isOnGeneralCooldown: false,
 			isOnCommandCooldown: true,

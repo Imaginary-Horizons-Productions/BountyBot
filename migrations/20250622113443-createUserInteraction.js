@@ -8,7 +8,11 @@ module.exports = {
 			userId: {
 				primaryKey: true,
 				type: DataTypes.STRING,
-				allowNull: false
+				allowNull: false,
+				references: {
+					model: 'User',
+					key: 'id'
+				}
 			},
 			interactionName: {
 				primaryKey: true,
@@ -23,10 +27,6 @@ module.exports = {
 			},
 			cooldownTime: {
 				type: DataTypes.DATE
-			},
-			hitTimes: {
-				type: DataTypes.NUMBER,
-				defaultValue: 0
 			}
 		}, {
 			sequelize: queryInterface.sequelize,

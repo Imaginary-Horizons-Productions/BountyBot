@@ -30,10 +30,6 @@ function initModel(sequelize) {
 		},
 		cooldownTime: {
 			type: DataTypes.DATE
-		},
-		hitTimes: {
-			type: DataTypes.NUMBER,
-			defaultValue: 0
 		}
 	}, {
 		sequelize,
