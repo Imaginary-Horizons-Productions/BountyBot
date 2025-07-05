@@ -24,6 +24,9 @@ class User extends Model {
 		models.User.Contributions = models.User.hasMany(models.Contribution, {
 			foreignKey: "userId"
 		})
+		models.User.UserInteractions = models.User.hasMany(models.UserInteraction, {
+			foreignKey: "userId"
+		})
 	}
 }
 

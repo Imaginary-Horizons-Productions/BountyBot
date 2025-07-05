@@ -12,5 +12,6 @@ module.exports = {
 	ranks: require("./ranks.js"),
 	items: require("./items.js"),
 	seasons: require("./seasons.js"),
-	toasts: require("./toasts.js")
+	toasts: require("./toasts.js"),
+	cooldowns: require("./cooldowns.js")
 };
