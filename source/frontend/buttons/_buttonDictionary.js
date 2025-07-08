@@ -26,3 +26,9 @@ exports.setLogic = function (logicBlob) {
 		buttonDictionary[buttonKey].setLogic?.(logicBlob);
 	}
 }
+
+exports.updateCooldownMap = function(map) {
+	for (const commandKey in buttonDictionary) {
+		map[commandKey] = buttonDictionary[commandKey].cooldown;
+	}
+}
