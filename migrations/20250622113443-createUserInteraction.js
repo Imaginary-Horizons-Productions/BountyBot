@@ -4,7 +4,7 @@ const { DataTypes } = require('sequelize');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 	async up(queryInterface, Sequelize) {
-		queryInterface.createTable("UserInteraction", {
+		await queryInterface.createTable("UserInteraction", {
 			userId: {
 				primaryKey: true,
 				type: DataTypes.STRING,
@@ -36,6 +36,6 @@ module.exports = {
 		});
 	},
 	async down(queryInterface, Sequelize) {
-		queryInterface.dropTable('UserInteraction');
+		await queryInterface.dropTable('UserInteraction');
 	}
 };
