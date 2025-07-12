@@ -12,9 +12,16 @@ function setDB(database) {
 
 /** *Find the Secondings of specified seconder for the purposes of Crit Toast and Rewarded Toast tracking*
  * @param {string} seconderId
- */
-function findRecentSecondings(seconderId) {
-	return db.models.Seconding.findAll({ where: { seconderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } } });
+ * @param {object} recency How far in the past to look for recent secondings. By default, 2 days.
+ * @param {number} recency.w An amount of time to look back in weeks.
+ * @param {number} recency.d An amount of time to look back in days.
+ * @param {number} recency.h An amount of time to look back in hours.
+ * @param {number} recency.m An amount of time to look back in minues.
+ * @param {number} recency.s An amount of time to look back in seconds.
+ * @param {number} recency.ms An amount of time to look back in milliseconds.
+*/
+function findRecentSecondings(seconderId, recency = { d: 2 }) {
+	return db.models.Seconding.findAll({ where: { seconderId, createdAt: { [Op.gt]: dateInPast(recency) } } });
 }
 
 /** *Get the ids of the rewarded Recipients on the sender's last 5 Toasts*
