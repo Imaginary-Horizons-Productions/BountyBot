@@ -12,7 +12,7 @@ function setDB(database) {
 
 /** *Find the Secondings of specified seconder for the purposes of Crit Toast and Rewarded Toast tracking*
  * @param {string} seconderId
- * @param {object} recency How far in the past to look for recent secondings. By default, 2 days.
+ * @param {object} recency How far in the past to look for recent secondings. Defaults to 2 days.
  * @param {number} recency.w An amount of time to look back in weeks.
  * @param {number} recency.d An amount of time to look back in days.
  * @param {number} recency.h An amount of time to look back in hours.
