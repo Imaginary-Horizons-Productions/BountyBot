@@ -29,7 +29,8 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 				collector.on("collect", async (collectedInteraction) => {
 					let previousBounty = openBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 					if (collectedInteraction.customId.endsWith("bounty")) {
-						const bountySlotCount = Hunter.getBountySlotCount(origin.hunter.getLevel(origin.company.xpCoefficient), origin.company.maxSimBounties);
+						const startingPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+						const bountySlotCount = Hunter.getBountySlotCount(startingPosterLevel, origin.company.maxSimBounties);
 						if (bountySlotCount < 2) {
 							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: MessageFlags.Ephemeral });
 							return;
@@ -44,7 +45,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 									{
 										emoji: getNumberEmoji(i),
 										label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
-										description: `XP Reward: ${Bounty.calculateCompleterReward(origin.hunter.getLevel(origin.company.xpCoefficient), i, existingBounty?.showcaseCount ?? 0)}`,
+										description: `XP Reward: ${Bounty.calculateCompleterReward(startingPosterLevel, i, existingBounty?.showcaseCount ?? 0)}`,
 										value: i.toString()
 									}
 								)
