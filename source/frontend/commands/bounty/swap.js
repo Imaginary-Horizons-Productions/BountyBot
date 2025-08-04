@@ -26,9 +26,10 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 				withResponse: true
 			}).then(response => {
 				const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
+				let previousBounty;
 				collector.on("collect", async (collectedInteraction) => {
-					let previousBounty = openBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 					if (collectedInteraction.customId.endsWith("bounty")) {
+						previousBounty = openBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 						const startingPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 						const bountySlotCount = Hunter.getBountySlotCount(startingPosterLevel, origin.company.maxSimBounties);
 						if (bountySlotCount < 2) {
@@ -69,28 +70,24 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 						await previousBounty.reload();
 						if (previousBounty.state !== "open") {
 							collectedInteraction.update({ content: "The selected bounty appears to already have been completed.", components: [] });
-							return;
+						} else {
+							const hunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+							const sourceSlot = previousBounty.slotNumber;
+							const destinationSlot = parseInt(collectedInteraction.values[0]);
+							let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id });
+
+							previousBounty = await previousBounty.update({ slotNumber: destinationSlot });
+							updatePosting(interaction.guild, origin.company, previousBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
+
+							if (destinationBounty?.state === "open") {
+								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
+								updatePosting(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+							}
+
+							interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
+							interaction.deleteReply();
 						}
-
-						const hunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-						const sourceSlot = previousBounty.slotNumber;
-						const destinationSlot = parseInt(collectedInteraction.values[0]);
-						let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id });
-
-						previousBounty = await previousBounty.update({ slotNumber: destinationSlot });
-						updatePosting(interaction.guild, origin.company, previousBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
-
-						if (destinationBounty?.state === "open") {
-							destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-							updatePosting(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
-						}
-
-						interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
 					}
-				})
-
-				collector.on("end", () => {
-					interaction.deleteReply();
 				})
 			})
 		})
