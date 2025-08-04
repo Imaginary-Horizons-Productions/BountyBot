@@ -149,7 +149,7 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 		}
 	}
 
-	const posterXP = bounty.calculatePosterReward(validatedHunters.length);
+	const posterXP = bounty.calculatePosterReward(validatedHunters.size);
 	hunterResults[poster.userId] = { previousLevel: poster.getLevel(company.xpCoefficient) };
 	await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
 	const [itemRow, wasCreated] = await rollItemForHunter(1 / 4, poster);

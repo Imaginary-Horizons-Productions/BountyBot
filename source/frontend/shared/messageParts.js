@@ -198,7 +198,7 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
  * @param {string[]} rewardTexts
  */
 function generateBountyRewardString(completerIds, completerReward, posterId, posterReward, multiplierString, rankUpdates, rewardTexts) {
-	let text = `${heading("XP Gained", 2)}\n${completerIds.map(id => `${userMention(id)} +${completerReward} XP${multiplierString}`).join("\n")}`;
+	let text = `${heading("XP Gained", 2)}\n${Array.from(completerIds.map(id => `${userMention(id)} +${completerReward} XP${multiplierString}`)).join("\n")}`;
 	if (posterId && posterReward) {
 		text += `\n${userMention(posterId)} +${posterReward} XP${multiplierString}`;
 	}
