@@ -1,8 +1,8 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
 const { getNumberEmoji, bountiesToSelectOptions, updatePosting, sendAnnouncement, disabledSelectRow } = require("../../shared");
-const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
+const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -26,16 +26,18 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 				withResponse: true
 			}).then(response => {
 				const collector = response.resource.message.createMessageComponentCollector({ max: 2 });
+				let previousBounty;
 				collector.on("collect", async (collectedInteraction) => {
 					if (collectedInteraction.customId.endsWith("bounty")) {
-						const bountySlotCount = Hunter.getBountySlotCount(origin.hunter.getLevel(origin.company.xpCoefficient), origin.company.maxSimBounties);
+						previousBounty = openBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
+						const startingPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+						const bountySlotCount = Hunter.getBountySlotCount(startingPosterLevel, origin.company.maxSimBounties);
 						if (bountySlotCount < 2) {
 							collectedInteraction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: MessageFlags.Ephemeral });
 							return;
 						}
 
 						const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
-						const previousBounty = existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
 						const slotOptions = [];
 						for (let i = 1; i <= bountySlotCount; i++) {
 							if (i != previousBounty.slotNumber) {
@@ -44,7 +46,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 									{
 										emoji: getNumberEmoji(i),
 										label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
-										description: `XP Reward: ${Bounty.calculateCompleterReward(origin.hunter.getLevel(origin.company.xpCoefficient), i, existingBounty?.showcaseCount ?? 0)}`,
+										description: `XP Reward: ${Bounty.calculateCompleterReward(startingPosterLevel, i, existingBounty?.showcaseCount ?? 0)}`,
 										value: i.toString()
 									}
 								)
@@ -56,7 +58,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 							components: [
 								disabledSelectRow(`Selected Bounty: ${previousBounty.title}`),
 								new ActionRowBuilder().addComponents(
-									new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}${SAFE_DELIMITER}${previousBounty.slotNumber}`)
+									new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 										.setPlaceholder("Select a slot to swap the bounty to...")
 										.setMaxValues(1)
 										.setOptions(slotOptions)
@@ -65,31 +67,27 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 							flags: MessageFlags.Ephemeral
 						})
 					} else {
-						const sourceSlot = parseInt(collectedInteraction.customId.split(SAFE_DELIMITER)[1]);
-						const destinationSlot = parseInt(collectedInteraction.values[0]);
+						await previousBounty.reload();
+						if (previousBounty.state !== "open") {
+							collectedInteraction.update({ content: "The selected bounty appears to already have been completed.", components: [] });
+						} else {
+							const hunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+							const sourceSlot = previousBounty.slotNumber;
+							const destinationSlot = parseInt(collectedInteraction.values[0]);
+							let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id });
 
-						const bounties = await logicLayer.bounties.bulkFindOpenBounties(interaction.user.id, interaction.guildId, [sourceSlot, destinationSlot]);
-						const sourceBounty = bounties.find(bounty => bounty.slotNumber == sourceSlot);
-						const destinationBounty = bounties.find(bounty => bounty.slotNumber == destinationSlot);
-						sourceBounty.slotNumber = destinationSlot;
-						await sourceBounty.save();
-						await sourceBounty.reload();
-						const hunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-						updatePosting(interaction.guild, origin.company, sourceBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(sourceBounty.id));
+							previousBounty = await previousBounty.update({ slotNumber: destinationSlot });
+							updatePosting(interaction.guild, origin.company, previousBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
 
-						if (destinationBounty) {
-							destinationBounty.slotNumber = sourceSlot;
-							await destinationBounty.save();
-							await destinationBounty.reload();
-							updatePosting(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+							if (destinationBounty?.state === "open") {
+								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
+								updatePosting(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+							}
+
+							interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
+							interaction.deleteReply();
 						}
-
-						interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, **${sourceBounty.title}** is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, sourceBounty.showcaseCount)} XP.` }));
 					}
-				})
-
-				collector.on("end", () => {
-					interaction.deleteReply();
 				})
 			})
 		})

@@ -59,15 +59,6 @@ function findOpenBounties(userId, companyId) {
 	return db.models.Bounty.findAll({ where: { userId, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
 }
 
-/** *Find a Hunter's Bounties in the slotNumbers*
- * @param {string} userId
- * @param {string} companyId
- * @param {number[]} slotNumbers
- */
-function bulkFindOpenBounties(userId, companyId, slotNumbers) {
-	return db.models.Bounty.findAll({ where: { userId, companyId, slotNumber: { [Op.in]: slotNumbers }, state: "open" } });
-}
-
 /** @param {string} companyId */
 function findEvergreenBounties(companyId) {
 	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
@@ -204,7 +195,6 @@ module.exports = {
 	bulkCreateCompletions,
 	findBounty,
 	findOpenBounties,
-	bulkFindOpenBounties,
 	findEvergreenBounties,
 	findBountyCompletions,
 	getHunterIdSet,
