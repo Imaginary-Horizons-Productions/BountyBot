@@ -19,6 +19,7 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 - The Seasonal Scoreboard no longer shows bounty hunter level
 - Fixed XP Boosts not updating the scoreboard
 - "Give Bounty Credit" was renamed to "Record Bounty Turn-In"
+TODONOW update changelog
 
 ## BountyBot Version 2.9.0:
 ### Server Goals

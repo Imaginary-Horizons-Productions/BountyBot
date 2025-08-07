@@ -1,9 +1,9 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
-const { timeConversion, descendingByProperty } = require("../../shared");
+const { descendingByProperty } = require("../../shared");
 const { commandIds } = require("../../constants");
 
 /** generates a command mention, which users can click to shortcut them to using the command
@@ -214,26 +214,22 @@ function generateBountyRewardString(completerIds, completerReward, posterId, pos
 	return text;
 }
 
-/** @param {Bounty} bounty */
-function generateBountyBoardButtons(bounty) {
+/** @param {string} bountyId */
+function generateBountyCommandSelect(bountyId) {
 	return [
 		new ActionRowBuilder().addComponents(
-			new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Success)
-				.setLabel("Complete")
-				.setDisabled(new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))),
-			new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Primary)
-				.setLabel("Record Turn-Ins"),
-			new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Secondary)
-				.setLabel("Revoke Turn-Ins"),
-			new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Primary)
-				.setLabel("Showcase"),
-			new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Danger)
-				.setLabel("Take Down")
+			new StringSelectMenuBuilder().setCustomId(`bountycommand${SAFE_DELIMITER}${bountyId}`)
+				.setPlaceholder("Select a bounty command...")
+				.setOptions([
+					{ label: "No Change", description: "You can move the selection to this option without changing anything", value: "nochange" },
+					{ emoji: "📥", label: "Record other hunters' turn-ins", description: "Confirm another hunter has turned-in this bounty", value: "recordturnin" },
+					{ emoji: "🚫", label: "Revoke other hunters' turn-ins", description: "Remove credit for turning in this bounty from another hunter", value: "revoketurnin" },
+					{ emoji: "🔝", label: "Showcase this bounty", description: "Increase the rewards on this bounty and promote it in another channel", value: "showcase" },
+					{ emoji: "✅", label: "Complete this bounty", description: "Distribute rewards for turn-ins and mark this bounty completed", value: "complete" },
+					{ emoji: "📝", label: "Edit this bounty", description: "Change details about this bounty", value: "edit" },
+					{ emoji: "🔄", label: "Swap this bounty to another slot", description: "Move this bounty to another slot, changing its base reward", value: "swap" },
+					{ emoji: "🗑️", label: "Take this bounty down", description: "Take this bounty down without distrbuting rewards", value: "takedown" }
+				])
 		)
 	]
 }
@@ -674,7 +670,7 @@ module.exports = {
 	buildBountyEmbed,
 	generateBountyRewardString,
 	buildVersionEmbed,
-	generateBountyBoardButtons,
+	generateBountyCommandSelect,
 	sendAnnouncement,
 	buildCompanyLevelUpLine,
 	seasonalScoreboardEmbed,
