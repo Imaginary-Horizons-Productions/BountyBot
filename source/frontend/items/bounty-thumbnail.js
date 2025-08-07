@@ -51,7 +51,7 @@ module.exports = new ItemTemplateSet(
 					flags: MessageFlags.Ephemeral,
 					withResponse: true
 				}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-					const bounty = await logicLayer.bounties.findBounty(collectedInteraction.values[0]);
+					const bounty = await openBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
 					if (bounty?.state !== "open") {
 						return collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 					}
