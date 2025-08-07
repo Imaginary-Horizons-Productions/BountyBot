@@ -6,7 +6,7 @@ let logicLayer;
 const mainId = "";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Specs */
-	(interaction, args, runMode) => {
+	(interaction, origin, runMode, args) => {
 
 	}
 ).setLogicLinker(logicBlob => {
