@@ -1,4 +1,4 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, StringSelectMenuBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank } = require("../../database/models");
 const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
@@ -173,9 +173,8 @@ async function updateScoreboard(company, guild, embeds) {
 /** @param {string} placeholderText */
 function disabledSelectRow(placeholderText) {
 	return new ActionRowBuilder().addComponents(
-		new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
-			.setOptions([{ label: "empty", value: "empty" }])
 			.setDisabled(true)
 	)
 }
