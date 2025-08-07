@@ -161,57 +161,62 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	await dbReady;
 
+	let mainId, args;
+	if (interaction.isCommand() || interaction.isContextMenuCommand() || interaction.isAutocomplete()) {
+		mainId = interaction.commandName;
+	} else {
+		[mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
+	}
+
 	/** @type {InteractionOrigin} */
 	const origin = { company: (await logicBlob.companies.findOrCreateCompany(interaction.guild.id))[0] };
 	const { user: [user], hunter: [hunter] } = await logicBlob.hunters.findOrCreateBountyHunter(interaction.user.id, interaction.guild.id);
 	origin.user = user;
 	origin.hunter = hunter;
 	//#region Ban Check
-	if (origin.hunter.isBanned && !(interaction.isCommand() && interaction.commandName === "moderation")) {
+	if (origin.hunter.isBanned && !(interaction.isCommand() && mainId === "moderation")) {
 		interaction.reply({ content: `You are banned from interacting with BountyBot on ${interaction.guild.name}.`, flags: MessageFlags.Ephemeral });
-
 		return;
 	}
 	//#endregion
 
 	//#region Premium Checks
-	if (premiumCommandList.includes(interaction.commandName) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
-		interaction.reply({ content: `The \`/${interaction.commandName}\` BountyBot function is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
+	if (premiumCommandList.includes(mainId) && !premium.paid.includes(interaction.user.id) && !premium.gift.includes(interaction.user.id)) {
+		interaction.reply({ content: `The \`/${mainId}\` BountyBot function is a premium command. Learn more with ${commandMention("premium")}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	//#endregion
 
 	// #region General Cooldown Management
 	const commandTime = new Date();
-	const { isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName } = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, interaction.commandName, commandTime);
+	const { isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName } = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, mainId, commandTime);
 	if (isOnGeneralCooldown) {
 		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	if (isOnCommandCooldown) {
-		interaction.reply({ content: `Please wait, \`/${interaction.commandName}\` is on cooldown. It can be used again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `Please wait, \`/${mainId}\` is on cooldown. It can be used again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
-	logicBlob.cooldowns.updateCooldowns(interaction.user.id, interaction.commandName, commandTime, cooldownMap[interaction.commandName]);
+	logicBlob.cooldowns.updateCooldowns(interaction.user.id, mainId, commandTime, cooldownMap[mainId]);
 	//#endregion
 
 	//#region Command execution
 	if (interaction.isAutocomplete()) {
-		const command = getCommand(interaction.commandName);
+		const command = getCommand(mainId);
 		const focusedOption = interaction.options.getFocused(true);
 		const unfilteredChoices = command.autocomplete?.[focusedOption.name] ?? [];
 		if (unfilteredChoices.length < 1) {
-			console.error(`Attempted autocomplete on misconfigured command ${interaction.commandName} ${focusedOption.name}`);
+			console.error(`Attempted autocomplete on misconfigured command ${mainId} ${focusedOption.name}`);
 		}
 		const choices = unfilteredChoices.filter(choice => choice.value.toLowerCase().includes(focusedOption.value.toLowerCase()))
 			.slice(0, 25);
 		interaction.respond(choices);
 	} else if (interaction.isContextMenuCommand()) {
-		getContextMenu(interaction.commandName).execute(interaction, origin, runMode);
+		getContextMenu(mainId).execute(interaction, origin, runMode);
 	} else if (interaction.isCommand()) {
-		getCommand(interaction.commandName).execute(interaction, origin, runMode);
+		getCommand(mainId).execute(interaction, origin, runMode);
 	} else {
-		const [mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
 		/** @type {MessageComponentWrapper} */
 		let interactionWrapper;
 		if (interaction.isButton()) {
