@@ -1,4 +1,4 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { timeConversion } = require('../../shared');
@@ -383,7 +383,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
-					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.id);
+					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 
 					return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 				}).catch(error => {
