@@ -20,11 +20,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 						.setPlaceholder("Select a bounty...")
 						.addOptions(bountiesToSelectOptions(openBounties))
 				),
-				new ActionRowBuilder().addComponents(
-					new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-						.setPlaceholder("Select bounty hunters...")
-						.setDisabled(true)
-				)
+				disabledSelectRow("Select bounty hunters...")
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true

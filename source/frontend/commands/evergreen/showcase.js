@@ -25,8 +25,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
-			const [bountyId] = collectedInteraction.values;
-			return logicLayer.bounties.findBounty(bountyId).then(async bounty => {
+			return existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload().then(async bounty => {
 				if (bounty?.state !== "open") {
 					return collectedInteraction;
 				}

@@ -27,7 +27,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const posterId = collectedInteraction.customId.split(SAFE_DELIMITER)[1];
 			const [bountyId] = collectedInteraction.values;
-			logicLayer.bounties.findBounty(bountyId).then(async bounty => {
+			openBounties.find(bounty => bounty.id === bountyId).reload().then(async bounty => {
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
 				bounty.state = "deleted";
 				bounty.save();
