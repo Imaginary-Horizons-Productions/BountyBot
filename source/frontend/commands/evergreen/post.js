@@ -1,16 +1,16 @@
 const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, DiscordjsErrorCodes } = require("discord.js");
-const { EmbedLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
+const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { SKIP_INTERACTION_HANDLING, MAX_EVERGREEN_SLOTS } = require("../../../constants");
 const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, updateEvergreenBountyBoard } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { Company } = require("../../../database/models");
 
-module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 10",
+module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit ${MAX_EVERGREEN_SLOTS}`,
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		let slotNumber = null;
-		for (let slotCandidate = 1; slotCandidate <= MessageLimits.MaximumEmbeds; slotCandidate++) {
+		for (let slotCandidate = 1; slotCandidate <= MAX_EVERGREEN_SLOTS; slotCandidate++) {
 			if (!existingBounties.some(bounty => bounty.slotNumber === slotCandidate)) {
 				slotNumber = slotCandidate;
 				break;
@@ -18,7 +18,7 @@ module.exports = new SubcommandWrapper("post", "Post an evergreen bounty, limit 
 		}
 
 		if (slotNumber === null) {
-			interaction.reply({ content: "Each server can only have 10 Evergreen Bounties.", flags: MessageFlags.Ephemeral });
+			interaction.reply({ content: `Each server can only have ${MAX_EVERGREEN_SLOTS} Evergreen Bounties.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
