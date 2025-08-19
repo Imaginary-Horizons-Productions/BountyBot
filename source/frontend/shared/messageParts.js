@@ -1,10 +1,9 @@
 const fs = require("fs");
 const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
-const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
+const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { timeConversion, descendingByProperty } = require("../../shared");
-const { commandIds } = require("../../constants");
 
 /** generates a command mention, which users can click to shortcut them to using the command
  * @param {string} fullCommand for subcommands append a whitespace and the subcommandName
