@@ -28,6 +28,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				   twice in a row but doesn't want other changes to be applied (like to fix a typo in a previous
 				   edit), they can move the selection to this option to intentionally do nothing.
 				*/
+				//TODONOW update with zero width whitespace
 				break;
 			case "recordturnin": {
 				interaction.reply({
@@ -191,7 +192,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}
 
 				interaction.reply({
-					content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${listifyEN(validatedHunters.keys().map(id => userMention(id)))}`,
+					content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${listifyEN(Array.from(validatedHunters.keys()).map(id => userMention(id)))}`,
 					components: [
 						new ActionRowBuilder().addComponents(
 							new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
@@ -228,7 +229,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						await collectedInteraction.channel.setArchived(false, "bounty complete");
 					}
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
-					collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
+					await collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
 					buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
 						.then(async embed => {
 							if (goalUpdate.gpContributed > 0) {
