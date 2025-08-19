@@ -1,8 +1,6 @@
-const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
+const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { createEvergreenBountyThread, buildBountyEmbed } = require("../../shared");
-const { SAFE_DELIMITER } = require("../../../constants");
-const { timeConversion } = require("../../../shared");
+const { createEvergreenBountyThread, buildBountyEmbed, generateBountyCommandSelect } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
@@ -48,24 +46,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 						name: bounty.title,
 						message: {
 							embeds: [bountyEmbed],
-							components: [new ActionRowBuilder().addComponents(
-								new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${bounty.id}`)
-									.setStyle(ButtonStyle.Success)
-									.setLabel("Complete")
-									.setDisabled(new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))),
-								new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${bounty.id}`)
-									.setStyle(ButtonStyle.Primary)
-									.setLabel("Credit Hunters"),
-								new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${bounty.id}`)
-									.setStyle(ButtonStyle.Secondary)
-									.setLabel("Uncredit Hunters"),
-								new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${bounty.id}`)
-									.setStyle(ButtonStyle.Primary)
-									.setLabel("Showcase this Bounty"),
-								new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
-									.setStyle(ButtonStyle.Danger)
-									.setLabel("Take Down")
-							)]
+							components: generateBountyCommandSelect(bounty.id)
 						},
 						appliedTags: [openTagId]
 					})
