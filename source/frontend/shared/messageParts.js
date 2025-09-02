@@ -217,7 +217,7 @@ function generateBountyRewardString(completerIds, completerReward, posterId, pos
 function generateBountyCommandSelect(bountyId) {
 	return [
 		new ActionRowBuilder().addComponents(
-			new StringSelectMenuBuilder().setCustomId(`bountycommand${SAFE_DELIMITER}${bountyId}`)
+			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
 				.setPlaceholder("Select a bounty command...")
 				.setOptions([
 					{ label: "No Change", description: "You can move the selection to this option without changing anything", value: "nochange" },

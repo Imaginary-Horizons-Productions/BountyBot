@@ -7,6 +7,9 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 - `/bounty remove-completers` has been renamed to `/bounty revoke-turn-ins` and now uses message selects.
 - `/bounty complete` now accepts up to 5 optional hunters.
 - `/evergreen complete` now uses message selects.
+### Improving Bounty Thread Controls
+- Converted the bounty control panel in bounty threads from buttons to a select menu
+- Used expanded option capacity to add edit and swap options
 ### Premium
 - Added the ability to customize the Goal Completion embed's thumbnail with `/config-premium goal-completion-thumbnail-url`
 - Changed `/rank remove` to use a select and confirmation button and accept multiple roles at the same time
@@ -19,7 +22,6 @@ Slash commands originally accepted users as a string (instead of Discord's user 
 - The Seasonal Scoreboard no longer shows bounty hunter level
 - Fixed XP Boosts not updating the scoreboard
 - "Give Bounty Credit" was renamed to "Record Bounty Turn-In"
-TODONOW update changelog
 
 ## BountyBot Version 2.9.0:
 ### Server Goals

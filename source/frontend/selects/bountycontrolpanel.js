@@ -1,6 +1,6 @@
 const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { SKIP_INTERACTION_HANDLING } = require('../../constants');
+const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion } = require('../../shared');
 const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
@@ -8,7 +8,7 @@ const { Company, Bounty, Hunter } = require('../../database/models');
 /** @type {typeof import("../../logic")} */
 let logicLayer;
 
-const mainId = "bountycommand";
+const mainId = "bountycontrolpanel";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** This select menu accompanies individual bounty threads, providing an interface for the bounty's poster to interact with the bounty */
 	async (interaction, origin, runMode, [bountyId]) => {
@@ -28,7 +28,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				   twice in a row but doesn't want other changes to be applied (like to fix a typo in a previous
 				   edit), they can move the selection to this option to intentionally do nothing.
 				*/
-				//TODONOW update with zero width whitespace
+				interaction.update({ content: ZERO_WIDTH_WHITE_SPACE });
 				break;
 			case "recordturnin": {
 				interaction.reply({
