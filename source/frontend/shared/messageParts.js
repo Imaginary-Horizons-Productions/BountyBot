@@ -356,7 +356,7 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
 
 	const scorelines = [];
-	for (const hunter of Array.from(hunter.values()).sort(descendingByProperty("xp"))) {
+	for (const hunter of Array.from(hunterMembers.values()).sort(descendingByProperty("xp"))) {
 		if (hunter.xp < 1) {
 			break;
 		}
