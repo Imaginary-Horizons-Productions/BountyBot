@@ -1,7 +1,7 @@
 const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank } = require("../../database/models");
-const { getNumberEmoji, buildBountyEmbed, generateBountyBoardButtons } = require("./messageParts");
+const { getNumberEmoji, buildBountyEmbed } = require("./messageParts");
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { ascendingByProperty } = require("../../shared");
@@ -146,10 +146,7 @@ async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
 		return buildBountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
-			posting.edit({
-				embeds: [embed],
-				components: generateBountyBoardButtons(bounty)
-			});
+			posting.edit({ embeds: [embed] });
 			return posting;
 		})
 	})

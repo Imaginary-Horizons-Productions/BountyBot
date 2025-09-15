@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, generateBountyBoardButtons, truncateTextToLength } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -193,10 +193,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 						thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
 						return thread.fetchStarterMessage();
 					}).then(posting => {
-						posting.edit({
-							embeds: [bountyEmbed],
-							components: generateBountyBoardButtons(bounty)
-						});
+						posting.edit({ embeds: [bountyEmbed] });
 					})
 				}
 
