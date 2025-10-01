@@ -219,7 +219,7 @@ function generateBountyCommandSelect(bountyId) {
 		new ActionRowBuilder().addComponents(
 			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
 				.setPlaceholder("Select a bounty command...")
-				.setOptions([
+				.setOptions(
 					{ label: "No Change", description: "You can move the selection to this option without changing anything", value: "nochange" },
 					{ emoji: "📥", label: "Record other hunters' turn-ins", description: "Confirm another hunter has turned-in this bounty", value: "recordturnin" },
 					{ emoji: "🚫", label: "Revoke other hunters' turn-ins", description: "Remove credit for turning in this bounty from another hunter", value: "revoketurnin" },
@@ -228,7 +228,7 @@ function generateBountyCommandSelect(bountyId) {
 					{ emoji: "📝", label: "Edit this bounty", description: "Change details about this bounty", value: "edit" },
 					{ emoji: "🔄", label: "Swap this bounty to another slot", description: "Move this bounty to another slot, changing its base reward", value: "swap" },
 					{ emoji: "🗑️", label: "Take this bounty down", description: "Take this bounty down without distrbuting rewards", value: "takedown" }
-				])
+				)
 		)
 	]
 }
