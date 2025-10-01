@@ -84,7 +84,6 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 								updatePosting(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 							}
 
-							//TODONOW if bounty thread exists, send change message there
 							interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
 							interaction.deleteReply();
 						}

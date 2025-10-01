@@ -1,7 +1,7 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
-const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds } = require("../../constants");
+const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty } = require("../../shared");
 
@@ -658,6 +658,63 @@ function formatSeasonResultsToRewardTexts(seasonResults, descendingRanks, allGui
 	return rewardTexts;
 }
 
+/**
+ * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
+ */
+function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
+	const errors = [];
+	const nowTimestamp = Date.now() / 1000;
+
+	if (!startTimestamp) {
+		errors.push(`Start Timestamp must be an integer. Received: ${startTimestamp}`);
+	}
+
+	if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to <t:${startTimestamp}>`);
+	}
+
+	if (!endTimestamp) {
+		errors.push(`End Timestamp must be an integer. Received: ${endTimestamp}`);
+	}
+
+	if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to <t:${endTimestamp}>`);
+	}
+
+	if (startTimestamp > endTimestamp) {
+		errors.push(`End Timestamp (${endTimestamp}) was before Start Timestamp (${startTimestamp}).`);
+	}
+	return errors;
+}
+
+/**
+ * @param {string} title
+ * @param {string} posterName
+ * @param {number} slotNumber
+ * @param {string?} description
+ * @param {string?} imageURL
+ * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
+ */
+function createBountyEventPayload(title, posterName, slotNumber, description, imageURL, startTimestamp, endTimestamp) {
+	const payload = {
+		name: `Bounty: ${title}`,
+		scheduledStartTime: startTimestamp * 1000,
+		scheduledEndTime: endTimestamp * 1000,
+		privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+		entityType: GuildScheduledEventEntityType.External,
+		entityMetadata: { location: `${posterName}'s #${slotNumber} Bounty` }
+	};
+	if (description) {
+		payload.description = description;
+	}
+	if (imageURL) {
+		payload.image = imageURL;
+	}
+	return payload;
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -685,5 +742,7 @@ module.exports = {
 	generateCompletionEmbed,
 	generateSecondingRewardString,
 	formatHunterResultsToRewardTexts,
-	formatSeasonResultsToRewardTexts
+	formatSeasonResultsToRewardTexts,
+	validateScheduledEventTimestamps,
+	createBountyEventPayload
 };

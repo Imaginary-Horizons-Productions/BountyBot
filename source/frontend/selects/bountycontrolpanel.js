@@ -1,9 +1,10 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
+const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE, SAFE_DELIMITER } = require('../../constants');
 const { timeConversion } = require('../../shared');
-const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement } = require('../shared');
+const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, truncateTextToLength, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
+const { ModalLimits } = require('@sapphire/discord.js-utilities');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -273,7 +274,129 @@ module.exports = new SelectWrapper(mainId, 3000,
 				});
 			} break;
 			case "edit": {
-				//TODONOW finish
+				const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
+					.setLabel("Event Start (Unix Timestamp)")
+					.setRequired(false)
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder("Required if making an event with the bounty");
+				const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
+					.setLabel("Event End (Unix Timestamp)")
+					.setRequired(false)
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder("Required if making an event with the bounty");
+
+				if (bounty.scheduledEventId) {
+					const scheduledEvent = await interaction.guild.scheduledEvents.fetch(bounty.scheduledEventId);
+					eventStartComponent.setValue((scheduledEvent.scheduledStartTimestamp / 1000).toString());
+					eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
+				}
+				const modalId = `${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${interaction.id}`;
+				const modal = new ModalBuilder().setCustomId(modalId)
+					.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
+					.addComponents(
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("title")
+								.setLabel("Title")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Discord markdown allowed...")
+								.setValue(bounty.title)
+						),
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("description")
+								.setLabel("Description")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Paragraph)
+								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+								.setValue(bounty.description ?? "")
+						),
+						new ActionRowBuilder().addComponents(
+							new TextInputBuilder().setCustomId("imageURL")
+								.setLabel("Image URL")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+								.setValue(bounty.attachmentURL ?? "")
+						),
+						new ActionRowBuilder().addComponents(
+							eventStartComponent
+						),
+						new ActionRowBuilder().addComponents(
+							eventEndComponent
+						)
+					)
+				interaction.showModal(modal).then(() => {
+					return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: timeConversion(5, "m", "ms") })
+				}).then(async modalSubmission => {
+					const title = modalSubmission.fields.getTextInputValue("title");
+					const description = modalSubmission.fields.getTextInputValue("description");
+
+					const updatePayload = {};
+					const errors = [];
+					if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty")) {
+						errors.push("The bounty's new title or description would trip this server's AutoMod.");
+					} else {
+						updatePayload.title = title;
+						updatePayload.description = description;
+					}
+
+					const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
+					if (imageURL) {
+						try {
+							new URL(imageURL);
+							updatePayload.attachmentURL = imageURL;
+						} catch (error) {
+							errors.push(error.message);
+						}
+					} else {
+						updatePayload.attachmentURL = null;
+					}
+
+					const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
+					const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue("endTimestamp"));
+					if (startTimestamp || endTimestamp) {
+						errors.push(...validateScheduledEventTimestamps(startTimestamp, endTimestamp));
+					}
+
+					if (errors.length > 0) {
+						interaction.deleteReply();
+						modalSubmission.reply({ content: `The following errors were encountered while editing your bounty ${bold(title)}:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
+						return;
+					}
+
+					if (startTimestamp && endTimestamp) {
+						const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
+						if (bounty.scheduledEventId) {
+							modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
+						} else {
+							const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
+							updatePayload.scheduledEventId = event.id;
+						}
+					} else if (bounty.scheduledEventId) {
+						modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId);
+						updatePayload.scheduledEventId = null;
+					}
+					bounty.increment("editCount");
+					bounty.update(updatePayload);
+
+					// update bounty board
+					const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
+					if (origin.company.bountyBoardId) {
+						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
+							return bountyBoard.threads.fetch(bounty.postingId);
+						}).then(async thread => {
+							if (thread.archived) {
+								await thread.setArchived(false, "Unarchived to update posting");
+							}
+							thread.edit({ name: bounty.title });
+							thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
+							return thread.fetchStarterMessage();
+						}).then(posting => {
+							posting.edit({ embeds: [bountyEmbed] });
+						})
+					}
+
+					modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
+				});
 			} break;
 			case "swap": {
 				const startingPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
@@ -350,7 +473,6 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 							const destinationRewardValue = Bounty.calculateCompleterReward(posterLevel, destinationSlot, bounty.showcaseCount);
 							interaction.channel.send({ content: `This bounty was swapped to Slot ${destinationSlot} and is now worth ${destinationRewardValue} XP.`, flags: MessageFlags.SuppressNotifications });
-							//TODONOW send change message to other bounty thread if not swapping into empty slot
 							collectedInteraction.channels.first().send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(bounty.title)} is now worth ${destinationRewardValue} XP.` }));
 							collectedInteraction.update({ components: [] }).then(() => {
 								interaction.deleteReply();

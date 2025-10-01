@@ -1,9 +1,9 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, bold } = require("discord.js");
 const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength } = require("../../shared");
-const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
+const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength, validateScheduledEventTimestamps, createBountyEventPayload } = require("../../shared");
+const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -89,96 +89,53 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 
+				const updatePayload = {};
 				const errors = [];
 				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty")) {
 					errors.push("The bounty's new title or description would trip this server's AutoMod.");
+				} else {
+					updatePayload.title = title;
+					updatePayload.description = description;
 				}
 
 				const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
 				if (imageURL) {
 					try {
 						new URL(imageURL);
+						updatePayload.attachmentURL = imageURL;
 					} catch (error) {
 						errors.push(error.message);
 					}
+				} else {
+					updatePayload.attachmentURL = null;
 				}
 
 				const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
 				const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue("endTimestamp"));
-				const shouldMakeEvent = startTimestamp && endTimestamp;
 				if (startTimestamp || endTimestamp) {
-					if (!startTimestamp) {
-						errors.push("Start timestamp must be an integer.");
-					} else if (!endTimestamp) {
-						errors.push("End timestamp must be an integer.");
-					} else {
-						if (startTimestamp > endTimestamp) {
-							errors.push("End timestamp was before start timestamp.");
-						}
-
-						const nowTimestamp = Date.now() / 1000;
-						if (nowTimestamp >= startTimestamp) {
-							errors.push("Start timestamp must be in the future.");
-						}
-
-						if (nowTimestamp >= endTimestamp) {
-							errors.push("End timestamp must be in the future.");
-						}
-
-						if (startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-							errors.push("Start timestamp cannot be 5 years in the future or further.");
-						}
-
-						if (endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-							errors.push("End timestamp cannot be 5 years in the future or further.");
-						}
-					}
+					errors.push(...validateScheduledEventTimestamps(startTimestamp, endTimestamp));
 				}
 
 				if (errors.length > 0) {
 					interaction.deleteReply();
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty ${bold(title)}:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
-				if (title) {
-					bounty.title = title;
-				}
-				bounty.description = description;
-				if (imageURL) {
-					bounty.attachmentURL = imageURL;
-				} else if (bounty.attachmentURL) {
-					bounty.attachmentURL = null;
-				}
-
-
-				if (shouldMakeEvent) {
-					const eventPayload = {
-						name: `Bounty: ${title}`,
-						scheduledStartTime: startTimestamp * 1000,
-						scheduledEndTime: endTimestamp * 1000,
-						privacyLevel: 2,
-						entityType: GuildScheduledEventEntityType.External,
-						entityMetadata: { location: `${modalSubmission.member.displayName}'s #${bounty.slotNumber} Bounty` }
-					};
-					if (description) {
-						eventPayload.description = description;
-					}
-					if (imageURL) {
-						eventPayload.image = imageURL;
-					}
+				if (startTimestamp && endTimestamp) {
+					const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 					if (bounty.scheduledEventId) {
 						modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 					} else {
 						const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
-						bounty.scheduledEventId = event.id;
+						updatePayload.scheduledEventId = event.id;
 					}
 				} else if (bounty.scheduledEventId) {
 					modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId);
-					bounty.scheduledEventId = null;
+					updatePayload.scheduledEventId = null;
 				}
-				bounty.editCount++;
-				bounty.save();
+				bounty.increment("editCount");
+				bounty.update(updatePayload);
 
 				// update bounty board
 				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
