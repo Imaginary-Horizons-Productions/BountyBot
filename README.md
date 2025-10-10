@@ -2,7 +2,7 @@
 BountyBot is a Discord bot that facilitates community interaction by allowing users to create server-wide quests and rewarding active server particpation.
 
 ### Join Link
-[Click here](https://discord.com/api/oauth2/authorize?client_id=536330483852771348&permissions=18135835404336&scope=bot%20applications.commands) to add BountyBot to your server! The bot will be managable by anyone who has a role above the bot's roles, so make sure to check role order when the bot joins!
+[Click here](https://discord.com/oauth2/authorize?client_id=536330483852771348&permissions=2832816883034128&integration_type=0&scope=bot) to add BountyBot to your server! The bot will be managable by anyone who has a role above the bot's roles, so make sure to check role order when the bot joins!
 
 ## Beyond "Just Chatting"
 Bounties allow server members to transform otherwise mundate activites into community events. Repeating bounties (aka Evergreen Bounties) turn one-off interactions into long term engagement.
