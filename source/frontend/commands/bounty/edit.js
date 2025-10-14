@@ -134,7 +134,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId);
 					updatePayload.scheduledEventId = null;
 				}
-				bounty.increment("editCount");
+				await bounty.increment("editCount");
 				bounty.update(updatePayload);
 
 				// update bounty board
