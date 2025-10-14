@@ -1,7 +1,7 @@
-const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ComponentType, DiscordjsErrorCodes, MessageFlags, PermissionFlagsBits } = require('discord.js');
+const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ComponentType, DiscordjsErrorCodes, MessageFlags, PermissionFlagsBits, TimestampStyles } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { timeConversion } = require('../../shared');
+const { timeConversion, discordTimestamp } = require('../../shared');
 const { buildBountyEmbed, updatePosting } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -18,7 +18,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 			const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 			if (runMode === "production" && Date.now() < nextShowcaseInMS) {
-				interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
+				interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
