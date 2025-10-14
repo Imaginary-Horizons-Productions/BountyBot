@@ -1,8 +1,24 @@
 # BountyBot
 BountyBot is a Discord bot that facilitates community interaction by allowing users to create server-wide quests and rewarding active server particpation.
 
-### Join Link
-[Click here](https://discord.com/api/oauth2/authorize?client_id=536330483852771348&permissions=18135835404336&scope=bot%20applications.commands) to add BountyBot to your server! The bot will be managable by anyone who has a role above the bot's roles, so make sure to check role order when the bot joins!
+## Adding BountyBot to your Server
+[Click here](https://discord.com/oauth2/authorize?client_id=536330483852771348&permissions=2269727342913536&integration_type=0&scope=bot) to add BountyBot to your server! The bot will be managable by anyone who has a role above the bot's roles, so make sure to check role order when the bot joins!
+
+### Permissions
+Here are the permissions BountyBot asks for and a summary of what it uses each for:
+- Manage Roles: BountyBot can be configured to distinguish active Bounty Hunters by making and granting roles
+- Change Nickname: BountyBot nicknames itself to promote XP Festivals
+- Create Events: Bounties created with start and end timestamps automatically create Discord events
+- Manage Events: Discord events created for bounties with are updated when their bounty is
+- Send Messages: BountyBot responds to commands in text channels, announces festival starts, etc
+- Create Public Threads: BountyBot can create a bounty board forum where each bounty gets a thread for discussion and organization
+- Send Messages in Threads: In bounty threads, BountyBot records updates or participation in bounties
+- Manage Messages: BountyBot edits the scoreboard message when Bounty Hunters earn XP, edits messages in bounty threads for updates, etc.
+- Pin Messages: On the bounty board forum, the thread containing the Evergreen Bounties (server-wide repeating bounties) is pinned
+- Manage Threads: BountyBot updates bounty threads when their bounties are edited
+- Embed Links: BountyBot refers users to the github for documentation and feedback
+- Attach Files: BountyBot sends changelogs and other overflowing messages as text files
+- Mention @everyone, @here, and All Roles: BountyBot can be configured to notify users when festivals or other server bonuses are starting
 
 ## Beyond "Just Chatting"
 Bounties allow server members to transform otherwise mundate activites into community events. Repeating bounties (aka Evergreen Bounties) turn one-off interactions into long term engagement.
