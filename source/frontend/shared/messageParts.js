@@ -683,7 +683,7 @@ function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
 	}
 
 	if (startTimestamp > endTimestamp) {
-		errors.push(`End Timestamp (${endTimestamp}) was before Start Timestamp (${startTimestamp}).`);
+		errors.push(`End Timestamp (<t:${endTimestamp}>) was before Start Timestamp (<t:${startTimestamp}>).`);
 	}
 	return errors;
 }
