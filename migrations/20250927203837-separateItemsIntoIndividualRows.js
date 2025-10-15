@@ -1,0 +1,231 @@
+'use strict';
+const { DataTypes } = require('sequelize');
+
+// TODO investigate oddity where new Item table timestamps are UNIX timestamps (a number)
+// while old Item table timestamps are a string representation of the date
+
+class OldItemStructure {
+  userId;
+  itemName;
+  count;
+  createdAt;
+  updatedAt;
+
+  /**
+   * Make a skeleton of the old item structure. This can either be made out of a NewItemStructure,
+   * or out of an object that has the prerequisite properties.
+   * @param {NewItemStructure | {userId, itemName, count, createdAt, updatedAt}} objWithProperties 
+   */
+  constructor(objWithProperties) {
+    if (objWithProperties instanceof NewItemStructure) {
+      const realDate = new Date(objWithProperties.createdAt);
+      this.userId = objWithProperties.userId;
+      this.itemName = objWithProperties.itemName;
+      this.count = 1;
+      this.createdAt = realDate;
+      this.updatedAt = realDate;
+    } else {
+      const realDate = Date.parse(objWithProperties.createdAt);
+      this.userId = objWithProperties.userId;
+      this.itemName = objWithProperties.itemName;
+      this.count = objWithProperties.count;
+      this.createdAt = realDate;
+      this.updatedAt = realDate;
+    }
+  }
+
+  /**
+   * Add to the number of items being tracked by this instance
+   */
+  incrementCount() {
+    this.count++;
+  }
+
+  /**
+   * Update date information.
+   * `createdAt` is the least recent item date.
+   * `updatedAt` is the most recent item date.
+   * @param {*} date 
+   */
+  updateDateInformation(date) {
+    let realDate = new Date(date);
+    this.createdAt = realDate < this.createdAt ? realDate : this.createdAt;
+    this.updatedAt = realDate > this.updatedAt ? realDate : this.updatedAt;
+  }
+
+  /**
+   * Return this object as a vanilla object for Sequelize compatibility
+   * @returns {}
+   */
+  asQueryCompatible() {
+    return {
+      userId: this.userId,
+      itemName: this.itemName,
+      count: this.count,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
+}
+
+class NewItemStructure {
+  userId;
+  itemName;
+  createdAt; // createdAt and updatedAt will always be the same for freshly migrated items
+  used;
+  //TODO consider the ramifications of {used} on createdAt/updatedAt
+
+  /**
+   * Make a new NewItemStructure based on the passed object.
+   * The only requirement is that the passed object has the prerequisite properties.
+   * @param {{userId, itemName, createdAt}} objWithProperties 
+   */
+  constructor(objWithProperties) {
+    this.userId = objWithProperties.userId;
+    this.itemName = objWithProperties.itemName;
+    this.createdAt = objWithProperties.createdAt;
+    this.used = false;
+  }
+
+  isUsed() {
+    return this.used;
+  }
+
+  /**
+   * Return this object as a vanilla object for Sequelize compatibility
+   * @returns {}
+   */
+  asQueryCompatible() {
+    return {
+      userId: this.userId,
+      itemName: this.itemName,
+      used: this.used,
+      createdAt: this.createdAt,
+      updatedAt: this.createdAt
+    };
+  }
+}
+
+/**
+ * Convert old items to new items
+ * @param {OldItemStructure} items 
+ * @returns {NewItemStructure}
+ */
+function oldToNewItems(items) {
+  return items.map(item => {
+    let newList = [];
+    for (let i = 0; i < item.count; i++) {
+      newList.push(new NewItemStructure(item));
+    }
+    return newList;
+  }).flat();
+}
+
+/**
+ * Convert new items back to old items
+ * @param {NewItemStructure} items 
+ * @returns {OldItemStructure}
+ */
+function newToOldItems(items) {
+  let oldItemsAsMap = new Map();
+  for (let item of items) {
+    if (item.isUsed()) continue; // Skip and do not count used items. Used items are not tracked in the old structure
+
+    if (!oldItemsAsMap.has(item.userId)) oldItemsAsMap.set(item.userId, new Map());
+
+    let itemsForUser = oldItemsAsMap.get(item.userId, new Map());
+    if (!itemsForUser.has(item.itemName)) {
+      itemsForUser.set(item.itemName, new OldItemStructure(item));
+    } else {
+      let thisItem = itemsForUser.get(item.itemName)
+      thisItem.incrementCount();
+      thisItem.updateDateInformation(item.createdAt);
+    }
+  }
+  return [...oldItemsAsMap.values()].map(map => [...map.values()]).flat();
+}
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up (queryInterface, Sequelize) {
+    let [oldItems] = await queryInterface.sequelize.query("SELECT * FROM Item");
+    let newItems = oldToNewItems(oldItems.map(raw => new OldItemStructure(raw)));
+    await queryInterface.dropTable("Item");
+    await queryInterface.createTable("Item", {
+      id: {
+        primaryKey: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4 // TODO fix this as it does not generate proper UUID values and causes null IDs
+      },
+      userId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+          model: 'User',
+          key: 'id'
+        }
+      },
+      itemName: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      used: {
+        type: DataTypes.BOOLEAN,
+        default: false
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        default: DataTypes.NOW
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        default: DataTypes.NOW
+      }
+    }, {
+      sequelize: queryInterface.sequelize,
+      modelName: "Item",
+      freezeTableName: true
+    });
+    await queryInterface.bulkInsert("Item", newItems.map(i => i.asQueryCompatible()));
+  },
+
+  async down (queryInterface, Sequelize) {
+    let [newItems] = await queryInterface.sequelize.query("SELECT * FROM Item");
+    let oldItems = newToOldItems(newItems.map(raw => new NewItemStructure(raw)));
+    await queryInterface.dropTable("Item");
+    await queryInterface.createTable("Item", {
+      userId: {
+        primaryKey: true,
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+          model: 'User',
+          key: 'id'
+        }
+      },
+      itemName: {
+        primaryKey: true,
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      count: {
+        type: DataTypes.BIGINT,
+        defaultValue: 1
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        default: DataTypes.NOW
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        default: DataTypes.NOW
+      }
+    }, {
+      sequelize: queryInterface.sequelize,
+      modelName: "Item",
+      freezeTableName: true
+    });
+    console.log(oldItems.map(i => i.asQueryCompatible()))
+    await queryInterface.bulkInsert("Item", oldItems.map(i => i.asQueryCompatible()));
+  }
+};
