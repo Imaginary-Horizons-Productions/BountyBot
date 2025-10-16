@@ -81,7 +81,7 @@ class NewItemStructure {
   /**
    * Make a new NewItemStructure based on the passed object.
    * The only requirement is that the passed object has the prerequisite properties.
-   * @param {{userId, itemName, createdAt}} objWithProperties 
+	 * @param {{ userId: string, itemName: string, createdAt: Date}} objWithProperties
    */
   constructor(objWithProperties) {
     this.userId = objWithProperties.userId;
@@ -162,7 +162,7 @@ module.exports = {
       modelName: "Item",
       freezeTableName: true
     });
-		await queryInterface.bulkInsert("Item", migratedItems.map(i => i.asQueryCompatible()));
+		await queryInterface.bulkInsert("Item", migratedItems);
   },
 
   async down (queryInterface, Sequelize) {
