@@ -162,7 +162,7 @@ module.exports = {
       modelName: "Item",
       freezeTableName: true
     });
-    await queryInterface.bulkInsert("Item", newItems.map(i => i.asQueryCompatible()));
+		await queryInterface.bulkInsert("Item", migratedItems.map(i => i.asQueryCompatible()));
   },
 
   async down (queryInterface, Sequelize) {
