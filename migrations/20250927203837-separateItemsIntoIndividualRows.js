@@ -1,9 +1,6 @@
 'use strict';
 const { DataTypes } = require('sequelize');
 
-// TODO investigate oddity where new Item table timestamps are UNIX timestamps (a number)
-// while old Item table timestamps are a string representation of the date
-
 class OldItemStructure {
   userId;
   itemName;
@@ -25,7 +22,7 @@ class OldItemStructure {
       this.createdAt = realDate;
       this.updatedAt = realDate;
     } else {
-      const realDate = Date.parse(objWithProperties.createdAt);
+      const realDate = new Date (objWithProperties.createdAt);
       this.userId = objWithProperties.userId;
       this.itemName = objWithProperties.itemName;
       this.count = objWithProperties.count;
