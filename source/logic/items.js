@@ -14,8 +14,17 @@ function setDB(database) {
 }
 
 /** @param {string} userId */
-function getInventory(userId) {
-	return db.models.Item.findAll({ where: { userId, count: { [Op.gt]: 0 } } });
+async function getInventory(userId) {
+	/** @type {Map<string, number>} */
+	const inventoryMap = new Map();
+	for(const item of await db.models.Item.findAll({ where: { userId, used: false } })) {
+		if (inventoryMap.has(item.itemName)) {
+			inventoryMap.set(item.itemName, inventoryMap.get(item.itemName) + 1);
+		} else {
+			inventoryMap.set(item.itemName, 1);
+		}
+	}
+	return inventoryMap;
 }
 
 

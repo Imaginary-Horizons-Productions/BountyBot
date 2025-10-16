@@ -8,10 +8,10 @@ let logicLayer;
 const mainId = "inventory";
 module.exports = new CommandWrapper(mainId, "Show your inventory of usable items", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	(interaction, origin, runMode) => {
-		logicLayer.items.getInventory(interaction.user.id).then(itemRows => {
+		logicLayer.items.getInventory(interaction.user.id).then(inventoryMap => {
 			let content = `Here are the items in your inventory (use them with ${commandMention("item")}):\n- `;
-			if (itemRows.length > 0) {
-				content += `${itemRows.map(row => `${row.itemName} x ${row.count}`).join("\n- ")}`;
+			if (inventoryMap.size > 0) {
+				content += `${Array.from(inventoryMap.entries()).map(([itemName, count]) => `${itemName} x ${count}`).join("\n- ")}`;
 			} else {
 				content += "(None yet, do some bounties to find some!)";
 			}
