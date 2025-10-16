@@ -17,7 +17,7 @@ function setDB(database) {
 async function getInventory(userId) {
 	/** @type {Map<string, number>} */
 	const inventoryMap = new Map();
-	for(const item of await db.models.Item.findAll({ where: { userId, used: false } })) {
+	for (const item of await db.models.Item.findAll({ where: { userId, used: false } })) {
 		if (inventoryMap.has(item.itemName)) {
 			inventoryMap.set(item.itemName, inventoryMap.get(item.itemName) + 1);
 		} else {
@@ -111,18 +111,31 @@ async function rollItemForHunter(dropRate, hunter) {
 	});
 }
 
-/** *Finds the count and other data associated with the specified Items of User*
+/** *Finds the count of the specified Items of User*
  * @param {string} userId
  * @param {string} itemName
  */
-function findUserItemEntry(userId, itemName) {
-	return db.models.Item.findOne({ where: { userId, itemName } });
+function countUserCopies(userId, itemName) {
+	return db.models.Item.count({ where: { userId, itemName, used: false } });
 }
+
+/** *Sets the oldest of the specified Items of User to used*
+ * Assumes item is extent
+ * @param {string} userId
+ * @param {string} itemName
+ */
+async function consume(userId, itemName) {
+	const dbRow = await db.models.Item.findOne({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]] });
+	return dbRow.update("used", true);
+}
+
+//TODONOW sweep used items
 
 module.exports = {
 	setDB,
 	getInventory,
 	getDropsAvailable,
 	rollItemForHunter,
-	findUserItemEntry
+	countUserCopies,
+	consume
 }

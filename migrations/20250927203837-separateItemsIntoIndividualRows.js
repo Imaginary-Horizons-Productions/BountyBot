@@ -68,7 +68,6 @@ class NewItemStructure {
 	userId;
 	/** @type {string} */
 	itemName;
-	//TODO implement used in logic layer
 	/** @type {boolean} */
 	used;
 	/** @type {Date} */
