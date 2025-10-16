@@ -74,7 +74,7 @@ const DROP_TABLE = {
 /** @param {string} hunterId */
 async function getDropsAvailable(hunterId) {
 	const itemCutoff = premium.gift.concat(premium.paid).includes(hunterId) ? 4 : 2;
-	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, updatedAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
+	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, createdAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
 	return itemCutoff - itemsDropped;
 }
 
