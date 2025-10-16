@@ -129,7 +129,10 @@ async function consume(userId, itemName) {
 	return dbRow.update("used", true);
 }
 
-//TODONOW sweep used items
+/** Destroy used items to reduce table size and obfuscate id generation */
+function sweepUsed() {
+	return db.models.Item.destroy({ where: { used: true } });
+}
 
 module.exports = {
 	setDB,
@@ -137,5 +140,6 @@ module.exports = {
 	getDropsAvailable,
 	rollItemForHunter,
 	countUserCopies,
-	consume
+	consume,
+	sweepUsed
 }

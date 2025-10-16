@@ -288,4 +288,9 @@ cron.schedule('0 0 */1 * *', async runTime => { // Runs daily currently
 	await dbReady;
 	logicBlob.cooldowns.cleanCooldownData();
 });
+
+cron.schedule("0 0 1 * *", async runTime => { // Sweep used items at noon on day 1 of each month
+	await dbReady;
+	logicBlob.items.sweepUsed();
+})
 //#endregion
