@@ -131,8 +131,8 @@ module.exports = {
     await queryInterface.createTable("Item", {
       id: {
         primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4 // TODO fix this as it does not generate proper UUID values and causes null IDs
+				type: DataTypes.INTEGER,
+				autoIncrement: true
       },
       userId: {
         type: DataTypes.STRING,
