@@ -66,11 +66,17 @@ class OldItemStructure {
 }
 
 class NewItemStructure {
+	/** @type {string} */
   userId;
+	/** @type {string} */
   itemName;
-  createdAt; // createdAt and updatedAt will always be the same for freshly migrated items
+	//TODO implement used in logic layer
+	/** @type {boolean} */
   used;
-  //TODO consider the ramifications of {used} on createdAt/updatedAt
+	/** @type {Date} */
+	createdAt;
+	/** @type {null} in the actual db, this will be `Date | null`, but we're not migrating any used items */
+	updatedAt;
 
   /**
    * Make a new NewItemStructure based on the passed object.
@@ -80,42 +86,10 @@ class NewItemStructure {
   constructor(objWithProperties) {
     this.userId = objWithProperties.userId;
     this.itemName = objWithProperties.itemName;
+		this.used = false;
     this.createdAt = objWithProperties.createdAt;
-    this.used = false;
-  }
-
-  isUsed() {
-    return this.used;
-  }
-
-  /**
-   * Return this object as a vanilla object for Sequelize compatibility
-   * @returns {}
-   */
-  asQueryCompatible() {
-    return {
-      userId: this.userId,
-      itemName: this.itemName,
-      used: this.used,
-      createdAt: this.createdAt,
-      updatedAt: this.createdAt
-    };
-  }
-}
-
-/**
- * Convert old items to new items
- * @param {OldItemStructure} items 
- * @returns {NewItemStructure}
- */
-function oldToNewItems(items) {
-  return items.map(item => {
-    let newList = [];
-    for (let i = 0; i < item.count; i++) {
-      newList.push(new NewItemStructure(item));
+		this.updatedAt = null;
     }
-    return newList;
-  }).flat();
 }
 
 /**
@@ -126,7 +100,7 @@ function oldToNewItems(items) {
 function newToOldItems(items) {
   let oldItemsAsMap = new Map();
   for (let item of items) {
-    if (item.isUsed()) continue; // Skip and do not count used items. Used items are not tracked in the old structure
+		if (item.used) continue; // Skip and do not count used items. Used items are not tracked in the old structure
 
     if (!oldItemsAsMap.has(item.userId)) oldItemsAsMap.set(item.userId, new Map());
 
@@ -146,7 +120,13 @@ function newToOldItems(items) {
 module.exports = {
   async up (queryInterface, Sequelize) {
     let [oldItems] = await queryInterface.sequelize.query("SELECT * FROM Item");
-    let newItems = oldToNewItems(oldItems.map(raw => new OldItemStructure(raw)));
+		/** @type {NewItemStructure[]} */
+		const migratedItems = [];
+		for (const item of oldItems.map(raw => new OldItemStructure(raw))) {
+			for (let i = 0; i < item.count; i++) {
+				migratedItems.push(new NewItemStructure(item));
+			}
+		}
     await queryInterface.dropTable("Item");
     await queryInterface.createTable("Item", {
       id: {
@@ -175,8 +155,7 @@ module.exports = {
         default: DataTypes.NOW
       },
       updatedAt: {
-        type: DataTypes.DATE,
-        default: DataTypes.NOW
+				type: DataTypes.DATE
       }
     }, {
       sequelize: queryInterface.sequelize,
