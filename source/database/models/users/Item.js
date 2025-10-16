@@ -8,17 +8,26 @@ class Item extends Model {
 /** @param {Sequelize} sequelize */
 function initModel(sequelize) {
 	return Item.init({
-		userId: {
+		id: {
 			primaryKey: true,
-			type: DataTypes.STRING
+			type: DataTypes.INTEGER,
+			autoIncrement: true
+		},
+		userId: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			references: {
+				model: 'User',
+				key: 'id'
+			}
 		},
 		itemName: {
-			primaryKey: true,
-			type: DataTypes.STRING
+			type: DataTypes.STRING,
+			allowNull: false
 		},
-		count: {
-			type: DataTypes.BIGINT,
-			defaultValue: 1
+		used: {
+			type: DataTypes.BOOLEAN,
+			default: false
 		}
 	}, {
 		sequelize,
