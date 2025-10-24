@@ -4,11 +4,6 @@ const { ButtonWrapper } = require("../classes");
 const buttonDictionary = {};
 
 for (const file of [
-	"bbaddcompleters.js",
-	"bbcomplete.js",
-	"bbremovecompleters.js",
-	"bbshowcase.js",
-	"bbtakedown.js",
 	"secondtoast.js"
 ]) {
 	/** @type {ButtonWrapper} */

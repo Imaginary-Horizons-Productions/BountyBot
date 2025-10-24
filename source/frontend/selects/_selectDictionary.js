@@ -4,6 +4,7 @@ const { SelectWrapper } = require("../classes");
 const selectDictionary = {};
 
 for (const file of [
+	"bountycontrolpanel.js"
 ]) {
 	/** @type {SelectWrapper} */
 	const select = require(`./${file}`);
