@@ -3,7 +3,7 @@ const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyl
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
-const { descendingByProperty } = require("../../shared");
+const { descendingByProperty, discordTimestamp } = require("../../shared");
 
 /** generates a command mention, which users can click to shortcut them to using the command
  * @param {string} fullCommand for subcommands append a whitespace and the subcommandName
@@ -161,7 +161,7 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 	}
 	if (bounty.scheduledEventId) {
 		const event = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
-		fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
+		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
 		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
@@ -671,7 +671,7 @@ function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
 	}
 
 	if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to <t:${startTimestamp}>`);
+		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to ${discordTimestamp(startTimestamp)}`);
 	}
 
 	if (!endTimestamp) {
@@ -679,11 +679,11 @@ function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
 	}
 
 	if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to <t:${endTimestamp}>`);
+		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to ${discordTimestamp(endTimestamp)}`);
 	}
 
 	if (startTimestamp > endTimestamp) {
-		errors.push(`End Timestamp (<t:${endTimestamp}>) was before Start Timestamp (<t:${startTimestamp}>).`);
+		errors.push(`End Timestamp (${discordTimestamp(endTimestamp)}) was before Start Timestamp (${discordTimestamp(startTimestamp)}).`);
 	}
 	return errors;
 }
