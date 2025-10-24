@@ -671,7 +671,7 @@ function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
 	}
 
 	if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to <t:${startTimestamp}>`);
+		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to ${discordTimestamp(startTimestamp)}`);
 	}
 
 	if (!endTimestamp) {
@@ -679,11 +679,11 @@ function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
 	}
 
 	if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to <t:${endTimestamp}>`);
+		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to ${discordTimestamp(endTimestamp)}`);
 	}
 
 	if (startTimestamp > endTimestamp) {
-		errors.push(`End Timestamp (<t:${endTimestamp}>) was before Start Timestamp (<t:${startTimestamp}>).`);
+		errors.push(`End Timestamp (${discordTimestamp(endTimestamp)}) was before Start Timestamp (${discordTimestamp(startTimestamp)}).`);
 	}
 	return errors;
 }

@@ -1,7 +1,7 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, TimestampStyles } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE, SAFE_DELIMITER } = require('../../constants');
-const { timeConversion } = require('../../shared');
+const { timeConversion, discordTimestamp } = require('../../shared');
 const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, truncateTextToLength, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 const { ModalLimits } = require('@sapphire/discord.js-utilities');
@@ -111,7 +111,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			case "showcase": {
 				const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 				if (runMode === "production" && Date.now() < nextShowcaseInMS) {
-					interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
+					interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
