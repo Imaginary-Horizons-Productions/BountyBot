@@ -1,10 +1,10 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyBoardButtons, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles } = require("../../shared");
+const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyCommandSelect, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload } = require("../../shared");
 const { timeConversion } = require("../../../shared");
-const { SKIP_INTERACTION_HANDLING, YEAR_IN_MS } = require("../../../constants");
+const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -133,37 +133,8 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
 				const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue("endTimestamp"));
-				const shouldMakeEvent = startTimestamp && endTimestamp;
 				if (startTimestamp || endTimestamp) {
-					if (!shouldMakeEvent) {
-						errors.push("Cannot make event with only start or only end timestamp.")
-					}
-					if (!startTimestamp) {
-						errors.push("Start timestamp must be an integer.");
-					} else if (!endTimestamp) {
-						errors.push("End timestamp must be an integer.");
-					} else {
-						if (startTimestamp > endTimestamp) {
-							errors.push("End timestamp was before start timestamp.");
-						}
-
-						const nowTimestamp = Date.now() / 1000;
-						if (nowTimestamp >= startTimestamp) {
-							errors.push("Start timestamp must be in the future.");
-						}
-
-						if (nowTimestamp >= endTimestamp) {
-							errors.push("End timestamp must be in the future.");
-						}
-
-						if (startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-							errors.push("Start timestamp cannot be 5 years in the future or further.");
-						}
-
-						if (endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-							errors.push("End timestamp cannot be 5 years in the future or further.");
-						}
-					}
+					errors.push(...validateScheduledEventTimestamps(startTimestamp, endTimestamp))
 				}
 
 				if (errors.length > 0) {
@@ -188,21 +159,8 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					updateScoreboard(origin.company, interaction.guild, embeds);
 				});
 
-				if (shouldMakeEvent) {
-					const eventPayload = {
-						name: `Bounty: ${title}`,
-						scheduledStartTime: startTimestamp * 1000,
-						scheduledEndTime: endTimestamp * 1000,
-						privacyLevel: 2,
-						entityType: GuildScheduledEventEntityType.External,
-						entityMetadata: { location: `${modalSubmission.member.displayName}'s #${slotNumber} Bounty` }
-					};
-					if (description) {
-						eventPayload.description = description;
-					}
-					if (imageURL) {
-						eventPayload.image = imageURL;
-					}
+				if (startTimestamp && endTimestamp) {
+					const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
 					const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 					rawBounty.scheduledEventId = event.id;
 				}
@@ -217,7 +175,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
 								name: bounty.title,
-								message: { embeds: [bountyEmbed], components: generateBountyBoardButtons(bounty) },
+								message: { embeds: [bountyEmbed], components: generateBountyCommandSelect(bounty.id) },
 								appliedTags: [origin.company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {
