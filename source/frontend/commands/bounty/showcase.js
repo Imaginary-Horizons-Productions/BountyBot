@@ -1,6 +1,6 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, PermissionFlagsBits } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, PermissionFlagsBits, TimestampStyles } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { timeConversion } = require("../../../shared");
+const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { bountiesToSelectOptions, buildBountyEmbed, updatePosting } = require("../../shared");
 
@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (runMode === "production" && Date.now() < nextShowcaseInMS) {
-			interaction.reply({ content: `You can showcase another bounty in <t:${Math.floor(nextShowcaseInMS / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
+			interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 

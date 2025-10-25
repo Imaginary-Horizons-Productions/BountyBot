@@ -1,9 +1,9 @@
-const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require('discord.js');
+const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType, MessageFlags, ComponentType, DiscordjsErrorCodes, bold, TimestampStyles } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
 const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
 const { ihpAuthorPayload, randomFooterTip } = require('../shared');
-const { timeConversion } = require('../../shared');
+const { timeConversion, discordTimestamp } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -54,7 +54,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			const cooldownName = `item-${itemName}`;
 			const { isOnCommandCooldown, cooldownTimestamp } = await logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
 			if (isOnCommandCooldown) {
-				collectedInteration.reply({ content: `Please wait, you can use another **${itemName}** again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
+				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 			logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));

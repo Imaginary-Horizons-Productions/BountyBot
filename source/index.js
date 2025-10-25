@@ -1,13 +1,14 @@
+const { discordTimestamp } = require('./shared/index.js');
 const log = console.log;
 
 console.log = function () {
-	log.apply(console, [`<t:${Math.floor(Date.now() / 1000)}> `, ...arguments]);
+	log.apply(console, [`${discordTimestamp(Math.floor(Date.now() / 1000))} `, ...arguments]);
 }
 
 const error = console.error;
 
 console.error = function () {
-	error.apply(console, [`<t:${Math.floor(Date.now() / 1000)}> `, ...arguments]);
+	error.apply(console, [`${discordTimestamp(Math.floor(Date.now() / 1000))} `, ...arguments]);
 }
 
 //#region Imports
@@ -15,7 +16,7 @@ const fsa = require('fs').promises;
 const { Sequelize } = require('sequelize');
 const path = require('path');
 const basename = path.basename(__filename);
-const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags } = require("discord.js");
+const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags, TimestampStyles } = require("discord.js");
 const { MessageComponentWrapper, InteractionOrigin } = require('./frontend/classes');
 const cron = require('node-cron');
 
@@ -191,11 +192,11 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	const commandTime = new Date();
 	const { isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName } = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, mainId, commandTime);
 	if (isOnGeneralCooldown) {
-		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	if (isOnCommandCooldown) {
-		interaction.reply({ content: `Please wait, \`/${mainId}\` is on cooldown. It can be used again <t:${Math.floor(cooldownTimestamp.getTime() / 1000)}:R>.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `Please wait, \`/${mainId}\` is on cooldown. It can be used again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	logicBlob.cooldowns.updateCooldowns(interaction.user.id, mainId, commandTime, cooldownMap[mainId]);

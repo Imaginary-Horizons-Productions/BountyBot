@@ -1,9 +1,9 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, unorderedList } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
-const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds } = require("../../constants");
+const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
-const { timeConversion, descendingByProperty } = require("../../shared");
+const { descendingByProperty, discordTimestamp } = require("../../shared");
 
 /** generates a command mention, which users can click to shortcut them to using the command
  * @param {string} fullCommand for subcommands append a whitespace and the subcommandName
@@ -161,7 +161,7 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 	}
 	if (bounty.scheduledEventId) {
 		const event = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
-		fields.push({ name: "Time", value: `<t:${event.scheduledStartTimestamp / 1000}> - <t:${event.scheduledEndTimestamp / 1000}>` });
+		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
 		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
@@ -213,26 +213,22 @@ function generateBountyRewardString(completerIds, completerReward, posterId, pos
 	return text;
 }
 
-/** @param {Bounty} bounty */
-function generateBountyBoardButtons(bounty) {
+/** @param {string} bountyId */
+function generateBountyCommandSelect(bountyId) {
 	return [
 		new ActionRowBuilder().addComponents(
-			new ButtonBuilder().setCustomId(`bbcomplete${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Success)
-				.setLabel("Complete")
-				.setDisabled(new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))),
-			new ButtonBuilder().setCustomId(`bbaddcompleters${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Primary)
-				.setLabel("Record Turn-Ins"),
-			new ButtonBuilder().setCustomId(`bbremovecompleters${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Secondary)
-				.setLabel("Revoke Turn-Ins"),
-			new ButtonBuilder().setCustomId(`bbshowcase${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Primary)
-				.setLabel("Showcase"),
-			new ButtonBuilder().setCustomId(`bbtakedown${SAFE_DELIMITER}${bounty.id}`)
-				.setStyle(ButtonStyle.Danger)
-				.setLabel("Take Down")
+			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
+				.setPlaceholder("Select a bounty command...")
+				.setOptions(
+					{ label: "No Change", description: "You can move the selection to this option without changing anything", value: "nochange" },
+					{ emoji: "📥", label: "Record other hunters' turn-ins", description: "Confirm another hunter has turned-in this bounty", value: "recordturnin" },
+					{ emoji: "🚫", label: "Revoke other hunters' turn-ins", description: "Remove credit for turning in this bounty from another hunter", value: "revoketurnin" },
+					{ emoji: "🔝", label: "Showcase this bounty", description: "Increase the rewards on this bounty and promote it in another channel", value: "showcase" },
+					{ emoji: "✅", label: "Complete this bounty", description: "Distribute rewards for turn-ins and mark this bounty completed", value: "complete" },
+					{ emoji: "📝", label: "Edit this bounty", description: "Change details about this bounty", value: "edit" },
+					{ emoji: "🔄", label: "Swap this bounty to another slot", description: "Move this bounty to another slot, changing its base reward", value: "swap" },
+					{ emoji: "🗑️", label: "Take this bounty down", description: "Take this bounty down without distrbuting rewards", value: "takedown" }
+				)
 		)
 	]
 }
@@ -662,6 +658,63 @@ function formatSeasonResultsToRewardTexts(seasonResults, descendingRanks, allGui
 	return rewardTexts;
 }
 
+/**
+ * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
+ */
+function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
+	const errors = [];
+	const nowTimestamp = Date.now() / 1000;
+
+	if (!startTimestamp) {
+		errors.push(`Start Timestamp must be an integer. Received: ${startTimestamp}`);
+	}
+
+	if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to ${discordTimestamp(startTimestamp)}`);
+	}
+
+	if (!endTimestamp) {
+		errors.push(`End Timestamp must be an integer. Received: ${endTimestamp}`);
+	}
+
+	if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to ${discordTimestamp(endTimestamp)}`);
+	}
+
+	if (startTimestamp > endTimestamp) {
+		errors.push(`End Timestamp (${discordTimestamp(endTimestamp)}) was before Start Timestamp (${discordTimestamp(startTimestamp)}).`);
+	}
+	return errors;
+}
+
+/**
+ * @param {string} title
+ * @param {string} posterName
+ * @param {number} slotNumber
+ * @param {string?} description
+ * @param {string?} imageURL
+ * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
+ */
+function createBountyEventPayload(title, posterName, slotNumber, description, imageURL, startTimestamp, endTimestamp) {
+	const payload = {
+		name: `Bounty: ${title}`,
+		scheduledStartTime: startTimestamp * 1000,
+		scheduledEndTime: endTimestamp * 1000,
+		privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+		entityType: GuildScheduledEventEntityType.External,
+		entityMetadata: { location: `${posterName}'s #${slotNumber} Bounty` }
+	};
+	if (description) {
+		payload.description = description;
+	}
+	if (imageURL) {
+		payload.image = imageURL;
+	}
+	return payload;
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -673,7 +726,7 @@ module.exports = {
 	buildBountyEmbed,
 	generateBountyRewardString,
 	buildVersionEmbed,
-	generateBountyBoardButtons,
+	generateBountyCommandSelect,
 	sendAnnouncement,
 	buildCompanyLevelUpLine,
 	seasonalScoreboardEmbed,
@@ -689,5 +742,7 @@ module.exports = {
 	generateCompletionEmbed,
 	generateSecondingRewardString,
 	formatHunterResultsToRewardTexts,
-	formatSeasonResultsToRewardTexts
+	formatSeasonResultsToRewardTexts,
+	validateScheduledEventTimestamps,
+	createBountyEventPayload
 };

@@ -1,3 +1,5 @@
+const { TimestampStyles } = require("discord.js");
+
 /** Convert an amount of time from a starting unit to a different one
  * @param {number} value
  * @param {"w" | "d" | "h" | "m" | "s" | "ms"} startingUnit
@@ -93,10 +95,23 @@ function descendingByProperty(property) {
 	return (a, b) => b[property] - a[property];
 }
 
+/** Formats a Unix Epoch into a string that Discord parses into the viewer's timezone, including style options
+ * @param {number} secondsSinceStartOf1970 aka the Unix Epoch, must be an integer to parse
+ * @param {TimestampStyles[keyof TimestampStyles]?} style using Discord.js's `TimestampStyles` recommended, see that object's properties for examples
+ */
+function discordTimestamp(secondsSinceStartOf1970, style) {
+	if (style) {
+		return `<t:${secondsSinceStartOf1970}:${style}>`;
+	} else {
+		return `<t:${secondsSinceStartOf1970}>`;
+	}
+}
+
 module.exports = {
 	timeConversion,
 	dateInPast,
 	dateInFuture,
 	ascendingByProperty,
-	descendingByProperty
+	descendingByProperty,
+	discordTimestamp
 };

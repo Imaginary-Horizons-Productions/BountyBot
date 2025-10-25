@@ -25,7 +25,7 @@ module.exports = {
 	commandIds: {},
 
 	// Internal Constants
-	BOUNTYBOT_INVITE_URL: "https://discord.com/api/oauth2/authorize?client_id=536330483852771348&permissions=18135835404336&scope=bot%20applications.commands",
+	BOUNTYBOT_INVITE_URL: "https://discord.com/oauth2/authorize?client_id=536330483852771348&permissions=2269727342913536&integration_type=0&scope=bot",
 	SAFE_DELIMITER: "→",
 	SKIP_INTERACTION_HANDLING: "❌",
 	COMPANY_XP_COEFFICIENT: 3,
