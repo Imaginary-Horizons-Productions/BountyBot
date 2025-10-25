@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
@@ -167,7 +167,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				}
 
 				if (errors.length > 0) {
-					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 

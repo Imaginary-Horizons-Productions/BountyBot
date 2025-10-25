@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, GuildScheduledEventEntityType, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList } = require("discord.js");
 const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
@@ -137,7 +137,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 
 				if (errors.length > 0) {
 					interaction.deleteReply();
-					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n• ${errors.join("\n• ")}`, flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
