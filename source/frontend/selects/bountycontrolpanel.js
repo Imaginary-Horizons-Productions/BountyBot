@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, Di
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModal } = require('../shared');
+const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -273,10 +273,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 				});
 			} break;
 			case "edit": {
-				const modal = await constructEditBountyModal(bounty, false, interaction.id, interaction.guild);
-				interaction.showModal(modal).then(() => {
-					return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
-				}).then(async modalSubmission => {
+				const { modal, submissionOptions } = await constructEditBountyModalAndOptions(bounty, false, interaction.id, interaction.guild);
+				interaction.showModal(modal).then(() => interaction.awaitModalSubmit(submissionOptions)).then(async modalSubmission => {
 					const title = modalSubmission.fields.getTextInputValue("title");
 					const description = modalSubmission.fields.getTextInputValue("description");
 

@@ -22,33 +22,32 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 			return;
 		}
 
-		interaction.showModal(
-			new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-				.setTitle("New Evergreen Bounty")
-				.addLabelComponents(
-					new LabelBuilder().setLabel("Title")
-						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("title")
-								.setStyle(TextInputStyle.Short)
-								.setPlaceholder("Discord markdown allowed...")
-								.setMaxLength(EmbedLimits.MaximumTitleLength)
-						),
-					new LabelBuilder().setLabel("Description")
-						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("description")
-								.setStyle(TextInputStyle.Paragraph)
-								.setPlaceholder("Bounties with clear instructions are easier to complete...")
-						),
-					new LabelBuilder().setLabel("Image URL")
-						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("imageURL")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Short)
-						)
-				)
-		);
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+			.setTitle("New Evergreen Bounty")
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Title")
+					.setTextInputComponent(
+						new TextInputBuilder().setCustomId("title")
+							.setStyle(TextInputStyle.Short)
+							.setPlaceholder("Discord markdown allowed...")
+							.setMaxLength(EmbedLimits.MaximumTitleLength)
+					),
+				new LabelBuilder().setLabel("Description")
+					.setTextInputComponent(
+						new TextInputBuilder().setCustomId("description")
+							.setStyle(TextInputStyle.Paragraph)
+							.setPlaceholder("Bounties with clear instructions are easier to complete...")
+					),
+				new LabelBuilder().setLabel("Image URL")
+					.setTextInputComponent(
+						new TextInputBuilder().setCustomId("imageURL")
+							.setRequired(false)
+							.setStyle(TextInputStyle.Short)
+					)
+			);
+		interaction.showModal(modal);
 
-		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: timeConversion(5, "m", "ms") }).then(async interaction => {
+		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async interaction => {
 			const title = interaction.fields.getTextInputValue("title");
 			const description = interaction.fields.getTextInputValue("description");
 

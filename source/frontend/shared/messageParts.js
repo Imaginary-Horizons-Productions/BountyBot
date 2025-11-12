@@ -3,7 +3,7 @@ const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyl
 const { MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
-const { descendingByProperty, discordTimestamp } = require("../../shared");
+const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 const { truncateTextToLength } = require("./dAPIRequests");
 
 /** generates a command mention, which users can click to shortcut them to using the command
@@ -722,7 +722,7 @@ function createBountyEventPayload(title, posterName, slotNumber, description, im
  * @param {string} key for constructing the ModalBuilder's customId uniquely
  * @param {Guild} guild
  */
-async function constructEditBountyModal(bounty, isEvergreen, key, guild) {
+async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guild) {
 	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${key}`)
 		.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
 		.addLabelComponents(
@@ -772,7 +772,7 @@ async function constructEditBountyModal(bounty, isEvergreen, key, guild) {
 				.setTextInputComponent(eventEndComponent)
 		)
 	}
-	return modal;
+	return { modal, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
 }
 
 module.exports = {
@@ -805,5 +805,5 @@ module.exports = {
 	formatSeasonResultsToRewardTexts,
 	validateScheduledEventTimestamps,
 	createBountyEventPayload,
-	constructEditBountyModal
+	constructEditBountyModalAndOptions
 };

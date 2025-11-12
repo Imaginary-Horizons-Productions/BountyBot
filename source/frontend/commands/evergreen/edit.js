@@ -1,7 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, updateEvergreenBountyBoard, constructEditBountyModal } = require("../../shared");
+const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, updateEvergreenBountyBoard, constructEditBountyModalAndOptions } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -34,9 +33,9 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				return;
 			}
 
-			const modal = await constructEditBountyModal(selectedBounty, true, collectedInteraction.id, collectedInteraction.guild);
+			const { modal, submissionOptions } = await constructEditBountyModalAndOptions(selectedBounty, true, collectedInteraction.id, collectedInteraction.guild);
 			collectedInteraction.showModal(modal);
-			return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
 				interaction.deleteReply();
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");

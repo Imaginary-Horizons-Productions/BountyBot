@@ -59,48 +59,47 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				return;
 			}
 
-			collectedInteraction.showModal(
-				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
-					.setTitle(`New Bounty (Slot ${slotNumber})`)
-					.addLabelComponents(
-						new LabelBuilder().setLabel("Title")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("title")
-									.setStyle(TextInputStyle.Short)
-									.setPlaceholder("Discord markdown allowed...")
-									.setMaxLength(EmbedLimits.MaximumTitleLength)
-							),
-						new LabelBuilder().setLabel("Description")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("description")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Paragraph)
-									.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
-							),
-						new LabelBuilder().setLabel("Image URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("imageURL")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-							),
-						new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("startTimestamp")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setPlaceholder("Required if making an event with the bounty")
-							),
-						new LabelBuilder().setLabel("Event End (Unix Timestamp)")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("endTimestamp")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setPlaceholder("Required if making an event with the bounty")
-							)
-					)
-			);
+			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
+				.setTitle(`New Bounty (Slot ${slotNumber})`)
+				.addLabelComponents(
+					new LabelBuilder().setLabel("Title")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("title")
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Discord markdown allowed...")
+								.setMaxLength(EmbedLimits.MaximumTitleLength)
+						),
+					new LabelBuilder().setLabel("Description")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("description")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Paragraph)
+								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+						),
+					new LabelBuilder().setLabel("Image URL")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("imageURL")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+						),
+					new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("startTimestamp")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Required if making an event with the bounty")
+						),
+					new LabelBuilder().setLabel("Event End (Unix Timestamp)")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("endTimestamp")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Required if making an event with the bounty")
+						)
+				);
+			collectedInteraction.showModal(modal);
 
-			return collectedInteraction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			return collectedInteraction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 
