@@ -1,4 +1,4 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, TimestampStyles } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, TimestampStyles, LabelBuilder } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE, SAFE_DELIMITER } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
@@ -275,12 +275,10 @@ module.exports = new SelectWrapper(mainId, 3000,
 			} break;
 			case "edit": {
 				const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
-					.setLabel("Event Start (Unix Timestamp)")
 					.setRequired(false)
 					.setStyle(TextInputStyle.Short)
 					.setPlaceholder("Required if making an event with the bounty");
 				const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
-					.setLabel("Event End (Unix Timestamp)")
 					.setRequired(false)
 					.setStyle(TextInputStyle.Short)
 					.setPlaceholder("Required if making an event with the bounty");
@@ -293,36 +291,34 @@ module.exports = new SelectWrapper(mainId, 3000,
 				const modalId = `${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${interaction.id}`;
 				const modal = new ModalBuilder().setCustomId(modalId)
 					.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
-					.addComponents(
-						new ActionRowBuilder().addComponents(
-							new TextInputBuilder().setCustomId("title")
-								.setLabel("Title")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Short)
-								.setPlaceholder("Discord markdown allowed...")
-								.setValue(bounty.title)
-						),
-						new ActionRowBuilder().addComponents(
-							new TextInputBuilder().setCustomId("description")
-								.setLabel("Description")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Paragraph)
-								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
-								.setValue(bounty.description ?? "")
-						),
-						new ActionRowBuilder().addComponents(
-							new TextInputBuilder().setCustomId("imageURL")
-								.setLabel("Image URL")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Short)
-								.setValue(bounty.attachmentURL ?? "")
-						),
-						new ActionRowBuilder().addComponents(
-							eventStartComponent
-						),
-						new ActionRowBuilder().addComponents(
-							eventEndComponent
-						)
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Title")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId("title")
+									.setRequired(false)
+									.setStyle(TextInputStyle.Short)
+									.setPlaceholder("Discord markdown allowed...")
+									.setValue(bounty.title)
+							),
+						new LabelBuilder().setLabel("Description")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId("description")
+									.setRequired(false)
+									.setStyle(TextInputStyle.Paragraph)
+									.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+									.setValue(bounty.description ?? "")
+							),
+						new LabelBuilder().setLabel("Image URL")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId("imageURL")
+									.setRequired(false)
+									.setStyle(TextInputStyle.Short)
+									.setValue(bounty.attachmentURL ?? "")
+							),
+						new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
+							.setTextInputComponent(eventStartComponent),
+						new LabelBuilder().setLabel("Event End (Unix Timestamp)")
+							.setTextInputComponent(eventEndComponent)
 					)
 				interaction.showModal(modal).then(() => {
 					return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: timeConversion(5, "m", "ms") })

@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, LabelBuilder } = require("discord.js");
 const { ModalLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
@@ -38,30 +38,30 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 			collectedInteraction.showModal(
 				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
 					.setTitle(truncateTextToLength(`Edit Bounty: ${selectedBounty.title}`, ModalLimits.MaximumTitleCharacters))
-					.addComponents(
-						new ActionRowBuilder().addComponents(
-							new TextInputBuilder().setCustomId("title")
-								.setLabel("Title")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Short)
-								.setPlaceholder("Discord markdown allowed...")
-								.setValue(selectedBounty.title)
-						),
-						new ActionRowBuilder().addComponents(
-							new TextInputBuilder().setCustomId("description")
-								.setLabel("Description")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Paragraph)
-								.setPlaceholder("Bounties with clear instructions are easier to complete...")
-								.setValue(selectedBounty.description ?? "")
-						),
-						new ActionRowBuilder().addComponents(
-							new TextInputBuilder().setCustomId("imageURL")
-								.setLabel("Image URL")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Short)
-								.setValue(selectedBounty.attachmentURL ?? "")
-						)
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Title")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId("title")
+									.setRequired(false)
+									.setStyle(TextInputStyle.Short)
+									.setPlaceholder("Discord markdown allowed...")
+									.setValue(selectedBounty.title)
+							),
+						new LabelBuilder().setLabel("Description")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId("description")
+									.setRequired(false)
+									.setStyle(TextInputStyle.Paragraph)
+									.setPlaceholder("Bounties with clear instructions are easier to complete...")
+									.setValue(selectedBounty.description ?? "")
+							),
+						new LabelBuilder().setLabel("Image URL")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId("imageURL")
+									.setRequired(false)
+									.setStyle(TextInputStyle.Short)
+									.setValue(selectedBounty.attachmentURL ?? "")
+							)
 					)
 			);
 			return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {

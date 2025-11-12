@@ -1,4 +1,4 @@
-const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, DiscordjsErrorCodes } = require("discord.js");
+const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, DiscordjsErrorCodes, LabelBuilder } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING, MAX_EVERGREEN_SLOTS } = require("../../../constants");
@@ -25,26 +25,26 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 		interaction.showModal(
 			new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("New Evergreen Bounty")
-				.addComponents(
-					new ActionRowBuilder().addComponents(
-						new TextInputBuilder().setCustomId("title")
-							.setLabel("Title")
-							.setStyle(TextInputStyle.Short)
-							.setPlaceholder("Discord markdown allowed...")
-							.setMaxLength(EmbedLimits.MaximumTitleLength)
-					),
-					new ActionRowBuilder().addComponents(
-						new TextInputBuilder().setCustomId("description")
-							.setLabel("Description")
-							.setStyle(TextInputStyle.Paragraph)
-							.setPlaceholder("Bounties with clear instructions are easier to complete...")
-					),
-					new ActionRowBuilder().addComponents(
-						new TextInputBuilder().setCustomId("imageURL")
-							.setLabel("Image URL")
-							.setRequired(false)
-							.setStyle(TextInputStyle.Short)
-					)
+				.addLabelComponents(
+					new LabelBuilder().setLabel("Title")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("title")
+								.setStyle(TextInputStyle.Short)
+								.setPlaceholder("Discord markdown allowed...")
+								.setMaxLength(EmbedLimits.MaximumTitleLength)
+						),
+					new LabelBuilder().setLabel("Description")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("description")
+								.setStyle(TextInputStyle.Paragraph)
+								.setPlaceholder("Bounties with clear instructions are easier to complete...")
+						),
+					new LabelBuilder().setLabel("Image URL")
+						.setTextInputComponent(
+							new TextInputBuilder().setCustomId("imageURL")
+								.setRequired(false)
+								.setStyle(TextInputStyle.Short)
+						)
 				)
 		);
 

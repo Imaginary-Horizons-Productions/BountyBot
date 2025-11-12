@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, LabelBuilder } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions, updatePosting } = require("../shared");
@@ -19,12 +19,12 @@ module.exports = new ItemTemplateSet(
 			interaction.showModal(
 				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Add Bounty Thumbnail")
-					.addComponents(
-						new ActionRowBuilder().addComponents(
-							new TextInputBuilder().setCustomId("imageURL")
-								.setLabel("Image URL")
-								.setStyle(TextInputStyle.Short)
-						)
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Image URL")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId("imageURL")
+									.setStyle(TextInputStyle.Short)
+							)
 					)
 			);
 

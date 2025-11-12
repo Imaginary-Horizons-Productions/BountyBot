@@ -1,4 +1,4 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, DiscordjsErrorCodes } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, DiscordjsErrorCodes, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { textsHaveAutoModInfraction, generateTextBar, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts } = require('../shared');
@@ -30,12 +30,12 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		const modalId = `${SKIP_INTERACTION_HANDLING}${interaction.id}`;
 		interaction.showModal(new ModalBuilder().setCustomId(modalId)
 			.setTitle("Raising a Toast")
-			.addComponents(
-				new ActionRowBuilder().addComponents(
-					new TextInputBuilder().setCustomId("message")
-						.setLabel("Toast Message")
-						.setStyle(TextInputStyle.Short)
-				)
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Toast Message")
+					.setTextInputComponent(
+						new TextInputBuilder().setCustomId("message")
+							.setStyle(TextInputStyle.Short)
+					)
 			)
 		);
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {

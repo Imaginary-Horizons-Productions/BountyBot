@@ -1,4 +1,4 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, DiscordjsErrorCodes } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, DiscordjsErrorCodes, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { commandMention, congratulationBuilder, buildBountyEmbed } = require('../shared');
@@ -29,12 +29,12 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		const modalId = `${SKIP_INTERACTION_HANDLING}${interaction.id}`;
 		interaction.showModal(new ModalBuilder().setCustomId(modalId)
 			.setTitle("Select a Bounty")
-			.addComponents(
-				new ActionRowBuilder().addComponents(
-					new TextInputBuilder().setCustomId("slot-number")
-						.setLabel("Bounty Slot Number")
-						.setStyle(TextInputStyle.Short)
-				)
+			.setLabelComponents(
+				new LabelBuilder().setLabel("Bounty Slot Number")
+					.setTextInputComponent(
+						new TextInputBuilder().setCustomId("slot-number")
+							.setStyle(TextInputStyle.Short)
+					)
 			)
 		);
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
