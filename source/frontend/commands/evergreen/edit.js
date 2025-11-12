@@ -1,8 +1,7 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, LabelBuilder } = require("discord.js");
-const { ModalLimits } = require("@sapphire/discord.js-utilities");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength, updateEvergreenBountyBoard } = require("../../shared");
+const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, updateEvergreenBountyBoard, constructEditBountyModal } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -35,36 +34,9 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				return;
 			}
 
-			collectedInteraction.showModal(
-				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
-					.setTitle(truncateTextToLength(`Edit Bounty: ${selectedBounty.title}`, ModalLimits.MaximumTitleCharacters))
-					.addLabelComponents(
-						new LabelBuilder().setLabel("Title")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("title")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setPlaceholder("Discord markdown allowed...")
-									.setValue(selectedBounty.title)
-							),
-						new LabelBuilder().setLabel("Description")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("description")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Paragraph)
-									.setPlaceholder("Bounties with clear instructions are easier to complete...")
-									.setValue(selectedBounty.description ?? "")
-							),
-						new LabelBuilder().setLabel("Image URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("imageURL")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setValue(selectedBounty.attachmentURL ?? "")
-							)
-					)
-			);
-			return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			const modal = await constructEditBountyModal(selectedBounty, true, collectedInteraction.id, collectedInteraction.guild);
+			collectedInteraction.showModal(modal);
+			return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				interaction.deleteReply();
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");

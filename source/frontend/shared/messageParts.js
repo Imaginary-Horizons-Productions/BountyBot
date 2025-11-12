@@ -1,9 +1,10 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList } = require("discord.js");
-const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
-const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS } = require("../../constants");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList, TextInputBuilder, TextInputStyle, ModalBuilder, LabelBuilder } = require("discord.js");
+const { MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
+const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp } = require("../../shared");
+const { truncateTextToLength } = require("./dAPIRequests");
 
 /** generates a command mention, which users can click to shortcut them to using the command
  * @param {string} fullCommand for subcommands append a whitespace and the subcommandName
@@ -715,6 +716,65 @@ function createBountyEventPayload(title, posterName, slotNumber, description, im
 	return payload;
 }
 
+/**
+ * @param {Bounty} bounty
+ * @param {boolean} isEvergreen
+ * @param {string} key for constructing the ModalBuilder's customId uniquely
+ * @param {Guild} guild
+ */
+async function constructEditBountyModal(bounty, isEvergreen, key, guild) {
+	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${key}`)
+		.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
+		.addLabelComponents(
+			new LabelBuilder().setLabel("Title")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("title")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Short)
+						.setPlaceholder("Discord markdown allowed...")
+						.setValue(bounty.title)
+				),
+			new LabelBuilder().setLabel("Description")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("description")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Paragraph)
+						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+						.setValue(bounty.description ?? "")
+				),
+			new LabelBuilder().setLabel("Image URL")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("imageURL")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Short)
+						.setValue(bounty.attachmentURL ?? "")
+				)
+		);
+	if (!isEvergreen) {
+		const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
+			.setRequired(false)
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("Required if making an event with the bounty");
+		const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
+			.setRequired(false)
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("Required if making an event with the bounty");
+
+		if (bounty.scheduledEventId) {
+			const scheduledEvent = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
+			eventStartComponent.setValue((scheduledEvent.scheduledStartTimestamp / 1000).toString());
+			eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
+		}
+		modal.addLabelComponents(
+			new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
+				.setTextInputComponent(eventStartComponent),
+			new LabelBuilder().setLabel("Event End (Unix Timestamp)")
+				.setTextInputComponent(eventEndComponent)
+		)
+	}
+	return modal;
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -744,5 +804,6 @@ module.exports = {
 	formatHunterResultsToRewardTexts,
 	formatSeasonResultsToRewardTexts,
 	validateScheduledEventTimestamps,
-	createBountyEventPayload
+	createBountyEventPayload,
+	constructEditBountyModal
 };

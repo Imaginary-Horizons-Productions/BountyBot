@@ -1,10 +1,9 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, TimestampStyles, LabelBuilder } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles } = require('discord.js');
 const { SelectWrapper } = require('../classes');
-const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE, SAFE_DELIMITER } = require('../../constants');
+const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, truncateTextToLength, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps } = require('../shared');
+const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModal } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
-const { ModalLimits } = require('@sapphire/discord.js-utilities');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -274,54 +273,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 				});
 			} break;
 			case "edit": {
-				const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
-					.setRequired(false)
-					.setStyle(TextInputStyle.Short)
-					.setPlaceholder("Required if making an event with the bounty");
-				const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
-					.setRequired(false)
-					.setStyle(TextInputStyle.Short)
-					.setPlaceholder("Required if making an event with the bounty");
-
-				if (bounty.scheduledEventId) {
-					const scheduledEvent = await interaction.guild.scheduledEvents.fetch(bounty.scheduledEventId);
-					eventStartComponent.setValue((scheduledEvent.scheduledStartTimestamp / 1000).toString());
-					eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
-				}
-				const modalId = `${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${interaction.id}`;
-				const modal = new ModalBuilder().setCustomId(modalId)
-					.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
-					.addLabelComponents(
-						new LabelBuilder().setLabel("Title")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("title")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setPlaceholder("Discord markdown allowed...")
-									.setValue(bounty.title)
-							),
-						new LabelBuilder().setLabel("Description")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("description")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Paragraph)
-									.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
-									.setValue(bounty.description ?? "")
-							),
-						new LabelBuilder().setLabel("Image URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("imageURL")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setValue(bounty.attachmentURL ?? "")
-							),
-						new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
-							.setTextInputComponent(eventStartComponent),
-						new LabelBuilder().setLabel("Event End (Unix Timestamp)")
-							.setTextInputComponent(eventEndComponent)
-					)
+				const modal = await constructEditBountyModal(bounty, false, interaction.id, interaction.guild);
 				interaction.showModal(modal).then(() => {
-					return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: timeConversion(5, "m", "ms") })
+					return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
 				}).then(async modalSubmission => {
 					const title = modalSubmission.fields.getTextInputValue("title");
 					const description = modalSubmission.fields.getTextInputValue("description");

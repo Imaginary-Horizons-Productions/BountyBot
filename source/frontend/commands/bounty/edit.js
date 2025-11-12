@@ -1,8 +1,7 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, bold, LabelBuilder } = require("discord.js");
-const { ModalLimits } = require("@sapphire/discord.js-utilities");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
-const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, truncateTextToLength, validateScheduledEventTimestamps, createBountyEventPayload } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModal } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -34,54 +33,9 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				return;
 			}
 
-			const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
-				.setRequired(false)
-				.setStyle(TextInputStyle.Short)
-				.setPlaceholder("Required if making an event with the bounty");
-			const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
-				.setRequired(false)
-				.setStyle(TextInputStyle.Short)
-				.setPlaceholder("Required if making an event with the bounty");
-
-			if (bounty.scheduledEventId) {
-				const scheduledEvent = await interaction.guild.scheduledEvents.fetch(bounty.scheduledEventId);
-				eventStartComponent.setValue((scheduledEvent.scheduledStartTimestamp / 1000).toString());
-				eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
-			}
-			collectedInteraction.showModal(
-				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
-					.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
-					.addLabelComponents(
-						new LabelBuilder().setLabel("Title")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("title")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setPlaceholder("Discord markdown allowed...")
-									.setValue(bounty.title)
-							),
-						new LabelBuilder().setLabel("Description")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("description")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Paragraph)
-									.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
-									.setValue(bounty.description ?? "")
-							),
-						new LabelBuilder().setLabel("Image URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("imageURL")
-									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
-									.setValue(bounty.attachmentURL ?? "")
-							),
-						new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
-							.setTextInputComponent(eventStartComponent),
-						new LabelBuilder().setLabel("Event End (Unix Timestamp)")
-							.setTextInputComponent(eventEndComponent)
-					)
-			);
-			return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === `${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			const modal = await constructEditBountyModal(bounty, false, interaction.id, interaction.guild);
+			collectedInteraction.showModal(modal);
+			return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 
