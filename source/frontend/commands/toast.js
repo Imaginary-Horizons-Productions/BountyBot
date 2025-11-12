@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { textsHaveAutoModInfraction, generateTextBar, listifyEN, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
@@ -53,7 +53,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		// Early-out if any errors
 		if (errors.length > 0) {
-			interaction.reply({ content: `The following errors were encountered while raising your toast:\n- ${errors.join("\n- ")}`, flags: MessageFlags.Ephemeral });
+			interaction.reply({ content: `The following errors were encountered while raising your toast:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 

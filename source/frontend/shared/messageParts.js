@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList } = require("discord.js");
 const { MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
@@ -202,10 +202,10 @@ function generateBountyRewardString(completerIds, completerReward, posterId, pos
 		text += `\n${userMention(posterId)} +${posterReward} XP${multiplierString}`;
 	}
 	if (rankUpdates.length > 0) {
-		text += `\n${heading("Rank Ups", 2)}\n- ${rankUpdates.join("\n- ")}`;
+		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
 	}
 	if (rewardTexts.length > 0) {
-		text += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
+		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
 	}
 	if (text.length > MessageLimits.MaximumLength) {
 		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
@@ -569,10 +569,10 @@ function generateToastRewardString(rewardedHunterIds, rankUpdates, rewardTexts, 
 		rewardString += `\n${senderMention} + ${critValue} XP${multiplierString} ${italic("Critical Toast!")}`;
 	}
 	if (rankUpdates.length > 0) {
-		rewardString += `\n${heading("Rank Ups", 2)}\n- ${rankUpdates.join("\n- ")}`;
+		rewardString += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
 	}
 	if (rewardTexts.length > 0) {
-		rewardString += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
+		rewardString += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
 	}
 	if (rewardString.length > MessageLimits.MaximumLength) {
 		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
@@ -604,10 +604,10 @@ function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUp
 		}
 	}
 	if (rankUpdates.length > 0) {
-		text += `\n${heading("Rank Ups", 2)}\n- ${rankUpdates.join("\n- ")}`;
+		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
 	}
 	if (rewardTexts.length > 0) {
-		text += `\n${heading("Rewards", 2)}\n- ${rewardTexts.join("\n- ")}`;
+		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
 	}
 	if (text.length > MessageLimits.MaximumLength) {
 		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;

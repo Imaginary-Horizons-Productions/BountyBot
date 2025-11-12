@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
+const { PermissionFlagsBits, InteractionContextType, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, companyStatsEmbed } = require('../shared');
 
@@ -65,7 +65,7 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			updateScoreboard(origin.company, guild, embeds);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
-				announcementText += `\n## Shoutouts\n- ${shoutouts.join("\n- ")}`;
+				announcementText += `\n## Shoutouts\n${unorderedList(shoutouts)}`;
 			}
 			interaction.reply(sendAnnouncement(origin.company, { content: announcementText, embeds: [embed] }));
 		})

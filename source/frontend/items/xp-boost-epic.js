@@ -1,3 +1,4 @@
+const { unorderedList } = require("discord.js");
 const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard } = require("../shared");
@@ -32,7 +33,7 @@ module.exports = new ItemTemplateSet(
 				additionalRewards.push(companyLevelLine);
 			}
 			if (additionalRewards.length > 0) {
-				content += `\n- ${additionalRewards.join("\n- ")}`;
+				content += `\n${unorderedList(additionalRewards)}`;
 			}
 			interaction.reply({ content });
 			const embeds = [];

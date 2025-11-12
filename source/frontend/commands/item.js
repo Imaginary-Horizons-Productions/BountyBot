@@ -12,8 +12,8 @@ const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, origin, runMode) => {
 		const itemName = interaction.options.getString("item-name");
-		const itemRow = await logicLayer.items.findUserItemEntry(interaction.user.id, itemName);
-		const hasItem = itemRow !== null && itemRow.count > 0 || runMode !== "production";
+		const itemCount = await logicLayer.items.countUserCopies(interaction.user.id, itemName);
+		const hasItem = itemCount > 0 || runMode !== "production";
 		let embedColor = Colors.Blurple;
 		if (itemName.includes("Profile Colorizer")) {
 			const [color] = itemName.split("Profile Colorizer");
@@ -25,7 +25,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 					.setAuthor(ihpAuthorPayload)
 					.setTitle(itemName)
 					.setDescription(getItemDescription(itemName))
-					.addFields({ name: "You have", value: runMode !== "production" ? "Debug Mode" : hasItem ? itemRow.count.toString() : "0" })
+					.addFields({ name: "You have", value: runMode !== "production" ? "Debug Mode" : itemCount })
 					.setFooter(randomFooterTip())
 			],
 			components: [
@@ -44,9 +44,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 				return;
 			}
 
-			await itemRow?.reload();
-
-			if (runMode === "production" && itemRow?.count < 1) {
+			if (runMode === "production" && await logicLayer.items.countUserCopies(interaction.user.id, itemName) < 1) {
 				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -54,7 +52,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			const now = new Date();
 
 			const cooldownName = `item-${itemName}`;
-			const {isOnCommandCooldown, cooldownTimestamp} = await logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
+			const { isOnCommandCooldown, cooldownTimestamp } = await logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
 			if (isOnCommandCooldown) {
 				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
@@ -63,7 +61,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 
 			return useItem(itemName, collectedInteration, origin).then(shouldSkipDecrement => {
 				if (!shouldSkipDecrement && runMode === "production") {
-					itemRow?.decrement("count");
+					return logicLayer.items.consume(interaction.user.id, itemName);
 				}
 			});
 		}).catch(error => {
