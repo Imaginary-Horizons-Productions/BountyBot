@@ -4,7 +4,6 @@ const { MessageLimits, EmbedLimits, ModalLimits, SelectMenuLimits } = require("@
 const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
-const { truncateTextToLength } = require("./dAPIRequests");
 
 /** generates a command mention, which users can click to shortcut them to using the command
  * @param {string} fullCommand for subcommands append a whitespace and the subcommandName
