@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, bountiesToSelectOptions, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, bountiesToSelectOptions } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",

@@ -1,6 +1,6 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList, TextInputBuilder, TextInputStyle, ModalBuilder, LabelBuilder } = require("discord.js");
-const { MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList, TextInputBuilder, TextInputStyle, ModalBuilder, LabelBuilder, UserSelectMenuBuilder } = require("discord.js");
+const { MessageLimits, EmbedLimits, ModalLimits, SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
@@ -775,6 +775,42 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 	return { modal, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
 }
 
+/**
+ * @param {string} text
+ * @param {number} length
+ */
+function truncateTextToLength(text, length) {
+	if (text.length > length) {
+		return `${text.slice(0, length - 1)}…`;
+	} else {
+		return text;
+	}
+}
+
+/** @param {Bounty[]} bounties */
+function bountiesToSelectOptions(bounties) {
+	return bounties.map(bounty => {
+		const optionPayload = {
+			emoji: getNumberEmoji(bounty.slotNumber),
+			label: bounty.title,
+			value: bounty.id
+		}
+		if (bounty.description) {
+			optionPayload.description = truncateTextToLength(bounty.description, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
+		}
+		return optionPayload;
+	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
+}
+
+/** @param {string} placeholderText */
+function disabledSelectRow(placeholderText) {
+	return new ActionRowBuilder().addComponents(
+		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
+			.setDisabled(true)
+	)
+}
+
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -805,5 +841,8 @@ module.exports = {
 	formatSeasonResultsToRewardTexts,
 	validateScheduledEventTimestamps,
 	createBountyEventPayload,
-	constructEditBountyModalAndOptions
+	constructEditBountyModalAndOptions,
+	truncateTextToLength,
+	bountiesToSelectOptions,
+	disabledSelectRow
 };

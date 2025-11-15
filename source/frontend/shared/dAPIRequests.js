@@ -1,9 +1,8 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, ActionRowBuilder, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel, UserSelectMenuBuilder } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank } = require("../../database/models");
-const { getNumberEmoji, buildBountyEmbed } = require("./messageParts");
+const { buildBountyEmbed } = require("./messageParts");
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
-const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { ascendingByProperty } = require("../../shared");
 
 /**
@@ -26,21 +25,6 @@ function createSubcommandMappings(mainId, fileList) {
 	return mappings;
 };
 
-/** @param {Bounty[]} bounties */
-function bountiesToSelectOptions(bounties) {
-	return bounties.map(bounty => {
-		const optionPayload = {
-			emoji: getNumberEmoji(bounty.slotNumber),
-			label: bounty.title,
-			value: bounty.id
-		}
-		if (bounty.description) {
-			optionPayload.description = truncateTextToLength(bounty.description, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
-		}
-		return optionPayload;
-	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
-}
-
 /**
  * @param {Rank[]} ranks
  * @param {Collection<string, Role>} allGuildRoles
@@ -57,18 +41,6 @@ function rankArrayToSelectOptions(ranks, allGuildRoles) {
 		}
 		return option;
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
-}
-
-/**
- * @param {string} text
- * @param {number} length
- */
-function truncateTextToLength(text, length) {
-	if (text.length > length) {
-		return `${text.slice(0, length - 1)}…`;
-	} else {
-		return text;
-	}
 }
 
 /** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't
@@ -167,15 +139,6 @@ async function updateScoreboard(company, guild, embeds) {
 	}
 }
 
-/** @param {string} placeholderText */
-function disabledSelectRow(placeholderText) {
-	return new ActionRowBuilder().addComponents(
-		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
-			.setDisabled(true)
-	)
-}
-
 /**
  * @param {Message} embedMessage
  * @param {string} content
@@ -224,15 +187,12 @@ async function syncRankRoles(seasonResults, descendingRanks, guildMemberManager)
 
 module.exports = {
 	createSubcommandMappings,
-	bountiesToSelectOptions,
 	rankArrayToSelectOptions,
-	truncateTextToLength,
 	contentOrFileMessagePayload,
 	updateEvergreenBountyBoard,
 	createEvergreenBountyThread,
 	updatePosting,
 	updateScoreboard,
-	disabledSelectRow,
 	sendToRewardsThread,
 	syncRankRoles
 };
