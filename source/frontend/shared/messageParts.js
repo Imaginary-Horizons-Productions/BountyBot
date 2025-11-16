@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList, TextInputBuilder, TextInputStyle, ModalBuilder, LabelBuilder, UserSelectMenuBuilder } = require("discord.js");
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList, TextInputBuilder, TextInputStyle, ModalBuilder, LabelBuilder, UserSelectMenuBuilder, underline } = require("discord.js");
 const { MessageLimits, EmbedLimits, ModalLimits, SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
@@ -356,11 +356,12 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
 
 	const scorelines = [];
-	for (const hunter of Array.from(hunterMembers.values()).sort(descendingByProperty("xp"))) {
-		if (hunter.xp < 1) {
+	for (const guildMember of Array.from(hunterMembers.values()).sort(descendingByProperty("xp"))) {
+		const hunter = hunterMap.get(guildMember.id);
+		if (hunter?.xp < 1) {
 			break;
 		}
-		scorelines.push(`**${hunterMembers.get(hunter.userId).displayName}** __Level ${hunter.getLevel(company.xpCoefficient)}__ *${hunter.xp} XP*`);
+		scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)
