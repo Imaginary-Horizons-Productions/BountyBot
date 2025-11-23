@@ -47,14 +47,15 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, [interaction.targetId], null);
 			const boardId = origin.company.bountyBoardId;
 			const { postingId } = bounty;
-			if (!boardId || !postingId) return;
-			const boardChannel = await modalSubmission.guild.channels.fetch(boardId);
-			const post = await boardChannel.threads.fetch(postingId);
-			if (post.archived) {
-				await post.setArchived(false, "Unarchived to update posting");
+			if (boardId && postingId) {
+				const boardChannel = await modalSubmission.guild.channels.fetch(boardId);
+				const post = await boardChannel.threads.fetch(postingId);
+				if (post.archived) {
+					await post.setArchived(false, "Unarchived to update posting");
+				}
+				post.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${congratulationBuilder()}!` });
+				(await post.fetchStarterMessage()).edit({ embeds: [await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]))] });
 			}
-			post.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${congratulationBuilder()}!` });
-			(await post.fetchStarterMessage()).edit({ embeds: [await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]))] });
 			modalSubmission.reply({ content: `${userMention(interaction.targetId)}'s turn-in of ${bold(bounty.title)} has been recorded! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: MessageFlags.Ephemeral });
 		}).catch(error => {
 			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
