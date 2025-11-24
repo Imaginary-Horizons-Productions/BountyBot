@@ -112,7 +112,6 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					userId: modalSubmission.user.id,
 					companyId: modalSubmission.guildId,
 					slotNumber: parseInt(slotNumber),
-					isEvergreen: false,
 					title
 				};
 				if (description) {

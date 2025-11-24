@@ -55,7 +55,7 @@ function initModel(sequelize) {
 		},
 		isEvergreen: {
 			type: DataTypes.BOOLEAN,
-			devaultValue: false
+			defaultValue: false
 		},
 		title: {
 			type: DataTypes.STRING,
