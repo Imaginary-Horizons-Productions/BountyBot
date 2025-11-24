@@ -1,8 +1,8 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, PermissionFlagsBits, TimestampStyles } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { timeConversion, discordTimestamp, butIgnoreDiscordInteractionCollectorErrors } = require("../../../shared");
+const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, buildBountyEmbed, updatePosting } = require("../../shared");
+const { bountiesToSelectOptions, buildBountyEmbed, updatePosting, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {

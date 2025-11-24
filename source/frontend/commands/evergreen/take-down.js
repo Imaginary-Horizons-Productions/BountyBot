@@ -1,9 +1,8 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, bountiesToSelectOptions, updateEvergreenBountyBoard } = require("../../shared");
+const { commandMention, bountiesToSelectOptions, updateEvergreenBountyBoard, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
-const { butIgnoreDiscordInteractionCollectorErrors } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {

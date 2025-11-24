@@ -2,7 +2,7 @@ const { TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, Emb
 const { EmbedLimits } = require('@sapphire/discord.js-utilities');
 const { CommandWrapper } = require('../classes');
 const { testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { butIgnoreDiscordInteractionCollectorErrors } = require('../../shared');
+const { butIgnoreDiscordInteractionCollectorErrors } = require('../shared');
 
 const mainId = "feedback";
 module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,

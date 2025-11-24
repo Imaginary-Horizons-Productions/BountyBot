@@ -2,8 +2,8 @@ const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, Embed
 const { CommandWrapper } = require('../classes/index.js');
 const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
-const { ihpAuthorPayload, randomFooterTip } = require('../shared');
-const { timeConversion, discordTimestamp, butIgnoreDiscordInteractionCollectorErrors } = require('../../shared');
+const { ihpAuthorPayload, randomFooterTip, butIgnoreDiscordInteractionCollectorErrors } = require('../shared');
+const { timeConversion, discordTimestamp } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;

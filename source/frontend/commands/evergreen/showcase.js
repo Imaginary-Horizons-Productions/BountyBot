@@ -1,9 +1,8 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, buildBountyEmbed } = require("../../shared");
+const { bountiesToSelectOptions, buildBountyEmbed, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
 const { Company } = require("../../../database/models");
-const { butIgnoreDiscordInteractionCollectorErrors } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {

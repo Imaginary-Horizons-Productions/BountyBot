@@ -1,8 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { commandMention, congratulationBuilder, buildBountyEmbed } = require('../shared');
-const { butIgnoreDiscordInteractionCollectorErrors } = require('../../shared');
+const { commandMention, congratulationBuilder, buildBountyEmbed, butIgnoreDiscordInteractionCollectorErrors } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;

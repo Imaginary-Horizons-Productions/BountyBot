@@ -1,8 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, syncRankRoles } = require("../../shared");
-const { butIgnoreDiscordInteractionCollectorErrors } = require("../../../shared");
+const { bountiesToSelectOptions, syncRankRoles, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down another user's bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {

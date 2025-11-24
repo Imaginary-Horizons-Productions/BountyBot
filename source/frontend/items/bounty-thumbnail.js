@@ -1,8 +1,8 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, LabelBuilder } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
-const { bountiesToSelectOptions, updatePosting } = require("../shared");
-const { timeConversion, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
+const { bountiesToSelectOptions, updatePosting, butIgnoreDiscordInteractionCollectorErrors } = require("../shared");
+const { timeConversion } = require("../../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
