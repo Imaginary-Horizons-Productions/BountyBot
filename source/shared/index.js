@@ -1,4 +1,4 @@
-const { TimestampStyles, DiscordjsErrorCodes } = require("discord.js");
+const { TimestampStyles } = require("discord.js");
 
 /** Convert an amount of time from a starting unit to a different one
  * @param {number} value
