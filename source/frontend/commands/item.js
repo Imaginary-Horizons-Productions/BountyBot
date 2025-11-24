@@ -1,9 +1,9 @@
-const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType, MessageFlags, ComponentType, DiscordjsErrorCodes, bold, TimestampStyles } = require('discord.js');
+const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType, MessageFlags, ComponentType, bold, TimestampStyles } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
 const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
 const { ihpAuthorPayload, randomFooterTip } = require('../shared');
-const { timeConversion, discordTimestamp } = require('../../shared');
+const { timeConversion, discordTimestamp, butIgnoreDiscordInteractionCollectorErrors } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -64,11 +64,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 					return logicLayer.items.consume(interaction.user.id, itemName);
 				}
 			});
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		}).finally(() => {
+		}).catch(butIgnoreDiscordInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

@@ -1,8 +1,9 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, DiscordjsErrorCodes, LabelBuilder } = require('discord.js');
+const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { textsHaveAutoModInfraction, generateTextBar, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts } = require('../shared');
 const { Company } = require('../../database/models');
+const { butIgnoreDiscordInteractionCollectorErrors } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -96,11 +97,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					updateScoreboard(origin.company, modalSubmission.guild, embeds);
 				}
 			});
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		})
+		}).catch(butIgnoreDiscordInteractionCollectorErrors);
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

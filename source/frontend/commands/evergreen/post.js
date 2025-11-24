@@ -1,9 +1,9 @@
-const { ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, DiscordjsErrorCodes, LabelBuilder } = require("discord.js");
+const { ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, LabelBuilder } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING, MAX_EVERGREEN_SLOTS } = require("../../../constants");
 const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, updateEvergreenBountyBoard } = require("../../shared");
-const { timeConversion } = require("../../../shared");
+const { timeConversion, butIgnoreDiscordInteractionCollectorErrors } = require("../../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit ${MAX_EVERGREEN_SLOTS}`,
@@ -99,10 +99,6 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 			});
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		})
+		}).catch(butIgnoreDiscordInteractionCollectorErrors);
 	}
 );

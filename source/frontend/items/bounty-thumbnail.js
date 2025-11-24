@@ -1,8 +1,8 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, LabelBuilder } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, LabelBuilder } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { bountiesToSelectOptions, updatePosting } = require("../shared");
-const { timeConversion } = require("../../shared");
+const { timeConversion, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -63,11 +63,7 @@ module.exports = new ItemTemplateSet(
 					});
 					return collectedInteraction.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` <#${bounty.postingId}>` : ""}`, flags: MessageFlags.Ephemeral });
 				})
-			}).catch(error => {
-				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-					console.error(error);
-				}
-			}).finally(() => {
+			}).catch(butIgnoreDiscordInteractionCollectorErrors).finally(() => {
 				modalSubmission.deleteReply();
 			})
 		}
