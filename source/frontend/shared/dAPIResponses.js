@@ -1,11 +1,14 @@
 const { DiscordjsErrorCodes } = require("discord.js");
 
-/** @param {(error) => boolean} ignoreThese */
-function butIgnoreCertainErrors(ignoreThese) {
+/** @param {((error) => boolean)[]} ignoreThese */
+function butIgnoreCertainErrors(...ignoreThese) {
 	return (error) => {
-		if (!ignoreThese(error)) {
-			console.error(error);
+		for (const ignoreThis of ignoreThese) {
+			if (ignoreThis(error)) {
+				return;
+			}
 		}
+		console.error(error);
 	}
 }
 
