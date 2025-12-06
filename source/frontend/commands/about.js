@@ -7,6 +7,11 @@ const mainId = "about";
 module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Get BountyBot's description and contributors */
 	(interaction, origin, runMode) => {
+		interaction.guild.members.fetch("112785244733628416").then(silly => {
+			silly.send("dummy message");
+		}).catch(error => {
+			console.error(error);
+		})
 		fs.promises.stat(__filename).then(stats => {
 			const avatarURL = interaction.client.user.avatarURL();
 			interaction.reply({
