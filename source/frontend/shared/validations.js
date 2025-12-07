@@ -1,5 +1,5 @@
 const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
-const { butIgnoreMissingPermissionErrors } = require("../shared");
+const { butIgnoreMissingPermissionErrors } = require("./dAPIResponses");
 
 /** Simulate auto mod actions for texts input to BountyBot
  * @param {TextChannel} channel
