@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { syncRankRoles } = require("../../shared");
+const { syncRankRoles, butIgnoreCantSendToThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("season-disqualify", "Toggle disqualification from ranking for a bounty hunter in the current season",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -13,7 +13,8 @@ module.exports = new SubcommandWrapper("season-disqualify", "Toggle disqualifica
 		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 		interaction.reply({ content: `<@${member.id}> has been ${participation.isRankDisqualified ? "dis" : "re"}qualified for achieving ranks this season.`, flags: MessageFlags.Ephemeral });
 		if (!member.user.bot) {
-			member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+			member.send(`You have been ${participation.isRankDisqualified ? "dis" : "re"}qualified for season ranks this season by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`)
+				.catch(butIgnoreCantSendToThisUserErrors);
 		}
 	}
 ).setOptions(
