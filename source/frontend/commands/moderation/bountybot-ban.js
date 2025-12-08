@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { butIgnoreCantSendToThisUserErrors } = require("../../shared");
+const { butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("bountybot-ban", "Toggle whether the provided user can interact with bounties or toasts",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -20,7 +20,7 @@ module.exports = new SubcommandWrapper("bountybot-ban", "Toggle whether the prov
 		interaction.reply({ content: `${discordUser} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 		if (!discordUser.bot) {
 			discordUser.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString("reason")}`)
-				.catch(butIgnoreCantSendToThisUserErrors);
+				.catch(butIgnoreCantDirectMessageThisUserErrors);
 		}
 	}
 ).setOptions(

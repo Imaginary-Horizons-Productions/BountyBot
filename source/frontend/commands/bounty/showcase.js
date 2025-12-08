@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, 
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, buildBountyEmbed, updatePosting, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
+const { bountiesToSelectOptions, buildBountyEmbed, updatePosting, butIgnoreInteractionCollectorErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -60,7 +60,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 				}
 				return interaction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 			})
-		}).catch(butIgnoreDiscordInteractionCollectorErrors).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, butIgnoreCantSendToThisUserErrors } = require("../../shared");
+const { updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset all bounty hunter stats on this server",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -19,6 +19,6 @@ module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset a
 		}
 		updateScoreboard(origin.company, interaction.guild, embeds);
 		interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`)
-			.catch(butIgnoreCantSendToThisUserErrors);
+			.catch(butIgnoreCantDirectMessageThisUserErrors);
 	}
 );

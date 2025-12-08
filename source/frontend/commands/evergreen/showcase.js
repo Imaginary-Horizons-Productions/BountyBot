@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, buildBountyEmbed, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
+const { bountiesToSelectOptions, buildBountyEmbed, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
@@ -46,7 +46,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 			});
 		}).then(interactionToAcknowledge => {
 			return interactionToAcknowledge.update({ components: [] });
-		}).catch(butIgnoreDiscordInteractionCollectorErrors).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { syncRankRoles, butIgnoreCantSendToThisUserErrors } = require("../../shared");
+const { syncRankRoles, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -21,7 +21,7 @@ module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's X
 		interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, flags: MessageFlags.Ephemeral });
 		if (!member.user.bot) {
 			member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`)
-				.catch(butIgnoreCantSendToThisUserErrors);
+				.catch(butIgnoreCantDirectMessageThisUserErrors);
 		}
 	}
 ).setOptions(

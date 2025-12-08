@@ -1,5 +1,5 @@
 const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
-const { butIgnoreMissingPermissionErrors, butIgnoreCantSendToThisUserErrors } = require("./dAPIResponses");
+const { butIgnoreMissingPermissionErrors, butIgnoreCantDirectMessageThisUserErrors } = require("./dAPIResponses");
 
 /** Simulate auto mod actions for texts input to BountyBot
  * @param {TextChannel} channel
@@ -41,7 +41,7 @@ async function textsHaveAutoModInfraction(channel, member, texts, context) {
 						break;
 					case AutoModerationActionType.BlockMessage:
 						member.send(action.metadata.customMessage || `Your ${context} could not be completed because it tripped AutoMod.`)
-							.catch(butIgnoreCantSendToThisUserErrors);
+							.catch(butIgnoreCantDirectMessageThisUserErrors);
 						shouldBlockMessage = true;
 						break;
 				}

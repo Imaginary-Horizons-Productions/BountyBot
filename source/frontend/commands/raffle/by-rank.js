@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, roleMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { rankArrayToSelectOptions, raffleResultEmbed, butIgnoreCantSendToThisUserErrors } = require("../../shared");
+const { rankArrayToSelectOptions, raffleResultEmbed, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a particular rank",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -46,10 +46,10 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 
 			if (error.name === "SequelizeInstanceError") {
 				interaction.user.send({ content: "A raffle by ranks could not be started because there was an error with finding the rank you selected. Please try again." })
-					.catch(butIgnoreCantSendToThisUserErrors);
+					.catch(butIgnoreCantDirectMessageThisUserErrors);
 			} else if (error.rawError && Object.values(error.rawError.errors.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
 				interaction.user.send({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji.", flags: MessageFlags.Ephemeral })
-					.catch(butIgnoreCantSendToThisUserErrors);
+					.catch(butIgnoreCantDirectMessageThisUserErrors);
 			} else {
 				console.error(error);
 			}

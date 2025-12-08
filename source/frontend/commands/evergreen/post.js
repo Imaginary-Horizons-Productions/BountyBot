@@ -2,7 +2,7 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, LabelBuild
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING, MAX_EVERGREEN_SLOTS } = require("../../../constants");
-const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, updateEvergreenBountyBoard, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, updateEvergreenBountyBoard, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { Company } = require("../../../database/models");
 
@@ -99,6 +99,6 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 			});
-		}).catch(butIgnoreDiscordInteractionCollectorErrors);
+		}).catch(butIgnoreInteractionCollectorErrors);
 	}
 );

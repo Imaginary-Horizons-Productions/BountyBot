@@ -19,22 +19,22 @@ function butIgnoreErrorIf(...ignoreThese) {
 const isAutomodError = error => [200000, 200001].includes(error.code);
 const isInteractionCollectorError = error => error.code === DiscordjsErrorCodes.InteractionCollectorError;
 const isMissingPermissionError = error => error.code === 50013;
-const isCantSendToThisUserError = error => error.code === 50007;
+const isCantDirectMessageThisUserError = error => error.code === 50007;
 
 /** Interaction collectors throw an error on timeout (which is a crash if uncaught) */
-const butIgnoreDiscordInteractionCollectorErrors = butIgnoreErrorIf(isInteractionCollectorError);
+const butIgnoreInteractionCollectorErrors = butIgnoreErrorIf(isInteractionCollectorError);
 
 const butIgnoreMissingPermissionErrors = butIgnoreErrorIf(isMissingPermissionError);
 
-const butIgnoreCantSendToThisUserErrors = butIgnoreErrorIf(isCantSendToThisUserError);
+const butIgnoreCantDirectMessageThisUserErrors = butIgnoreErrorIf(isCantDirectMessageThisUserError);
 
 module.exports = {
 	butIgnoreErrorIf,
 	isAutomodError,
 	isInteractionCollectorError,
 	isMissingPermissionError,
-	isCantSendToThisUserError,
-	butIgnoreDiscordInteractionCollectorErrors,
+	isCantDirectMessageThisUserError,
+	butIgnoreInteractionCollectorErrors,
 	butIgnoreMissingPermissionErrors,
-	butIgnoreCantSendToThisUserErrors
+	butIgnoreCantDirectMessageThisUserErrors
 }

@@ -2,7 +2,7 @@ const { TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, Emb
 const { EmbedLimits } = require('@sapphire/discord.js-utilities');
 const { CommandWrapper } = require('../classes');
 const { testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { butIgnoreDiscordInteractionCollectorErrors } = require('../shared');
+const { butIgnoreInteractionCollectorErrors } = require('../shared');
 
 const mainId = "feedback";
 module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
@@ -80,7 +80,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 							modalSubmission.reply({ content: `Your bug report has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}.You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: MessageFlags.Ephemeral })
 						})
 					})
-				}).catch(butIgnoreDiscordInteractionCollectorErrors);
+				}).catch(butIgnoreInteractionCollectorErrors);
 				break;
 			case "feature":
 				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -151,7 +151,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 							modalSubmission.reply({ content: `Your feature request has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}. You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: MessageFlags.Ephemeral })
 						})
 					})
-				}).catch(butIgnoreDiscordInteractionCollectorErrors);
+				}).catch(butIgnoreInteractionCollectorErrors);
 				break;
 		}
 	}

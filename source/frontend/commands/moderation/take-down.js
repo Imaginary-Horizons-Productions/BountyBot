@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, syncRankRoles, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
+const { bountiesToSelectOptions, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down another user's bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -52,7 +52,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 				collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
 			});
-		}).catch(butIgnoreDiscordInteractionCollectorErrors).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

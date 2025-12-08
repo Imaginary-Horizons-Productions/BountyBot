@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, updateEvergreenBountyBoard, constructEditBountyModalAndOptions, butIgnoreDiscordInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, updateEvergreenBountyBoard, constructEditBountyModalAndOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -87,6 +87,6 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set());
 				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
 			});
-		}).catch(butIgnoreDiscordInteractionCollectorErrors);
+		}).catch(butIgnoreInteractionCollectorErrors);
 	}
 );

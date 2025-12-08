@@ -1,6 +1,6 @@
 const { MessageFlags, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { butIgnoreCantSendToThisUserErrors } = require("../../shared");
+const { butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("revoke-goal-bonus", "Revoke Goal contribution item find bonus",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -14,7 +14,7 @@ module.exports = new SubcommandWrapper("revoke-goal-bonus", "Revoke Goal contrib
 			hunter.update({ "itemFindBoost": false });
 			interaction.reply({ content: `${userMention(revokeOption.value)}'s Goal Contribution item find boost has been revoked.`, flags: MessageFlags.Ephemeral });
 			revokeOption.user.send({ content: `Your Item Find Bonus in ${interaction.guild} was revoked by ${interaction.user}.` })
-				.catch(butIgnoreCantSendToThisUserErrors);
+				.catch(butIgnoreCantDirectMessageThisUserErrors);
 		} else {
 			interaction.reply({ content: `${userMention(revokeOption.value)} doesn't have Goal Contribution item find boost.`, flags: MessageFlags.Ephemeral });
 		}
