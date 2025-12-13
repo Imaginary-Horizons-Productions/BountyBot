@@ -1,4 +1,5 @@
 const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
+const { butIgnoreMissingPermissionErrors, butIgnoreCantDirectMessageThisUserErrors } = require("./dAPIResponses");
 
 /** Simulate auto mod actions for texts input to BountyBot
  * @param {TextChannel} channel
@@ -35,14 +36,12 @@ async function textsHaveAutoModInfraction(channel, member, texts, context) {
 						}
 						break;
 					case AutoModerationActionType.Timeout:
-						member.timeout(action.metadata.durationSeconds * 1000, `AutoMod timeout in a ${context} with texts: ${texts.join(", ")}`).catch(error => {
-							if (error.code != 50013) { // 50013 is Missing Permissions
-								console.error(error);
-							}
-						});
+						member.timeout(action.metadata.durationSeconds * 1000, `AutoMod timeout in a ${context} with texts: ${texts.join(", ")}`)
+							.catch(butIgnoreMissingPermissionErrors);
 						break;
 					case AutoModerationActionType.BlockMessage:
-						member.send(action.metadata.customMessage || `Your ${context} could not be completed because it tripped AutoMod.`);
+						member.send(action.metadata.customMessage || `Your ${context} could not be completed because it tripped AutoMod.`)
+							.catch(butIgnoreCantDirectMessageThisUserErrors);
 						shouldBlockMessage = true;
 						break;
 				}

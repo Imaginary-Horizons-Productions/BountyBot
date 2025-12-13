@@ -1,8 +1,8 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, LabelBuilder } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyCommandSelect, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload } = require("../../shared");
+const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyCommandSelect, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -187,11 +187,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					}
 				});
 			});
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		}).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

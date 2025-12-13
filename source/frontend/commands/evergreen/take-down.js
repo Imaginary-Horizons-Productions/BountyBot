@@ -1,6 +1,6 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, bountiesToSelectOptions, updateEvergreenBountyBoard } = require("../../shared");
+const { commandMention, bountiesToSelectOptions, updateEvergreenBountyBoard, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -47,11 +47,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			bounty.destroy();
 
 			collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", flags: MessageFlags.Ephemeral });
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		}).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();
