@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, userMention, bold, MessageFlags, DiscordjsErrorCodes, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { commandMention, congratulationBuilder, buildBountyEmbed } = require('../shared');
+const { commandMention, congratulationBuilder, buildBountyEmbed, unarchiveAndUnlockThread } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -50,9 +50,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			if (boardId && postingId) {
 				const boardChannel = await modalSubmission.guild.channels.fetch(boardId);
 				const post = await boardChannel.threads.fetch(postingId);
-				if (post.archived) {
-					await post.setArchived(false, "Unarchived to update posting");
-				}
+				await unarchiveAndUnlockThread(post, "Unarchived to update posting");
 				post.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${congratulationBuilder()}!` });
 				(await post.fetchStarterMessage()).edit({ embeds: [await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]))] });
 			}
