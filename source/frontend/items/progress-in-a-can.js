@@ -14,7 +14,7 @@ module.exports = new ItemTemplateSet(
 				interaction.reply({ content: "There isn't currently a Server Goal running.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
-			const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 			const progressData = await logicLayer.goals.progressGoal(interaction.guildId, goal.type, origin.hunter, season);
 			const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${progressData.gpContributed} GP the Server Goal!` };
 			if (progressData.goalCompleted) {
