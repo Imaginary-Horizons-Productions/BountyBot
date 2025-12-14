@@ -58,7 +58,7 @@ module.exports = new SubcommandWrapper("remove", "Remove one or more existing se
 					}
 				}
 				logicLayer.ranks.deleteRanks(buttonInteraction.guild.id, selectedRanks.map(rank => rank.threshold)).then(async () => {
-					const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);

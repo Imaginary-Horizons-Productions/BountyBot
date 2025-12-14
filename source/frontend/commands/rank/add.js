@@ -33,7 +33,7 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 			rawRank.rankmoji = newRankmoji;
 		}
 		await logicLayer.ranks.createCustomRank(rawRank);
-		const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const allRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), allRanks);
 		syncRankRoles(seasonUpdates, allRanks, interaction.guild.members);
