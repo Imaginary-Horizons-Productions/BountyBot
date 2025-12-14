@@ -241,6 +241,7 @@ dAPIClient.on(Events.ChannelDelete, async channel => {
 				shouldSaveCompany = true;
 			} else if (channel.id === company.scoreboardChannelId) {
 				company.scoreboardChannelId = null;
+				company.scoreboardMessageId = null;
 				shouldSaveCompany = true;
 			}
 			if (shouldSaveCompany) {
