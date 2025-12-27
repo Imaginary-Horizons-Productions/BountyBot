@@ -1,5 +1,4 @@
 node_modules
 config
 saves
-db.sqlite
-db_base.sqlite
+*.sqlite

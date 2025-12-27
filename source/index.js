@@ -189,17 +189,19 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	//#endregion
 
 	// #region General Cooldown Management
-	const commandTime = new Date();
-	const { isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName } = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, mainId, commandTime);
-	if (isOnGeneralCooldown) {
-		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
-		return;
+	if (!interaction.isAutocomplete()) { // Only run cooldowns on valid command types
+		const commandTime = new Date();
+		const { isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName } = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, mainId, commandTime);
+		if (isOnGeneralCooldown) {
+			interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+		if (isOnCommandCooldown) {
+			interaction.reply({ content: `Please wait, \`/${mainId}\` is on cooldown. It can be used again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
+			return;
+		}
+		logicBlob.cooldowns.updateCooldowns(interaction.user.id, mainId, commandTime, cooldownMap[mainId]);
 	}
-	if (isOnCommandCooldown) {
-		interaction.reply({ content: `Please wait, \`/${mainId}\` is on cooldown. It can be used again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
-		return;
-	}
-	logicBlob.cooldowns.updateCooldowns(interaction.user.id, mainId, commandTime, cooldownMap[mainId]);
 	//#endregion
 
 	//#region Command execution
