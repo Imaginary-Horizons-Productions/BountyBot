@@ -80,8 +80,8 @@ async function updateCooldowns(userId, interactionName, interactionTime, interac
 /**
  * Clean cooldown data. Intended to be run periodically.
  */
-async function cleanCooldownData() {
-	await db.models.UserInteraction.destroy({
+function cleanCooldownData() {
+	return db.models.UserInteraction.destroy({
 		where: {
 			cooldownTime: {
 				[Op.lt]: dateInPast({ d: 1 })
