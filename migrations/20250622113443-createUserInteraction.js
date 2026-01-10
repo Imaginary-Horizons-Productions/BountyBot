@@ -20,13 +20,16 @@ module.exports = {
 				allowNull: false
 			},
 			interactionTime: {
-				type: DataTypes.DATE
+				type: DataTypes.DATE,
+				allowNull: false
 			},
 			lastInteractTime: {
-				type: DataTypes.DATE
+				type: DataTypes.DATE,
+				allowNull: false
 			},
 			cooldownTime: {
-				type: DataTypes.DATE
+				type: DataTypes.DATE,
+				allowNull: false
 			}
 		}, {
 			sequelize: queryInterface.sequelize,

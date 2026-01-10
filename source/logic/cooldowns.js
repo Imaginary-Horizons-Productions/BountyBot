@@ -11,20 +11,20 @@ function setDB(database) {
 
 /**
  * Check all cooldown information based on the given user, intraction, and interaction time.
- * @param {string} userId 
- * @param {string} interactionName 
- * @param {Date} interactionTime 
+ * @param {string} userId
+ * @param {string} interactionName
+ * @param {Date} interactionTime
  * @returns {Promise<{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}>}
  */
 async function checkCooldownState(userId, interactionName, interactionTime) {
-	const allInteractions = await db.models.UserInteraction.findOne({ where: { userId }, order: [[ "cooldownTime", "DESC" ]] });
-	const gcdCooldown = !allInteractions ? new Date(0) : new Date(allInteractions.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
+	const latestCooldown = await db.models.UserInteraction.findOne({ where: { userId }, order: [["cooldownTime", "DESC"]] });
+	const gcdCooldown = !latestCooldown ? new Date(0) : new Date(latestCooldown.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
 	if (gcdCooldown > interactionTime) {
 		return {
 			isOnGeneralCooldown: true,
 			isOnCommandCooldown: false,
 			cooldownTimestamp: gcdCooldown,
-			lastCommandName: allInteractions.interactionName
+			lastCommandName: latestCooldown.interactionName
 		};
 	}
 	return checkCommandCooldownState(userId, interactionName, interactionTime);
@@ -33,13 +33,13 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 
 /**
  * Check cooldown information for a given command/item based on the given user, intraction, and interaction time.
- * @param {string} userId 
- * @param {string} interactionName 
- * @param {Date} interactionTime 
+ * @param {string} userId
+ * @param {string} interactionName
+ * @param {Date} interactionTime
  * @returns {Promise<{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}>}
  */
 async function checkCommandCooldownState(userId, interactionName, interactionTime) {
-	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName } , order: [[ "cooldownTime", "DESC" ]]});
+	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName }, order: [["cooldownTime", "DESC"]] });
 	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
 		return {
 			isOnGeneralCooldown: false,
@@ -57,32 +57,37 @@ async function checkCommandCooldownState(userId, interactionName, interactionTim
 /**
  * Update cooldown information based on known interaction information.
  * Should be run after all relevant cooldown information has been checked independently using checkCooldownState.
- * @param {string} userId 
- * @param {string} interactionName 
- * @param {Date} interactionTime 
- * @param {Date} interactionCooldown 
+ * @param {string} userId
+ * @param {string} interactionName
+ * @param {Date} interactionTime
+ * @param {Date} interactionCooldown
  */
 async function updateCooldowns(userId, interactionName, interactionTime, interactionCooldown) {
-	const [interaction, wasCreated] = await db.models.UserInteraction.findOrCreate({ where: { userId, interactionName } });
-	interaction.lastInteractTime = interactionTime;
-	if (wasCreated) {
-		interaction.interactionTime = interactionTime;
+	const cooldownTime = new Date(interactionTime.getTime() + interactionCooldown);
+	const userInteraction = await db.models.UserInteraction.findOne({ where: { userId, interactionName } });
+	if (!userInteraction) {
+		return db.models.UserInteraction.create({ userId, interactionName, interactionTime, lastInteractTime: interactionTime, cooldownTime: cooldownTime });
 	}
-	if (wasCreated || interaction.cooldownTime <= interactionTime) { // Only update the cooldown if it is currently off cooldown or new
-		interaction.cooldownTime = new Date(interactionTime.getTime() + interactionCooldown);
+
+	const updateValues = { lastInteractTime: interactionTime };
+	if (userInteraction.cooldownTime <= interactionTime) {
+		// Only update the cooldown if it is currently off cooldown
+		updateValues.cooldownTime = cooldownTime;
 	}
-	interaction.save();
+	return userInteraction.update(updateValues);
 }
 
 /**
  * Clean cooldown data. Intended to be run periodically.
  */
-async function cleanCooldownData() {
-	await db.models.UserInteraction.destroy({ where: {
-		cooldownTime: {
-			[Op.lt] : dateInPast({ d: 1 })
+function cleanCooldownData() {
+	return db.models.UserInteraction.destroy({
+		where: {
+			cooldownTime: {
+				[Op.lt]: dateInPast({ d: 1 })
+			}
 		}
-	} });
+	});
 }
 
 module.exports = {

@@ -57,7 +57,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
-			logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
+			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
 
 			return useItem(itemName, collectedInteration, origin).then(shouldSkipDecrement => {
 				if (!shouldSkipDecrement && runMode === "production") {
