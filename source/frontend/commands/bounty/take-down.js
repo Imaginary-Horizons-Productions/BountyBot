@@ -27,7 +27,9 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				if (origin.company.bountyBoardId) {
 					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
-					postingThread.delete("Bounty taken down by poster");
+					if (postingThread) {
+						postingThread.delete("Bounty taken down by poster");
+					}
 				}
 				bounty.destroy();
 
