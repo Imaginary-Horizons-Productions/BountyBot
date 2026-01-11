@@ -1,6 +1,6 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, bold } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, bountiesToSelectOptions, unarchiveAndUnlockThread } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, bountiesToSelectOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -103,10 +103,6 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 
 				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], components: [] });
 			});
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		})
+		}).catch(butIgnoreInteractionCollectorErrors);
 	}
 );

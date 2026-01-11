@@ -1,8 +1,8 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, DiscordjsErrorCodes, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread } = require('../shared');
+const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -58,11 +58,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					return collectedInteraction.update({
 						components: []
 					});
-				}).catch(error => {
-					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-						console.error(error);
-					}
-				}).finally(() => {
+				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {
 						interaction.deleteReply();
@@ -92,11 +88,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 					collectedInteraction.channel.send({ content: `${listifyEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 					return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: MessageFlags.Ephemeral });
-				}).catch(error => {
-					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-						console.error(error);
-					}
-				}).finally(() => {
+				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {
 						interaction.deleteReply();
@@ -149,11 +141,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						await unarchiveAndUnlockThread(channel, "bounty showcased");
 						return channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 					})
-				}).catch(error => {
-					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-						console.error(error);
-					}
-				}).finally(() => {
+				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {
 						interaction.deleteReply();
@@ -239,12 +227,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					if (goalUpdate.goalCompleted) {
 						announcementOptions.embeds = [generateCompletionEmbed(goalUpdate.contributorIds)];
 					}
-					collectedInteraction.channels.first().send(announcementOptions).catch(error => {
-						//Ignore Missing Permissions errors, user selected channel bot cannot post in
-						if (error.code !== 50013) {
-							console.error(error);
-						}
-					});
+					collectedInteraction.channels.first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
 					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
@@ -253,11 +236,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, hunterMap, goalProgress));
 					}
 					updateScoreboard(origin.company, collectedInteraction.guild, embeds);
-				}).catch(error => {
-					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-						console.error(error);
-					}
-				}).finally(() => {
+				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {
 						interaction.deleteReply();
@@ -447,11 +426,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 
 					return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
-				}).catch(error => {
-					if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-						console.error(error);
-					}
-				}).finally(() => {
+				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					interaction.channel.delete("Bounty taken down by poster");
 				});
 			} break;

@@ -1,7 +1,7 @@
-const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, PermissionFlagsBits } = require("discord.js");
+const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { timeConversion } = require("../../shared");
-const { commandMention, bountiesToSelectOptions, buildBountyEmbed, updatePosting, unarchiveAndUnlockThread } = require("../shared");
+const { commandMention, bountiesToSelectOptions, buildBountyEmbed, updatePosting, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /** @type {typeof import("../../logic")} */
@@ -54,11 +54,7 @@ module.exports = new ItemTemplateSet(
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty showcased");
 					return collectedInteraction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 				})
-			}).catch(error => {
-				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-					console.error(error);
-				}
-			}).finally(() => {
+			}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 				if (interaction.channel) {
 					interaction.deleteReply();
