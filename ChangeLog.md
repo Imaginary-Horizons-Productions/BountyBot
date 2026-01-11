@@ -1,5 +1,7 @@
 # BountyBot Change Log
 ## BountyBot Version 2.10.0fi:
+With this update we're changing our versioning convention. The letters at the end of the version are there to track the main goal of the version: c for "content", f for "features", and i for "infrastructure".
+
 ### User Options in Slash Commands
 Slash commands originally accepted users as a string (instead of Discord's user filtering) to allow users to mention as many users as they wanted. However, this doesn't work on mobile, so those slash commands have been remade to use Discord's user filtering or message selects.
 - `/toast` now requires 1 toastee and up to 4 optional ones. The `message` option has been changed to the first option to group the toastee options.
