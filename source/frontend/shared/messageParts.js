@@ -239,7 +239,7 @@ async function buildVersionEmbed() {
 	const data = await fs.promises.readFile(changelogPath, { encoding: 'utf8' });
 	const stats = await fs.promises.stat(changelogPath);
 	const dividerRegEx = /## .+ Version/g;
-	const changesStartRegEx = /\.\d+:/g;
+	const changesStartRegEx = /\.\d+[cfi]*:/g;
 	let titleStart = dividerRegEx.exec(data).index;
 	changesStartRegEx.exec(data);
 	let sectionEnd = dividerRegEx.exec(data).index;
