@@ -1,4 +1,4 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel } = require("discord.js");
+const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
 const { SubcommandWrapper } = require("../classes");
 const { Bounty, Company, Rank } = require("../../database/models");
 const { buildBountyEmbed } = require("./messageParts");
@@ -111,9 +111,7 @@ async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
 	return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
 		return bountyBoard.threads.fetch(bounty.postingId);
 	}).then(async thread => {
-		if (thread.archived) {
-			await thread.setArchived(false, "Unarchived to update posting");
-		}
+		await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
 		thread.edit({ name: bounty.title });
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
@@ -185,6 +183,19 @@ async function syncRankRoles(seasonResults, descendingRanks, guildMemberManager)
 	}
 }
 
+/**
+ * @param {ThreadChannel} thread
+ * @param {string} auditLogReason
+ */
+async function unarchiveAndUnlockThread(thread, auditLogReason) {
+	if (thread.archived) {
+		await thread.setArchived(false, auditLogReason);
+	}
+	if (thread.locked) {
+		await thread.setLocked(false, auditLogReason);
+	}
+}
+
 module.exports = {
 	createSubcommandMappings,
 	rankArrayToSelectOptions,
@@ -194,5 +205,6 @@ module.exports = {
 	updatePosting,
 	updateScoreboard,
 	sendToRewardsThread,
-	syncRankRoles
+	syncRankRoles,
+	unarchiveAndUnlockThread
 };

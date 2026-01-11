@@ -11,6 +11,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			return;
 		}
 		const roles = await interaction.guild.roles.fetch();
+		let skipDeleteReply = false;
 		interaction.reply({
 			content: "Select a rank to be the eligibility threshold for this raffle:",
 			components: [
@@ -33,6 +34,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
 			if (eligibleMembers.size < 1) {
 				collectedInteraction.editReply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${threshold + 1}`}).`, components: [] });
+				skipDeleteReply = true;
 				return;
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
@@ -55,7 +57,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			}
 		}).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-			if (interaction.channel) {
+			if (interaction.channel && !skipDeleteReply) {
 				interaction.deleteReply();
 			}
 		});

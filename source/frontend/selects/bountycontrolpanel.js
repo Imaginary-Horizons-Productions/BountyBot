@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
+const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -51,9 +51,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 					await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
 					if (!collectedInteraction.channel) return;
-					if (collectedInteraction.channel.archived) {
-						await collectedInteraction.channel.setArchived(false, "Unarchived to update posting");
-					}
+					await unarchiveAndUnlockThread(collectedInteraction.channel, "Unarchived to update posting");
 					collectedInteraction.channel.send({ content: `${listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
 					const starterMessage = await collectedInteraction.channel.fetchStarterMessage();
 					starterMessage.edit({ embeds: [await buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)] });
@@ -84,9 +82,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
 					buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))
 						.then(async embed => {
-							if (collectedInteraction.channel.archived) {
-								await collectedInteraction.channel.setArchived(false, "completers removed from bounty");
-							}
+							await unarchiveAndUnlockThread(collectedInteraction.channel, "completers removed from bounty");
 							interaction.message.edit({ embeds: [embed] })
 						});
 
@@ -142,9 +138,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 					updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
 					return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
-						if (channel.archived) {
-							await channel.setArchived(false, "bounty showcased");
-						}
+						await unarchiveAndUnlockThread(channel, "bounty showcased");
 						return channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 					})
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
@@ -213,9 +207,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
 					const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch());
 
-					if (collectedInteraction.channel.archived) {
-						await collectedInteraction.channel.setArchived(false, "bounty complete");
-					}
+					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty complete");
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					await collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
 					buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
@@ -311,9 +303,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.fetch(bounty.postingId);
 						}).then(async thread => {
-							if (thread.archived) {
-								await thread.setArchived(false, "Unarchived to update posting");
-							}
+							await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
 							thread.edit({ name: bounty.title });
 							thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
 							return thread.fetchStarterMessage();

@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for 
 			updateOptions.rankmoji = newRankmoji;
 		}
 		rank.update(updateOptions);
-		const season = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
 		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);

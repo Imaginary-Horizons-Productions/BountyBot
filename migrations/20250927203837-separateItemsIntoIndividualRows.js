@@ -159,7 +159,9 @@ module.exports = {
 			modelName: "Item",
 			freezeTableName: true
 		});
-		await queryInterface.bulkInsert("Item", migratedItems);
+		if (oldItems.length > 0) {
+			await queryInterface.bulkInsert("Item", migratedItems);
+		}
 	},
 
 	async down(queryInterface, Sequelize) {
@@ -198,6 +200,8 @@ module.exports = {
 			modelName: "Item",
 			freezeTableName: true
 		});
-		await queryInterface.bulkInsert("Item", oldItems.map(i => i.asQueryCompatible()));
+		if (oldItems.length > 0) {
+			await queryInterface.bulkInsert("Item", oldItems.map(i => i.asQueryCompatible()));
+		}
 	}
 };

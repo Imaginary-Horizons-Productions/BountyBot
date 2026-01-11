@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, bountiesToSelectOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, bountiesToSelectOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -92,9 +92,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 						return bountyBoard.threads.fetch(bounty.postingId);
 					}).then(async thread => {
-						if (thread.archived) {
-							await thread.setArchived(false, "Unarchived to update posting");
-						}
+						await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
 						thread.edit({ name: bounty.title });
 						thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
 						return thread.fetchStarterMessage();

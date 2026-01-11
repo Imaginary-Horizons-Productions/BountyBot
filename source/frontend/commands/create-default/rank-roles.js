@@ -20,28 +20,28 @@ module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks f
 				[
 					{
 						name: "Platinum Rank",
-						color: "#669999",
+						colors: { primaryColor: "#669999" },
 						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						hoist: true,
 						reason: "/create-default rank-roles"
 					},
 					{
 						name: "Gold Rank",
-						color: "#daa520",
+						colors: { primaryColor: "#daa520" },
 						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						hoist: true,
 						reason: "/create-default rank-roles"
 					},
 					{
 						name: "Silver Rank",
-						color: "#ccccff",
+						colors: { primaryColor: "#ccccff" },
 						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						hoist: true,
 						reason: "/create-default rank-roles"
 					},
 					{
 						name: "Bronze Rank",
-						color: "#b9722d",
+						colors: { primaryColor: "#b9722d" },
 						icon: "./source/frontend/images/BountyBotIcon.jpg",
 						reason: "/create-default rank-roles"
 					}

@@ -161,7 +161,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 		}
 		rawRecipients.push(rawToast);
 	}
-	db.models.Recipient.bulkCreate(rawRecipients);
+	await db.models.Recipient.bulkCreate(rawRecipients);
 
 	// Update sender
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: senderId, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });

@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts } = require("../../shared");
+const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -86,9 +86,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			if (origin.company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 				bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
-					if (thread.archived) {
-						await thread.setArchived(false, "bounty completed");
-					}
+					await unarchiveAndUnlockThread(thread, "bounty complete");
 					thread.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					thread.send({ content, flags: MessageFlags.SuppressNotifications });
 					return thread.fetchStarterMessage();
