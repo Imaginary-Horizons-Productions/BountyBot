@@ -6,26 +6,6 @@ const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilit
 const { ascendingByProperty } = require("../../shared");
 
 /**
- * @param {string} mainId
- * @param {string[]} fileList
- */
-function createSubcommandMappings(mainId, fileList) {
-	const mappings = {
-		/** @type {import("discord.js").BaseApplicationCommandData[]} */
-		slashData: [],
-		/** @type {Record<string, (interaction: CommandInteraction, runMode: string, ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
-		executeDictionary: {}
-	};
-	for (const fileName of fileList) {
-		/** @type {SubcommandWrapper} */
-		const subcommand = require(`../commands/${mainId}/${fileName}`);
-		mappings.slashData.push(subcommand.data);
-		mappings.executeDictionary[subcommand.data.name] = subcommand.executeSubcommand;
-	};
-	return mappings;
-};
-
-/**
  * @param {Rank[]} ranks
  * @param {Collection<string, Role>} allGuildRoles
  */
@@ -197,7 +177,6 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 }
 
 module.exports = {
-	createSubcommandMappings,
 	rankArrayToSelectOptions,
 	contentOrFileMessagePayload,
 	updateEvergreenBountyBoard,
