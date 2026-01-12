@@ -5,20 +5,6 @@ const { buildBountyEmbed } = require("./messageParts");
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { ascendingByProperty } = require("../../shared");
 
-/** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't
- * @param {string} content
- * @param {import("discord.js").BaseMessageOptionsWithPoll} messageOptions
- * @param {string} filename
- */
-function contentOrFileMessagePayload(content, messageOptions, filename) {
-	if (content.length < MessageLimits.MaximumLength) {
-		messageOptions.content = content;
-	} else {
-		messageOptions.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: filename })];
-	}
-	return messageOptions;
-}
-
 /**
  * @param {GuildTextThreadManager} threadManager
  * @param {EmbedBuilder[]} embeds
@@ -159,7 +145,6 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 }
 
 module.exports = {
-	contentOrFileMessagePayload,
 	updateEvergreenBountyBoard,
 	createEvergreenBountyThread,
 	updatePosting,

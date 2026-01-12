@@ -1,7 +1,7 @@
-const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
+const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength, getNumberEmoji } = require("./messageParts");
 const { Bounty, Rank } = require("../../database/models");
-const { Role, Collection } = require("discord.js");
+const { Role, Collection, AttachmentBuilder } = require("discord.js");
 
 /**
  * @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants
@@ -20,6 +20,20 @@ function truncateTextToLength(text, length) {
 	} else {
 		return text;
 	}
+}
+
+/** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't
+ * @param {string} content
+ * @param {import("discord.js").BaseMessageOptionsWithPoll} messageOptions
+ * @param {string} filename
+ */
+function attachOverflowingContentAsFile(content, messageOptions, filename) {
+	if (content.length < MessageLimits.MaximumLength) {
+		messageOptions.content = content;
+	} else {
+		messageOptions.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: filename })];
+	}
+	return messageOptions;
 }
 
 /** @param {Bounty[]} bounties */
@@ -57,6 +71,7 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 
 module.exports = {
 	truncateTextToLength,
+	attachOverflowingContentAsFile,
 	selectOptionsFromBounties,
 	selectOptionsFromRanks
 }
