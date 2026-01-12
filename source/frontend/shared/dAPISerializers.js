@@ -10,6 +10,18 @@ const { Role, Collection } = require("discord.js");
  * - Serializer: `${outputType}From${inputType}`
  */
 
+/**
+ * @param {string} text
+ * @param {number} length
+ */
+function truncateTextToLength(text, length) {
+	if (text.length > length) {
+		return `${text.slice(0, length - 1)}…`;
+	} else {
+		return text;
+	}
+}
+
 /** @param {Bounty[]} bounties */
 function selectOptionsFromBounties(bounties) {
 	return bounties.map(bounty => {
@@ -44,6 +56,7 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 }
 
 module.exports = {
+	truncateTextToLength,
 	selectOptionsFromBounties,
 	selectOptionsFromRanks
 }

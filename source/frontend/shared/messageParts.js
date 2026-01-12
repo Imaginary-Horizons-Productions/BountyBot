@@ -778,18 +778,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 	return { modal, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
 }
 
-/**
- * @param {string} text
- * @param {number} length
- */
-function truncateTextToLength(text, length) {
-	if (text.length > length) {
-		return `${text.slice(0, length - 1)}…`;
-	} else {
-		return text;
-	}
-}
-
 /** @param {string} placeholderText */
 function disabledSelectRow(placeholderText) {
 	return new ActionRowBuilder().addComponents(
@@ -830,6 +818,5 @@ module.exports = {
 	validateScheduledEventTimestamps,
 	createBountyEventPayload,
 	constructEditBountyModalAndOptions,
-	truncateTextToLength,
 	disabledSelectRow
 };
