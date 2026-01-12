@@ -5,24 +5,6 @@ const { buildBountyEmbed } = require("./messageParts");
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { ascendingByProperty } = require("../../shared");
 
-/**
- * @param {Rank[]} ranks
- * @param {Collection<string, Role>} allGuildRoles
- */
-function rankArrayToSelectOptions(ranks, allGuildRoles) {
-	return ranks.map((rank, index) => {
-		const option = {
-			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
-			description: `Variance Threshold: ${rank.threshold}`,
-			value: rank.threshold.toString()
-		};
-		if (rank.rankmoji) {
-			option.emoji = rank.rankmoji;
-		}
-		return option;
-	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
-}
-
 /** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't
  * @param {string} content
  * @param {import("discord.js").BaseMessageOptionsWithPoll} messageOptions
@@ -177,7 +159,6 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 }
 
 module.exports = {
-	rankArrayToSelectOptions,
 	contentOrFileMessagePayload,
 	updateEvergreenBountyBoard,
 	createEvergreenBountyThread,
