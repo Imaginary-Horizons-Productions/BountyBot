@@ -597,7 +597,10 @@ function generateCompletionEmbed(contributorIds) {
  * @param {string[]} rewardTexts
  */
 function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUpdates, rewardTexts) {
-	let text = `${seconderDisplayName} seconded this toast!\n${heading("XP Gained", 2)}`;
+	let text = `${seconderDisplayName} seconded this toast!`;
+	if (recipientIds.length > 0) {
+		text += `\n${heading("XP Gained", 2)}`;
+	}
 	for (const id of recipientIds) {
 		text += `\n${userMention(id)} +1 XP`;
 		if (id === seconderDisplayName) {
