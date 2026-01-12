@@ -1,4 +1,4 @@
-const { discordTimestamp } = require('./shared/index.js');
+const { discordTimestamp } = require('./shared');
 const log = console.log;
 
 console.log = function () {

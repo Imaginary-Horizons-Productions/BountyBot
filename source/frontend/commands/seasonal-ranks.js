@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, heading } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
-const { contentOrFileMessagePayload } = require('../shared/dAPIRequests.js');
+const { contentOrFileMessagePayload } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;

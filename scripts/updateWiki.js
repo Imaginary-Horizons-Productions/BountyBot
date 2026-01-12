@@ -3,7 +3,7 @@ const { SlashCommandSubcommandBuilder, PermissionsBitField, InteractionContextTy
 const { commandFiles } = require('../source/frontend/commands/_commandDictionary.js');
 const { contextMenuFiles } = require('../source/frontend/context_menus/_contextMenuDictionary.js');
 const { CommandWrapper, ContextMenuWrapper } = require('../source/frontend/classes/index.js');
-const { listifyEN } = require('../source/frontend/shared/messageParts.js');
+const { listifyEN } = require('../source/frontend/shared');
 
 const contextDictionary = {
 	[InteractionContextType.BotDM]: "DMs",
