@@ -1,3 +1,6 @@
+const { CommandInteraction } = require("discord.js");
+const { SubcommandWrapper } = require("../classes");
+
 /**
  * @param {string} mainId
  * @param {string[]} fileList

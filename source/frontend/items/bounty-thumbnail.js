@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, LabelBuilder } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
-const { bountiesToSelectOptions, updatePosting, butIgnoreInteractionCollectorErrors } = require("../shared");
+const { selectOptionsFromBounties, updatePosting, butIgnoreInteractionCollectorErrors } = require("../shared");
 const { timeConversion } = require("../../shared");
 
 /** @type {typeof import("../../logic")} */
@@ -45,7 +45,7 @@ module.exports = new ItemTemplateSet(
 						new ActionRowBuilder().addComponents(
 							new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 								.setPlaceholder("Select a bounty...")
-								.setOptions(bountiesToSelectOptions(openBounties))
+								.setOptions(selectOptionsFromBounties(openBounties))
 						)
 					],
 					flags: MessageFlags.Ephemeral,

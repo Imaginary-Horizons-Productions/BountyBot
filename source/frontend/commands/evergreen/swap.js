@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { getNumberEmoji, bountiesToSelectOptions, disabledSelectRow, updateEvergreenBountyBoard } = require("../../shared");
+const { getNumberEmoji, selectOptionsFromBounties, disabledSelectRow, updateEvergreenBountyBoard } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { Bounty, Company } = require("../../../database/models");
 
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}evergreen`)
 						.setPlaceholder("Select a bounty to swap...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(existingBounties))
+						.setOptions(selectOptionsFromBounties(existingBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,

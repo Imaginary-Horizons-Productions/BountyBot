@@ -1,6 +1,6 @@
 const { userMention, bold, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, commandMention, updatePosting, congratulationBuilder, disabledSelectRow, bountiesToSelectOptions } = require("../../shared");
+const { listifyEN, commandMention, updatePosting, congratulationBuilder, disabledSelectRow, selectOptionsFromBounties } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
@@ -18,7 +18,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}bounty`)
 						.setPlaceholder("Select a bounty...")
-						.addOptions(bountiesToSelectOptions(openBounties))
+						.addOptions(selectOptionsFromBounties(openBounties))
 				),
 				disabledSelectRow("Select bounty hunters...")
 			],

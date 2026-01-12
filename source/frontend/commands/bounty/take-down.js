@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, bountiesToSelectOptions, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { commandMention, selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
@@ -13,7 +13,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 						new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 							.setPlaceholder("Select a bounty to take down...")
 							.setMaxValues(1)
-							.setOptions(bountiesToSelectOptions(openBounties))
+							.setOptions(selectOptionsFromBounties(openBounties))
 					)
 				],
 				flags: MessageFlags.Ephemeral,

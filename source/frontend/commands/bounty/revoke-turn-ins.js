@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, bold, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, updatePosting, bountiesToSelectOptions, disabledSelectRow, commandMention } = require("../../shared");
+const { listifyEN, updatePosting, selectOptionsFromBounties, disabledSelectRow, commandMention } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -18,7 +18,7 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}bounty`)
 						.setPlaceholder("Select Bounty...")
-						.setOptions(bountiesToSelectOptions(openBounties))
+						.setOptions(selectOptionsFromBounties(openBounties))
 				),
 				disabledSelectRow("Select Bounty Hunters...")
 			],

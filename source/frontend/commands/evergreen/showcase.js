@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, buildBountyEmbed, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { selectOptionsFromBounties, buildBountyEmbed, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to showcase...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(existingBounties))
+						.setOptions(selectOptionsFromBounties(existingBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,

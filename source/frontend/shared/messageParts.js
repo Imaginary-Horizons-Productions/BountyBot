@@ -790,21 +790,6 @@ function truncateTextToLength(text, length) {
 	}
 }
 
-/** @param {Bounty[]} bounties */
-function bountiesToSelectOptions(bounties) {
-	return bounties.map(bounty => {
-		const optionPayload = {
-			emoji: getNumberEmoji(bounty.slotNumber),
-			label: bounty.title,
-			value: bounty.id
-		}
-		if (bounty.description) {
-			optionPayload.description = truncateTextToLength(bounty.description, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
-		}
-		return optionPayload;
-	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
-}
-
 /** @param {string} placeholderText */
 function disabledSelectRow(placeholderText) {
 	return new ActionRowBuilder().addComponents(
@@ -846,6 +831,5 @@ module.exports = {
 	createBountyEventPayload,
 	constructEditBountyModalAndOptions,
 	truncateTextToLength,
-	bountiesToSelectOptions,
 	disabledSelectRow
 };

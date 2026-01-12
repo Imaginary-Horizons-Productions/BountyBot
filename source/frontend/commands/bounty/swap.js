@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, bountiesToSelectOptions, updatePosting, sendAnnouncement, disabledSelectRow } = require("../../shared");
+const { getNumberEmoji, selectOptionsFromBounties, updatePosting, sendAnnouncement, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 						new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}bounty`)
 							.setPlaceholder("Select a bounty to swap...")
 							.setMaxValues(1)
-							.setOptions(bountiesToSelectOptions(openBounties))
+							.setOptions(selectOptionsFromBounties(openBounties))
 					)
 				],
 				flags: MessageFlags.Ephemeral,
