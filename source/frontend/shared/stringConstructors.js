@@ -1,4 +1,6 @@
+const { heading, userMention, unorderedList } = require("discord.js");
 const { commandIds } = require("../../constants");
+const { MessageLimits } = require("@sapphire/discord.js-utilities");
 
 /**
  * @file String Constructors - formatted reusable strings
@@ -87,10 +89,37 @@ function sentenceListEN(texts, isMutuallyExclusive) {
 	}
 }
 
+/**
+ * @param {MapIterator<string>} completerIds
+ * @param {number} completerReward
+ * @param {string?} posterId null for evergreen bounties
+ * @param {number?} posterReward null for evergreen bounties
+ * @param {string} multiplierString
+ * @param {string[]} rankUpdates
+ * @param {string[]} rewardTexts
+ */
+function rewardStringBountyCompletion(completerIds, completerReward, posterId, posterReward, multiplierString, rankUpdates, rewardTexts) {
+	let text = `${heading("XP Gained", 2)}\n${Array.from(completerIds.map(id => `${userMention(id)} +${completerReward} XP${multiplierString}`)).join("\n")}`;
+	if (posterId && posterReward) {
+		text += `\n${userMention(posterId)} +${posterReward} XP${multiplierString}`;
+	}
+	if (rankUpdates.length > 0) {
+		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
+	}
+	if (rewardTexts.length > 0) {
+		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
+	}
+	if (text.length > MessageLimits.MaximumLength) {
+		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+	}
+	return text;
+}
+
 module.exports = {
 	commandMention,
 	randomCongratulatoryPhrase,
 	fillableTextBar,
 	emojiFromNumber,
-	sentenceListEN
+	sentenceListEN,
+	rewardStringBountyCompletion
 }

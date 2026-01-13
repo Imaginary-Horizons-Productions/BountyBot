@@ -5,32 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/**
- * @param {MapIterator<string>} completerIds
- * @param {number} completerReward
- * @param {string?} posterId null for evergreen bounties
- * @param {number?} posterReward null for evergreen bounties
- * @param {string} multiplierString
- * @param {string[]} rankUpdates
- * @param {string[]} rewardTexts
- */
-function generateBountyRewardString(completerIds, completerReward, posterId, posterReward, multiplierString, rankUpdates, rewardTexts) {
-	let text = `${heading("XP Gained", 2)}\n${Array.from(completerIds.map(id => `${userMention(id)} +${completerReward} XP${multiplierString}`)).join("\n")}`;
-	if (posterId && posterReward) {
-		text += `\n${userMention(posterId)} +${posterReward} XP${multiplierString}`;
-	}
-	if (rankUpdates.length > 0) {
-		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
-	}
-	if (rewardTexts.length > 0) {
-		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
-	}
-	if (text.length > MessageLimits.MaximumLength) {
-		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-	}
-	return text;
-}
-
 /** @param {string} bountyId */
 function generateBountyCommandSelect(bountyId) {
 	return [
@@ -598,7 +572,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 
 module.exports = {
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
-	generateBountyRewardString,
+	rewardStringBountyCompletion,
 	buildVersionEmbed,
 	generateBountyCommandSelect,
 	sendAnnouncement,
