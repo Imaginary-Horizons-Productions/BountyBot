@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
+const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -136,7 +136,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					origin.hunter.update({ lastShowcaseTimestamp: new Date() });
 					const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
 					const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-					updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+					refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
 					return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 						await unarchiveAndUnlockThread(channel, "bounty showcased");
 						return channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
@@ -381,11 +381,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 							const posterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 
 							bounty = await bounty.update({ slotNumber: destinationSlot });
-							updatePosting(interaction.guild, origin.company, bounty, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
+							refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
 
 							if (destinationBounty?.state === "open") {
 								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-								updatePosting(interaction.guild, origin.company, destinationBounty, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 							}
 
 							const destinationRewardValue = Bounty.calculateCompleterReward(posterLevel, destinationSlot, bounty.showcaseCount);

@@ -1,7 +1,7 @@
 const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { timeConversion } = require("../../shared");
-const { commandMention, selectOptionsFromBounties, buildBountyEmbed, updatePosting, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../shared");
+const { commandMention, selectOptionsFromBounties, buildBountyEmbed, refreshBountyThreadStarterMessage, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /** @type {typeof import("../../logic")} */
@@ -49,7 +49,7 @@ module.exports = new ItemTemplateSet(
 				await bounty.reload();
 				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+				refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
 				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty showcased");
 					return collectedInteraction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });

@@ -59,7 +59,7 @@ async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBount
  * @param {number} posterLevel
  * @param {Set<string>} hunterIdSet
  */
-async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
+async function refreshBountyThreadStarterMessage(guild, company, bounty, posterLevel, hunterIdSet) {
 	if (!company.bountyBoardId || !bounty.postingId) {
 		return null;
 	}
@@ -155,7 +155,7 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
-	updatePosting,
+	refreshBountyThreadStarterMessage,
 	updateScoreboard,
 	sendToRewardsThread,
 	syncRankRoles,

@@ -1,6 +1,6 @@
 const { userMention, bold, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, commandMention, updatePosting, congratulationBuilder, disabledSelectRow, selectOptionsFromBounties } = require("../../shared");
+const { listifyEN, commandMention, refreshBountyThreadStarterMessage, congratulationBuilder, disabledSelectRow, selectOptionsFromBounties } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
@@ -55,7 +55,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 							await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
 							const newTurnInList = listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
 							sentences.unshift(`Turn-ins of ${bold(bounty.title)} have been recorded for the following hunters: ${newTurnInList}`);
-							const post = await updatePosting(collectedInteraction.guild, origin.company, bounty, origin.hunter.getLevel(origin.company.xpCoefficient), eligibleTurnInIds);
+							const post = await refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, origin.hunter.getLevel(origin.company.xpCoefficient), eligibleTurnInIds);
 							if (post) {
 								post.channel.send({ content: `${newTurnInList} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
 							}

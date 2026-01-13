@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, bold, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, updatePosting, selectOptionsFromBounties, disabledSelectRow, commandMention } = require("../../shared");
+const { listifyEN, refreshBountyThreadStarterMessage, selectOptionsFromBounties, disabledSelectRow, commandMention } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -44,7 +44,7 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 						break;
 					case "hunters":
 						await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, collectedInteraction.values);
-						const post = await updatePosting(collectedInteraction.guild, origin.company, bounty, origin.hunter.getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id));
+						const post = await refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, origin.hunter.getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id));
 						if (post) {
 							post.channel.send({ content: `${listifyEN(collectedInteraction.values.map(id => `<@${id}>`))} ${collectedInteraction.values.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
 						}

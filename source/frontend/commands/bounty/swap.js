@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, selectOptionsFromBounties, updatePosting, sendAnnouncement, disabledSelectRow } = require("../../shared");
+const { getNumberEmoji, selectOptionsFromBounties, refreshBountyThreadStarterMessage, sendAnnouncement, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
@@ -77,11 +77,11 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 							let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id });
 
 							previousBounty = await previousBounty.update({ slotNumber: destinationSlot });
-							updatePosting(interaction.guild, origin.company, previousBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
+							refreshBountyThreadStarterMessage(interaction.guild, origin.company, previousBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
 
 							if (destinationBounty?.state === "open") {
 								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-								updatePosting(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 							}
 
 							interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
