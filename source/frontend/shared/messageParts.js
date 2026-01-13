@@ -1,70 +1,8 @@
-const fs = require("fs");
-const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, MessageFlags, bold, italic, GuildMember, Role, Collection, StringSelectMenuBuilder, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList, TextInputBuilder, TextInputStyle, ModalBuilder, LabelBuilder, UserSelectMenuBuilder, underline } = require("discord.js");
-const { MessageLimits, EmbedLimits, ModalLimits, SelectMenuLimits } = require("@sapphire/discord.js-utilities");
-const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INTERACTION_HANDLING, discordIconURL, bountyBotIconURL } = require("../../constants");
-const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
-const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
-
-/** An overall scoreboard orders a company's hunters by total xp
- * @param {Company} company
- * @param {Guild} guild
- * @param {Map<string, Hunter>} hunterMap
- * @param {Rank[]} ranks
- * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
- */
-async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
-	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
-
-	const scorelines = [];
-	for (const guildMember of Array.from(hunterMembers.values()).sort(descendingByProperty("xp"))) {
-		const hunter = hunterMap.get(guildMember.id);
-		if (hunter?.xp < 1) {
-			break;
-		}
-		scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
-	}
-	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL)
-		.setTitle("The Scoreboard")
-		.setFooter(randomFooterTip())
-		.setTimestamp();
-	let description = "";
-	const andMore = "…and more";
-	const maxDescriptionLength = 2048 - andMore.length;
-	for (const scoreline of scorelines) {
-		if (description.length + scoreline.length <= maxDescriptionLength) {
-			description += `${scoreline}\n`;
-		} else {
-			description += andMore;
-			break;
-		}
-	}
-
-	if (description) {
-		embed.setDescription(description);
-	} else {
-		embed.setDescription("No Bounty Hunters yet…");
-	}
-
-	const fields = [];
-	const { currentGP, requiredGP } = goalProgress;
-	if (currentGP < requiredGP) {
-		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
-	}
-	if (company.nextRaffleString) {
-		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
-	}
-
-	if (fields.length > 0) {
-		embed.addFields(fields);
-	}
-
-	return embed;
-}
+const { EmbedBuilder, Colors, Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle, heading, userMention, bold, italic, GuildMember, Role, Collection, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, unorderedList, TextInputBuilder, TextInputStyle, ModalBuilder, LabelBuilder } = require("discord.js");
+const { MessageLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
+const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { Bounty, Completion, Company, Season, Rank, Hunter } = require("../../database/models");
+const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
  * @param {Guild} guild
@@ -439,7 +377,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	overallScoreboardEmbed,
 	companyStatsEmbed,
 	raffleResultEmbed,
 	getHunterLevelUpRewards,

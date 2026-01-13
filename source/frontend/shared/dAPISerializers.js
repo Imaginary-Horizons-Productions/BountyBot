@@ -1,9 +1,11 @@
+const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength } = require("./messageParts");
 const { Bounty, Rank, Company, Participation } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar } = require("./stringConstructors");
+const { descendingByProperty } = require("../../shared");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
@@ -236,6 +238,67 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	return embed;
 }
 
+/** An overall scoreboard orders a company's hunters by total xp
+ * @param {Company} company
+ * @param {Guild} guild
+ * @param {Map<string, Hunter>} hunterMap
+ * @param {Rank[]} ranks
+ * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
+ */
+async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
+	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
+
+	const scorelines = [];
+	for (const guildMember of Array.from(hunterMembers.values()).sort(descendingByProperty("xp"))) {
+		const hunter = hunterMap.get(guildMember.id);
+		if (hunter?.xp < 1) {
+			break;
+		}
+		scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
+	}
+	const embed = new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setThumbnail(company.scoreboardThumbnailURL)
+		.setTitle("The Scoreboard")
+		.setFooter(randomFooterTip())
+		.setTimestamp();
+	let description = "";
+	const andMore = "…and more";
+	const maxDescriptionLength = 2048 - andMore.length;
+	for (const scoreline of scorelines) {
+		if (description.length + scoreline.length <= maxDescriptionLength) {
+			description += `${scoreline}\n`;
+		} else {
+			description += andMore;
+			break;
+		}
+	}
+
+	if (description) {
+		embed.setDescription(description);
+	} else {
+		embed.setDescription("No Bounty Hunters yet…");
+	}
+
+	const fields = [];
+	const { currentGP, requiredGP } = goalProgress;
+	if (currentGP < requiredGP) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+	}
+	if (company.festivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
+	}
+	if (company.nextRaffleString) {
+		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
+	}
+
+	if (fields.length > 0) {
+		embed.addFields(fields);
+	}
+
+	return embed;
+}
+
 /** Generate an embed for the given bounty
  * @param {Bounty} bounty
  * @param {Guild} guild
@@ -298,5 +361,6 @@ module.exports = {
 	selectOptionsFromRanks,
 	latestVersionChangesEmbed,
 	seasonalScoreboardEmbed,
+	overallScoreboardEmbed,
 	bountyEmbed
 }
