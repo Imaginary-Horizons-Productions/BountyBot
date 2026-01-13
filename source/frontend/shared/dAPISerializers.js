@@ -1,7 +1,8 @@
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength, getNumberEmoji } = require("./messageParts");
 const { Bounty, Rank } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder } = require("discord.js");
+const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
@@ -37,6 +38,15 @@ function attachOverflowingContentAsFile(content, messageOptions, filename) {
 
 //#region Serializers - returns whole entities
 // Naming Convention: `${outputType}From${inputType}`
+
+/** @param {string} placeholderText */
+function disabledSelectRow(placeholderText) {
+	return new ActionRowBuilder().addComponents(
+		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
+			.setDisabled(true)
+	)
+}
 
 /** @param {Bounty[]} bounties */
 function selectOptionsFromBounties(bounties) {
@@ -75,6 +85,7 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 module.exports = {
 	truncateTextToLength,
 	attachOverflowingContentAsFile,
+	disabledSelectRow,
 	selectOptionsFromBounties,
 	selectOptionsFromRanks
 }

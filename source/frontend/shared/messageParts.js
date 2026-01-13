@@ -778,15 +778,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 	return { modal, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
 }
 
-/** @param {string} placeholderText */
-function disabledSelectRow(placeholderText) {
-	return new ActionRowBuilder().addComponents(
-		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
-			.setDisabled(true)
-	)
-}
-
 module.exports = {
 	commandMention,
 	congratulationBuilder,
@@ -817,6 +808,5 @@ module.exports = {
 	formatSeasonResultsToRewardTexts,
 	validateScheduledEventTimestamps,
 	createBountyEventPayload,
-	constructEditBountyModalAndOptions,
-	disabledSelectRow
+	constructEditBountyModalAndOptions
 };
