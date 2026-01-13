@@ -5,28 +5,6 @@ const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/mo
 const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
- * @param {keyof Colors} profileColor
- * @param {Guild} guild
- * @param {string} thumbnailURL
- * @param {GuildMember} winner
- * @param {string} qualificationText
- */
-function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificationText) {
-	const embed = new EmbedBuilder().setColor(Colors[profileColor])
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
-		.setTitle("Raffle Results")
-		.setThumbnail(thumbnailURL)
-		.setDescription(`The winner of this raffle is: ${winner}`)
-		.addFields({ name: "Qualifications", value: qualificationText })
-		.setTimestamp();
-
-	if (guild.bannerURL()) {
-		embed.setImage(guild.bannerURL());
-	}
-	return embed;
-}
-
-/**
  * @param {number} level
  * @param {number} maxSlots
  * @param {boolean} futureReward
@@ -345,7 +323,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	raffleResultEmbed,
 	getHunterLevelUpRewards,
 	buildHunterLevelUpLine,
 	modStatsEmbed,

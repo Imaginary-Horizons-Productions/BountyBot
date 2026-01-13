@@ -1,8 +1,8 @@
 const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
-const { truncateTextToLength } = require("./messageParts");
+const { truncateTextToLength, raffleResultEmbed } = require("./messageParts");
 const { Bounty, Rank, Company, Participation, Hunter, Season } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar } = require("./stringConstructors");
 const { descendingByProperty } = require("../../shared");
@@ -379,6 +379,28 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 	}
 	return embed;
 }
+
+/**
+ * @param {keyof Colors} profileColor
+ * @param {Guild} guild
+ * @param {string} thumbnailURL
+ * @param {GuildMember} winner
+ * @param {string} qualificationText
+ */
+function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificationText) {
+	const embed = new EmbedBuilder().setColor(Colors[profileColor])
+		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setTitle("Raffle Results")
+		.setThumbnail(thumbnailURL)
+		.setDescription(`The winner of this raffle is: ${winner}`)
+		.addFields({ name: "Qualifications", value: qualificationText })
+		.setTimestamp();
+
+	if (guild.bannerURL()) {
+		embed.setImage(guild.bannerURL());
+	}
+	return embed;
+}
 //#endregion
 
 module.exports = {
@@ -395,5 +417,6 @@ module.exports = {
 	companyStatsEmbed,
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
-	bountyEmbed
+	bountyEmbed,
+	raffleResultEmbed
 }
