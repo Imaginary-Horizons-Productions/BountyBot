@@ -5,65 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** A seasonal scoreboard orders a company's hunters by their seasonal xp
- * @param {Company} company
- * @param {Guild} guild
- * @param {Map<string, Participation>} participationMap
- * @param {Rank[]} ranks
- * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
- */
-async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
-	const hunterMembers = await guild.members.fetch({ user: Array.from(participationMap.keys()) });
-	const rankmojiArray = ranks.map(rank => rank.rankmoji);
-
-	const scorelines = [];
-	for (const [id, participation] of Array.from(participationMap.entries()).sort((a, b) => b[1].xp - a[1].xp)) {
-		if (participation.xp > 0 && hunterMembers.has(id)) {
-			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** ${participation.xp} season XP`);
-		}
-	}
-	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
-		.setThumbnail(company.scoreboardThumbnailURL)
-		.setTitle("The Season Scoreboard")
-		.setFooter(randomFooterTip())
-		.setTimestamp();
-	let description = "";
-	const andMore = "…and more";
-	const maxDescriptionLength = 2048 - andMore.length;
-	for (const scoreline of scorelines) {
-		if (description.length + scoreline.length <= maxDescriptionLength) {
-			description += `${scoreline}\n`;
-		} else {
-			description += andMore;
-			break;
-		}
-	}
-
-	if (description) {
-		embed.setDescription(description);
-	} else {
-		embed.setDescription("No Bounty Hunters yet…");
-	}
-
-	const fields = [];
-	const { currentGP, requiredGP } = goalProgress;
-	if (currentGP < requiredGP) {
-		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
-	}
-	if (company.nextRaffleString) {
-		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
-	}
-
-	if (fields.length > 0) {
-		embed.addFields(fields);
-	}
-	return embed;
-}
-
 /** An overall scoreboard orders a company's hunters by total xp
  * @param {Company} company
  * @param {Guild} guild
@@ -498,7 +439,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
 	companyStatsEmbed,
 	raffleResultEmbed,
