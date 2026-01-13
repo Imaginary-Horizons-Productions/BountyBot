@@ -5,28 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */
-async function buildVersionEmbed() {
-	const changelogPath = "./ChangeLog.md";
-	const data = await fs.promises.readFile(changelogPath, { encoding: 'utf8' });
-	const stats = await fs.promises.stat(changelogPath);
-	const dividerRegEx = /## .+ Version/g;
-	const changesStartRegEx = /\.\d+[cfi]*:/g;
-	let titleStart = dividerRegEx.exec(data).index;
-	changesStartRegEx.exec(data);
-	let sectionEnd = dividerRegEx.exec(data).index;
-
-	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
-		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
-		.setURL('https://discord.gg/JxqE9EpKt9')
-		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')
-		.setDescription(data.slice(changesStartRegEx.lastIndex, sectionEnd).slice(0, EmbedLimits.MaximumDescriptionLength))
-		.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" })
-		.setFooter(randomFooterTip())
-		.setTimestamp(stats.mtime);
-}
-
 /**
  * @param {Company} company
  * @param {number} previousLevel
@@ -551,10 +529,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
-	rewardStringBountyCompletion,
-	buildVersionEmbed,
-	bountyControlPanelSelectRow,
 	sendAnnouncement,
 	buildCompanyLevelUpLine,
 	seasonalScoreboardEmbed,
