@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { makeEvergreenBountiesThread, bountyEmbed, generateBountyCommandSelect } = require("../../shared");
+const { makeEvergreenBountiesThread, bountyEmbed, bountyControlPanelSelectRow } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
@@ -46,7 +46,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 						name: bounty.title,
 						message: {
 							embeds: [bountyEmbed],
-							components: generateBountyCommandSelect(bounty.id)
+							components: bountyControlPanelSelectRow(bounty.id)
 						},
 						appliedTags: [openTagId]
 					})

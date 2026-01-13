@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, generateBountyCommandSelect, sendAnnouncement, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, sendAnnouncement, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -173,7 +173,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
 								name: bounty.title,
-								message: { embeds: [bountyEmbed], components: generateBountyCommandSelect(bounty.id) },
+								message: { embeds: [bountyEmbed], components: bountyControlPanelSelectRow(bounty.id) },
 								appliedTags: [origin.company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {

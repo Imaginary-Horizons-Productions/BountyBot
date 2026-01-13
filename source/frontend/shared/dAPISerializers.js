@@ -1,8 +1,8 @@
 const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength } = require("./messageParts");
 const { Bounty, Rank, Company } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild } = require("discord.js");
-const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } = require("../../constants");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder } = require("discord.js");
+const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER } = require("../../constants");
 const { emojiFromNumber, sentenceListEN } = require("./stringConstructors");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
@@ -83,6 +83,26 @@ function disabledSelectRow(placeholderText) {
 			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
 			.setDisabled(true)
 	)
+}
+
+/** @param {string} bountyId */
+function bountyControlPanelSelectRow(bountyId) {
+	return [
+		new ActionRowBuilder().addComponents(
+			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
+				.setPlaceholder("Select a bounty command...")
+				.setOptions(
+					{ label: "No Change", description: "You can move the selection to this option without changing anything", value: "nochange" },
+					{ emoji: "📥", label: "Record other hunters' turn-ins", description: "Confirm another hunter has turned-in this bounty", value: "recordturnin" },
+					{ emoji: "🚫", label: "Revoke other hunters' turn-ins", description: "Remove credit for turning in this bounty from another hunter", value: "revoketurnin" },
+					{ emoji: "🔝", label: "Showcase this bounty", description: "Increase the rewards on this bounty and promote it in another channel", value: "showcase" },
+					{ emoji: "✅", label: "Complete this bounty", description: "Distribute rewards for turn-ins and mark this bounty completed", value: "complete" },
+					{ emoji: "📝", label: "Edit this bounty", description: "Change details about this bounty", value: "edit" },
+					{ emoji: "🔄", label: "Swap this bounty to another slot", description: "Move this bounty to another slot, changing its base reward", value: "swap" },
+					{ emoji: "🗑️", label: "Take this bounty down", description: "Take this bounty down without distrbuting rewards", value: "takedown" }
+				)
+		)
+	]
 }
 
 /** @param {Bounty[]} bounties */
@@ -173,6 +193,7 @@ module.exports = {
 	attachOverflowingContentAsFile,
 	randomFooterTip,
 	disabledSelectRow,
+	bountyControlPanelSelectRow,
 	selectOptionsFromBounties,
 	selectOptionsFromRanks,
 	bountyEmbed

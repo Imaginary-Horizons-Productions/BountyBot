@@ -5,26 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** @param {string} bountyId */
-function generateBountyCommandSelect(bountyId) {
-	return [
-		new ActionRowBuilder().addComponents(
-			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
-				.setPlaceholder("Select a bounty command...")
-				.setOptions(
-					{ label: "No Change", description: "You can move the selection to this option without changing anything", value: "nochange" },
-					{ emoji: "📥", label: "Record other hunters' turn-ins", description: "Confirm another hunter has turned-in this bounty", value: "recordturnin" },
-					{ emoji: "🚫", label: "Revoke other hunters' turn-ins", description: "Remove credit for turning in this bounty from another hunter", value: "revoketurnin" },
-					{ emoji: "🔝", label: "Showcase this bounty", description: "Increase the rewards on this bounty and promote it in another channel", value: "showcase" },
-					{ emoji: "✅", label: "Complete this bounty", description: "Distribute rewards for turn-ins and mark this bounty completed", value: "complete" },
-					{ emoji: "📝", label: "Edit this bounty", description: "Change details about this bounty", value: "edit" },
-					{ emoji: "🔄", label: "Swap this bounty to another slot", description: "Move this bounty to another slot, changing its base reward", value: "swap" },
-					{ emoji: "🗑️", label: "Take this bounty down", description: "Take this bounty down without distrbuting rewards", value: "takedown" }
-				)
-		)
-	]
-}
-
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */
 async function buildVersionEmbed() {
 	const changelogPath = "./ChangeLog.md";
@@ -574,7 +554,7 @@ module.exports = {
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
 	rewardStringBountyCompletion,
 	buildVersionEmbed,
-	generateBountyCommandSelect,
+	bountyControlPanelSelectRow,
 	sendAnnouncement,
 	buildCompanyLevelUpLine,
 	seasonalScoreboardEmbed,
