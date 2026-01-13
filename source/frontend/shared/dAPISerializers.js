@@ -1,9 +1,9 @@
 const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength } = require("./messageParts");
-const { Bounty, Rank, Company, Participation } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic } = require("discord.js");
-const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER } = require("../../constants");
+const { Bounty, Rank, Company, Participation, Hunter, Season } = require("../../database/models");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors } = require("discord.js");
+const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar } = require("./stringConstructors");
 const { descendingByProperty } = require("../../shared");
 
@@ -177,6 +177,38 @@ async function latestVersionChangesEmbed() {
 		.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" })
 		.setFooter(randomFooterTip())
 		.setTimestamp(stats.mtime);
+}
+
+/**
+ * @param {Guild} guild
+ * @param {number} companyXP
+ * @param {number} participantCount
+ * @param {Season} currentSeason
+ * @param {Season} lastSeason
+ */
+async function companyStatsEmbed(guild, companyXP, participantCount, currentSeason, lastSeason) {
+	const currentCompanyLevel = Company.getLevel(companyXP);
+	const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
+	const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
+	const currentSeasonXP = await currentSeason.totalXP;
+	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
+
+	const particpantPercentage = participantCount / guild.memberCount * 100;
+	const seasonXPDifference = currentSeasonXP - lastSeasonXP;
+	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
+	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
+	return new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setTitle(`${guild.name} is __Level ${currentCompanyLevel}__`)
+		.setThumbnail(guild.iconURL())
+		.setDescription(`${fillableTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
+		.addFields(
+			{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
+			{ name: "Participation", value: `${participantCount} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
+			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
+		)
+		.setFooter(randomFooterTip())
+		.setTimestamp()
 }
 
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
@@ -360,6 +392,7 @@ module.exports = {
 	selectOptionsFromBounties,
 	selectOptionsFromRanks,
 	latestVersionChangesEmbed,
+	companyStatsEmbed,
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
 	bountyEmbed
