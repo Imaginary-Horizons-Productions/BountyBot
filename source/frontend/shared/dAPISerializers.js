@@ -1,8 +1,9 @@
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
-const { truncateTextToLength, emojiFromNumber } = require("./messageParts");
+const { truncateTextToLength } = require("./messageParts");
 const { Bounty, Rank } = require("../../database/models");
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { emojiFromNumber } = require("./stringConstructors");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 

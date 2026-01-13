@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, randomCongratulatoryPhrase, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, fillableTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, fillableTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -52,7 +52,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
 					if (!collectedInteraction.channel) return;
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "Unarchived to update posting");
-					collectedInteraction.channel.send({ content: `${listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
+					collectedInteraction.channel.send({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 					const starterMessage = await collectedInteraction.channel.fetchStarterMessage();
 					starterMessage.edit({ embeds: [await buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)] });
 					return collectedInteraction.update({
@@ -86,7 +86,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 							interaction.message.edit({ embeds: [embed] })
 						});
 
-					collectedInteraction.channel.send({ content: `${listifyEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
+					collectedInteraction.channel.send({ content: `${sentenceListEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 					return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: MessageFlags.Ephemeral });
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
@@ -174,7 +174,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}
 
 				interaction.reply({
-					content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${listifyEN(Array.from(validatedHunters.keys()).map(id => userMention(id)))}`,
+					content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${sentenceListEN(Array.from(validatedHunters.keys()).map(id => userMention(id)))}`,
 					components: [
 						new ActionRowBuilder().addComponents(
 							new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)

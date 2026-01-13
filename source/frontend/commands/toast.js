@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, fillableTextBar, listifyEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, sentenceListEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -27,7 +27,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		let bannedText;
 		if (bannedIds.size > 1) {
-			bannedText = `${listifyEN(Array.from(bannedIds).map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+			bannedText = `${sentenceListEN(Array.from(bannedIds).map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
 		} else if (bannedIds.size === 1) {
 			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}

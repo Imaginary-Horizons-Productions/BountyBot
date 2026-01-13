@@ -3,7 +3,7 @@ const { SlashCommandSubcommandBuilder, PermissionsBitField, InteractionContextTy
 const { commandFiles } = require('../source/frontend/commands/_commandDictionary.js');
 const { contextMenuFiles } = require('../source/frontend/context_menus/_contextMenuDictionary.js');
 const { CommandWrapper, ContextMenuWrapper } = require('../source/frontend/classes/index.js');
-const { listifyEN } = require('../source/frontend/shared');
+const { sentenceListEN } = require('../source/frontend/shared');
 
 const contextDictionary = {
 	[InteractionContextType.BotDM]: "DMs",
@@ -22,7 +22,7 @@ if (commandFiles.length > 0) {
 		if (command.premiumCommand) {
 			text += `> 💎 Premium Command 💎\n\n`
 		}
-		text += `> Usable in: ${listifyEN(command.builder.contexts.map(context => contextDictionary[context]))}\n\n`;
+		text += `> Usable in: ${sentenceListEN(command.builder.contexts.map(context => contextDictionary[context]))}\n\n`;
 		if (command.cooldown === 1000) {
 			text += `> Cooldown: 1 second\n\n`;
 		} else {
@@ -63,7 +63,7 @@ if (contextMenuFiles.length > 0) {
 		if (contextMenu.premiumCommand) {
 			text += `> 💎 Premium Feature 💎\n\n`
 		}
-		text += `> Usable in: ${listifyEN(contextMenu.builder.contexts.map(context => contextDictionary[context]))}\n\n`;
+		text += `> Usable in: ${sentenceListEN(contextMenu.builder.contexts.map(context => contextDictionary[context]))}\n\n`;
 		if (contextMenu.cooldown === 1000) {
 			text += `> Cooldown: 1 second\n\n`;
 		} else {

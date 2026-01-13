@@ -5,31 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** Formats string array into Oxford English list syntax
- *  @param {string[]} texts
- *  @param {boolean} isMutuallyExclusive
- */
-function listifyEN(texts, isMutuallyExclusive) {
-	if (texts.length > 2) {
-		const textsSansLast = texts.slice(0, texts.length - 1);
-		if (isMutuallyExclusive) {
-			return `${textsSansLast.join(", ")}, or ${texts[texts.length - 1]}`;
-		} else {
-			return `${textsSansLast.join(", ")}, and ${texts[texts.length - 1]}`;
-		}
-	} else if (texts.length === 2) {
-		if (isMutuallyExclusive) {
-			return texts.join(" or ");
-		} else {
-			return texts.join(" and ");
-		}
-	} else if (texts.length === 1) {
-		return texts[0];
-	} else {
-		return "";
-	}
-}
-
 const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 const bountyBotIcon = "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg";
 /** @type {import("discord.js").EmbedFooterData[]} */
@@ -103,7 +78,7 @@ async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsFie
 		embed.setAuthor({ name: `${author.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
 	}
 	if (hunterIdSet.size > 0) {
-		const completersFieldText = listifyEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
+		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: "Turned in by:", value: completersFieldText });
 		} else {
@@ -453,7 +428,7 @@ function modStatsEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 	let bountyHistory = "";
 	for (let i = 0; i < lastFiveBounties.length; i++) {
 		const bounty = lastFiveBounties[i];
-		bountyHistory += `__${bounty.title}__${bounty.description !== null ? ` ${bounty.description}` : ""}${listifyEN(bounty.Completions.map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
+		bountyHistory += `__${bounty.title}__${bounty.description !== null ? ` ${bounty.description}` : ""}${sentenceListEN(bounty.Completions.map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
 	}
 
 	if (bountyHistory === "") {
@@ -472,7 +447,7 @@ function generateToastEmbed(thumbnailURL, toastText, recipientIdSet, senderMembe
 	return new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
-		.setDescription(`A toast to ${listifyEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
+		.setDescription(`A toast to ${sentenceListEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
 }
 
@@ -517,7 +492,7 @@ function generateCompletionEmbed(contributorIds) {
 		.setTitle("Server Goal Completed")
 		.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
 		.setDescription(`${randomCongratulatoryPhrase()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
-		.addFields({ name: "Contributors", value: listifyEN(contributorIds.map(id => userMention(id))) })
+		.addFields({ name: "Contributors", value: sentenceListEN(contributorIds.map(id => userMention(id))) })
 }
 
 /**
@@ -709,8 +684,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	emojiFromNumber,
-	listifyEN,
+	sentenceListEN,
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
 	randomFooterTip,
 	buildBountyEmbed,

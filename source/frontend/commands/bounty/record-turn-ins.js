@@ -1,6 +1,6 @@
 const { userMention, bold, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { listifyEN, commandMention, refreshBountyThreadStarterMessage, randomCongratulatoryPhrase, disabledSelectRow, selectOptionsFromBounties } = require("../../shared");
+const { sentenceListEN, commandMention, refreshBountyThreadStarterMessage, randomCongratulatoryPhrase, disabledSelectRow, selectOptionsFromBounties } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 
@@ -47,13 +47,13 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 						const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(collectedInteraction.members.values()), runMode);
 						const sentences = [];
 						if (bannedTurnInIds.size > 0) {
-							sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${listifyEN(Array.from(bannedTurnInIds.values().map(id => userMention(id))))}`);
+							sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${sentenceListEN(Array.from(bannedTurnInIds.values().map(id => userMention(id))))}`);
 						}
 						if (newTurnInIds.size < 1) {
 							sentences.unshift("No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties.");
 						} else {
 							await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
-							const newTurnInList = listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
+							const newTurnInList = sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
 							sentences.unshift(`Turn-ins of ${bold(bounty.title)} have been recorded for the following hunters: ${newTurnInList}`);
 							const post = await refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, origin.hunter.getLevel(origin.company.xpCoefficient), eligibleTurnInIds);
 							if (post) {
