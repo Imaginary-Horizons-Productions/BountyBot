@@ -90,6 +90,20 @@ function sentenceListEN(texts, isMutuallyExclusive) {
 }
 
 /**
+ * @param {Company} company
+ * @param {number} previousLevel
+ * @param {Map<string, Hunter>} hunterMap
+ * @param {string} guildName
+ */
+function companyLevelUpLine(company, previousLevel, hunterMap, guildName) {
+	const currentLevel = Company.getLevel(company.getXP(hunterMap));
+	if (currentLevel > previousLevel) {
+		return `${guildName} is now level ${currentLevel}! Evergreen bounties now award more XP!`;
+	}
+	return null;
+}
+
+/**
  * @param {MapIterator<string>} completerIds
  * @param {number} completerReward
  * @param {string?} posterId null for evergreen bounties
@@ -121,5 +135,6 @@ module.exports = {
 	fillableTextBar,
 	emojiFromNumber,
 	sentenceListEN,
+	companyLevelUpLine,
 	rewardStringBountyCompletion
 }

@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Company } = require("../../../database/models");
-const { fillableTextBar, bountyEmbed, rewardStringBountyCompletion, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, formatSeasonResultsToRewardTexts, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset } = require("../../shared");
+const { fillableTextBar, bountyEmbed, rewardStringBountyCompletion, companyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, formatSeasonResultsToRewardTexts, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -86,7 +86,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						}
 
 						hunterMap = await reloadHunterMapSubset(hunterMap, Array.from(finalContributorIds));
-						const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, collectedInteraction.guild.name);
+						const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, collectedInteraction.guild.name);
 						if (companyLevelLine) {
 							levelTexts.push(companyLevelLine);
 						}

@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, rewardStringBountyCompletion, fillableTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, companyLevelUpLine, syncRankRoles, rewardStringBountyCompletion, fillableTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -193,7 +193,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, origin.company);
 					hunterMap = await reloadHunterMapSubset(hunterMap, [...validatedHunters.keys(), bounty.userId]);
 					const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
-					const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, collectedInteraction.guild.name);
+					const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, collectedInteraction.guild.name);
 					if (companyLevelLine) {
 						rewardTexts.push(companyLevelLine);
 					}

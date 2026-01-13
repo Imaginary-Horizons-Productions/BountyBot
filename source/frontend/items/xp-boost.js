@@ -1,7 +1,7 @@
 const { unorderedList } = require("discord.js");
 const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { buildCompanyLevelUpLine, buildHunterLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard } = require("../shared");
+const { companyLevelUpLine, buildHunterLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -28,7 +28,7 @@ module.exports = new ItemTemplateSet(
 				additionalRewards.push(hunterLevelLine);
 			}
 			hunterMap.set(interaction.user.id, await hunterMap.get(interaction.user.id).reload());
-			const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
+			const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
 			if (companyLevelLine) {
 				additionalRewards.push(companyLevelLine);
 			}

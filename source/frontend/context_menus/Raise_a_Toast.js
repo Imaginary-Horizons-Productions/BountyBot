@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, butIgnoreInteractionCollectorErrors } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, companyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, butIgnoreInteractionCollectorErrors } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -52,7 +52,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			const { toastId, rewardedHunterIds, hunterResults, critValue } = await logicLayer.toasts.raiseToast(modalSubmission.guild, origin.company, interaction.user.id, new Set([interaction.targetId]), hunterMap, season.id, toastText, null);
 			hunterMap = await reloadHunterMapSubset(hunterMap, rewardedHunterIds.concat(interaction.user.id));
 			const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
-			const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
+			const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
 			if (companyLevelLine) {
 				rewardTexts.push(companyLevelLine);
 			}

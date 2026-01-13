@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { fillableTextBar, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { fillableTextBar, companyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -87,7 +87,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				recipientIds.push(interaction.user.id);
 			}
 		}
-		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), interaction.guild.name);
+		const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), interaction.guild.name);
 		if (companyLevelLine) {
 			rewardTexts.push(companyLevelLine);
 		}

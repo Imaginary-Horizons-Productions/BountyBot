@@ -5,20 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/**
- * @param {Company} company
- * @param {number} previousLevel
- * @param {Map<string, Hunter>} hunterMap
- * @param {string} guildName
- */
-function buildCompanyLevelUpLine(company, previousLevel, hunterMap, guildName) {
-	const currentLevel = Company.getLevel(company.getXP(hunterMap));
-	if (currentLevel > previousLevel) {
-		return `${guildName} is now level ${currentLevel}! Evergreen bounties now award more XP!`;
-	}
-	return null;
-}
-
 /** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
  * @param {Company} company
  * @param {import('discord.js').MessageCreateOptions} messageOptions
@@ -530,7 +516,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 
 module.exports = {
 	sendAnnouncement,
-	buildCompanyLevelUpLine,
+	companyLevelUpLine,
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
 	companyStatsEmbed,
