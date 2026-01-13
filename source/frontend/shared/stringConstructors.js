@@ -12,6 +12,19 @@ function commandMention(fullCommand) {
 	return `</${fullCommand}:${commandIds[mainCommand]}>`;
 }
 
+const CONGRATULATORY_PHRASES = [
+	"Congratulations",
+	"Well done",
+	"You've done it",
+	"Nice",
+	"Awesome"
+];
+
+function randomCongratulatoryPhrase() {
+	return CONGRATULATORY_PHRASES[Math.floor(CONGRATULATORY_PHRASES.length * Math.random())];
+}
+
 module.exports = {
-	commandMention
+	commandMention,
+	randomCongratulatoryPhrase
 }

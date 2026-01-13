@@ -5,21 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-const CONGRATULATORY_PHRASES = [
-	"Congratulations",
-	"Well done",
-	"You've done it",
-	"Nice",
-	"Awesome"
-];
-
-/** Return a random congragulatory phrase
- * @returns {string}
- */
-function congratulationBuilder() {
-	return CONGRATULATORY_PHRASES[Math.floor(CONGRATULATORY_PHRASES.length * Math.random())];
-}
-
 /** Create a text-only ratio bar that fills left to right
  * @param {number} numerator
  * @param {number} denominator
@@ -482,7 +467,7 @@ function buildHunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBoun
 		for (let level = previousLevel + 1; level <= currentLevel; level++) {
 			rewards.push(...getHunterLevelUpRewards(level, maxSimBounties, false));
 		}
-		return `${congratulationBuilder()}, ${userMention(hunter.userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
+		return `${randomCongratulatoryPhrase()}, ${userMention(hunter.userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
 	}
 	return null;
 }
@@ -574,7 +559,7 @@ function generateCompletionEmbed(contributorIds) {
 	return new EmbedBuilder().setColor("e5b271")
 		.setTitle("Server Goal Completed")
 		.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
-		.setDescription(`${congratulationBuilder()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+		.setDescription(`${randomCongratulatoryPhrase()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
 		.addFields({ name: "Contributors", value: listifyEN(contributorIds.map(id => userMention(id))) })
 }
 
@@ -644,7 +629,7 @@ function formatSeasonResultsToRewardTexts(seasonResults, descendingRanks, allGui
 		if (result.rankIncreased) {
 			const rank = descendingRanks[result.newRankIndex];
 			const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${result.newRankIndex + 1}`;
-			rewardTexts.push(`${congratulationBuilder()}, ${userMention(id)}! You've risen to ${bold(rankName)}!`);
+			rewardTexts.push(`${randomCongratulatoryPhrase()}, ${userMention(id)}! You've risen to ${bold(rankName)}!`);
 		}
 	}
 	return rewardTexts;
@@ -767,7 +752,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	congratulationBuilder,
 	generateTextBar,
 	getNumberEmoji,
 	listifyEN,
