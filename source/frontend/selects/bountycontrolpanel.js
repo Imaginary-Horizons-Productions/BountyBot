@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, randomCongratulatoryPhrase, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
+const { listifyEN, randomCongratulatoryPhrase, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, fillableTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -215,9 +215,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 							if (goalUpdate.gpContributed > 0) {
 								const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 								if (goalId !== null) {
-									embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 								} else {
-									embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
 								}
 							}
 							interaction.message.edit({ embeds: [embed], components: [] });

@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Company } = require("../../../database/models");
-const { generateTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, formatSeasonResultsToRewardTexts, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset } = require("../../shared");
+const { fillableTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, formatSeasonResultsToRewardTexts, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -97,9 +97,9 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 							levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);
 							const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guildId);
 							if (goalId !== null) {
-								completedBountyEmbed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+								completedBountyEmbed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 							} else {
-								completedBountyEmbed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+								completedBountyEmbed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
 							}
 						}
 						if (wasGoalCompleted) {

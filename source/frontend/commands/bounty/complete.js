@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendRewardMessage, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
+const { commandMention, fillableTextBar, buildBountyEmbed, generateBountyRewardString, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendRewardMessage, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -73,9 +73,9 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			if (goalUpdate.gpContributed > 0) {
 				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 				if (goalId !== null) {
-					embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+					embed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 				} else {
-					embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+					embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
 				}
 			}
 			const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };

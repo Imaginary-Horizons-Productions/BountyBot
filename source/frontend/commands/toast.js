@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, generateTextBar, listifyEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, listifyEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -88,9 +88,9 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				}
 				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (goalId !== null) {
-					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+					embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 				} else {
-					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+					embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
 				}
 			}
 		}

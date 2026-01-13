@@ -5,24 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** Create a text-only ratio bar that fills left to right
- * @param {number} numerator
- * @param {number} denominator
- * @param {number} barLength
- */
-function generateTextBar(numerator, denominator, barLength) {
-	const filledBlocks = Math.floor(barLength * numerator / denominator);
-	let bar = "";
-	for (let i = 0; i < barLength; i++) {
-		if (filledBlocks > i) {
-			bar += "▰";
-		} else {
-			bar += "▱";
-		}
-	}
-	return bar;
-}
-
 const NUMBER_EMOJI = {
 	0: '0️⃣',
 	1: '1️⃣',
@@ -303,7 +285,7 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	const fields = [];
 	const { currentGP, requiredGP } = goalProgress;
 	if (currentGP < requiredGP) {
-		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
 	if (company.festivalMultiplier !== 1) {
 		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
@@ -363,7 +345,7 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	const fields = [];
 	const { currentGP, requiredGP } = goalProgress;
 	if (currentGP < requiredGP) {
-		fields.push({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
 	if (company.festivalMultiplier !== 1) {
 		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
@@ -401,7 +383,7 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
 		.setAuthor(module.exports.ihpAuthorPayload)
 		.setTitle(`${guild.name} is __Level ${currentCompanyLevel}__`)
 		.setThumbnail(guild.iconURL())
-		.setDescription(`${generateTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
+		.setDescription(`${fillableTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
 		.addFields(
 			{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
 			{ name: "Participation", value: `${participantCount} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
@@ -752,7 +734,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	generateTextBar,
 	getNumberEmoji,
 	listifyEN,
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },

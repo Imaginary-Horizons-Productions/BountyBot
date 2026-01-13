@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, generateTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, butIgnoreInteractionCollectorErrors } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, butIgnoreInteractionCollectorErrors } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -67,9 +67,9 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					}
 					const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (goalId !== null) {
-						embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+						embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 					} else {
-						embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+						embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
 					}
 				}
 			}

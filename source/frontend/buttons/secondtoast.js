@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { generateTextBar, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { fillableTextBar, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -113,9 +113,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		if (goalProgressFieldIndex !== -1) {
 			const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 			if (goalId !== null) {
-				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 			} else {
-				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Complete!` });
+				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
 			}
 		}
 		interaction.update({ embeds: [embed] });
