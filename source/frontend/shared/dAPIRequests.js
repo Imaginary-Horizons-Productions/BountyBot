@@ -83,7 +83,7 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, posterL
  * @param {Guild} guild
  * @param {EmbedBuilder[]} embeds
  */
-async function updateScoreboard(company, guild, embeds) {
+async function refreshReferenceChannelScoreboard(company, guild, embeds) {
 	if (company.scoreboardChannelId && company.scoreboardMessageId) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
@@ -156,7 +156,7 @@ module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	refreshBountyThreadStarterMessage,
-	updateScoreboard,
+	refreshReferenceChannelScoreboard,
 	sendToRewardsThread,
 	syncRankRoles,
 	unarchiveAndUnlockThread

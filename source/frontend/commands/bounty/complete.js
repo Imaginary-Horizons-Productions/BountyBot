@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
+const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -111,7 +111,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			} else {
 				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
 			}
-			updateScoreboard(origin.company, interaction.guild, embeds);
+			refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 		});
 	}
 ).setOptions(

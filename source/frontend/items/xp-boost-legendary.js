@@ -1,7 +1,7 @@
 const { unorderedList } = require("discord.js");
 const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard } = require("../shared");
+const { buildCompanyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -43,7 +43,7 @@ module.exports = new ItemTemplateSet(
 			} else {
 				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
 			}
-			updateScoreboard(origin.company, interaction.guild, embeds);
+			refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 		}
 	)
 ).setLogicLinker(logicBlob => {
