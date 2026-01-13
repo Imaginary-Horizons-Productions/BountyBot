@@ -1,6 +1,7 @@
 const { heading, userMention, unorderedList } = require("discord.js");
 const { commandIds } = require("../../constants");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
+const { Hunter } = require("../../database/models");
 
 /**
  * @file String Constructors - formatted reusable strings
@@ -104,6 +105,27 @@ function companyLevelUpLine(company, previousLevel, hunterMap, guildName) {
 }
 
 /**
+ * @param {number} level
+ * @param {number} maxSlots
+ * @param {boolean} futureReward
+ */
+function getHunterLevelUpRewards(level, maxSlots, futureReward = true) {
+	const texts = [];
+	if (level % 2) {
+		texts.push(`Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
+	} else {
+		texts.push(`Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
+	}
+	const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
+	if (currentSlots < maxSlots) {
+		if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
+			texts.push(` You ${futureReward ? "will unlock" : "have unlocked"} bounty slot #${currentSlots}.`);
+		};
+	}
+	return texts;
+}
+
+/**
  * @param {MapIterator<string>} completerIds
  * @param {number} completerReward
  * @param {string?} posterId null for evergreen bounties
@@ -136,5 +158,6 @@ module.exports = {
 	emojiFromNumber,
 	sentenceListEN,
 	companyLevelUpLine,
+	getHunterLevelUpRewards,
 	rewardStringBountyCompletion
 }

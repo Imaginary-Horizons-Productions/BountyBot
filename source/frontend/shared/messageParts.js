@@ -5,27 +5,6 @@ const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/mo
 const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
- * @param {number} level
- * @param {number} maxSlots
- * @param {boolean} futureReward
- */
-function getHunterLevelUpRewards(level, maxSlots, futureReward = true) {
-	const texts = [];
-	if (level % 2) {
-		texts.push(`Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
-	} else {
-		texts.push(`Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
-	}
-	const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
-	if (currentSlots < maxSlots) {
-		if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
-			texts.push(` You ${futureReward ? "will unlock" : "have unlocked"} bounty slot #${currentSlots}.`);
-		};
-	}
-	return texts;
-}
-
-/**
  * @param {Hunter} hunter
  * @param {number} previousLevel
  * @param {number} xpCoefficient
