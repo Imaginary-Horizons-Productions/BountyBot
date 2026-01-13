@@ -6,11 +6,19 @@ const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilit
 const { ascendingByProperty } = require("../../shared");
 
 /**
+ * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
+ *
+ * Naming Convention:
+ * - verb first, avoid HTML method verbs (many functions will use more than one)
+ * - describe entity in BountyBot context (eg "EvergreenBountyBoard" instead of "ForumChannel")
+ */
+
+/**
  * @param {GuildTextThreadManager} threadManager
  * @param {EmbedBuilder[]} embeds
  * @param {Company} company
  */
-function createEvergreenBountyThread(threadManager, embeds, company) {
+function makeEvergreenBountiesThread(threadManager, embeds, company) {
 	return threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds },
@@ -40,7 +48,7 @@ async function updateEvergreenBountyBoard(bountyBoardChannel, evergreenBounties,
 			return thread;
 		});
 	} else {
-		return createEvergreenBountyThread(bountyBoardChannel.threads, embeds, company);
+		return makeEvergreenBountiesThread(bountyBoardChannel.threads, embeds, company);
 	}
 }
 
@@ -146,7 +154,7 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 
 module.exports = {
 	updateEvergreenBountyBoard,
-	createEvergreenBountyThread,
+	makeEvergreenBountiesThread,
 	updatePosting,
 	updateScoreboard,
 	sendToRewardsThread,

@@ -3,12 +3,10 @@ const { truncateTextToLength, getNumberEmoji } = require("./messageParts");
 const { Bounty, Rank } = require("../../database/models");
 const { Role, Collection, AttachmentBuilder } = require("discord.js");
 
-/**
- * @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants
- *
- * Naming conventions:
- * - Serializer: `${outputType}From${inputType}`
- */
+/** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
+
+//#region Serialization Utilities - modifies a given entity
+// Naming Convention: describe modifications, don't match other conventions
 
 /**
  * @param {string} text
@@ -35,6 +33,10 @@ function attachOverflowingContentAsFile(content, messageOptions, filename) {
 	}
 	return messageOptions;
 }
+//#endregion
+
+//#region Serializers - returns whole entities
+// Naming Convention: `${outputType}From${inputType}`
 
 /** @param {Bounty[]} bounties */
 function selectOptionsFromBounties(bounties) {
@@ -68,6 +70,7 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 		return option;
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
+//#endregion
 
 module.exports = {
 	truncateTextToLength,
