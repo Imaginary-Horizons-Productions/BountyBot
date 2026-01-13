@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, fillableTextBar, buildBountyEmbed, generateBountyRewardString, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendRewardMessage, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
+const { commandMention, fillableTextBar, bountyEmbed, generateBountyRewardString, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendRewardMessage, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -69,7 +69,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 		const content = generateBountyRewardString(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts);
 
-		buildBountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()])).then(async embed => {
+		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()])).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {
 				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 				if (goalId !== null) {

@@ -1,6 +1,6 @@
 const { MessageFlags, heading, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { buildBountyEmbed } = require("../../shared");
+const { bountyEmbed } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("list", "List all of a hunter's open bounties (default: your own)",
@@ -14,7 +14,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 					return;
 				}
 				const companyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
-				interaction.reply({ content: heading(`Evergreen Bounties on ${interaction.guild.name}`, 2), embeds: await Promise.all(existingBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))), flags: MessageFlags.Ephemeral });
+				interaction.reply({ content: heading(`Evergreen Bounties on ${interaction.guild.name}`, 2), embeds: await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))), flags: MessageFlags.Ephemeral });
 			});
 		} else {
 			logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id).then(async existingBounties => {
@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 					return;
 				}
 				const hunter = listUserId === origin.hunter.userId ? origin.hunter : await logicLayer.hunters.findOneHunter(listUserId, interaction.guild.id);
-				interaction.reply({ content: heading(`${userMention(listUserId)}'s Bounties`, 2), embeds: await Promise.all(existingBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))), flags: MessageFlags.Ephemeral });
+				interaction.reply({ content: heading(`${userMention(listUserId)}'s Bounties`, 2), embeds: await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, interaction.guild, hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))), flags: MessageFlags.Ephemeral });
 			});
 		}
 	}

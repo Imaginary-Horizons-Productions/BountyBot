@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyCommandSelect, sendAnnouncement, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, generateBountyCommandSelect, sendAnnouncement, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -167,7 +167,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				// post in bounty board forum
 				await origin.hunter.reload();
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set());
+				const bountyEmbed = await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set());
 				modalSubmission.reply(sendAnnouncement(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
 					if (origin.company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {

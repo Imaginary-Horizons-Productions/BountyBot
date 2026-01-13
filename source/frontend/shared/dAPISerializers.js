@@ -1,9 +1,9 @@
-const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
+const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength } = require("./messageParts");
-const { Bounty, Rank } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder } = require("discord.js");
+const { Bounty, Rank, Company } = require("../../database/models");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } = require("../../constants");
-const { emojiFromNumber } = require("./stringConstructors");
+const { emojiFromNumber, sentenceListEN } = require("./stringConstructors");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
@@ -117,6 +117,55 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 		return option;
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
+
+/** Generate an embed for the given bounty
+ * @param {Bounty} bounty
+ * @param {Guild} guild
+ * @param {number} posterLevel
+ * @param {boolean} shouldOmitRewardsField
+ * @param {Company} company
+ * @param {Set<string>} hunterIdSet
+ */
+async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet) {
+	const author = await guild.members.fetch(bounty.userId);
+	const fields = [];
+	const embed = new EmbedBuilder().setColor(author.displayColor)
+		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
+		.setTitle(bounty.state == "complete" ? `Bounty Complete! ${bounty.title}` : bounty.title)
+		.setTimestamp();
+	if (bounty.description) {
+		embed.setDescription(bounty.description);
+	}
+	if (bounty.attachmentURL) {
+		embed.setImage(bounty.attachmentURL);
+	}
+	if (bounty.scheduledEventId) {
+		const event = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
+		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
+	}
+	if (!shouldOmitRewardsField) {
+		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
+	}
+
+	if (bounty.isEvergreen) {
+		embed.setAuthor({ name: `Evergreen Bounty #${bounty.slotNumber}`, iconURL: author.user.displayAvatarURL() });
+	} else {
+		embed.setAuthor({ name: `${author.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+	}
+	if (hunterIdSet.size > 0) {
+		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
+		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
+			fields.push({ name: "Turned in by:", value: completersFieldText });
+		} else {
+			fields.push({ name: "Turned in by:", value: "Too many to display!" });
+		}
+	}
+
+	if (fields.length > 0) {
+		embed.addFields(fields);
+	}
+	return embed;
+}
 //#endregion
 
 module.exports = {
@@ -126,4 +175,5 @@ module.exports = {
 	disabledSelectRow,
 	selectOptionsFromBounties,
 	selectOptionsFromRanks,
+	bountyEmbed
 }

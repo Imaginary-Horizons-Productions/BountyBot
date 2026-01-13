@@ -1,8 +1,6 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
-const { SubcommandWrapper } = require("../classes");
+const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
 const { Bounty, Company, Rank } = require("../../database/models");
-const { buildBountyEmbed } = require("./messageParts");
-const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
+const { bountyEmbed } = require("./messageParts");
 const { ascendingByProperty } = require("../../shared");
 
 /**
@@ -40,7 +38,7 @@ function makeEvergreenBountiesThread(threadManager, embeds, company) {
  * @param {Record<string, Set<string>>} hunterIdMap
  */
 async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBounties, company, companyLevel, guild, hunterIdMap) {
-	const embeds = await Promise.all(evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => buildBountyEmbed(bounty, guild, companyLevel, false, company, hunterIdMap[bounty.id])));
+	const embeds = await Promise.all(evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => bountyEmbed(bounty, guild, companyLevel, false, company, hunterIdMap[bounty.id])));
 	if (company.evergreenThreadId) {
 		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
 			const message = await thread.fetchStarterMessage();
@@ -71,7 +69,7 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, posterL
 		thread.edit({ name: bounty.title });
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
-		return buildBountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
+		return bountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
 			posting.edit({ embeds: [embed] });
 			return posting;
 		})

@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Company } = require("../../../database/models");
-const { fillableTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, formatSeasonResultsToRewardTexts, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset } = require("../../shared");
+const { fillableTextBar, bountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, formatSeasonResultsToRewardTexts, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -91,7 +91,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 							levelTexts.push(companyLevelLine);
 						}
 						const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-						const completedBountyEmbed = await buildBountyEmbed(bounty, collectedInteraction.guild, currentCompanyLevel, false, origin.company, finalContributorIds);
+						const completedBountyEmbed = await bountyEmbed(bounty, collectedInteraction.guild, currentCompanyLevel, false, origin.company, finalContributorIds);
 						const announcementPayload = { embeds: [completedBountyEmbed], withResponse: true };
 						if (totalGP > 0) {
 							levelTexts.push(`This bounty contributed ${totalGP} GP to the Server Goal!`);

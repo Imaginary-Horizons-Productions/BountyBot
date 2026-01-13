@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { makeEvergreenBountiesThread, buildBountyEmbed, generateBountyCommandSelect } = require("../../shared");
+const { makeEvergreenBountiesThread, bountyEmbed, generateBountyCommandSelect } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
@@ -41,7 +41,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 					evergreenBounties.unshift(bounty);
 					continue;
 				}
-				buildBountyEmbed(bounty, interaction.guild, bounty.userId == interaction.client.user.id ? Company.getLevel(origin.company.getXP(hunterMap)) : hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)).then(bountyEmbed => {
+				bountyEmbed(bounty, interaction.guild, bounty.userId == interaction.client.user.id ? Company.getLevel(origin.company.getXP(hunterMap)) : hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)).then(bountyEmbed => {
 					return bountyBoard.threads.create({
 						name: bounty.title,
 						message: {
@@ -59,7 +59,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 			// make Evergreen Bounty list
 			if (evergreenBounties.length > 0) {
 				const companyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-				Promise.all(evergreenBounties.map(async bounty => buildBountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
+				Promise.all(evergreenBounties.map(async bounty => bountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
 					makeEvergreenBountiesThread(bountyBoard.threads, embeds, origin.company);
 				})
 			}

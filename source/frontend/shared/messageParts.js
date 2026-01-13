@@ -5,55 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** Generate an embed for the given bounty
- * @param {Bounty} bounty
- * @param {Guild} guild
- * @param {number} posterLevel
- * @param {boolean} shouldOmitRewardsField
- * @param {Company} company
- * @param {Set<string>} hunterIdSet
- */
-async function buildBountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet) {
-	const author = await guild.members.fetch(bounty.userId);
-	const fields = [];
-	const embed = new EmbedBuilder().setColor(author.displayColor)
-		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
-		.setTitle(bounty.state == "complete" ? `Bounty Complete! ${bounty.title}` : bounty.title)
-		.setTimestamp();
-	if (bounty.description) {
-		embed.setDescription(bounty.description);
-	}
-	if (bounty.attachmentURL) {
-		embed.setImage(bounty.attachmentURL);
-	}
-	if (bounty.scheduledEventId) {
-		const event = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
-		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
-	}
-	if (!shouldOmitRewardsField) {
-		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
-	}
-
-	if (bounty.isEvergreen) {
-		embed.setAuthor({ name: `Evergreen Bounty #${bounty.slotNumber}`, iconURL: author.user.displayAvatarURL() });
-	} else {
-		embed.setAuthor({ name: `${author.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
-	}
-	if (hunterIdSet.size > 0) {
-		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
-		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
-			fields.push({ name: "Turned in by:", value: completersFieldText });
-		} else {
-			fields.push({ name: "Turned in by:", value: "Too many to display!" });
-		}
-	}
-
-	if (fields.length > 0) {
-		embed.addFields(fields);
-	}
-	return embed;
-}
-
 /**
  * @param {MapIterator<string>} completerIds
  * @param {number} completerReward
@@ -646,10 +597,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	sentenceListEN,
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
-	randomFooterTip,
-	buildBountyEmbed,
 	generateBountyRewardString,
 	buildVersionEmbed,
 	generateBountyCommandSelect,

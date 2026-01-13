@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -87,7 +87,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				bounty.update(updatePayload);
 
 				// update bounty board
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
+				const bountyEmbed = await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
 				if (origin.company.bountyBoardId) {
 					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 						return bountyBoard.threads.fetch(bounty.postingId);

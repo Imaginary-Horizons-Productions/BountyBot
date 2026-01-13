@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, fillableTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, fillableTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -54,7 +54,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "Unarchived to update posting");
 					collectedInteraction.channel.send({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 					const starterMessage = await collectedInteraction.channel.fetchStarterMessage();
-					starterMessage.edit({ embeds: [await buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)] });
+					starterMessage.edit({ embeds: [await bountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)] });
 					return collectedInteraction.update({
 						components: []
 					});
@@ -80,7 +80,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 					const removedIds = collectedInteraction.members.map((_, key) => key);
 					await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
-					buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))
+					bountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))
 						.then(async embed => {
 							await unarchiveAndUnlockThread(collectedInteraction.channel, "completers removed from bounty");
 							interaction.message.edit({ embeds: [embed] })
@@ -137,7 +137,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
 					const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 					refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
-					return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
+					return bountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 						await unarchiveAndUnlockThread(channel, "bounty showcased");
 						return channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 					})
@@ -210,7 +210,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty complete");
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					await collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
-					buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
+					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
 						.then(async embed => {
 							if (goalUpdate.gpContributed > 0) {
 								const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
@@ -298,7 +298,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					bounty.update(updatePayload);
 
 					// update bounty board
-					const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
+					const bountyEmbed = await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
 					if (origin.company.bountyBoardId) {
 						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.fetch(bounty.postingId);

@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, selectOptionsFromBounties, buildBountyEmbed, refreshEvergreenBountiesThread, constructEditBountyModalAndOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, selectOptionsFromBounties, bountyEmbed, refreshEvergreenBountiesThread, constructEditBountyModalAndOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -84,7 +84,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 
-				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set());
+				const bountyEmbed = await bountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set());
 				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
