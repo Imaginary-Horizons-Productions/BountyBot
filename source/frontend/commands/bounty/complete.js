@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendToRewardsThread, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
+const { commandMention, generateTextBar, buildBountyEmbed, generateBountyRewardString, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendRewardMessage, buildCompanyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -100,7 +100,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			} else {
 				acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
 				interaction.editReply(acknowledgeOptions).then(message => {
-					sendToRewardsThread(message, content, `${bounty.title} Rewards`);
+					sendRewardMessage(message, content, `${bounty.title} Rewards`);
 				})
 			}
 

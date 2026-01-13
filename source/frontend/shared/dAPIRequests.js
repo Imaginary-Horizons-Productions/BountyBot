@@ -98,7 +98,7 @@ async function refreshReferenceChannelScoreboard(company, guild, embeds) {
  * @param {string} content
  * @param {string} threadTitle
  */
-function sendToRewardsThread(embedMessage, content, threadTitle) {
+function sendRewardMessage(embedMessage, content, threadTitle) {
 	const rewardsPayload = { content, flags: MessageFlags.SuppressNotifications };
 	if (embedMessage.channel.isThread()) {
 		// If already in thread, send message
@@ -157,7 +157,7 @@ module.exports = {
 	makeEvergreenBountiesThread,
 	refreshBountyThreadStarterMessage,
 	refreshReferenceChannelScoreboard,
-	sendToRewardsThread,
+	sendRewardMessage,
 	syncRankRoles,
 	unarchiveAndUnlockThread
 };
