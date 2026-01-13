@@ -35,6 +35,23 @@ function attachOverflowingContentAsFile(content, messageOptions, filename) {
 	}
 	return messageOptions;
 }
+
+/** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
+ * @param {Company} company
+ * @param {import('discord.js').MessageCreateOptions} messageOptions
+ */
+function addCompanyAnnouncementPrefix(company, messageOptions) {
+	if (company.announcementPrefix == "@silent") {
+		if ("flags" in messageOptions) {
+			messageOptions.flags |= MessageFlags.SuppressNotifications;
+		} else {
+			messageOptions.flags = MessageFlags.SuppressNotifications;
+		}
+	} else if (company.announcementPrefix != "") {
+		messageOptions.content = `${company.announcementPrefix} ${messageOptions.content}`;
+	}
+	return messageOptions;
+}
 //#endregion
 
 //#region Serializers - returns whole entities
@@ -213,6 +230,7 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 module.exports = {
 	truncateTextToLength,
 	attachOverflowingContentAsFile,
+	addCompanyAnnouncementPrefix,
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
 	randomFooterTip,
 	disabledSelectRow,

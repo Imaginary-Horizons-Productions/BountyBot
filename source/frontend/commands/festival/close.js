@@ -1,6 +1,6 @@
 const { Company } = require("../../../database/models");
 const { SubcommandWrapper } = require("../../classes");
-const { sendAnnouncement, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshEvergreenBountiesThread } = require("../../shared");
+const { addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshEvergreenBountiesThread } = require("../../shared");
 
 module.exports = new SubcommandWrapper("close", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 		interaction.guild.members.fetchMe().then(bountyBot => {
 			bountyBot.setNickname(null);
 		})
-		interaction.reply(sendAnnouncement(origin.company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
+		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (origin.company.scoreboardIsSeasonal) {

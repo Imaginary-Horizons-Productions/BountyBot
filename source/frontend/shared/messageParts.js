@@ -5,23 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
- * @param {Company} company
- * @param {import('discord.js').MessageCreateOptions} messageOptions
- */
-function sendAnnouncement(company, messageOptions) {
-	if (company.announcementPrefix == "@silent") {
-		if ("flags" in messageOptions) {
-			messageOptions.flags |= MessageFlags.SuppressNotifications;
-		} else {
-			messageOptions.flags = MessageFlags.SuppressNotifications;
-		}
-	} else if (company.announcementPrefix != "") {
-		messageOptions.content = `${company.announcementPrefix} ${messageOptions.content}`;
-	}
-	return messageOptions;
-}
-
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
  * @param {Company} company
  * @param {Guild} guild
@@ -515,8 +498,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	sendAnnouncement,
-	companyLevelUpLine,
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
 	companyStatsEmbed,

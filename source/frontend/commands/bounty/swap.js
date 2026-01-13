@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, selectOptionsFromBounties, refreshBountyThreadStarterMessage, sendAnnouncement, disabledSelectRow } = require("../../shared");
+const { emojiFromNumber, selectOptionsFromBounties, refreshBountyThreadStarterMessage, addCompanyAnnouncementPrefix, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
@@ -84,7 +84,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 							}
 
-							interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
+							interaction.channel.send(addCompanyAnnouncementPrefix(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
 							interaction.deleteReply();
 						}
 					}
