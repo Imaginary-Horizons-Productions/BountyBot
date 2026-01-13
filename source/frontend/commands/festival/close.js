@@ -1,6 +1,6 @@
 const { Company } = require("../../../database/models");
 const { SubcommandWrapper } = require("../../classes");
-const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, updateEvergreenBountyBoard } = require("../../shared");
+const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshEvergreenBountiesThread } = require("../../shared");
 
 module.exports = new SubcommandWrapper("close", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -25,7 +25,7 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 			for (const bounty of existingBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild, hunterIdMap);
 		}
 	}
 );

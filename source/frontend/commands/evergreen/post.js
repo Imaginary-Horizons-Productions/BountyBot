@@ -2,7 +2,7 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, LabelBuild
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING, MAX_EVERGREEN_SLOTS } = require("../../../constants");
-const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, updateEvergreenBountyBoard, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, sendAnnouncement, refreshEvergreenBountiesThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { Company } = require("../../../database/models");
 
@@ -91,7 +91,7 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 					for (const bounty of existingBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap)).then(thread => {
+					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap)).then(thread => {
 						bounty.postingId = thread.id;
 						bounty.save()
 					});

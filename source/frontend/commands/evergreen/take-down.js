@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, selectOptionsFromBounties, updateEvergreenBountyBoard, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { commandMention, selectOptionsFromBounties, refreshEvergreenBountiesThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -33,7 +33,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 					for (const bounty of openBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					updateEvergreenBountyBoard(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
+					refreshEvergreenBountiesThread(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
 				} else {
 					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
 						thread.delete(`Evergreen bounty taken down by ${interaction.member}`);

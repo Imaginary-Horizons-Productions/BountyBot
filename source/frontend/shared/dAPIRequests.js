@@ -39,7 +39,7 @@ function makeEvergreenBountiesThread(threadManager, embeds, company) {
  * @param {Guild} guild
  * @param {Record<string, Set<string>>} hunterIdMap
  */
-async function updateEvergreenBountyBoard(bountyBoardChannel, evergreenBounties, company, companyLevel, guild, hunterIdMap) {
+async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBounties, company, companyLevel, guild, hunterIdMap) {
 	const embeds = await Promise.all(evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => buildBountyEmbed(bounty, guild, companyLevel, false, company, hunterIdMap[bounty.id])));
 	if (company.evergreenThreadId) {
 		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
@@ -153,7 +153,7 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 }
 
 module.exports = {
-	updateEvergreenBountyBoard,
+	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	updatePosting,
 	updateScoreboard,

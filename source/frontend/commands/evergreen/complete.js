@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Company } = require("../../../database/models");
-const { generateTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendToRewardsThread, syncRankRoles, formatSeasonResultsToRewardTexts, updateEvergreenBountyBoard, commandMention, reloadHunterMapSubset } = require("../../shared");
+const { generateTextBar, buildBountyEmbed, generateBountyRewardString, buildCompanyLevelUpLine, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendToRewardsThread, syncRankRoles, formatSeasonResultsToRewardTexts, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -127,7 +127,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 								hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 							}
 							const bountyBoard = await collectedInteraction.guild.channels.fetch(origin.company.bountyBoardId);
-							updateEvergreenBountyBoard(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, collectedInteraction.guild, hunterIdMap);
+							refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, collectedInteraction.guild, hunterIdMap);
 						} else if (!collectedInteraction.member.manageable) {
 							collectedInteraction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 						}
