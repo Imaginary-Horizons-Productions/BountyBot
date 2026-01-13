@@ -5,18 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-/** generates a command mention, which users can click to shortcut them to using the command
- * @param {string} fullCommand for subcommands append a whitespace and the subcommandName
- */
-function commandMention(fullCommand) {
-	const [mainCommand] = fullCommand.split(" ");
-	if (!(mainCommand in commandIds)) {
-		return `\`/${fullCommand}\``;
-	}
-
-	return `</${fullCommand}:${commandIds[mainCommand]}>`;
-}
-
 const CONGRATULATORY_PHRASES = [
 	"Congratulations",
 	"Well done",
@@ -779,7 +767,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	commandMention,
 	congratulationBuilder,
 	generateTextBar,
 	getNumberEmoji,
