@@ -49,8 +49,22 @@ function fillableTextBar(numerator, denominator, barLength) {
 	return bar;
 }
 
+const NUMBER_EMOJI = { 0: '0️⃣', 1: '1️⃣', 2: '2️⃣', 3: '3️⃣', 4: '4️⃣', 5: '5️⃣', 6: '6️⃣', 7: '7️⃣', 8: '8️⃣', 9: '9️⃣', 10: '🔟' };
+/**
+ * @param {number} number
+ * @returns {string}
+ */
+function emojiFromNumber(number) {
+	if (number in NUMBER_EMOJI) {
+		return NUMBER_EMOJI[number];
+	} else {
+		return '#️⃣';
+	}
+}
+
 module.exports = {
 	commandMention,
 	randomCongratulatoryPhrase,
-	fillableTextBar
+	fillableTextBar,
+	emojiFromNumber
 }

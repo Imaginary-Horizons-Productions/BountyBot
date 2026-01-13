@@ -5,31 +5,6 @@ const { SAFE_DELIMITER, COMPANY_XP_COEFFICIENT, commandIds, YEAR_IN_MS, SKIP_INT
 const { Bounty, Completion, Company, Season, Rank, Participation, Hunter } = require("../../database/models");
 const { descendingByProperty, discordTimestamp, timeConversion } = require("../../shared");
 
-const NUMBER_EMOJI = {
-	0: '0️⃣',
-	1: '1️⃣',
-	2: '2️⃣',
-	3: '3️⃣',
-	4: '4️⃣',
-	5: '5️⃣',
-	6: '6️⃣',
-	7: '7️⃣',
-	8: '8️⃣',
-	9: '9️⃣',
-	10: '🔟'
-};
-/**
- * @param {number} number
- * @returns {string}
- */
-function getNumberEmoji(number) {
-	if (number in NUMBER_EMOJI) {
-		return NUMBER_EMOJI[number];
-	} else {
-		return '#️⃣';
-	}
-}
-
 /** Formats string array into Oxford English list syntax
  *  @param {string[]} texts
  *  @param {boolean} isMutuallyExclusive
@@ -734,7 +709,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	getNumberEmoji,
+	emojiFromNumber,
 	listifyEN,
 	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
 	randomFooterTip,

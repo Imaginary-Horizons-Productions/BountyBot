@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, selectOptionsFromBounties, refreshBountyThreadStarterMessage, sendAnnouncement, disabledSelectRow } = require("../../shared");
+const { emojiFromNumber, selectOptionsFromBounties, refreshBountyThreadStarterMessage, sendAnnouncement, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
@@ -44,7 +44,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 								const existingBounty = existingBounties.find(bounty => bounty.slotNumber == i);
 								slotOptions.push(
 									{
-										emoji: getNumberEmoji(i),
+										emoji: emojiFromNumber(i),
 										label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
 										description: `XP Reward: ${Bounty.calculateCompleterReward(startingPosterLevel, i, existingBounty?.showcaseCount ?? 0)}`,
 										value: i.toString()

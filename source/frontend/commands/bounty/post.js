@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyCommandSelect, sendAnnouncement, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyCommandSelect, sendAnnouncement, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 		for (let slotNumber = 1; slotNumber <= bountySlots; slotNumber++) {
 			if (!occupiedSlots.includes(slotNumber)) {
 				slotOptions.push({
-					emoji: getNumberEmoji(slotNumber),
+					emoji: emojiFromNumber(slotNumber),
 					label: `Slot ${slotNumber}`,
 					description: `Reward: ${Bounty.calculateCompleterReward(currentHunterLevel, slotNumber, 0)} XP`,
 					value: slotNumber.toString()

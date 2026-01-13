@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { getNumberEmoji, selectOptionsFromBounties, disabledSelectRow, refreshEvergreenBountiesThread } = require("../../shared");
+const { emojiFromNumber, selectOptionsFromBounties, disabledSelectRow, refreshEvergreenBountiesThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { Bounty, Company } = require("../../../database/models");
 
@@ -37,7 +37,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 							if (bounty.slotNumber != previousBountySlot) {
 								slotOptions.push(
 									{
-										emoji: getNumberEmoji(bounty.slotNumber),
+										emoji: emojiFromNumber(bounty.slotNumber),
 										label: `Slot ${bounty.slotNumber}: ${bounty.title}`,
 										// Evergreen bounties are not eligible for showcase bonuses
 										description: `XP Reward: ${Bounty.calculateCompleterReward(hunter.getLevel(origin.company.xpCoefficient), bounty.slotNumber, 0)}`,

@@ -1,5 +1,5 @@
 const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
-const { truncateTextToLength, getNumberEmoji } = require("./messageParts");
+const { truncateTextToLength, emojiFromNumber } = require("./messageParts");
 const { Bounty, Rank } = require("../../database/models");
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
@@ -52,7 +52,7 @@ function disabledSelectRow(placeholderText) {
 function selectOptionsFromBounties(bounties) {
 	return bounties.map(bounty => {
 		const optionPayload = {
-			emoji: getNumberEmoji(bounty.slotNumber),
+			emoji: emojiFromNumber(bounty.slotNumber),
 			label: bounty.title,
 			value: bounty.id
 		}
