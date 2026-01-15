@@ -1,7 +1,7 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../../database/models');
-const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, getHunterLevelUpRewards } = require('../shared');
+const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, hunterLevelUpRewards } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -97,7 +97,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with **${mostSecondedToast.secondings} secondings**` : "No toasts seconded yet..." },
 							{ name: "Bounty Stats", value: `Bounties Hunted: ${origin.hunter.othersFinished} bount${origin.hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${origin.hunter.mineFinished} bount${origin.hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
 							{ name: "Toast Stats", value: `Toasts Raised: ${origin.hunter.toastsRaised} toast${origin.hunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${origin.hunter.toastsSeconded} toast${origin.hunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${origin.hunter.toastsReceived} toast${origin.hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
-							{ name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(getHunterLevelUpRewards(level, origin.company.maxSimBounties, true))}`).join("\n") }
+							{ name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(hunterLevelUpRewards(level, origin.company.maxSimBounties, true))}`).join("\n") }
 						)
 						.setFooter(randomFooterTip())
 						.setTimestamp()

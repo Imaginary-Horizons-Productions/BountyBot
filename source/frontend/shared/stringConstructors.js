@@ -115,7 +115,7 @@ function hunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBounties)
 	if (currentLevel > previousLevel) {
 		const rewards = [];
 		for (let level = previousLevel + 1; level <= currentLevel; level++) {
-			rewards.push(...getHunterLevelUpRewards(level, maxSimBounties, false));
+			rewards.push(...hunterLevelUpRewards(level, maxSimBounties, false));
 		}
 		return `${randomCongratulatoryPhrase()}, ${userMention(hunter.userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
 	}
@@ -127,7 +127,7 @@ function hunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBounties)
  * @param {number} maxSlots
  * @param {boolean} futureReward
  */
-function getHunterLevelUpRewards(level, maxSlots, futureReward = true) {
+function hunterLevelUpRewards(level, maxSlots, futureReward = true) {
 	const texts = [];
 	if (level % 2) {
 		texts.push(`Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
@@ -177,6 +177,6 @@ module.exports = {
 	sentenceListEN,
 	companyLevelUpLine,
 	hunterLevelUpLine,
-	getHunterLevelUpRewards,
+	hunterLevelUpRewards,
 	rewardStringBountyCompletion
 }
