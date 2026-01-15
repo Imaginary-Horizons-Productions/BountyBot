@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, fillableTextBar, bountyEmbed, rewardStringBountyCompletion, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateCompletionEmbed, sendRewardMessage, companyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
+const { commandMention, fillableTextBar, bountyEmbed, rewardStringBountyCompletion, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, companyLevelUpLine, formatHunterResultsToRewardTexts, reloadHunterMapSubset, syncRankRoles, formatSeasonResultsToRewardTexts, unarchiveAndUnlockThread } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -80,7 +80,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			}
 			const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 			if (goalUpdate.goalCompleted) {
-				acknowledgeOptions.embeds = [generateCompletionEmbed(goalUpdate.contributorIds)];
+				acknowledgeOptions.embeds = [goalCompletionEmbed(goalUpdate.contributorIds)];
 			}
 
 			if (origin.company.bountyBoardId) {

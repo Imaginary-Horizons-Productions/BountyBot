@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { fillableTextBar, companyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, hunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { fillableTextBar, companyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, hunterLevelUpLine, goalCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -136,7 +136,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		if (progressData.goalCompleted) {
 			interaction.channel.send({
-				embeds: [generateCompletionEmbed(progressData.contributorIds)]
+				embeds: [goalCompletionEmbed(progressData.contributorIds)]
 			});
 		}
 	}
