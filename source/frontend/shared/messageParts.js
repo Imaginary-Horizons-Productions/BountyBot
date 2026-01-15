@@ -5,27 +5,6 @@ const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/mo
 const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
- * @param {Record<string, { previousLevel: number, droppedItem: string | null }>} hunterResults
- * @param {Map<string, Hunter>} hunterMap
- * @param {Company} company
- */
-function formatHunterResultsToRewardTexts(hunterResults, hunterMap, company) {
-	/** @type {string[]} */
-	const rewardTexts = [];
-	for (const id in hunterResults) {
-		const { previousLevel, droppedItem } = hunterResults[id];
-		const hunterLevelLine = hunterLevelUpLine(hunterMap.get(id), previousLevel, company.xpCoefficient, company.maxSimBounties);
-		if (hunterLevelLine) {
-			rewardTexts.push(hunterLevelLine);
-		}
-		if (droppedItem) {
-			rewardTexts.push(`${userMention(id)} has found a ${bold(droppedItem)}!`);
-		}
-	}
-	return rewardTexts;
-}
-
-/**
  * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
  * @param {Rank[]} descendingRanks
  * @param {Collection<string, Role>} allGuildRoles
@@ -164,7 +143,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	formatHunterResultsToRewardTexts,
+	rewardTextsHunterResults,
 	formatSeasonResultsToRewardTexts,
 	validateScheduledEventTimestamps,
 	createBountyEventPayload,

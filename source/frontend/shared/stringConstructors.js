@@ -144,6 +144,27 @@ function hunterLevelUpRewards(level, maxSlots, futureReward = true) {
 }
 
 /**
+ * @param {Record<string, { previousLevel: number, droppedItem: string | null }>} hunterResults
+ * @param {Map<string, Hunter>} hunterMap
+ * @param {Company} company
+ */
+function rewardTextsHunterResults(hunterResults, hunterMap, company) {
+	/** @type {string[]} */
+	const rewardTexts = [];
+	for (const id in hunterResults) {
+		const { previousLevel, droppedItem } = hunterResults[id];
+		const hunterLevelLine = hunterLevelUpLine(hunterMap.get(id), previousLevel, company.xpCoefficient, company.maxSimBounties);
+		if (hunterLevelLine) {
+			rewardTexts.push(hunterLevelLine);
+		}
+		if (droppedItem) {
+			rewardTexts.push(`${userMention(id)} has found a ${bold(droppedItem)}!`);
+		}
+	}
+	return rewardTexts;
+}
+
+/**
  * @param {MapIterator<string>} completerIds
  * @param {number} completerReward
  * @param {string?} posterId null for evergreen bounties
@@ -232,6 +253,7 @@ module.exports = {
 	companyLevelUpLine,
 	hunterLevelUpLine,
 	hunterLevelUpRewards,
+	rewardTextsHunterResults,
 	rewardStringBountyCompletion,
 	rewardStringToast,
 	rewardStringSeconding
