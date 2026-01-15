@@ -5,28 +5,6 @@ const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/mo
 const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
- * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
- * @param {Rank[]} descendingRanks
- * @param {Collection<string, Role>} allGuildRoles
- */
-function formatSeasonResultsToRewardTexts(seasonResults, descendingRanks, allGuildRoles) {
-	/** @type {string[]} */
-	const rewardTexts = [];
-	for (const id in seasonResults) {
-		const result = seasonResults[id];
-		if (result.newPlacement === 1) {
-			rewardTexts.push(italic(`${userMention(id)} has reached the #1 spot for this season!`));
-		}
-		if (result.rankIncreased) {
-			const rank = descendingRanks[result.newRankIndex];
-			const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${result.newRankIndex + 1}`;
-			rewardTexts.push(`${randomCongratulatoryPhrase()}, ${userMention(id)}! You've risen to ${bold(rankName)}!`);
-		}
-	}
-	return rewardTexts;
-}
-
-/**
  * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
  * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
  */
@@ -144,7 +122,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 
 module.exports = {
 	rewardTextsHunterResults,
-	formatSeasonResultsToRewardTexts,
+	rewardTextsSeasonResults,
 	validateScheduledEventTimestamps,
 	createBountyEventPayload,
 	constructEditBountyModalAndOptions

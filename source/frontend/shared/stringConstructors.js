@@ -1,7 +1,7 @@
-const { heading, userMention, unorderedList, bold, italic } = require("discord.js");
+const { heading, userMention, unorderedList, bold, italic, Role, Collection } = require("discord.js");
 const { commandIds } = require("../../constants");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
-const { Hunter } = require("../../database/models");
+const { Hunter, Rank, Company } = require("../../database/models");
 
 /**
  * @file String Constructors - formatted reusable strings
@@ -165,6 +165,28 @@ function rewardTextsHunterResults(hunterResults, hunterMap, company) {
 }
 
 /**
+ * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
+ * @param {Rank[]} descendingRanks
+ * @param {Collection<string, Role>} allGuildRoles
+ */
+function rewardTextsSeasonResults(seasonResults, descendingRanks, allGuildRoles) {
+	/** @type {string[]} */
+	const rewardTexts = [];
+	for (const id in seasonResults) {
+		const result = seasonResults[id];
+		if (result.newPlacement === 1) {
+			rewardTexts.push(italic(`${userMention(id)} has reached the #1 spot for this season!`));
+		}
+		if (result.rankIncreased) {
+			const rank = descendingRanks[result.newRankIndex];
+			const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${result.newRankIndex + 1}`;
+			rewardTexts.push(`${randomCongratulatoryPhrase()}, ${userMention(id)}! You've risen to ${bold(rankName)}!`);
+		}
+	}
+	return rewardTexts;
+}
+
+/**
  * @param {MapIterator<string>} completerIds
  * @param {number} completerReward
  * @param {string?} posterId null for evergreen bounties
@@ -254,6 +276,7 @@ module.exports = {
 	hunterLevelUpLine,
 	hunterLevelUpRewards,
 	rewardTextsHunterResults,
+	rewardTextsSeasonResults,
 	rewardStringBountyCompletion,
 	rewardStringToast,
 	rewardStringSeconding
