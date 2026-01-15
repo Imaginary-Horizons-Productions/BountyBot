@@ -2,7 +2,7 @@ const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength, raffleResultEmbed } = require("./messageParts");
 const { Bounty, Rank, Company, Participation, Hunter, Season, Completion } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
 const { descendingByProperty } = require("../../shared");
@@ -122,6 +122,33 @@ function bountyControlPanelSelectRow(bountyId) {
 				)
 		)
 	]
+}
+
+/**
+ * @param {string} title
+ * @param {string} posterName
+ * @param {number} slotNumber
+ * @param {string?} description
+ * @param {string?} imageURL
+ * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
+ */
+function bountyScheduledEventPayload(title, posterName, slotNumber, description, imageURL, startTimestamp, endTimestamp) {
+	const payload = {
+		name: `Bounty: ${title}`,
+		scheduledStartTime: startTimestamp * 1000,
+		scheduledEndTime: endTimestamp * 1000,
+		privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+		entityType: GuildScheduledEventEntityType.External,
+		entityMetadata: { location: `${posterName}'s #${slotNumber} Bounty` }
+	};
+	if (description) {
+		payload.description = description;
+	}
+	if (imageURL) {
+		payload.image = imageURL;
+	}
+	return payload;
 }
 
 /** @param {Bounty[]} bounties */
@@ -477,6 +504,7 @@ module.exports = {
 	randomFooterTip,
 	disabledSelectRow,
 	bountyControlPanelSelectRow,
+	bountyScheduledEventPayload,
 	selectOptionsFromBounties,
 	selectOptionsFromRanks,
 	latestVersionChangesEmbed,

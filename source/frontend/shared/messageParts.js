@@ -5,33 +5,6 @@ const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/mo
 const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
- * @param {string} title
- * @param {string} posterName
- * @param {number} slotNumber
- * @param {string?} description
- * @param {string?} imageURL
- * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
- * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
- */
-function createBountyEventPayload(title, posterName, slotNumber, description, imageURL, startTimestamp, endTimestamp) {
-	const payload = {
-		name: `Bounty: ${title}`,
-		scheduledStartTime: startTimestamp * 1000,
-		scheduledEndTime: endTimestamp * 1000,
-		privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
-		entityType: GuildScheduledEventEntityType.External,
-		entityMetadata: { location: `${posterName}'s #${slotNumber} Bounty` }
-	};
-	if (description) {
-		payload.description = description;
-	}
-	if (imageURL) {
-		payload.image = imageURL;
-	}
-	return payload;
-}
-
-/**
  * @param {Bounty} bounty
  * @param {boolean} isEvergreen
  * @param {string} key for constructing the ModalBuilder's customId uniquely
@@ -91,6 +64,5 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	createBountyEventPayload,
 	constructEditBountyModalAndOptions
 };

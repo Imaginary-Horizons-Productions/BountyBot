@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, constructEditBountyModalAndOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -72,7 +72,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				}
 
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 					if (bounty.scheduledEventId) {
 						modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 					} else {

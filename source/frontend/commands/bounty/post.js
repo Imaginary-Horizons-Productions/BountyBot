@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -158,7 +158,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				});
 
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
 					const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 					rawBounty.scheduledEventId = event.id;
 				}
