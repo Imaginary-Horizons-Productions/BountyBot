@@ -1,7 +1,7 @@
 const { heading, userMention, unorderedList, bold, italic, Role, Collection } = require("discord.js");
 const { commandIds } = require("../../constants");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
-const { Hunter, Rank, Company } = require("../../database/models");
+const { Hunter, Rank, Company, Bounty } = require("../../database/models");
 
 /**
  * @file String Constructors - formatted reusable strings
@@ -130,9 +130,9 @@ function hunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBounties)
 function hunterLevelUpRewards(level, maxSlots, futureReward = true) {
 	const texts = [];
 	if (level % 2) {
-		texts.push(`Your bounties in odd-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
+		texts.push(`Your odd-numbered bounty slot base reward ${futureReward ? "will increase" : "has increased"} (max: ${Bounty.calculateCompleterReward(level, 1, 0)} Reward XP in Slot 1)!`);
 	} else {
-		texts.push(`Your bounties in even-numbered slots ${futureReward ? "will increase" : "have increased"} in value.`);
+		texts.push(`Your even-numbered bounty slot base reward ${futureReward ? "will increase" : "has increased"} (max: ${Bounty.calculateCompleterReward(level, 2, 0)} Reward XP in Slot 2)!`);
 	}
 	const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
 	if (currentSlots < maxSlots) {
