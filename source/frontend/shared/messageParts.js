@@ -6,24 +6,6 @@ const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
  * @param {Hunter} hunter
- * @param {number} previousLevel
- * @param {number} xpCoefficient
- * @param {number} maxSimBounties
- */
-function buildHunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBounties) {
-	const currentLevel = hunter.getLevel(xpCoefficient);
-	if (currentLevel > previousLevel) {
-		const rewards = [];
-		for (let level = previousLevel + 1; level <= currentLevel; level++) {
-			rewards.push(...getHunterLevelUpRewards(level, maxSimBounties, false));
-		}
-		return `${randomCongratulatoryPhrase()}, ${userMention(hunter.userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
-	}
-	return null;
-}
-
-/**
- * @param {Hunter} hunter
  * @param {Guild} guild
  * @param {GuildMember} member
  * @param {number} dqCount
@@ -152,7 +134,7 @@ function formatHunterResultsToRewardTexts(hunterResults, hunterMap, company) {
 	const rewardTexts = [];
 	for (const id in hunterResults) {
 		const { previousLevel, droppedItem } = hunterResults[id];
-		const hunterLevelLine = buildHunterLevelUpLine(hunterMap.get(id), previousLevel, company.xpCoefficient, company.maxSimBounties);
+		const hunterLevelLine = hunterLevelUpLine(hunterMap.get(id), previousLevel, company.xpCoefficient, company.maxSimBounties);
 		if (hunterLevelLine) {
 			rewardTexts.push(hunterLevelLine);
 		}
@@ -302,8 +284,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	getHunterLevelUpRewards,
-	buildHunterLevelUpLine,
 	modStatsEmbed,
 	generateToastEmbed,
 	generateSecondingActionRow,

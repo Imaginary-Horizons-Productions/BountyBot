@@ -1,4 +1,4 @@
-const { heading, userMention, unorderedList } = require("discord.js");
+const { heading, userMention, unorderedList, bold } = require("discord.js");
 const { commandIds } = require("../../constants");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
 const { Hunter } = require("../../database/models");
@@ -105,6 +105,24 @@ function companyLevelUpLine(company, previousLevel, hunterMap, guildName) {
 }
 
 /**
+ * @param {Hunter} hunter
+ * @param {number} previousLevel
+ * @param {number} xpCoefficient
+ * @param {number} maxSimBounties
+ */
+function hunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBounties) {
+	const currentLevel = hunter.getLevel(xpCoefficient);
+	if (currentLevel > previousLevel) {
+		const rewards = [];
+		for (let level = previousLevel + 1; level <= currentLevel; level++) {
+			rewards.push(...getHunterLevelUpRewards(level, maxSimBounties, false));
+		}
+		return `${randomCongratulatoryPhrase()}, ${userMention(hunter.userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
+	}
+	return null;
+}
+
+/**
  * @param {number} level
  * @param {number} maxSlots
  * @param {boolean} futureReward
@@ -158,6 +176,7 @@ module.exports = {
 	emojiFromNumber,
 	sentenceListEN,
 	companyLevelUpLine,
+	hunterLevelUpLine,
 	getHunterLevelUpRewards,
 	rewardStringBountyCompletion
 }

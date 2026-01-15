@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { fillableTextBar, companyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, buildHunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { fillableTextBar, companyLevelUpLine, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, hunterLevelUpLine, generateCompletionEmbed, generateSecondingRewardString, sendRewardMessage, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -42,7 +42,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			const hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
 			const previousLevel = hunter.getLevel(origin.company.xpCoefficient);
 			await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
-			const hunterLevelLine = buildHunterLevelUpLine(hunter, previousLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
+			const hunterLevelLine = hunterLevelUpLine(hunter, previousLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}
@@ -95,7 +95,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, critSeconds > 0);
 		if (critSeconds > 0) {
 			await origin.hunter.increment({ xp: critSeconds }).then(seconder => seconder.reload());
-			const hunterLevelLine = buildHunterLevelUpLine(origin.hunter, startingSeconderLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
+			const hunterLevelLine = hunterLevelUpLine(origin.hunter, startingSeconderLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
 			if (hunterLevelLine) {
 				rewardTexts.push(hunterLevelLine);
 			}

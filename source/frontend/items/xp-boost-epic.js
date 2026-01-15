@@ -1,7 +1,7 @@
 const { unorderedList } = require("discord.js");
 const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { companyLevelUpLine, buildHunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard } = require("../shared");
+const { companyLevelUpLine, hunterLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -23,7 +23,7 @@ module.exports = new ItemTemplateSet(
 			syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
 			const additionalRewards = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
 			let content = `${interaction.member} used an ${itemName} and gained ${xpValue} XP.`;
-			const hunterLevelLine = buildHunterLevelUpLine(origin.hunter, previousHunterLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
+			const hunterLevelLine = hunterLevelUpLine(origin.hunter, previousHunterLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
 			if (hunterLevelLine) {
 				additionalRewards.push(hunterLevelLine);
 			}
