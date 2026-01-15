@@ -4,31 +4,6 @@ const { SAFE_DELIMITER, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../..
 const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/models");
 const { discordTimestamp, timeConversion } = require("../../shared");
 
-/**
- * @param {string[]} rewardedHunterIds
- * @param {string[]} rankUpdates
- * @param {string[]} rewardTexts
- * @param {string} senderMention
- * @param {string} multiplierString
- * @param {number} critValue
- */
-function generateToastRewardString(rewardedHunterIds, rankUpdates, rewardTexts, senderMention, multiplierString, critValue) {
-	let rewardString = `${heading("XP Gained", 2)}\n${rewardedHunterIds.map(id => `${userMention(id)} +1 XP${multiplierString}`).join("\n")}`;
-	if (critValue > 0) {
-		rewardString += `\n${senderMention} + ${critValue} XP${multiplierString} ${italic("Critical Toast!")}`;
-	}
-	if (rankUpdates.length > 0) {
-		rewardString += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
-	}
-	if (rewardTexts.length > 0) {
-		rewardString += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
-	}
-	if (rewardString.length > MessageLimits.MaximumLength) {
-		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-	}
-	return rewardString;
-}
-
 /** @param {string[]} contributorIds */
 function generateCompletionEmbed(contributorIds) {
 	return new EmbedBuilder().setColor("e5b271")
@@ -227,7 +202,7 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	generateToastRewardString,
+	rewardStringToast,
 	generateCompletionEmbed,
 	generateSecondingRewardString,
 	formatHunterResultsToRewardTexts,

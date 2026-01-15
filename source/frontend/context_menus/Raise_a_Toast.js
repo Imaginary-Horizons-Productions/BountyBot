@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, companyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, butIgnoreInteractionCollectorErrors } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, rewardStringToast, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, companyLevelUpLine, syncRankRoles, formatSeasonResultsToRewardTexts, butIgnoreInteractionCollectorErrors } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -84,7 +84,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
-					const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
+					const rewardString = rewardStringToast(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
 					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);

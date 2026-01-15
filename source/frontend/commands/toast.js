@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, fillableTextBar, sentenceListEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, generateToastRewardString, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, companyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, sentenceListEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, rewardStringToast, generateCompletionEmbed, sendRewardMessage, formatHunterResultsToRewardTexts, reloadHunterMapSubset, companyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -108,7 +108,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
-				const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
+				const rewardString = rewardStringToast(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
 				sendRewardMessage(response.resource.message, rewardString, "Rewards");
 				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
