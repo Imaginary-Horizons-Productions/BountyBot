@@ -2,7 +2,7 @@ const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength, raffleResultEmbed } = require("./messageParts");
 const { Bounty, Rank, Company, Participation, Hunter, Season, Completion } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar } = require("./stringConstructors");
 const { descendingByProperty } = require("../../shared");
@@ -394,6 +394,16 @@ function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
 }
 
+/** @param {string} toastId */
+function secondingButtonRow(toastId) {
+	return new ActionRowBuilder().addComponents(
+		new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
+			.setLabel("Hear, hear!")
+			.setEmoji("🥂")
+			.setStyle(ButtonStyle.Primary)
+	)
+}
+
 /**
  * @param {keyof Colors} profileColor
  * @param {Guild} guild
@@ -466,6 +476,7 @@ module.exports = {
 	overallScoreboardEmbed,
 	bountyEmbed,
 	toastEmbed,
+	secondingButtonRow,
 	raffleResultEmbed,
 	userReportEmbed
 }

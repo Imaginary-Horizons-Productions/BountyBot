@@ -4,16 +4,6 @@ const { SAFE_DELIMITER, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../..
 const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/models");
 const { discordTimestamp, timeConversion } = require("../../shared");
 
-/** @param {string} toastId */
-function generateSecondingActionRow(toastId) {
-	return new ActionRowBuilder().addComponents(
-		new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
-			.setLabel("Hear, hear!")
-			.setEmoji("🥂")
-			.setStyle(ButtonStyle.Primary)
-	)
-}
-
 /**
  * @param {string[]} rewardedHunterIds
  * @param {string[]} rankUpdates
@@ -237,7 +227,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	generateSecondingActionRow,
 	generateToastRewardString,
 	generateCompletionEmbed,
 	generateSecondingRewardString,
