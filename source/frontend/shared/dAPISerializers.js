@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
 const { Bounty, Rank, Company, Participation, Hunter, Season, Completion } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
 const { descendingByProperty } = require("../../shared");
@@ -286,11 +286,11 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
 		.setAuthor(module.exports.ihpAuthorPayload)
 		.setTitle(`${guild.name} is __Level ${currentCompanyLevel}__`)
 		.setThumbnail(guild.iconURL())
-		.setDescription(`${fillableTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}*Next Level:* ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
+		.setDescription(`${fillableTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}${italic("Next Level:")} ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
 		.addFields(
 			{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
 			{ name: "Participation", value: `${participantCount} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
-			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? `**+${seasonBountyDifference} more bounties**` : `**${seasonBountyDifference * -1} fewer bounties**`} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? `**+${seasonToastDifference} more toasts**` : `**${seasonToastDifference * -1} fewer toasts**`} than last season`})` }
+			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? bold(`+${seasonBountyDifference} more bounties`) : bold(`${seasonBountyDifference * -1} fewer bounties`)} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? bold(`+${seasonToastDifference} more toasts`) : bold(`${seasonToastDifference * -1} fewer toasts`)} than last season`})` }
 		)
 		.setFooter(randomFooterTip())
 		.setTimestamp()
@@ -321,7 +321,7 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 		.setTimestamp();
 	let description = "";
 	const andMore = "…and more";
-	const maxDescriptionLength = 2048 - andMore.length;
+	const maxDescriptionLength = EmbedLimits.MaximumDescriptionLength - andMore.length;
 	for (const scoreline of scorelines) {
 		if (description.length + scoreline.length <= maxDescriptionLength) {
 			description += `${scoreline}\n`;
@@ -381,7 +381,7 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 		.setTimestamp();
 	let description = "";
 	const andMore = "…and more";
-	const maxDescriptionLength = 2048 - andMore.length;
+	const maxDescriptionLength = EmbedLimits.MaximumDescriptionLength - andMore.length;
 	for (const scoreline of scorelines) {
 		if (description.length + scoreline.length <= maxDescriptionLength) {
 			description += `${scoreline}\n`;
@@ -532,7 +532,7 @@ function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`Moderation Stats: ${member.user.tag}`)
 		.setThumbnail(member.user.avatarURL())
-		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
+		.setDescription(`Display Name: ${bold(member.displayName)} (id: ${italic(member.id)})\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
 		.addFields(
 			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
 			{ name: "Disqualifications", value: `${dqCount} season DQs`, inline: true },
@@ -544,7 +544,11 @@ function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 	let bountyHistory = "";
 	for (let i = 0; i < lastFiveBounties.length; i++) {
 		const bounty = lastFiveBounties[i];
-		bountyHistory += `__${bounty.title}__${bounty.description !== null ? ` ${bounty.description}` : ""}${sentenceListEN(bounty.Completions.map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
+		bountyHistory += underline(bounty.title);
+		if (bounty.description !== null) {
+			bountyHistory += ` ${bounty.description}`;
+		}
+		bountyHistory += `${sentenceListEN(bounty.Completions.map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
 	}
 
 	if (bountyHistory === "") {
