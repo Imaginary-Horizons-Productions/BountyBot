@@ -381,6 +381,20 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 }
 
 /**
+ * @param {string} thumbnailURL
+ * @param {string} toastText
+ * @param {Set<string>} recipientIdSet
+ * @param {GuildMember} senderMember
+ */
+function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
+	return new EmbedBuilder().setColor("e5b271")
+		.setThumbnail(thumbnailURL)
+		.setTitle(toastText)
+		.setDescription(`A toast to ${sentenceListEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
+		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
+}
+
+/**
  * @param {keyof Colors} profileColor
  * @param {Guild} guild
  * @param {string} thumbnailURL
@@ -451,6 +465,7 @@ module.exports = {
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
 	bountyEmbed,
+	toastEmbed,
 	raffleResultEmbed,
 	userReportEmbed
 }

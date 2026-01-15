@@ -4,20 +4,6 @@ const { SAFE_DELIMITER, YEAR_IN_MS, SKIP_INTERACTION_HANDLING } = require("../..
 const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/models");
 const { discordTimestamp, timeConversion } = require("../../shared");
 
-/**
- * @param {string} thumbnailURL
- * @param {string} toastText
- * @param {Set<string>} recipientIdSet
- * @param {GuildMember} senderMember
- */
-function generateToastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
-	return new EmbedBuilder().setColor("e5b271")
-		.setThumbnail(thumbnailURL)
-		.setTitle(toastText)
-		.setDescription(`A toast to ${sentenceListEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
-		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
-}
-
 /** @param {string} toastId */
 function generateSecondingActionRow(toastId) {
 	return new ActionRowBuilder().addComponents(
@@ -251,7 +237,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	generateToastEmbed,
 	generateSecondingActionRow,
 	generateToastRewardString,
 	generateCompletionEmbed,
