@@ -84,8 +84,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 
-				const bountyEmbed = await bountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set());
-				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
+				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [await bountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set())], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
 	}

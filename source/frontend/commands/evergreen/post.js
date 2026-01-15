@@ -84,8 +84,7 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 
 			// post in bounty board forum
 			const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
-			const bountyEmbed = await bountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set());
-			interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed] })).then(async () => {
+			interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [await bountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set())] })).then(async () => {
 				if (origin.company.bountyBoardId) {
 					const hunterIdMap = {};
 					for (const bounty of existingBounties) {

@@ -298,7 +298,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					bounty.update(updatePayload);
 
 					// update bounty board
-					const bountyEmbed = await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
+					const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))];
 					if (origin.company.bountyBoardId) {
 						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.fetch(bounty.postingId);
@@ -308,11 +308,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 							thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
 							return thread.fetchStarterMessage();
 						}).then(posting => {
-							posting.edit({ embeds: [bountyEmbed] });
+							posting.edit({ embeds });
 						})
 					}
 
-					modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds, flags: MessageFlags.Ephemeral });
 				});
 			} break;
 			case "swap": {

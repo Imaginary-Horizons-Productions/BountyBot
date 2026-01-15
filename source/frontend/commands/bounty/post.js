@@ -167,13 +167,13 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				// post in bounty board forum
 				await origin.hunter.reload();
-				const bountyEmbed = await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set());
-				modalSubmission.reply(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
+				const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set())];
+				modalSubmission.reply(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(() => {
 					if (origin.company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
 								name: bounty.title,
-								message: { embeds: [bountyEmbed], components: bountyControlPanelSelectRow(bounty.id) },
+								message: { embeds, components: bountyControlPanelSelectRow(bounty.id) },
 								appliedTags: [origin.company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {
