@@ -194,6 +194,35 @@ function rewardStringToast(rewardedHunterIds, rankUpdates, rewardTexts, senderMe
 	return rewardString;
 }
 
+/**
+ * @param {string} seconderDisplayName
+ * @param {string[]} recipientIds
+ * @param {string[]} rankUpdates
+ * @param {string[]} rewardTexts
+ */
+function rewardStringSeconding(seconderDisplayName, recipientIds, rankUpdates, rewardTexts) {
+	let text = `${seconderDisplayName} seconded this toast!`;
+	if (recipientIds.length > 0) {
+		text += `\n${heading("XP Gained", 2)}`;
+	}
+	for (const id of recipientIds) {
+		text += `\n${userMention(id)} +1 XP`;
+		if (id === seconderDisplayName) {
+			text += ` ${italic("Critical Toast!")}`;
+		}
+	}
+	if (rankUpdates.length > 0) {
+		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
+	}
+	if (rewardTexts.length > 0) {
+		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
+	}
+	if (text.length > MessageLimits.MaximumLength) {
+		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+	}
+	return text;
+}
+
 module.exports = {
 	commandMention,
 	randomCongratulatoryPhrase,
@@ -204,5 +233,6 @@ module.exports = {
 	hunterLevelUpLine,
 	hunterLevelUpRewards,
 	rewardStringBountyCompletion,
-	rewardStringToast
+	rewardStringToast,
+	rewardStringSeconding
 }

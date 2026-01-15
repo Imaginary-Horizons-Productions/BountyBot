@@ -5,35 +5,6 @@ const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/mo
 const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
- * @param {string} seconderDisplayName
- * @param {string[]} recipientIds
- * @param {string[]} rankUpdates
- * @param {string[]} rewardTexts
- */
-function generateSecondingRewardString(seconderDisplayName, recipientIds, rankUpdates, rewardTexts) {
-	let text = `${seconderDisplayName} seconded this toast!`;
-	if (recipientIds.length > 0) {
-		text += `\n${heading("XP Gained", 2)}`;
-	}
-	for (const id of recipientIds) {
-		text += `\n${userMention(id)} +1 XP`;
-		if (id === seconderDisplayName) {
-			text += ` ${italic("Critical Toast!")}`;
-		}
-	}
-	if (rankUpdates.length > 0) {
-		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
-	}
-	if (rewardTexts.length > 0) {
-		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
-	}
-	if (text.length > MessageLimits.MaximumLength) {
-		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-	}
-	return text;
-}
-
-/**
  * @param {Record<string, { previousLevel: number, droppedItem: string | null }>} hunterResults
  * @param {Map<string, Hunter>} hunterMap
  * @param {Company} company
@@ -193,9 +164,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	rewardStringToast,
-	goalCompletionEmbed,
-	generateSecondingRewardString,
 	formatHunterResultsToRewardTexts,
 	formatSeasonResultsToRewardTexts,
 	validateScheduledEventTimestamps,
