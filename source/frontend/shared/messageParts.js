@@ -5,39 +5,6 @@ const { Bounty, Completion, Company, Rank, Hunter } = require("../../database/mo
 const { discordTimestamp, timeConversion } = require("../../shared");
 
 /**
- * @param {Hunter} hunter
- * @param {Guild} guild
- * @param {GuildMember} member
- * @param {number} dqCount
- * @param {(Bounty & {Completions: Completion[]})[]} lastFiveBounties
- */
-function modStatsEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
-	const embed = new EmbedBuilder().setColor(member.displayColor)
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
-		.setTitle(`Moderation Stats: ${member.user.tag}`)
-		.setThumbnail(member.user.avatarURL())
-		.setDescription(`Display Name: **${member.displayName}** (id: *${member.id}*)\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
-		.addFields(
-			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
-			{ name: "Disqualifications", value: `${dqCount} season DQs`, inline: true },
-			{ name: "Penalties", value: `${hunter.penaltyCount} penalties (${hunter.penaltyPointTotal} points total)`, inline: true }
-		)
-		.setFooter(randomFooterTip())
-		.setTimestamp();
-
-	let bountyHistory = "";
-	for (let i = 0; i < lastFiveBounties.length; i++) {
-		const bounty = lastFiveBounties[i];
-		bountyHistory += `__${bounty.title}__${bounty.description !== null ? ` ${bounty.description}` : ""}${sentenceListEN(bounty.Completions.map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
-	}
-
-	if (bountyHistory === "") {
-		bountyHistory = "No recent bounties";
-	}
-	return embed.addFields({ name: "Last 5 Completed Bounties Created by this User", value: bountyHistory });
-}
-
-/**
  * @param {string} thumbnailURL
  * @param {string} toastText
  * @param {Set<string>} recipientIdSet
@@ -284,7 +251,6 @@ async function constructEditBountyModalAndOptions(bounty, isEvergreen, key, guil
 }
 
 module.exports = {
-	modStatsEmbed,
 	generateToastEmbed,
 	generateSecondingActionRow,
 	generateToastRewardString,
