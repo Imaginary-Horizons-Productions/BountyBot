@@ -1,8 +1,8 @@
 const fs = require("fs");
-const { SelectMenuLimits, MessageLimits, EmbedLimits } = require("@sapphire/discord.js-utilities");
+const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
 const { truncateTextToLength, raffleResultEmbed } = require("./messageParts");
 const { Bounty, Rank, Company, Participation, Hunter, Season, Completion } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
 const { descendingByProperty } = require("../../shared");
@@ -182,6 +182,65 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 		}
 		return option;
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
+}
+
+/**
+ * @param {Bounty} bounty
+ * @param {boolean} isEvergreen
+ * @param {string} key for constructing the ModalBuilder's customId uniquely
+ * @param {Guild} guild
+ */
+async function editBountyModalAndSubmissionOptions(bounty, isEvergreen, key, guild) {
+	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${key}`)
+		.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
+		.addLabelComponents(
+			new LabelBuilder().setLabel("Title")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("title")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Short)
+						.setPlaceholder("Discord markdown allowed...")
+						.setValue(bounty.title)
+				),
+			new LabelBuilder().setLabel("Description")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("description")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Paragraph)
+						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+						.setValue(bounty.description ?? "")
+				),
+			new LabelBuilder().setLabel("Image URL")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("imageURL")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Short)
+						.setValue(bounty.attachmentURL ?? "")
+				)
+		);
+	if (!isEvergreen) {
+		const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
+			.setRequired(false)
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("Required if making an event with the bounty");
+		const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
+			.setRequired(false)
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("Required if making an event with the bounty");
+
+		if (bounty.scheduledEventId) {
+			const scheduledEvent = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
+			eventStartComponent.setValue((scheduledEvent.scheduledStartTimestamp / 1000).toString());
+			eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
+		}
+		modal.addLabelComponents(
+			new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
+				.setTextInputComponent(eventStartComponent),
+			new LabelBuilder().setLabel("Event End (Unix Timestamp)")
+				.setTextInputComponent(eventEndComponent)
+		)
+	}
+	return { modal, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */
@@ -507,6 +566,7 @@ module.exports = {
 	bountyScheduledEventPayload,
 	selectOptionsFromBounties,
 	selectOptionsFromRanks,
+	editBountyModalAndSubmissionOptions,
 	latestVersionChangesEmbed,
 	companyStatsEmbed,
 	seasonalScoreboardEmbed,
