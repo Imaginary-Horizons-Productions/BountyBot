@@ -1,7 +1,6 @@
-const { unorderedList } = require("discord.js");
 const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { companyLevelUpLine, hunterLevelUpLine, rewardTextsSeasonResults, syncRankRoles, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard } = require("../shared");
+const { syncRankRoles, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, rewardSummary, hunterLevelUpRewards } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -15,31 +14,46 @@ class XPBoost extends ItemTemplate {
 		const itemName = `${descriptor} XP Boost`.trimStart();
 		super(itemName, `Gain ${value} XP in the used server (unaffected by festivals)`, 60000,
 			async (interaction, origin) => {
+				const companyReceipt = { guildName: interaction.guild.name };
+				const hunterReceipts = new Map().set(interaction.user.id, { xp: value });
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, value);
 				const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 				const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 				const previousHunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				await origin.hunter.increment({ xp: value }).then(hunter => hunter.reload());
+				const updatedHunter = await origin.hunter.increment({ xp: value }).then(hunter => hunter.reload());
+				const currentHunterLevel = updatedHunter.getLevel(origin.company.xpCoefficient);
+				if (currentHunterLevel > previousHunterLevel) {
+					const rewards = [];
+					for (let level = previousHunterLevel + 1; level <= currentHunterLevel; level++) {
+						rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
+					}
+					hunterReceipts.set(interaction.user.id, { ...hunterReceipts.get(interaction.user.id), levelUp: { level: currentHunterLevel, rewards } })
+				}
+				hunterMap.set(interaction.user.id, updatedHunter);
+				const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+				if (previousCompanyLevel < currentCompanyLevel) {
+					companyReceipt.levelUp = currentCompanyLevel;
+				}
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+				for (const id in seasonUpdates) {
+					const hunterReceipt = hunterReceipts.get(id) ?? {};
+					if (seasonUpdates[id].newPlacement === 1) {
+						hunterReceipt.topPlacement = true;
+					}
+					if (seasonUpdates[id].rankIncreased) {
+						const rank = descendingRanks[seasonUpdates[id].newRankIndex];
+						const rankName = rank.roleId ? (await interaction.guild.roles.fetch()).get(rank.roleId).name : `Rank ${seasonUpdates[id].newRankIndex + 1}`;
+						hunterReceipt.rankUp = rankName;
+					}
+					if (Object.keys(hunterReceipt).length > 0) {
+						hunterReceipts.set(id, hunterReceipt);
+					}
+				}
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
-				const additionalRewards = rewardTextsSeasonResults(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
-				let content = `${interaction.member} used an ${itemName} and gained ${value} XP.`;
-				const hunterLevelLine = hunterLevelUpLine(origin.hunter, previousHunterLevel, origin.company.xpCoefficient, origin.company.maxSimBounties);
-				if (hunterLevelLine) {
-					additionalRewards.push(hunterLevelLine);
-				}
-				hunterMap.set(interaction.user.id, await hunterMap.get(interaction.user.id).reload());
-				const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
-				if (companyLevelLine) {
-					additionalRewards.push(companyLevelLine);
-				}
-				if (additionalRewards.length > 0) {
-					content += `\n${unorderedList(additionalRewards)}`;
-				}
-				interaction.reply({ content });
+				interaction.reply({ content: `${interaction.member} used an ${itemName}.\n${rewardSummary("item", companyReceipt, hunterReceipts)}` });
 				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (origin.company.scoreboardIsSeasonal) {

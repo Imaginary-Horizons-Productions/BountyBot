@@ -1,7 +1,7 @@
-const { heading, userMention, unorderedList, bold, italic, Role, Collection } = require("discord.js");
+const { heading, userMention, bold, italic } = require("discord.js");
 const { commandIds } = require("../../constants");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
-const { Hunter, Rank, Company, Bounty } = require("../../database/models");
+const { Hunter, Bounty } = require("../../database/models");
 
 /**
  * @file String Constructors - formatted reusable strings
@@ -91,38 +91,6 @@ function sentenceListEN(texts, isMutuallyExclusive) {
 }
 
 /**
- * @param {Company} company
- * @param {number} previousLevel
- * @param {Map<string, Hunter>} hunterMap
- * @param {string} guildName
- */
-function companyLevelUpLine(company, previousLevel, hunterMap, guildName) {
-	const currentLevel = Company.getLevel(company.getXP(hunterMap));
-	if (currentLevel > previousLevel) {
-		return `${guildName} is now level ${currentLevel}! Evergreen bounties now award more XP!`;
-	}
-	return null;
-}
-
-/**
- * @param {Hunter} hunter
- * @param {number} previousLevel
- * @param {number} xpCoefficient
- * @param {number} maxSimBounties
- */
-function hunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBounties) {
-	const currentLevel = hunter.getLevel(xpCoefficient);
-	if (currentLevel > previousLevel) {
-		const rewards = [];
-		for (let level = previousLevel + 1; level <= currentLevel; level++) {
-			rewards.push(...hunterLevelUpRewards(level, maxSimBounties, false));
-		}
-		return `${randomCongratulatoryPhrase()}, ${userMention(hunter.userId)}! You have leveled up to level ${bold(currentLevel)}!\n\t- ${rewards.join('\n\t- ')}`;
-	}
-	return null;
-}
-
-/**
  * @param {number} level
  * @param {number} maxSlots
  * @param {boolean} futureReward
@@ -130,140 +98,68 @@ function hunterLevelUpLine(hunter, previousLevel, xpCoefficient, maxSimBounties)
 function hunterLevelUpRewards(level, maxSlots, futureReward = true) {
 	const texts = [];
 	if (level % 2) {
-		texts.push(`Your odd-numbered bounty slot base reward ${futureReward ? "will increase" : "has increased"} (max: ${Bounty.calculateCompleterReward(level, 1, 0)} Reward XP in Slot 1)!`);
+		texts.push(`The base reward of your odd-numbered bounty slots ${futureReward ? "will increase" : "has increased"} (max: ${Bounty.calculateCompleterReward(level, 1, 0)} Reward XP in Slot #1)!`);
 	} else {
-		texts.push(`Your even-numbered bounty slot base reward ${futureReward ? "will increase" : "has increased"} (max: ${Bounty.calculateCompleterReward(level, 2, 0)} Reward XP in Slot 2)!`);
+		texts.push(`The base reward of your even-numbered bounty slots ${futureReward ? "will increase" : "has increased"} (max: ${Bounty.calculateCompleterReward(level, 2, 0)} Reward XP in Slot #2)!`);
 	}
 	const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
 	if (currentSlots < maxSlots) {
 		if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
-			texts.push(` You ${futureReward ? "will unlock" : "have unlocked"} bounty slot #${currentSlots}.`);
+			texts.push(` You ${futureReward ? "will unlock" : "have unlocked"} Bounty Slot #${currentSlots}.`);
 		};
 	}
 	return texts;
 }
 
 /**
- * @param {Record<string, { previousLevel: number, droppedItem: string | null }>} hunterResults
- * @param {Map<string, Hunter>} hunterMap
- * @param {Company} company
+ * @param {"bounty" | "toast" | "seconding" | "item"} actionType
+ * @param {{ guildName: string; levelUp?: number; gp?: number; gpMultiplier?: string; }} companyReceipt
+ * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: string; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { level: number; rewards: string[]; }; item: string; }>>} hunterReceipts
  */
-function rewardTextsHunterResults(hunterResults, hunterMap, company) {
-	/** @type {string[]} */
-	const rewardTexts = [];
-	for (const id in hunterResults) {
-		const { previousLevel, droppedItem } = hunterResults[id];
-		const hunterLevelLine = hunterLevelUpLine(hunterMap.get(id), previousLevel, company.xpCoefficient, company.maxSimBounties);
-		if (hunterLevelLine) {
-			rewardTexts.push(hunterLevelLine);
-		}
-		if (droppedItem) {
-			rewardTexts.push(`${userMention(id)} has found a ${bold(droppedItem)}!`);
-		}
+function rewardSummary(actionType, companyReceipt, hunterReceipts) {
+	if (Object.keys(companyReceipt).length + hunterReceipts.size === 0) {
+		return "";
 	}
-	return rewardTexts;
-}
 
-/**
- * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
- * @param {Rank[]} descendingRanks
- * @param {Collection<string, Role>} allGuildRoles
- */
-function rewardTextsSeasonResults(seasonResults, descendingRanks, allGuildRoles) {
-	/** @type {string[]} */
-	const rewardTexts = [];
-	for (const id in seasonResults) {
-		const result = seasonResults[id];
-		if (result.newPlacement === 1) {
-			rewardTexts.push(italic(`${userMention(id)} has reached the #1 spot for this season!`));
+	let summary = heading("Rewards", 2);
+	if ("levelUp" in companyReceipt) {
+		summary += `\n- ${companyReceipt.guildName} is now Level ${companyReceipt.levelUp}! Evergreen bounties now award more XP!`;
+	}
+	if ("gp" in companyReceipt) {
+		summary += `\n- This ${actionType} contributed ${companyReceipt.gp} GP${companyReceipt.gpMultiplier} to the Server Goal!`;
+	}
+
+	for (const [id, receipt] of hunterReceipts) {
+		summary += `\n### ${userMention(id)}`;
+		if ("title" in receipt) {
+			summary += ` - ${receipt.title}`
 		}
-		if (result.rankIncreased) {
-			const rank = descendingRanks[result.newRankIndex];
-			const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${result.newRankIndex + 1}`;
-			rewardTexts.push(`${randomCongratulatoryPhrase()}, ${userMention(id)}! You've risen to ${bold(rankName)}!`);
+		if ("xp" in receipt) {
+			if ("levelUp" in receipt) {
+				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""} and reached ${bold(`Level ${receipt.levelUp.level}`)}!`;
+				for (const reward of receipt.levelUp.rewards) {
+					summary += `\n   - ${reward}`;
+				}
+			} else {
+				summary += `\n- Gained ${receipt.xpExpression} XP${receipt.xpMultiplier ?? ""}!`;
+			}
 		}
-	}
-	return rewardTexts;
-}
-
-/**
- * @param {MapIterator<string>} completerIds
- * @param {number} completerReward
- * @param {string?} posterId null for evergreen bounties
- * @param {number?} posterReward null for evergreen bounties
- * @param {string} multiplierString
- * @param {string[]} rankUpdates
- * @param {string[]} rewardTexts
- */
-function rewardStringBountyCompletion(completerIds, completerReward, posterId, posterReward, multiplierString, rankUpdates, rewardTexts) {
-	let text = `${heading("XP Gained", 2)}\n${Array.from(completerIds.map(id => `${userMention(id)} +${completerReward} XP${multiplierString}`)).join("\n")}`;
-	if (posterId && posterReward) {
-		text += `\n${userMention(posterId)} +${posterReward} XP${multiplierString}`;
-	}
-	if (rankUpdates.length > 0) {
-		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
-	}
-	if (rewardTexts.length > 0) {
-		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
-	}
-	if (text.length > MessageLimits.MaximumLength) {
-		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-	}
-	return text;
-}
-
-/**
- * @param {string[]} rewardedHunterIds
- * @param {string[]} rankUpdates
- * @param {string[]} rewardTexts
- * @param {string} senderMention
- * @param {string} multiplierString
- * @param {number} critValue
- */
-function rewardStringToast(rewardedHunterIds, rankUpdates, rewardTexts, senderMention, multiplierString, critValue) {
-	let rewardString = `${heading("XP Gained", 2)}\n${rewardedHunterIds.map(id => `${userMention(id)} +1 XP${multiplierString}`).join("\n")}`;
-	if (critValue > 0) {
-		rewardString += `\n${senderMention} + ${critValue} XP${multiplierString} ${italic("Critical Toast!")}`;
-	}
-	if (rankUpdates.length > 0) {
-		rewardString += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
-	}
-	if (rewardTexts.length > 0) {
-		rewardString += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
-	}
-	if (rewardString.length > MessageLimits.MaximumLength) {
-		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-	}
-	return rewardString;
-}
-
-/**
- * @param {string} seconderDisplayName
- * @param {string[]} recipientIds
- * @param {string[]} rankUpdates
- * @param {string[]} rewardTexts
- */
-function rewardStringSeconding(seconderDisplayName, recipientIds, rankUpdates, rewardTexts) {
-	let text = `${seconderDisplayName} seconded this toast!`;
-	if (recipientIds.length > 0) {
-		text += `\n${heading("XP Gained", 2)}`;
-	}
-	for (const id of recipientIds) {
-		text += `\n${userMention(id)} +1 XP`;
-		if (id === seconderDisplayName) {
-			text += ` ${italic("Critical Toast!")}`;
+		if ("topPlacement" in receipt) {
+			summary += `\n- ${italic("Claimed the lead on Seasonal XP!")}`;
+		}
+		if ("rankUp" in receipt) {
+			summary += `\n- Ranked up to ${bold(receipt.rankUp)}`;
+		}
+		if ("item" in receipt) {
+			summary += `\n- Found a ${bold(receipt.item)}`;
 		}
 	}
-	if (rankUpdates.length > 0) {
-		text += `\n${heading("Rank Ups", 2)}\n${unorderedList(rankUpdates)}`;
+
+	if (summary.length > MessageLimits.MaximumLength) {
+		return `${heading("Message overflow!", 2)}\nMany people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+	} else {
+		return summary;
 	}
-	if (rewardTexts.length > 0) {
-		text += `\n${heading("Rewards", 2)}\n${unorderedList(rewardTexts)}`;
-	}
-	if (text.length > MessageLimits.MaximumLength) {
-		return `Message overflow! Many people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
-	}
-	return text;
 }
 
 module.exports = {
@@ -272,12 +168,6 @@ module.exports = {
 	fillableTextBar,
 	emojiFromNumber,
 	sentenceListEN,
-	companyLevelUpLine,
-	hunterLevelUpLine,
 	hunterLevelUpRewards,
-	rewardTextsHunterResults,
-	rewardTextsSeasonResults,
-	rewardStringBountyCompletion,
-	rewardStringToast,
-	rewardStringSeconding
+	rewardSummary
 }

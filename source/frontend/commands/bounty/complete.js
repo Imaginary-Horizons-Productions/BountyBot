@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, fillableTextBar, bountyEmbed, rewardStringBountyCompletion, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, companyLevelUpLine, rewardTextsHunterResults, reloadHunterMapSubset, syncRankRoles, rewardTextsSeasonResults, unarchiveAndUnlockThread } = require("../../shared");
+const { commandMention, fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -50,24 +50,38 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const companyReceipt = { guildName: interaction.guild.name };
+
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-		const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, origin.hunter, validatedHunters, season, origin.company);
+		const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, origin.hunter, validatedHunters, season, origin.company);
 		hunterMap = await reloadHunterMapSubset(hunterMap, [...validatedHunters.keys(), origin.hunter.userId]);
-		const rewardTexts = rewardTextsHunterResults(hunterResults, hunterMap, origin.company);
-		const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
-		if (companyLevelLine) {
-			rewardTexts.push(companyLevelLine);
+		const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+		if (previousCompanyLevel < currentCompanyLevel) {
+			companyReceipt.levelUp = currentCompanyLevel;
 		}
 		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", origin.hunter, season);
 		if (goalUpdate.gpContributed > 0) {
-			rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
+			companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
 		}
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
+		for (const id in seasonUpdates) {
+			const hunterReceipt = hunterReceipts.get(id) ?? {};
+			if (seasonUpdates[id].newPlacement === 1) {
+				hunterReceipt.topPlacement = true;
+			}
+			if (seasonUpdates[id].rankIncreased) {
+				const rank = descendingRanks[seasonUpdates[id].newRankIndex];
+				const rankName = rank.roleId ? (await interaction.guild.roles.fetch()).get(rank.roleId).name : `Rank ${seasonUpdates[id].newRankIndex + 1}`;
+				hunterReceipt.rankUp = rankName;
+			}
+			if (Object.keys(hunterReceipt).length > 0) {
+				hunterReceipts.set(id, hunterReceipt);
+			}
+		}
 		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
-		const rankUpdates = rewardTextsSeasonResults(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
-		const content = rewardStringBountyCompletion(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts);
+		const content = rewardSummary("bounty", companyReceipt, hunterReceipts);
 
 		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()])).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {

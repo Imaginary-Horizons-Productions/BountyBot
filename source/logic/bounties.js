@@ -2,6 +2,7 @@ const { Sequelize, Op } = require("sequelize");
 const { GuildMember } = require("discord.js");
 const { Bounty, Hunter, Season, Company } = require("../database/models");
 const { rollItemForHunter } = require("./items");
+const { hunterLevelUpRewards } = require("../frontend/shared");
 
 /** @type {Sequelize} */
 let db;
@@ -131,39 +132,62 @@ function findHuntersLastFiveBounties(userId, companyId) {
  * @param {Company} company
  */
 async function completeBounty(bounty, poster, validatedHunters, season, company) {
+	const hunterReceipts = new Map();
 	bounty.update({ state: "completed", completedAt: new Date() });
 
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
 	const bountyValue = Math.floor(bountyBaseValue * company.festivalMultiplier);
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
-	/** @type {Record<string, { previousLevel: number, droppedItem: string | null }>} */
-	const hunterResults = {};
+	const xpMultiplierString = company.festivalMultiplierString();
 	for (const [hunterId, hunter] of validatedHunters) {
-		hunterResults[hunterId] = { previousLevel: hunter.getLevel(company.xpCoefficient) };
-		await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
+		const hunterReceipt = {};
+		const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
+		const updatedHunter = await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
+		hunterReceipt.xp = bountyBaseValue;
+		hunterReceipt.xpMultiplier = xpMultiplierString;
+		const currentHunterLevel = updatedHunter.getLevel(company.xpCoefficient);
+		if (currentHunterLevel > previousHunterLevel) {
+			const rewards = [];
+			for (let level = previousHunterLevel + 1; level <= currentHunterLevel; level++) {
+				rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
+			}
+			hunterReceipt.levelUp = { level: currentHunterLevel, rewards };
+		}
 		const [itemRow, wasCreated] = await rollItemForHunter(1 / 8, hunter);
-		hunterResults[hunterId].droppedItem = wasCreated ? itemRow.itemName : null;
+		if (wasCreated) {
+			hunterReceipt.item = itemRow.itemName;
+		}
 		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunterId, seasonId: season.id }, defaults: { xp: bountyValue } });
 		if (!participationCreated) {
 			participation.increment({ xp: bountyValue });
 		}
+		hunterReceipts.set(hunterId, hunterReceipt);
 	}
 
+	const posterReceipt = { title: "Bounty Poster" };
 	const posterXP = bounty.calculatePosterReward(validatedHunters.size);
-	hunterResults[poster.userId] = { previousLevel: poster.getLevel(company.xpCoefficient) };
-	await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
+	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
+	poster = await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
+	posterReceipt.xp = posterXP;
+	const currentPosterLevel = poster.getLevel(company.xpCoefficient);
+	if (currentPosterLevel > previousPosterLevel) {
+		const rewards = [];
+		for (let level = previousPosterLevel + 1; level <= currentPosterLevel; level++) {
+			rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
+		}
+		posterReceipt.levelUp = { level: currentPosterLevel, rewards };
+	}
 	const [itemRow, wasCreated] = await rollItemForHunter(1 / 4, poster);
-	hunterResults[poster.userId].droppedItem = wasCreated ? itemRow.itemName : null;
+	if (wasCreated) {
+		posterReceipt.item = itemRow.itemName;
+	}
+	hunterReceipts.set(poster.userId, posterReceipt);
 	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
 	if (!participationCreated) {
 		participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
 	}
 
-	return {
-		completerXP: bountyBaseValue,
-		posterXP,
-		hunterResults
-	};
+	return hunterReceipts;
 }
 
 /** *Delete all Bounties and Completions associated with the given Company*

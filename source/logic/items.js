@@ -79,7 +79,7 @@ async function getDropsAvailable(hunterId) {
 }
 
 /** *Grants the User 1 copy of a random Item at a rate of dropRate*
- * @param {number} dropRate a decimal between 0 and 1 (exclusive)
+ * @param {number} dropRate a decimal representing the probability
  * @param {Hunter} hunter
  * @returns {Promise<[itemRow: Item | null, wasCreated: boolean]>}
  */
