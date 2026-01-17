@@ -1,12 +1,12 @@
 const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
-const { createSubcommandMappings } = require('../../shared');
+const { aggregateSubcommands } = require('../../shared');
 
 /** @type {typeof import("../../../logic")} */
 let logicLayer;
 
 const mainId = "raffle";
-const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = createSubcommandMappings(mainId, [
+const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = aggregateSubcommands(mainId, [
 	"announce-upcoming.js",
 	"by-level.js",
 	"by-rank.js"

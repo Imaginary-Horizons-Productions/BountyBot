@@ -1,6 +1,8 @@
 const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
 const { butIgnoreMissingPermissionErrors, butIgnoreCantDirectMessageThisUserErrors } = require("./dAPIResponses");
 
+/** @file Validations - Checks for issues with user input data */
+
 /** Simulate auto mod actions for texts input to BountyBot
  * @param {TextChannel} channel
  * @param {GuildMember} member
@@ -51,6 +53,37 @@ async function textsHaveAutoModInfraction(channel, member, texts, context) {
 	return shouldBlockMessage;
 }
 
+/**
+ * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
+ */
+function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
+	const errors = [];
+	const nowTimestamp = Date.now() / 1000;
+
+	if (!startTimestamp) {
+		errors.push(`Start Timestamp must be an integer. Received: ${startTimestamp}`);
+	}
+
+	if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to ${discordTimestamp(startTimestamp)}`);
+	}
+
+	if (!endTimestamp) {
+		errors.push(`End Timestamp must be an integer. Received: ${endTimestamp}`);
+	}
+
+	if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to ${discordTimestamp(endTimestamp)}`);
+	}
+
+	if (startTimestamp > endTimestamp) {
+		errors.push(`End Timestamp (${discordTimestamp(endTimestamp)}) was before Start Timestamp (${discordTimestamp(startTimestamp)}).`);
+	}
+	return errors;
+}
+
 module.exports = {
-	textsHaveAutoModInfraction
+	textsHaveAutoModInfraction,
+	validateScheduledEventTimestamps
 };

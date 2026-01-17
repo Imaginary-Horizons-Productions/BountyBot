@@ -1,68 +1,22 @@
-const { CommandInteraction, GuildTextThreadManager, EmbedBuilder, Guild, Collection, Role, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
-const { SubcommandWrapper } = require("../classes");
+const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
 const { Bounty, Company, Rank } = require("../../database/models");
-const { buildBountyEmbed } = require("./messageParts");
-const { SelectMenuLimits, MessageLimits } = require("@sapphire/discord.js-utilities");
+const { bountyEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
 
 /**
- * @param {string} mainId
- * @param {string[]} fileList
+ * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
+ *
+ * Naming Convention:
+ * - verb first, avoid HTML method verbs (many functions will use more than one)
+ * - describe entity in BountyBot context (eg "EvergreenBountyBoard" instead of "ForumChannel")
  */
-function createSubcommandMappings(mainId, fileList) {
-	const mappings = {
-		/** @type {import("discord.js").BaseApplicationCommandData[]} */
-		slashData: [],
-		/** @type {Record<string, (interaction: CommandInteraction, runMode: string, ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
-		executeDictionary: {}
-	};
-	for (const fileName of fileList) {
-		/** @type {SubcommandWrapper} */
-		const subcommand = require(`../commands/${mainId}/${fileName}`);
-		mappings.slashData.push(subcommand.data);
-		mappings.executeDictionary[subcommand.data.name] = subcommand.executeSubcommand;
-	};
-	return mappings;
-};
-
-/**
- * @param {Rank[]} ranks
- * @param {Collection<string, Role>} allGuildRoles
- */
-function rankArrayToSelectOptions(ranks, allGuildRoles) {
-	return ranks.map((rank, index) => {
-		const option = {
-			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
-			description: `Variance Threshold: ${rank.threshold}`,
-			value: rank.threshold.toString()
-		};
-		if (rank.rankmoji) {
-			option.emoji = rank.rankmoji;
-		}
-		return option;
-	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
-}
-
-/** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't
- * @param {string} content
- * @param {import("discord.js").BaseMessageOptionsWithPoll} messageOptions
- * @param {string} filename
- */
-function contentOrFileMessagePayload(content, messageOptions, filename) {
-	if (content.length < MessageLimits.MaximumLength) {
-		messageOptions.content = content;
-	} else {
-		messageOptions.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: filename })];
-	}
-	return messageOptions;
-}
 
 /**
  * @param {GuildTextThreadManager} threadManager
  * @param {EmbedBuilder[]} embeds
  * @param {Company} company
  */
-function createEvergreenBountyThread(threadManager, embeds, company) {
+function makeEvergreenBountiesThread(threadManager, embeds, company) {
 	return threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds },
@@ -83,8 +37,8 @@ function createEvergreenBountyThread(threadManager, embeds, company) {
  * @param {Guild} guild
  * @param {Record<string, Set<string>>} hunterIdMap
  */
-async function updateEvergreenBountyBoard(bountyBoardChannel, evergreenBounties, company, companyLevel, guild, hunterIdMap) {
-	const embeds = await Promise.all(evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => buildBountyEmbed(bounty, guild, companyLevel, false, company, hunterIdMap[bounty.id])));
+async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBounties, company, companyLevel, guild, hunterIdMap) {
+	const embeds = await Promise.all(evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => bountyEmbed(bounty, guild, companyLevel, false, company, hunterIdMap[bounty.id])));
 	if (company.evergreenThreadId) {
 		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
 			const message = await thread.fetchStarterMessage();
@@ -92,7 +46,7 @@ async function updateEvergreenBountyBoard(bountyBoardChannel, evergreenBounties,
 			return thread;
 		});
 	} else {
-		return createEvergreenBountyThread(bountyBoardChannel.threads, embeds, company);
+		return makeEvergreenBountiesThread(bountyBoardChannel.threads, embeds, company);
 	}
 }
 
@@ -103,7 +57,7 @@ async function updateEvergreenBountyBoard(bountyBoardChannel, evergreenBounties,
  * @param {number} posterLevel
  * @param {Set<string>} hunterIdSet
  */
-async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
+async function refreshBountyThreadStarterMessage(guild, company, bounty, posterLevel, hunterIdSet) {
 	if (!company.bountyBoardId || !bounty.postingId) {
 		return null;
 	}
@@ -115,7 +69,7 @@ async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
 		thread.edit({ name: bounty.title });
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
-		return buildBountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
+		return bountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
 			posting.edit({ embeds: [embed] });
 			return posting;
 		})
@@ -127,7 +81,7 @@ async function updatePosting(guild, company, bounty, posterLevel, hunterIdSet) {
  * @param {Guild} guild
  * @param {EmbedBuilder[]} embeds
  */
-async function updateScoreboard(company, guild, embeds) {
+async function refreshReferenceChannelScoreboard(company, guild, embeds) {
 	if (company.scoreboardChannelId && company.scoreboardMessageId) {
 		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
 			return scoreboard.messages.fetch(company.scoreboardMessageId);
@@ -142,7 +96,7 @@ async function updateScoreboard(company, guild, embeds) {
  * @param {string} content
  * @param {string} threadTitle
  */
-function sendToRewardsThread(embedMessage, content, threadTitle) {
+function sendRewardMessage(embedMessage, content, threadTitle) {
 	const rewardsPayload = { content, flags: MessageFlags.SuppressNotifications };
 	if (embedMessage.channel.isThread()) {
 		// If already in thread, send message
@@ -197,14 +151,11 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 }
 
 module.exports = {
-	createSubcommandMappings,
-	rankArrayToSelectOptions,
-	contentOrFileMessagePayload,
-	updateEvergreenBountyBoard,
-	createEvergreenBountyThread,
-	updatePosting,
-	updateScoreboard,
-	sendToRewardsThread,
+	refreshEvergreenBountiesThread,
+	makeEvergreenBountiesThread,
+	refreshBountyThreadStarterMessage,
+	refreshReferenceChannelScoreboard,
+	sendRewardMessage,
 	syncRankRoles,
 	unarchiveAndUnlockThread
 };

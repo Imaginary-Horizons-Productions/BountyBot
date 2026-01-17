@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, generateTextBar, listifyEN, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, generateToastEmbed, generateSecondingActionRow, generateToastRewardString, generateCompletionEmbed, sendToRewardsThread, formatHunterResultsToRewardTexts, reloadHunterMapSubset, buildCompanyLevelUpLine, formatSeasonResultsToRewardTexts, syncRankRoles } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, sentenceListEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, rewardStringToast, goalCompletionEmbed, sendRewardMessage, rewardTextsHunterResults, reloadHunterMapSubset, companyLevelUpLine, rewardTextsSeasonResults, syncRankRoles } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -27,7 +27,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		let bannedText;
 		if (bannedIds.size > 1) {
-			bannedText = `${listifyEN(Array.from(bannedIds).map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
+			bannedText = `${sentenceListEN(Array.from(bannedIds).map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
 		} else if (bannedIds.size === 1) {
 			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
 		}
@@ -69,12 +69,12 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 		const { toastId, rewardedHunterIds, hunterResults, critValue } = await logicLayer.toasts.raiseToast(interaction.guild, origin.company, interaction.user.id, validatedToasteeIds, hunterMap, season.id, toastText, imageURL);
 		hunterMap = await reloadHunterMapSubset(hunterMap, rewardedHunterIds.concat(interaction.user.id));
-		const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
-		const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
+		const rewardTexts = rewardTextsHunterResults(hunterResults, hunterMap, origin.company);
+		const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
 		if (companyLevelLine) {
 			rewardTexts.push(companyLevelLine);
 		}
-		const embeds = [generateToastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
+		const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
 		if (imageURL) {
 			embeds[0].setImage(imageURL);
 		}
@@ -84,20 +84,20 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			if (goalUpdate.gpContributed > 0) {
 				rewardTexts.push(`This toast contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
 				if (goalUpdate.goalCompleted) {
-					embeds.push(generateCompletionEmbed(goalUpdate.contributorIds));
+					embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
 				}
 				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (goalId !== null) {
-					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+					embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 				} else {
-					embeds[0].addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+					embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
 				}
 			}
 		}
 
 		interaction.reply({
 			embeds,
-			components: [generateSecondingActionRow(toastId)],
+			components: [secondingButtonRow(toastId)],
 			withResponse: true
 		}).then(async response => {
 			if (bannedText) {
@@ -108,8 +108,8 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
-				const rewardString = generateToastRewardString(rewardedHunterIds, formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
-				sendToRewardsThread(response.resource.message, rewardString, "Rewards");
+				const rewardString = rewardStringToast(rewardedHunterIds, rewardTextsSeasonResults(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch()), rewardTexts, interaction.member.toString(), origin.company.festivalMultiplierString(), critValue);
+				sendRewardMessage(response.resource.message, rewardString, "Rewards");
 				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (origin.company.scoreboardIsSeasonal) {
@@ -117,7 +117,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				} else {
 					embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
 				}
-				updateScoreboard(origin.company, interaction.guild, embeds);
+				refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 			}
 		});
 	}

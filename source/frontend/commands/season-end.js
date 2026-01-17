@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, companyStatsEmbed } = require('../shared');
+const { addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, companyStatsEmbed } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -62,12 +62,12 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 			} else {
 				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
 			}
-			updateScoreboard(origin.company, guild, embeds);
+			refreshReferenceChannelScoreboard(origin.company, guild, embeds);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n${unorderedList(shoutouts)}`;
 			}
-			interaction.reply(sendAnnouncement(origin.company, { content: announcementText, embeds: [embed] }));
+			interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: announcementText, embeds: [embed] }));
 		})
 	}
 ).setLogicLinker(logicBlob => {

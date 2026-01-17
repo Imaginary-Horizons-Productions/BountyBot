@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, buildBountyEmbed, validateScheduledEventTimestamps, createBountyEventPayload, constructEditBountyModalAndOptions, bountiesToSelectOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -18,7 +18,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to edit...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(openBounties))
+						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,
@@ -32,7 +32,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				return;
 			}
 
-			const { modal, submissionOptions } = await constructEditBountyModalAndOptions(bounty, false, interaction.id, interaction.guild);
+			const { modal, submissionOptions } = await editBountyModalAndSubmissionOptions(bounty, false, interaction.id, interaction.guild);
 			collectedInteraction.showModal(modal);
 			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
 				const title = modalSubmission.fields.getTextInputValue("title");
@@ -72,7 +72,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				}
 
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 					if (bounty.scheduledEventId) {
 						modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 					} else {
@@ -87,7 +87,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				bounty.update(updatePayload);
 
 				// update bounty board
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
+				const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))];
 				if (origin.company.bountyBoardId) {
 					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 						return bountyBoard.threads.fetch(bounty.postingId);
@@ -97,11 +97,11 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 						thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
 						return thread.fetchStarterMessage();
 					}).then(posting => {
-						posting.edit({ embeds: [bountyEmbed] });
+						posting.edit({ embeds });
 					})
 				}
 
-				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], components: [] });
+				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds, components: [] });
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
 	}

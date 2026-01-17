@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { modStatsEmbed } = require("../../shared");
+const { userReportEmbed } = require("../../shared");
 
 module.exports = new SubcommandWrapper("user-report", "Get the BountyBot moderation stats for a user",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -13,7 +13,7 @@ module.exports = new SubcommandWrapper("user-report", "Get the BountyBot moderat
 
 		const dqCount = await logicLayer.seasons.getDQCount(member.id, interaction.guild.id);
 		const lastFiveBounties = await logicLayer.bounties.findHuntersLastFiveBounties(member.id, interaction.guildId);
-		interaction.reply({ embeds: [modStatsEmbed(hunter, interaction.guild, member, dqCount, lastFiveBounties)], flags: MessageFlags.Ephemeral });
+		interaction.reply({ embeds: [userReportEmbed(hunter, interaction.guild, member, dqCount, lastFiveBounties)], flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{

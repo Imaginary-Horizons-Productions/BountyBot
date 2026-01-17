@@ -1,11 +1,11 @@
 const { SubcommandWrapper } = require("../../classes");
-const { sendAnnouncement } = require("../../shared");
+const { addCompanyAnnouncementPrefix } = require("../../shared");
 
 module.exports = new SubcommandWrapper("announce-upcoming", "Announce an upcoming raffle",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const announcement = interaction.options.getString("announcement");
 		origin.company.update({ nextRaffleString: announcement });
-		interaction.reply(sendAnnouncement(origin.company, { content: announcement }));
+		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: announcement }));
 	}
 ).setOptions(
 	{

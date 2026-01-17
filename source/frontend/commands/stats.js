@@ -1,7 +1,7 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../../database/models');
-const { randomFooterTip, ihpAuthorPayload, generateTextBar, companyStatsEmbed, getHunterLevelUpRewards } = require('../shared');
+const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, hunterLevelUpRewards } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -50,7 +50,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 								.setAuthor(ihpAuthorPayload)
 								.setThumbnail(target.user.avatarURL())
 								.setTitle(`${target.displayName} is __Level ${currentHunterLevel}__`)
-								.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex !== null ? ` which qualifies for ${rankName}` : ""}.`)
+								.setDescription(`${fillableTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex !== null ? ` which qualifies for ${rankName}` : ""}.`)
 								.addFields(
 									{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
@@ -87,7 +87,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 						.setThumbnail(interaction.user.avatarURL())
 						.setTitle(`You are __Level ${currentHunterLevel}__ in ${guild.name}`)
 						.setDescription(
-							`${generateTextBar(origin.hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - origin.hunter.xp} XP\n\
+							`${fillableTextBar(origin.hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - origin.hunter.xp} XP\n\
 								You have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex != null ? ` which qualifies for ${rankName}` : ""}.${nextRankXP > 0 ? `You need ${nextRankXP} XP to reach the next rank.` : ""}\n\n\
 								You have ${bountySlots} bounty slot${bountySlots === 1 ? '' : 's'}!`
 						)
@@ -97,7 +97,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with **${mostSecondedToast.secondings} secondings**` : "No toasts seconded yet..." },
 							{ name: "Bounty Stats", value: `Bounties Hunted: ${origin.hunter.othersFinished} bount${origin.hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${origin.hunter.mineFinished} bount${origin.hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
 							{ name: "Toast Stats", value: `Toasts Raised: ${origin.hunter.toastsRaised} toast${origin.hunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${origin.hunter.toastsSeconded} toast${origin.hunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${origin.hunter.toastsReceived} toast${origin.hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
-							{ name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(getHunterLevelUpRewards(level, origin.company.maxSimBounties, true))}`).join("\n") }
+							{ name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(hunterLevelUpRewards(level, origin.company.maxSimBounties, true))}`).join("\n") }
 						)
 						.setFooter(randomFooterTip())
 						.setTimestamp()

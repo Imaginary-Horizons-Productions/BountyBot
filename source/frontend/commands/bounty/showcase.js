@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, 
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, buildBountyEmbed, updatePosting, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { selectOptionsFromBounties, bountyEmbed, refreshBountyThreadStarterMessage, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -25,7 +25,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to showcase...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(existingBounties))
+						.setOptions(selectOptionsFromBounties(existingBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,
@@ -53,8 +53,8 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 			origin.hunter.save();
 			const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 			const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-			updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
-			return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
+			refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+			return bountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 				await unarchiveAndUnlockThread(interaction.channel, "bounty showcased");
 				return interaction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 			})

@@ -1,4 +1,4 @@
-const { discordTimestamp } = require('./shared/index.js');
+const { discordTimestamp } = require('./shared');
 const log = console.log;
 
 console.log = function () {
@@ -26,7 +26,7 @@ const { getSelect, setLogic: setSelectLogic, updateCooldownMap: updateSelectCool
 const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic, updateCooldownMap: updateContextMenuCooldownMap, updatePremiumList: updatePremiumContextMenus } = require("./frontend/context_menus/_contextMenuDictionary.js");
 const { setLogic: setItemLogic, updateCooldownMap: updateItemCooldownMap } = require("./frontend/items/_itemDictionary.js")
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
-const { buildVersionEmbed, commandMention } = require("./frontend/shared");
+const { latestVersionChangesEmbed, commandMention } = require("./frontend/shared");
 const logicBlob = require("./logic");
 const runMode = process.argv[4] || "development";
 const cooldownMap = {};
@@ -131,7 +131,7 @@ dAPIClient.on(Events.ClientReady, () => {
 					return;
 				}
 
-				buildVersionEmbed(dAPIClient.user.displayAvatarURL()).then(embed => {
+				latestVersionChangesEmbed(dAPIClient.user.displayAvatarURL()).then(embed => {
 					dAPIClient.guilds.fetch(testGuildId).then(guild => {
 						guild.channels.fetch(announcementsChannelId).then(announcementsChannel => {
 							announcementsChannel.send({ embeds: [embed] }).then(message => {

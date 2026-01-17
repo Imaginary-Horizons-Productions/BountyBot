@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { getNumberEmoji, bountiesToSelectOptions, disabledSelectRow, updateEvergreenBountyBoard } = require("../../shared");
+const { emojiFromNumber, selectOptionsFromBounties, disabledSelectRow, refreshEvergreenBountiesThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { Bounty, Company } = require("../../../database/models");
 
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}evergreen`)
 						.setPlaceholder("Select a bounty to swap...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(existingBounties))
+						.setOptions(selectOptionsFromBounties(existingBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,
@@ -37,7 +37,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 							if (bounty.slotNumber != previousBountySlot) {
 								slotOptions.push(
 									{
-										emoji: getNumberEmoji(bounty.slotNumber),
+										emoji: emojiFromNumber(bounty.slotNumber),
 										label: `Slot ${bounty.slotNumber}: ${bounty.title}`,
 										// Evergreen bounties are not eligible for showcase bonuses
 										description: `XP Reward: ${Bounty.calculateCompleterReward(hunter.getLevel(origin.company.xpCoefficient), bounty.slotNumber, 0)}`,
@@ -80,7 +80,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 							hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 						}
 						collectedInteraction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-							updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
+							refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
 						})
 					} else if (!collectedInteraction.member.manageable) {
 						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });

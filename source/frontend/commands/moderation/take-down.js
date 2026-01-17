@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down another user's bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${poster.id}`)
 						.setPlaceholder("Select a bounty to take down...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(openBounties))
+						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,

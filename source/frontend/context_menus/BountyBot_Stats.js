@@ -1,7 +1,7 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { Hunter } = require('../../database/models');
-const { randomFooterTip, ihpAuthorPayload, generateTextBar, companyStatsEmbed } = require('../shared');
+const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -47,7 +47,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 							.setAuthor(ihpAuthorPayload)
 							.setThumbnail(target.user.avatarURL())
 							.setTitle(`${target.displayName} is __Level ${currentHunterLevel}__`)
-							.setDescription(`${generateTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex !== null ? ` which qualifies for ${rankName}` : ""}.`)
+							.setDescription(`${fillableTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex !== null ? ` which qualifies for ${rankName}` : ""}.`)
 							.addFields(
 								{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 								{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },

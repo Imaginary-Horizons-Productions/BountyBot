@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, roleMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { rankArrayToSelectOptions, raffleResultEmbed, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
+const { selectOptionsFromRanks, raffleResultEmbed, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a particular rank",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -18,7 +18,7 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a rank...")
-						.addOptions(rankArrayToSelectOptions(ranks, roles))
+						.addOptions(selectOptionsFromRanks(ranks, roles))
 				)
 			],
 			flags: MessageFlags.Ephemeral,

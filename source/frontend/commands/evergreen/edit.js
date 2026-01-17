@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, bountiesToSelectOptions, buildBountyEmbed, updateEvergreenBountyBoard, constructEditBountyModalAndOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, selectOptionsFromBounties, bountyEmbed, refreshEvergreenBountiesThread, editBountyModalAndSubmissionOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to edit...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(openBounties))
+						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,
@@ -33,7 +33,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				return;
 			}
 
-			const { modal, submissionOptions } = await constructEditBountyModalAndOptions(selectedBounty, true, collectedInteraction.id, collectedInteraction.guild);
+			const { modal, submissionOptions } = await editBountyModalAndSubmissionOptions(selectedBounty, true, collectedInteraction.id, collectedInteraction.guild);
 			collectedInteraction.showModal(modal);
 			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
 				interaction.deleteReply();
@@ -79,13 +79,12 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
 					const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
-					updateEvergreenBountyBoard(bountyBoard, openBounties, origin.company, currentCompanyLevel, modalSubmission.guild, hunterIdMap);
+					refreshEvergreenBountiesThread(bountyBoard, openBounties, origin.company, currentCompanyLevel, modalSubmission.guild, hunterIdMap);
 				} else if (!modalSubmission.member.manageable) {
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 
-				const bountyEmbed = await buildBountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set());
-				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
+				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [await bountyEmbed(selectedBounty, modalSubmission.guild, currentCompanyLevel, false, origin.company, new Set())], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
 	}

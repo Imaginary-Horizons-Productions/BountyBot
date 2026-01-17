@@ -1,6 +1,6 @@
 const { Company } = require("../../../database/models");
 const { SubcommandWrapper } = require("../../classes");
-const { sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, updateEvergreenBountyBoard } = require("../../shared");
+const { addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshEvergreenBountiesThread } = require("../../shared");
 
 module.exports = new SubcommandWrapper("close", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -8,7 +8,7 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 		interaction.guild.members.fetchMe().then(bountyBot => {
 			bountyBot.setNickname(null);
 		})
-		interaction.reply(sendAnnouncement(origin.company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
+		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (origin.company.scoreboardIsSeasonal) {
@@ -17,7 +17,7 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 		} else {
 			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 		}
-		updateScoreboard(origin.company, interaction.guild, embeds);
+		refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 		if (origin.company.bountyBoardId) {
 			const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 			const existingBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
@@ -25,7 +25,7 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 			for (const bounty of existingBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			updateEvergreenBountyBoard(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild, hunterIdMap);
 		}
 	}
 );

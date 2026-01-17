@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, heading } = require('discord.js');
 const { CommandWrapper } = require('../classes/index.js');
-const { contentOrFileMessagePayload } = require('../shared/dAPIRequests.js');
+const { attachOverflowingContentAsFile } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,7 +16,7 @@ module.exports = new CommandWrapper(mainId, "Look up this server's seasonal rank
 		const content = `${heading("Seasonal Ranks", 1)}\nBounty Hunters who earn more XP compared to their contemporaries are given special roles to distinguish themselves for the season. These roles are as follows:\n\n${ranks.map((rank, index) => {
 			return `${rank.rankmoji ? `${rank.rankmoji} ` : ""}${rank.roleId ? roleMention(rank.roleId) : `Rank ${index}`}\nStandard Deviations Threshold: ${rank.threshold}\n`;
 		}).join('\n')}`;
-		interaction.reply(contentOrFileMessagePayload(content, { flags: MessageFlags.Ephemeral }, "ranks.txt"));
+		interaction.reply(attachOverflowingContentAsFile(content, { flags: MessageFlags.Ephemeral }, "ranks.txt"));
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

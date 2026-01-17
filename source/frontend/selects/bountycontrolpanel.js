@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { listifyEN, congratulationBuilder, buildBountyEmbed, commandMention, reloadHunterMapSubset, formatSeasonResultsToRewardTexts, formatHunterResultsToRewardTexts, buildCompanyLevelUpLine, syncRankRoles, generateBountyRewardString, generateTextBar, generateCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, updateScoreboard, updatePosting, disabledSelectRow, getNumberEmoji, sendAnnouncement, textsHaveAutoModInfraction, createBountyEventPayload, validateScheduledEventTimestamps, constructEditBountyModalAndOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, rewardTextsSeasonResults, rewardTextsHunterResults, companyLevelUpLine, syncRankRoles, rewardStringBountyCompletion, fillableTextBar, goalCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -52,9 +52,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 					await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
 					if (!collectedInteraction.channel) return;
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "Unarchived to update posting");
-					collectedInteraction.channel.send({ content: `${listifyEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${congratulationBuilder()}!` });
+					collectedInteraction.channel.send({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 					const starterMessage = await collectedInteraction.channel.fetchStarterMessage();
-					starterMessage.edit({ embeds: [await buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)] });
+					starterMessage.edit({ embeds: [await bountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)] });
 					return collectedInteraction.update({
 						components: []
 					});
@@ -80,13 +80,13 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 					const removedIds = collectedInteraction.members.map((_, key) => key);
 					await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
-					buildBountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))
+					bountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))
 						.then(async embed => {
 							await unarchiveAndUnlockThread(collectedInteraction.channel, "completers removed from bounty");
 							interaction.message.edit({ embeds: [embed] })
 						});
 
-					collectedInteraction.channel.send({ content: `${listifyEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
+					collectedInteraction.channel.send({ content: `${sentenceListEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 					return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: MessageFlags.Ephemeral });
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
@@ -136,8 +136,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 					origin.hunter.update({ lastShowcaseTimestamp: new Date() });
 					const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
 					const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-					updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
-					return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
+					refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+					return bountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 						await unarchiveAndUnlockThread(channel, "bounty showcased");
 						return channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 					})
@@ -174,7 +174,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}
 
 				interaction.reply({
-					content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${listifyEN(Array.from(validatedHunters.keys()).map(id => userMention(id)))}`,
+					content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${sentenceListEN(Array.from(validatedHunters.keys()).map(id => userMention(id)))}`,
 					components: [
 						new ActionRowBuilder().addComponents(
 							new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
@@ -192,8 +192,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 					const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, origin.company);
 					hunterMap = await reloadHunterMapSubset(hunterMap, [...validatedHunters.keys(), bounty.userId]);
-					const rewardTexts = formatHunterResultsToRewardTexts(hunterResults, hunterMap, origin.company);
-					const companyLevelLine = buildCompanyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, collectedInteraction.guild.name);
+					const rewardTexts = rewardTextsHunterResults(hunterResults, hunterMap, origin.company);
+					const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, collectedInteraction.guild.name);
 					if (companyLevelLine) {
 						rewardTexts.push(companyLevelLine);
 					}
@@ -205,19 +205,19 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
 					syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
-					const rankUpdates = formatSeasonResultsToRewardTexts(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch());
+					const rankUpdates = rewardTextsSeasonResults(seasonUpdates, descendingRanks, await collectedInteraction.guild.roles.fetch());
 
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty complete");
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
-					await collectedInteraction.editReply({ content: generateBountyRewardString(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
-					buildBountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
+					await collectedInteraction.editReply({ content: rewardStringBountyCompletion(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts) });
+					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
 						.then(async embed => {
 							if (goalUpdate.gpContributed > 0) {
 								const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
 								if (goalId !== null) {
-									embed.addFields({ name: "Server Goal", value: `${generateTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 								} else {
-									embed.addFields({ name: "Server Goal", value: `${generateTextBar(15, 15, 15)} Completed!` });
+									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
 								}
 							}
 							interaction.message.edit({ embeds: [embed], components: [] });
@@ -225,7 +225,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						})
 					const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
 					if (goalUpdate.goalCompleted) {
-						announcementOptions.embeds = [generateCompletionEmbed(goalUpdate.contributorIds)];
+						announcementOptions.embeds = [goalCompletionEmbed(goalUpdate.contributorIds)];
 					}
 					collectedInteraction.channels.first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
 					const embeds = [];
@@ -235,7 +235,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					} else {
 						embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, hunterMap, goalProgress));
 					}
-					updateScoreboard(origin.company, collectedInteraction.guild, embeds);
+					refreshReferenceChannelScoreboard(origin.company, collectedInteraction.guild, embeds);
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {
@@ -244,7 +244,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				});
 			} break;
 			case "edit": {
-				const { modal, submissionOptions } = await constructEditBountyModalAndOptions(bounty, false, interaction.id, interaction.guild);
+				const { modal, submissionOptions } = await editBountyModalAndSubmissionOptions(bounty, false, interaction.id, interaction.guild);
 				interaction.showModal(modal).then(() => interaction.awaitModalSubmit(submissionOptions)).then(async modalSubmission => {
 					const title = modalSubmission.fields.getTextInputValue("title");
 					const description = modalSubmission.fields.getTextInputValue("description");
@@ -283,7 +283,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					}
 
 					if (startTimestamp && endTimestamp) {
-						const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
+						const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 						if (bounty.scheduledEventId) {
 							modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 						} else {
@@ -298,7 +298,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					bounty.update(updatePayload);
 
 					// update bounty board
-					const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId));
+					const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))];
 					if (origin.company.bountyBoardId) {
 						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.fetch(bounty.postingId);
@@ -308,11 +308,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 							thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
 							return thread.fetchStarterMessage();
 						}).then(posting => {
-							posting.edit({ embeds: [bountyEmbed] });
+							posting.edit({ embeds });
 						})
 					}
 
-					modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [bountyEmbed], flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds, flags: MessageFlags.Ephemeral });
 				});
 			} break;
 			case "swap": {
@@ -330,7 +330,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						const existingBounty = openBounties.find(checkedBounty => checkedBounty.slotNumber === i);
 						slotOptions.push(
 							{
-								emoji: getNumberEmoji(i),
+								emoji: emojiFromNumber(i),
 								label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
 								description: `XP Reward: ${Bounty.calculateCompleterReward(startingPosterLevel, i, existingBounty?.showcaseCount ?? 0)}`,
 								value: i.toString()
@@ -381,16 +381,16 @@ module.exports = new SelectWrapper(mainId, 3000,
 							const posterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 
 							bounty = await bounty.update({ slotNumber: destinationSlot });
-							updatePosting(interaction.guild, origin.company, bounty, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
+							refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
 
 							if (destinationBounty?.state === "open") {
 								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-								updatePosting(interaction.guild, origin.company, destinationBounty, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 							}
 
 							const destinationRewardValue = Bounty.calculateCompleterReward(posterLevel, destinationSlot, bounty.showcaseCount);
 							interaction.channel.send({ content: `This bounty was swapped to Slot ${destinationSlot} and is now worth ${destinationRewardValue} XP.`, flags: MessageFlags.SuppressNotifications });
-							collectedInteraction.channels.first().send(sendAnnouncement(origin.company, { content: `${interaction.member}'s bounty, ${bold(bounty.title)} is now worth ${destinationRewardValue} XP.` }));
+							collectedInteraction.channels.first().send(addCompanyAnnouncementPrefix(origin.company, { content: `${interaction.member}'s bounty, ${bold(bounty.title)} is now worth ${destinationRewardValue} XP.` }));
 							collectedInteraction.update({ components: [] }).then(() => {
 								interaction.deleteReply();
 							})
