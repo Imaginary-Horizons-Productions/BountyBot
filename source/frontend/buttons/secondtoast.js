@@ -106,7 +106,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		await logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, critSeconds > 0);
 		if (critSeconds > 0) {
-			const hunterReceipt = {};
+			const hunterReceipt = { title: "Critical Toast!", xp: critSeconds };
 			const previousSenderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 			await origin.hunter.increment({ xp: critSeconds }).then(seconder => seconder.reload());
 			const currentSenderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
