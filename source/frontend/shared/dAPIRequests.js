@@ -113,7 +113,7 @@ function sendRewardMessage(embedMessage, content, threadTitle) {
 }
 
 /** Requests dAPI change the roles on guild members based on the provided `seasonResults`
- * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedlevel: number; previousLevel: number; }; item: string; }>>} hunterRecipts
+ * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterRecipts
  * @param {Rank[]} descendingRanks
  * @param {GuildMemberManager} guildMemberManager
  */

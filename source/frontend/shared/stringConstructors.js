@@ -93,7 +93,7 @@ function sentenceListEN(texts, isMutuallyExclusive) {
 /**
  * @param {"bounty" | "toast" | "seconding" | "item"} actionType
  * @param {{ guildName: string; levelUp?: number; gp?: number; gpMultiplier?: string; }} companyReceipt
- * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedlevel: number; previousLevel: number; }; item: string; }>>} hunterReceipts
+ * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterReceipts
  * @param {number} companyMaxBountySlots
  */
 function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBountySlots) {
@@ -116,11 +116,11 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 		}
 		if ("xp" in receipt) {
 			if ("levelUp" in receipt) {
-				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""} and reached ${bold(`Level ${receipt.levelUp.achievedlevel}`)}!`;
-				for (let level = receipt.levelUp.previousLevel + 1; level <= receipt.levelUp.achievedlevel; level++) {
-					let oddSlotBaseRewardIncrease = null;
-					let evenSlotBaseRewardIncrease = null;
-					const bountySlotsUnlocked = [];
+				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""} and reached ${bold(`Level ${receipt.levelUp.achievedLevel}`)}!`;
+				let oddSlotBaseRewardIncrease = null;
+				let evenSlotBaseRewardIncrease = null;
+				const bountySlotsUnlocked = [];
+				for (let level = receipt.levelUp.previousLevel + 1; level <= receipt.levelUp.achievedLevel; level++) {
 					for (const [type, value] of Hunter.getLevelUpRewards(level, companyMaxBountySlots)) {
 						switch (type) {
 							case "oddSlotBaseRewardIncrease":
@@ -138,19 +138,19 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 								break;
 						}
 					}
-					if (bountySlotsUnlocked.length > 0) {
-						if (bountySlotsUnlocked.length === 1) {
-							summary += `\n   - You have unlocked Bounty Slot #${bountySlotsUnlocked[0]}.`;
-						} else {
-							summary += `\n   - You have unlocked ${sentenceListEN(bountySlotsUnlocked.map(slotNumber => `Bounty Slot #${slotNumber}`))}.`;
-						}
+				}
+				if (bountySlotsUnlocked.length > 0) {
+					if (bountySlotsUnlocked.length === 1) {
+						summary += `\n   - You have unlocked Bounty Slot #${bountySlotsUnlocked[0]}.`;
+					} else {
+						summary += `\n   - You have unlocked ${sentenceListEN(bountySlotsUnlocked.map(slotNumber => `Bounty Slot #${slotNumber}`))}.`;
 					}
-					if (oddSlotBaseRewardIncrease) {
-						summary += `\n   - The base reward of your odd-numbered bounty slots has increased (max: ${oddSlotBaseRewardIncrease} Reward XP in Slot #1)!`;
-					}
-					if (evenSlotBaseRewardIncrease) {
-						summary += `\n   - The base reward of your even-numbered bounty slots has increased (max: ${evenSlotBaseRewardIncrease} Reward XP in Slot #2)!`;
-					}
+				}
+				if (oddSlotBaseRewardIncrease) {
+					summary += `\n   - The base reward of your odd-numbered bounty slots has increased (max: ${oddSlotBaseRewardIncrease} Reward XP in Slot #1)!`;
+				}
+				if (evenSlotBaseRewardIncrease) {
+					summary += `\n   - The base reward of your even-numbered bounty slots has increased (max: ${evenSlotBaseRewardIncrease} Reward XP in Slot #2)!`;
 				}
 			} else {
 				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""}!`;

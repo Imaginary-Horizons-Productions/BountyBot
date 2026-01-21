@@ -1,4 +1,5 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
+const { Bounty } = require('../bounties/Bounty');
 
 /** This class stores a user's information related to a specific company */
 class Hunter extends Model {
@@ -39,7 +40,7 @@ class Hunter extends Model {
 	 * @param {number} maxSlots
 	 * @returns {[kind: "bountySlotUnlocked" | "oddSlotBaseRewardIncrease" | "evenSlotBaseRewardIncrease", value: number][]}
 	 */
-	static getLevelUpRewards() {
+	static getLevelUpRewards(level, maxSlots) {
 		const rewards = [];
 		const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
 		if (currentSlots < maxSlots) {
