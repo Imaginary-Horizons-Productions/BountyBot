@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -82,22 +82,9 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				if (hunterReceipts.size > 0) {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-					for (const id in seasonUpdates) {
-						const hunterReceipt = hunterReceipts.get(id) ?? {};
-						if (seasonUpdates[id].newPlacement === 1) {
-							hunterReceipt.topPlacement = true;
-						}
-						if (seasonUpdates[id].rankIncreased) {
-							const rank = descendingRanks[seasonUpdates[id].newRankIndex];
-							const rankName = rank.roleId ? (await interaction.guild.roles.fetch()).get(rank.roleId).name : `Rank ${seasonUpdates[id].newRankIndex + 1}`;
-							hunterReceipt.rankUp = rankName;
-						}
-						if (Object.keys(hunterReceipt).length > 0) {
-							hunterReceipts.set(id, hunterReceipt);
-						}
-					}
-					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
+					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
+					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
 					const embeds = [];

@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Company } = require("../../../database/models");
-const { fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset, rewardSummary } = require("../../shared");
+const { fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset, rewardSummary, consolidateHunterReceipts } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -118,22 +118,9 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						const message = await collectedInteraction.channel.send(announcementPayload);
 						const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 						const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-						const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-						for (const id in seasonUpdates) {
-							const hunterReceipt = hunterReceipts.get(id) ?? {};
-							if (seasonUpdates[id].newPlacement === 1) {
-								hunterReceipt.topPlacement = true;
-							}
-							if (seasonUpdates[id].rankIncreased) {
-								const rank = descendingRanks[seasonUpdates[id].newRankIndex];
-								const rankName = rank.roleId ? (await interaction.guild.roles.fetch()).get(rank.roleId).name : `Rank ${seasonUpdates[id].newRankIndex + 1}`;
-								hunterReceipt.rankUp = rankName;
-							}
-							if (Object.keys(hunterReceipt).length > 0) {
-								hunterReceipts.set(id, hunterReceipt);
-							}
-						}
-						syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
+						const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await collectedInteraction.guild.roles.fetch());
+						syncRankRoles(seasonalHunterReceipts, descendingRanks, collectedInteraction.guild.members);
+						consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 						sendRewardMessage(message, rewardSummary("bounty", companyReceipt, hunterReceipts), `${bounty.title} Rewards`);
 						const embeds = [];
 						const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);

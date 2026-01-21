@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary } = require("../../shared");
+const { commandMention, fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -65,22 +65,9 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-		for (const id in seasonUpdates) {
-			const hunterReceipt = hunterReceipts.get(id) ?? {};
-			if (seasonUpdates[id].newPlacement === 1) {
-				hunterReceipt.topPlacement = true;
-			}
-			if (seasonUpdates[id].rankIncreased) {
-				const rank = descendingRanks[seasonUpdates[id].newRankIndex];
-				const rankName = rank.roleId ? (await interaction.guild.roles.fetch()).get(rank.roleId).name : `Rank ${seasonUpdates[id].newRankIndex + 1}`;
-				hunterReceipt.rankUp = rankName;
-			}
-			if (Object.keys(hunterReceipt).length > 0) {
-				hunterReceipts.set(id, hunterReceipt);
-			}
-		}
-		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
+		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		const content = rewardSummary("bounty", companyReceipt, hunterReceipts);
 
 		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()])).then(async embed => {

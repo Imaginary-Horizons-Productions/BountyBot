@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, fillableTextBar, goalCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, fillableTextBar, goalCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -203,25 +203,12 @@ module.exports = new SelectWrapper(mainId, 3000,
 					}
 					const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-					for (const id in seasonUpdates) {
-						const hunterReceipt = hunterReceipts.get(id) ?? {};
-						if (seasonUpdates[id].newPlacement === 1) {
-							hunterReceipt.topPlacement = true;
-						}
-						if (seasonUpdates[id].rankIncreased) {
-							const rank = descendingRanks[seasonUpdates[id].newRankIndex];
-							const rankName = rank.roleId ? (await interaction.guild.roles.fetch()).get(rank.roleId).name : `Rank ${seasonUpdates[id].newRankIndex + 1}`;
-							hunterReceipt.rankUp = rankName;
-						}
-						if (Object.keys(hunterReceipt).length > 0) {
-							hunterReceipts.set(id, hunterReceipt);
-						}
-					}
-					syncRankRoles(seasonUpdates, descendingRanks, collectedInteraction.guild.members);
+					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await collectedInteraction.guild.roles.fetch());
+					syncRankRoles(seasonalHunterReceipts, descendingRanks, collectedInteraction.guild.members);
 
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty complete");
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
+					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts) });
 					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
 						.then(async embed => {
@@ -435,8 +422,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 					await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
-					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await collectedInteraction.guild.roles.fetch());
+					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 
 					return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {

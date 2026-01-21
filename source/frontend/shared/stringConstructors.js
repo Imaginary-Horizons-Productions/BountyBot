@@ -114,7 +114,7 @@ function hunterLevelUpRewards(level, maxSlots, futureReward = true) {
 /**
  * @param {"bounty" | "toast" | "seconding" | "item"} actionType
  * @param {{ guildName: string; levelUp?: number; gp?: number; gpMultiplier?: string; }} companyReceipt
- * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: string; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { level: number; rewards: string[]; }; item: string; }>>} hunterReceipts
+ * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { level: number; rewards: string[]; }; item: string; }>>} hunterReceipts
  */
 function rewardSummary(actionType, companyReceipt, hunterReceipts) {
 	if (Object.keys(companyReceipt).length + hunterReceipts.size === 0) {
@@ -148,7 +148,7 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts) {
 			summary += `\n- ${italic("Claimed the lead on Seasonal XP!")}`;
 		}
 		if ("rankUp" in receipt) {
-			summary += `\n- Ranked up to ${bold(receipt.rankUp)}`;
+			summary += `\n- Ranked up to ${bold(receipt.rankUp.name)}`;
 		}
 		if ("item" in receipt) {
 			summary += `\n- Found a ${bold(receipt.item)}`;

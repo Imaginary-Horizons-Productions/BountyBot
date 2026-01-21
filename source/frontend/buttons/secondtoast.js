@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, hunterLevelUpRewards } = require('../shared');
+const { fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, hunterLevelUpRewards, consolidateHunterReceipts } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -139,22 +139,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		interaction.update({ embeds: [embed] });
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-		for (const id in seasonUpdates) {
-			const hunterReceipt = hunterReceipts.get(id) ?? {};
-			if (seasonUpdates[id].newPlacement === 1) {
-				hunterReceipt.topPlacement = true;
-			}
-			if (seasonUpdates[id].rankIncreased) {
-				const rank = descendingRanks[seasonUpdates[id].newRankIndex];
-				const rankName = rank.roleId ? (await interaction.guild.roles.fetch()).get(rank.roleId).name : `Rank ${seasonUpdates[id].newRankIndex + 1}`;
-				hunterReceipt.rankUp = rankName;
-			}
-			if (Object.keys(hunterReceipt).length > 0) {
-				hunterReceipts.set(id, hunterReceipt);
-			}
-		}
-		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
+		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		sendRewardMessage(interaction.message, rewardSummary("seconding", companyReceipt, hunterReceipts), "Rewards");
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
