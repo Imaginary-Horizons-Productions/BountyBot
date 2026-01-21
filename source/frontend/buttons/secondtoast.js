@@ -11,6 +11,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
 	async (interaction, origin, runMode, [toastId]) => {
 		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
+		if (!originalToast) {
+			interaction.reply({ content: "Database record of this toast could not be found.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
 		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: MessageFlags.Ephemeral });
 			return;
@@ -50,7 +55,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			hunterReceipt.xpMultiplier = xpMultiplierString;
 			const currentLevel = hunter.getLevel(origin.company.xpCoefficient);
 			if (currentLevel > previousLevel) {
-				hunterReceipt.levelUp = { achivedLevel: currentLevel, previousLevel };
+				hunterReceipt.levelUp = { achievedLevel: currentLevel, previousLevel };
 			}
 			hunterReceipts.set(userId, hunterReceipt);
 		}
@@ -106,7 +111,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			await origin.hunter.increment({ xp: critSeconds }).then(seconder => seconder.reload());
 			const currentSenderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 			if (currentSenderLevel > previousSenderLevel) {
-				hunterReceipt.levelUp = { achivedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
+				hunterReceipt.levelUp = { achievedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
 			}
 			hunterReceipts.set(interaction.user.id, hunterReceipt);
 			await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, critSeconds);
@@ -134,7 +139,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-		sendRewardMessage(interaction.message, rewardSummary("seconding", companyReceipt, hunterReceipts, origin.company.maxSimBounties), "Rewards");
+		sendRewardMessage(interaction.message, `${interaction.member.displayName} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, origin.company.maxSimBounties)}`, "Rewards");
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (origin.company.scoreboardIsSeasonal) {

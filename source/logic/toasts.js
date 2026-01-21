@@ -64,7 +64,7 @@ async function wasAlreadySeconded(toastId, seconderId) {
 
 /** *Find the specified Toast*
  * @param {string} toastId
- * @returns {Promise<Toast & {Recipients: Recipient[]}>}
+ * @returns {Promise<Toast & {Recipients: Recipient[]} | null>}
  */
 function findToastByPK(toastId) {
 	return db.models.Toast.findByPk(toastId, { include: db.models.Toast.Recipients });
