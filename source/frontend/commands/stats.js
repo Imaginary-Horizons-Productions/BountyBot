@@ -1,7 +1,7 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../../database/models');
-const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, hunterLevelUpRewards } = require('../shared');
+const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -98,7 +98,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							{ name: "Bounty Stats", value: `Bounties Hunted: ${origin.hunter.othersFinished} bount${origin.hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${origin.hunter.mineFinished} bount${origin.hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
 							{ name: "Toast Stats", value: `Toasts Raised: ${origin.hunter.toastsRaised} toast${origin.hunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${origin.hunter.toastsSeconded} toast${origin.hunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${origin.hunter.toastsReceived} toast${origin.hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
 							{
-								name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(hunterLevelUpRewards(level, origin.company.maxSimBounties).map(([kind, value]) => {
+								name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(Hunter.getLevelUpRewards(level, origin.company.maxSimBounties).map(([kind, value]) => {
 									switch (kind) {
 										case "bountySlot":
 											return `You will unlock Bounty Slot #${value}.`;

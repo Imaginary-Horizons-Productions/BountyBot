@@ -91,26 +91,6 @@ function sentenceListEN(texts, isMutuallyExclusive) {
 }
 
 /**
- * @param {number} level
- * @param {number} maxSlots
- */
-function hunterLevelUpRewards(level, maxSlots) {
-	const rewards = [];
-	const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
-	if (currentSlots < maxSlots) {
-		if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
-			rewards.push(["bountySlotUnlocked", currentSlots]);
-		};
-	}
-	if (level % 2) {
-		rewards.push(["oddSlotBaseRewardIncrease", Bounty.calculateCompleterReward(level, 1, 0)]);
-	} else {
-		rewards.push(["evenSlotBaseRewardIncrease", Bounty.calculateCompleterReward(level, 2, 0)]);
-	}
-	return rewards;
-}
-
-/**
  * @param {"bounty" | "toast" | "seconding" | "item"} actionType
  * @param {{ guildName: string; levelUp?: number; gp?: number; gpMultiplier?: string; }} companyReceipt
  * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedlevel: number; previousLevel: number; }; item: string; }>>} hunterReceipts
@@ -141,7 +121,7 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 					let oddSlotBaseRewardIncrease = null;
 					let evenSlotBaseRewardIncrease = null;
 					const bountySlotsUnlocked = [];
-					for (const [type, value] of hunterLevelUpRewards(level, companyMaxBountySlots)) {
+					for (const [type, value] of Hunter.getLevelUpRewards(level, companyMaxBountySlots)) {
 						switch (type) {
 							case "oddSlotBaseRewardIncrease":
 								if (oddSlotBaseRewardIncrease === null || value > oddSlotBaseRewardIncrease) {
@@ -200,6 +180,5 @@ module.exports = {
 	fillableTextBar,
 	emojiFromNumber,
 	sentenceListEN,
-	hunterLevelUpRewards,
 	rewardSummary
 }
