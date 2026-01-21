@@ -1,7 +1,7 @@
 const { heading, userMention, bold, italic } = require("discord.js");
 const { commandIds } = require("../../constants");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
-const { Hunter, Bounty } = require("../../database/models");
+const { Hunter } = require("../../database/models");
 
 /**
  * @file String Constructors - formatted reusable strings
