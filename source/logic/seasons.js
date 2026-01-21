@@ -138,7 +138,9 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks, allGu
 		const rawReceipt = {};
 		if (id in placementChanges) {
 			updatePayload.placement = placementChanges[id];
-			rawReceipt.newPlacement = placementChanges[id];
+			if (placementChanges[id] === 1) {
+				rawReceipt.topPlacement = true;
+			}
 		}
 		if (id in rankChanges) {
 			const { index, isIncrease } = rankChanges[id];
