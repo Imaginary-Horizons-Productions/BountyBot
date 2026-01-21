@@ -164,6 +164,7 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
 	poster = await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
 	posterReceipt.xp = posterXP;
+	posterReceipt.xpMultiplier = xpMultiplierString;
 	const currentPosterLevel = poster.getLevel(company.xpCoefficient);
 	if (currentPosterLevel > previousPosterLevel) {
 		posterReceipt.levelUp = { achievedLevel: currentPosterLevel, previousLevel: previousPosterLevel };
