@@ -153,7 +153,7 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 					}
 				}
 			} else {
-				summary += `\n- Gained ${receipt.xpExpression} XP${receipt.xpMultiplier ?? ""}!`;
+				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""}!`;
 			}
 		}
 		if ("topPlacement" in receipt) {
