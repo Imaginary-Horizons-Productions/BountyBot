@@ -141,9 +141,9 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 				}
 				if (bountySlotsUnlocked.length > 0) {
 					if (bountySlotsUnlocked.length === 1) {
-						summary += `\n   - You have unlocked Bounty Slot #${bountySlotsUnlocked[0]}.`;
+						summary += `\n   - You have unlocked ${bold(`Bounty Slot #${bountySlotsUnlocked[0]}`)}.`;
 					} else {
-						summary += `\n   - You have unlocked ${sentenceListEN(bountySlotsUnlocked.map(slotNumber => `Bounty Slot #${slotNumber}`))}.`;
+						summary += `\n   - You have unlocked ${sentenceListEN(bountySlotsUnlocked.map(slotNumber => bold(`Bounty Slot #${slotNumber}`)))}.`;
 					}
 				}
 				if (oddSlotBaseRewardIncrease) {
