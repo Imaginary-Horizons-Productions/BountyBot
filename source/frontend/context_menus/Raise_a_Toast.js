@@ -85,7 +85,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts);
+					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
 					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);

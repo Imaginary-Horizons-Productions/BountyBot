@@ -1,6 +1,6 @@
 const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { syncRankRoles, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, rewardSummary, hunterLevelUpRewards, consolidateHunterReceipts } = require("../shared");
+const { syncRankRoles, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, rewardSummary, consolidateHunterReceipts } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -24,11 +24,7 @@ class XPBoost extends ItemTemplate {
 				const updatedHunter = await origin.hunter.increment({ xp: value }).then(hunter => hunter.reload());
 				const currentHunterLevel = updatedHunter.getLevel(origin.company.xpCoefficient);
 				if (currentHunterLevel > previousHunterLevel) {
-					const rewards = [];
-					for (let level = previousHunterLevel + 1; level <= currentHunterLevel; level++) {
-						rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
-					}
-					hunterReceipts.set(interaction.user.id, { ...hunterReceipts.get(interaction.user.id), levelUp: { level: currentHunterLevel, rewards } })
+					hunterReceipts.set(interaction.user.id, { ...hunterReceipts.get(interaction.user.id), levelUp: { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel } })
 				}
 				hunterMap.set(interaction.user.id, updatedHunter);
 				const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
@@ -40,7 +36,7 @@ class XPBoost extends ItemTemplate {
 				const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 				syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-				interaction.reply({ content: `${interaction.member} used an ${itemName}.\n${rewardSummary("item", companyReceipt, hunterReceipts)}` });
+				interaction.reply({ content: `${interaction.member} used an ${itemName}.\n${rewardSummary("item", companyReceipt, hunterReceipts, origin.company.maxSimBounties)}` });
 				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (origin.company.scoreboardIsSeasonal) {

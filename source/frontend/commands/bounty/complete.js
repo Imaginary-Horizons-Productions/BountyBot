@@ -68,7 +68,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-		const content = rewardSummary("bounty", companyReceipt, hunterReceipts);
+		const content = rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 
 		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()])).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {

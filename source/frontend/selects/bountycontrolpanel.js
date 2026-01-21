@@ -209,7 +209,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty complete");
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts) });
+					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
 					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
 						.then(async embed => {
 							if (goalUpdate.gpContributed > 0) {

@@ -110,7 +110,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-				sendRewardMessage(response.resource.message, rewardSummary("toast", companyReceipt, hunterReceipts), "Rewards");
+				sendRewardMessage(response.resource.message, rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties), "Rewards");
 				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (origin.company.scoreboardIsSeasonal) {

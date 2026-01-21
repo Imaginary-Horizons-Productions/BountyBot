@@ -2,7 +2,6 @@ const { Sequelize, Op } = require("sequelize");
 const { GuildMember } = require("discord.js");
 const { Bounty, Hunter, Season, Company } = require("../database/models");
 const { rollItemForHunter } = require("./items");
-const { hunterLevelUpRewards } = require("../frontend/shared");
 
 /** @type {Sequelize} */
 let db;
@@ -147,11 +146,7 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 		hunterReceipt.xpMultiplier = xpMultiplierString;
 		const currentHunterLevel = updatedHunter.getLevel(company.xpCoefficient);
 		if (currentHunterLevel > previousHunterLevel) {
-			const rewards = [];
-			for (let level = previousHunterLevel + 1; level <= currentHunterLevel; level++) {
-				rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
-			}
-			hunterReceipt.levelUp = { level: currentHunterLevel, rewards };
+			hunterReceipt.levelUp = { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel };
 		}
 		const [itemRow, wasCreated] = await rollItemForHunter(1 / 8, hunter);
 		if (wasCreated) {
@@ -171,11 +166,7 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	posterReceipt.xp = posterXP;
 	const currentPosterLevel = poster.getLevel(company.xpCoefficient);
 	if (currentPosterLevel > previousPosterLevel) {
-		const rewards = [];
-		for (let level = previousPosterLevel + 1; level <= currentPosterLevel; level++) {
-			rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
-		}
-		posterReceipt.levelUp = { level: currentPosterLevel, rewards };
+		posterReceipt.levelUp = { achievedLevel: currentPosterLevel, previousLevel: previousPosterLevel };
 	}
 	const [itemRow, wasCreated] = await rollItemForHunter(1 / 4, poster);
 	if (wasCreated) {

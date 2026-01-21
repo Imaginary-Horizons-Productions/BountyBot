@@ -2,7 +2,6 @@ const { Guild } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { dateInPast } = require("../shared");
 const { Company, Hunter, Toast, Recipient } = require("../database/models");
-const { hunterLevelUpRewards } = require("../frontend/shared");
 
 /** @type {Sequelize} */
 let db;
@@ -125,11 +124,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 			hunter = await hunter.increment({ toastsReceived: 1, xp: xpAwarded });
 			const currentLevel = hunter.getLevel(company.xpCoefficient);
 			if (currentLevel > previousLevel) {
-				const rewards = [];
-				for (let level = previousLevel + 1; level <= currentLevel; level++) {
-					rewards.push(...hunterLevelUpRewards(level, company.maxSimBounties, false));
-				}
-				hunterReceipt.levelUp = { level: currentLevel, rewards };
+				hunterReceipt.levelUp = { achievedLevel: currentLevel, previousLevel };
 			}
 			hunterReceipts.set(id, hunterReceipt);
 
@@ -184,11 +179,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 		sender = await hunterMap.get(senderId).increment({ toastsRaised: 1, xp: critValue });
 		const currentSenderLevel = sender.getLevel(company.xpCoefficient);
 		if (currentSenderLevel > previousSenderLevel) {
-			const rewards = [];
-			for (let level = previousLevel + 1; level <= currentLevel; level++) {
-				rewards.push(...hunterLevelUpRewards(level, company.maxSimBounties, false));
-			}
-			senderReceipt.levelUp = { level: currentLevel, rewards };
+			senderReceipt.levelUp = { achievedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
 		}
 		hunterReceipts.set(senderId, senderReceipt);
 		if (!participationCreated) {

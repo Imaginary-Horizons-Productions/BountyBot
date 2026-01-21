@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, hunterLevelUpRewards, consolidateHunterReceipts } = require('../shared');
+const { fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -50,11 +50,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			hunterReceipt.xpMultiplier = xpMultiplierString;
 			const currentLevel = hunter.getLevel(origin.company.xpCoefficient);
 			if (currentLevel > previousLevel) {
-				const rewards = [];
-				for (let level = previousLevel + 1; level <= currentLevel; level++) {
-					rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
-				}
-				hunterReceipt.levelUp = { level: currentLevel, rewards };
+				hunterReceipt.levelUp = { achivedLevel: currentLevel, previousLevel };
 			}
 			hunterReceipts.set(userId, hunterReceipt);
 		}
@@ -110,11 +106,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			await origin.hunter.increment({ xp: critSeconds }).then(seconder => seconder.reload());
 			const currentSenderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 			if (currentSenderLevel > previousSenderLevel) {
-				const rewards = [];
-				for (let level = previousLevel + 1; level <= currentLevel; level++) {
-					rewards.push(...hunterLevelUpRewards(level, origin.company.maxSimBounties, false));
-				}
-				hunterReceipt.levelUp = { level: currentLevel, rewards };
+				hunterReceipt.levelUp = { achivedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
 			}
 			hunterReceipts.set(interaction.user.id, hunterReceipt);
 			await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, critSeconds);
@@ -142,7 +134,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-		sendRewardMessage(interaction.message, rewardSummary("seconding", companyReceipt, hunterReceipts), "Rewards");
+		sendRewardMessage(interaction.message, rewardSummary("seconding", companyReceipt, hunterReceipts, origin.company.maxSimBounties), "Rewards");
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (origin.company.scoreboardIsSeasonal) {
