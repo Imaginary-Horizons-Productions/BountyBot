@@ -25,8 +25,8 @@ module.exports = new SubcommandWrapper("edit", "Change the role or rankmoji for 
 		rank.update(updateOptions);
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-		const seasonalHunterReceips = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await interaction.guild.roles.fetch());
-		syncRankRoles(seasonalHunterReceips, descendingRanks, interaction.guild.members);
+		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await interaction.guild.roles.fetch());
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		interaction.reply({ content: `The seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}at ${threshold} standard deviations above mean season xp was updated${newRole ? ` to give the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
