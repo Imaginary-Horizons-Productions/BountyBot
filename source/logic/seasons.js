@@ -2,6 +2,7 @@ const { Sequelize, Op } = require("sequelize");
 const { Participation, Rank, Season } = require("../database/models");
 const { calculateXPMean, calculateXPStandardDeviation } = require("./shared");
 const { descendingByProperty } = require("../shared");
+const { Role, Collection } = require("discord.js");
 
 /** @type {Sequelize} */
 let db;
@@ -121,40 +122,39 @@ async function nextRankXP(userId, season, descendingRanks) {
 /** Recalculate placement and rank changes based on changed XP values on Participations and updates the database
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} descendingRanks
+ * @param {Collection<import("discord.js").Snowflake, Role>} allGuildRoles
  */
-async function updatePlacementsAndRanks(participationMap, descendingRanks) {
+async function updatePlacementsAndRanks(participationMap, descendingRanks, allGuildRoles) {
 	if (participationMap.size < 1) {
-		return {};
+		return new Map();
 	}
 	const placementChanges = await calculatePlacementChanges(participationMap);
 	const mean = calculateXPMean(participationMap);
 	const xpStandardDeviation = calculateXPStandardDeviation(participationMap, mean);
 	const rankChanges = await calculateRankChanges(xpStandardDeviation, participationMap, descendingRanks);
-	/** @type {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} */
-	const results = {};
+	const seasonalHunterReceipts = new Map();
 	for (const id of new Set(Object.keys(placementChanges).concat(Object.keys(rankChanges)))) {
 		const updatePayload = {};
+		const rawReceipt = {};
 		if (id in placementChanges) {
 			updatePayload.placement = placementChanges[id];
-			if (id in results) {
-				results[id].newPlacement = placementChanges[id];
-			} else {
-				results[id] = { newPlacement: placementChanges[id] };
+			if (placementChanges[id] === 1) {
+				rawReceipt.topPlacement = true;
 			}
 		}
 		if (id in rankChanges) {
 			const { index, isIncrease } = rankChanges[id];
 			updatePayload.rankIndex = index;
-			if (id in results) {
-				results[id].newRankIndex = index;
-				results[id].rankIncreased = isIncrease;
-			} else {
-				results[id] = { newRankIndex: index, rankIncreased: isIncrease };
+			if (isIncrease) {
+				const rank = descendingRanks[index];
+				const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`;
+				rawReceipt.rankUp = { name: rankName, newRankIndex: index };
 			}
 		}
 		await participationMap.get(id).update(updatePayload);
+		seasonalHunterReceipts.set(id, rawReceipt);
 	}
-	return results;
+	return seasonalHunterReceipts;
 }
 
 /**
@@ -163,7 +163,7 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks) {
  * @param {Rank[]} descendingRanks
  */
 async function calculateRankChanges(standardDeviation, participationMap, descendingRanks) {
-	/** @type {Record<string, { index: number | null, isIncrease: boolean }>} */
+	/** @type {Record<string, { index: number; isIncrease: boolean; } | { index: null; isIncrease: false; }>} */
 	const rankChanges = {};
 	if (descendingRanks.length > 0) {
 		for (const [id, participation] of participationMap) {

@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, fillableTextBar, bountyEmbed, rewardStringBountyCompletion, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, companyLevelUpLine, rewardTextsHunterResults, reloadHunterMapSubset, syncRankRoles, rewardTextsSeasonResults, unarchiveAndUnlockThread } = require("../../shared");
+const { commandMention, fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -50,24 +50,25 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const companyReceipt = { guildName: interaction.guild.name };
+
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-		const { completerXP, posterXP, hunterResults } = await logicLayer.bounties.completeBounty(bounty, origin.hunter, validatedHunters, season, origin.company);
+		const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, origin.hunter, validatedHunters, season, origin.company);
 		hunterMap = await reloadHunterMapSubset(hunterMap, [...validatedHunters.keys(), origin.hunter.userId]);
-		const rewardTexts = rewardTextsHunterResults(hunterResults, hunterMap, origin.company);
-		const companyLevelLine = companyLevelUpLine(origin.company, previousCompanyLevel, hunterMap, interaction.guild.name);
-		if (companyLevelLine) {
-			rewardTexts.push(companyLevelLine);
+		const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+		if (previousCompanyLevel < currentCompanyLevel) {
+			companyReceipt.levelUp = currentCompanyLevel;
 		}
 		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", origin.hunter, season);
 		if (goalUpdate.gpContributed > 0) {
-			rewardTexts.push(`This bounty contributed ${goalUpdate.gpContributed} GP to the Server Goal!`);
+			companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
 		}
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
-		const rankUpdates = rewardTextsSeasonResults(seasonUpdates, descendingRanks, await interaction.guild.roles.fetch());
-		const content = rewardStringBountyCompletion(validatedHunters.keys(), completerXP, bounty.userId, posterXP, origin.company.festivalMultiplierString(), rankUpdates, rewardTexts);
+		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
+		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
+		const content = rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 
 		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()])).then(async embed => {
 			if (goalUpdate.gpContributed > 0) {

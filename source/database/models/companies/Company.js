@@ -1,4 +1,4 @@
-const { bold, italic } = require('discord.js');
+const { italic } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Hunter } = require('../users/Hunter');
 
@@ -47,7 +47,7 @@ class Company extends Model {
 
 	festivalMultiplierString() {
 		if (this.festivalMultiplier != 1) {
-			return ` ${bold(italic(`x${this.festivalMultiplier}`))}`;
+			return ` ${italic(`x${this.festivalMultiplier}`)}`;
 		} else {
 			return "";
 		}

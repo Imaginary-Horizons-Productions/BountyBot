@@ -145,8 +145,8 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				origin.hunter.increment({ xp: 1 }).then(async () => {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
+					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {

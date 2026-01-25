@@ -37,8 +37,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
-				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+				const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await collectedInteraction.guild.roles.fetch());
+				syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 
 				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 			}).catch(butIgnoreInteractionCollectorErrors).finally(() => {

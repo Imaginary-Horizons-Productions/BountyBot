@@ -113,14 +113,14 @@ function sendRewardMessage(embedMessage, content, threadTitle) {
 }
 
 /** Requests dAPI change the roles on guild members based on the provided `seasonResults`
- * @param {Record<string, { newPlacement: number } | { newRankIndex: number | null, rankIncreased: boolean }>} seasonResults
+ * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterRecipts
  * @param {Rank[]} descendingRanks
  * @param {GuildMemberManager} guildMemberManager
  */
-async function syncRankRoles(seasonResults, descendingRanks, guildMemberManager) {
+async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager) {
 	const rankChangeIds = [];
-	for (const id in seasonResults) {
-		if ("newRankIndex" in seasonResults[id] && descendingRanks[seasonResults[id].newRankIndex].roleId) {
+	for (const [id, receipt] of hunterRecipts) {
+		if ("rankUp" in receipt && descendingRanks[receipt.rankUp.newRankIndex].roleId) {
 			rankChangeIds.push(id);
 		}
 	}
@@ -128,8 +128,9 @@ async function syncRankRoles(seasonResults, descendingRanks, guildMemberManager)
 	const members = await guildMemberManager.fetch({ user: rankChangeIds });
 	for (const [id, member] of members) {
 		await member.roles.remove(rankRoleIds);
-		if (seasonResults[id].newRankIndex !== null) {
-			const rankRoleId = descendingRanks[seasonResults[id].newRankIndex].roleId;
+		const receipt = hunterRecipts.get(id);
+		if (receipt?.rankUp.newRankIndex) {
+			const rankRoleId = descendingRanks[receipt.rankUp.newRankIndex].roleId;
 			if (rankRoleId) {
 				await member.roles.add(rankRoleId).catch(console.error);
 			}
