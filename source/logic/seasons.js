@@ -110,7 +110,7 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
 async function nextRankXP(userId, season, descendingRanks) {
 	const participationMap = await getParticipationMap(season.id);
 	const participation = participationMap.get(userId);
-	if (participation?.rankIndex === null || participation.rankIndex === 0) {
+	if (!participation || participation.rankIndex === null || participation.rankIndex === 0) {
 		return 0;
 	}
 	const mean = calculateXPMean(participationMap);
