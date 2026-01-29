@@ -32,7 +32,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", origin.hunter, season);
 		const companyReceipt = { guildName: interaction.guild.name };
 		if (progressData.gpContributed > 0) {
-			companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+			companyReceipt.gpExpression = progressData.gpContributed.toString();
 		}
 
 		const recipientIds = [];
