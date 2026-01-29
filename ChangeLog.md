@@ -1,6 +1,7 @@
 # BountyBot Change Log
-## BountyBot Version 2.11.0fi:
-- Fixed several crashes related to missing permissions, modal timeouts, and trying to DM users who've blocked BountyBot
+## BountyBot Version 2.10.1bi:
+This version includes the addition of the "b" version category, for "bug fixes".
+- Fixed several crashes related to missing permissions, modal timeouts, trying to DM users who've blocked BountyBot, and residual data from former server members
 - Level-Up Rewards now mention all unlocked bounty slots in the same line and only generate one line mentioning bounty slot reward upgrades
 ## BountyBot Version 2.10.0fi:
 With this update we're changing our versioning convention. The letters at the end of the version are there to track the main goal of the version: c for "content", f for "features", and i for "infrastructure".
