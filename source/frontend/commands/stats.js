@@ -1,7 +1,7 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../../database/models');
-const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed } = require('../shared');
+const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, hunterProfileEmbed } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -12,11 +12,11 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 	async (interaction, origin, runMode) => {
 		const target = interaction.options.getMember("bounty-hunter");
 		const guild = interaction.guild;
+		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 		if (target) {
 			if (target.id === interaction.client.user.id) {
 				// BountyBot
 				const hunterMap = await logicLayer.hunters.getCompanyHunterMap(guild.id);
-				const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 				const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
 				const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
 				companyStatsEmbed(guild, origin.company.getXP(hunterMap), participantCount, currentSeason, lastSeason).then(embed => {
@@ -37,7 +37,6 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, origin.company.xpCoefficient);
 					const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, origin.company.xpCoefficient);
 					const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
-					const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 					const ranks = await logicLayer.ranks.findAllRanks(guild.id);
@@ -45,22 +44,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, guild.id);
 
 					interaction.reply({
-						embeds: [
-							new EmbedBuilder().setColor(Colors[hunter.profileColor])
-								.setAuthor(ihpAuthorPayload)
-								.setThumbnail(target.user.avatarURL())
-								.setTitle(`${target.displayName} is __Level ${currentHunterLevel}__`)
-								.setDescription(`${fillableTextBar(hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex !== null ? ` which qualifies for ${rankName}` : ""}.`)
-								.addFields(
-									{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
-									{ name: "Total XP Earned", value: `${hunter.xp} XP`, inline: true },
-									{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with **${mostSecondedToast.secondings} secondings**` : "No toasts seconded yet..." },
-									{ name: "Bounty Stats", value: `Bounties Hunted: ${hunter.othersFinished} bount${hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${hunter.mineFinished} bount${hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
-									{ name: "Toast Stats", value: `Toasts Raised: ${hunter.toastsRaised} toast${hunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${hunter.toastsSeconded} toast${hunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${hunter.toastsReceived} toast${hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
-								)
-								.setFooter(randomFooterTip())
-								.setTimestamp()
-						],
+						embeds: [hunterProfileEmbed(hunter, target, currentHunterLevel, currentLevelThreshold, nextLevelThreshold, currentParticipation, rankName, previousParticipations, mostSecondedToast)],
 						flags: MessageFlags.Ephemeral
 					});
 				})
@@ -72,7 +56,6 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, origin.company.xpCoefficient);
 			const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, origin.company.maxSimBounties);
 			const participations = await logicLayer.seasons.findHunterParticipations(origin.hunter.userId, origin.hunter.companyId);
-			const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 			const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 			const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
