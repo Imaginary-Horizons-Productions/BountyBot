@@ -273,6 +273,21 @@ dAPIClient.on(Events.ThreadDelete, async thread => {
 	})
 })
 
+dAPIClient.on(Events.GuildMemberRemove, async guildMember => {
+	await dbReady;
+	const postingIds = await logicBlob.bounties.deleteHunterBountiesAndCompletionsFromCompany(guildMember.id, guildMember.guild.id);
+	const company = await logicBlob.companies.findCompanyByPK(guildMember.guild.id);
+	if (company.bountyBoardId) {
+		const bountyBoard = await guildMember.guild.channels.fetch(company.bountyBoardId);
+		for (const postingId of postingIds) {
+			(await bountyBoard.threads.fetch(postingId)).delete("Poster removed from server");
+		}
+	}
+	await logicBlob.toasts.deleteHunterToasts(guildMember.id, guildMember.guild.id);
+	await logicBlob.seasons.deleteHunterParticipations(guildMember.id, guildMember.guild.id);
+	await logicBlob.hunters.deleteHunter(guildMember.id, guildMember.guild.id);
+})
+
 dAPIClient.on(Events.GuildDelete, async guild => {
 	await dbReady;
 	logicBlob.toasts.deleteCompanyToasts(guild.id);
