@@ -40,7 +40,10 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 
 				const updatePayload = {};
 				const errors = [];
-				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty")) {
+				const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty")
+				if (autoModInfraction == null) {
+					errors.push(`Could not check if the toast breaks automod rules. ${modalSubmission.client.user} may not have the Manage Server permission required to check the automod rules.`);
+				} else if (autoModInfraction) {
 					errors.push("The bounty's new title or description would trip this server's AutoMod.");
 				} else {
 					updatePayload.title = title;

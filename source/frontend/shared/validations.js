@@ -8,7 +8,14 @@ const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.
  * @returns whether or not any of the texts included something the auto mod blocks as a message
  */
 async function textsHaveAutoModInfraction(channel, member, texts, context) {
-	const autoModRules = await channel.guild.autoModerationRules.fetch();
+	let autoModRules;
+	try {
+		autoModRules = await channel.guild.autoModerationRules.fetch();
+	} catch (e) {
+		// If you cannot fetch the auto mod rules, you likely do not have the Manage Server permission
+		// Returning null to note this state to consumers of this function
+		return null;
+	}
 	let shouldBlockMessage = false;
 	for (const rule of autoModRules.values()) {
 		if (rule.exemptChannels.has(channel.id)) {
