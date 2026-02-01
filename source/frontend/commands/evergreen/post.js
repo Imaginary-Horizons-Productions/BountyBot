@@ -51,7 +51,11 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 			const title = interaction.fields.getTextInputValue("title");
 			const description = interaction.fields.getTextInputValue("description");
 
-			if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [title, description], "evergreen post")) {
+			const autoModInfraction = await textsHaveAutoModInfraction(interaction.channel, interaction.member, [title, description], "evergreen post");
+			if (autoModInfraction == null) {
+				interaction.reply({ content: `Could not check if the toast breaks automod rules. ${interaction.client.user} may not have the Manage Server permission required to check the automod rules.`, flags: MessageFlags.Ephemeral });
+				return;
+			} else if (autoModInfraction) {
 				interaction.reply({ content: "Your evergreen bounty could not be posted because it tripped AutoMod.", flags: MessageFlags.Ephemeral });
 				return;
 			}
