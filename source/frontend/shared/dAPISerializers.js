@@ -172,7 +172,7 @@ function selectOptionsFromBounties(bounties) {
 function selectOptionsFromRanks(ranks, allGuildRoles) {
 	return ranks.map((rank, index) => {
 		const option = {
-			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
+			label: rank.getName(allGuildRoles, index),
 			description: `Variance Threshold: ${rank.threshold}`,
 			value: rank.threshold.toString()
 		};

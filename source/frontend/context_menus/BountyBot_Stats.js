@@ -39,7 +39,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 				const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 				let rankName = null;
 				if (currentParticipation && ranks.length > 0) {
-					rankName = ranks[currentParticipation.rankIndex]?.roleId ? `<@&${ranks[currentParticipation.rankIndex].roleId}>` : `Rank ${currentParticipation.rankIndex + 1}`;
+					rankName = ranks[currentParticipation.rankIndex].getMention(currentParticipation.rankIndex);
 				}
 				const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, interaction.guild.id);
 

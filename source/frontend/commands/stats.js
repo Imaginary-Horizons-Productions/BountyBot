@@ -42,7 +42,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const ranks = await logicLayer.ranks.findAllRanks(guild.id);
 					let rankName = null;
 					if (currentParticipation && ranks.length > 0) {
-						rankName = ranks[currentParticipation.rankIndex]?.roleId ? `<@&${ranks[currentParticipation.rankIndex].roleId}>` : `Rank ${currentParticipation.rankIndex + 1}`;
+						rankName = ranks[currentParticipation.rankIndex].getMention(currentParticipation.rankIndex);
 					}
 					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, guild.id);
 
@@ -65,14 +65,14 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			let rankName = null;
 			if (currentParticipation && ranks.length > 0) {
 				const rankIndex = currentParticipation.rankIndex;
-				rankName = ranks[rankIndex]?.roleId ? `<@&${ranks[rankIndex].roleId}>` : `Rank ${rankIndex + 1}`;
+				rankName = ranks[rankIndex].getMention(rankIndex);
 			}
 			const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, guild.id);
 			const nextRankXP = await logicLayer.seasons.nextRankXP(interaction.user.id, currentSeason, ranks);
 			let nextRankName = null;
 			if (ranks.length > 0) {
 				const nextRankIndex = Math.max((currentParticipation?.rankIndex ?? ranks.length) - 1, 0);
-				nextRankName = ranks[nextRankIndex]?.roleId ? `<@&${ranks[nextRankIndex].roleId}>` : `Rank ${nextRankIndex + 1}`;
+				nextRankName = ranks[nextRankIndex].getMention(nextRankIndex);
 			}
 
 			let description = `${fillableTextBar(origin.hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} ${italic("Next Level:")} ${nextLevelThreshold - origin.hunter.xp} XP`;

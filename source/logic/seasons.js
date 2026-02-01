@@ -147,8 +147,7 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks, allGu
 			updatePayload.rankIndex = index;
 			if (isIncrease) {
 				const rank = descendingRanks[index];
-				const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`;
-				rawReceipt.rankUp = { name: rankName, newRankIndex: index };
+				rawReceipt.rankUp = { name: rank.getName(allGuildRoles, index), newRankIndex: index };
 			}
 		}
 		await participationMap.get(id).update(updatePayload);
