@@ -1,4 +1,4 @@
-const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
+const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList, underline, italic } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { Hunter } = require('../../database/models');
 const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, hunterProfileEmbed } = require('../shared');
@@ -40,7 +40,10 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 					const ranks = await logicLayer.ranks.findAllRanks(guild.id);
-					const rankName = ranks[currentParticipation.rankIndex]?.roleId ? `<@&${ranks[currentParticipation.rankIndex].roleId}>` : `Rank ${currentParticipation.rankIndex + 1}`;
+					let rankName = null;
+					if (currentParticipation && ranks.length > 0) {
+						rankName = ranks[currentParticipation.rankIndex].getMention(currentParticipation.rankIndex);
+					}
 					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, guild.id);
 
 					interaction.reply({
@@ -59,21 +62,40 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 			const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 			const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
-			const rankName = ranks[currentParticipation.rankIndex]?.roleId ? `<@&${ranks[currentParticipation.rankIndex].roleId}>` : `Rank ${currentParticipation.rankIndex + 1}`;
+			let rankName = null;
+			if (currentParticipation && ranks.length > 0) {
+				const rankIndex = currentParticipation.rankIndex;
+				rankName = ranks[rankIndex].getMention(rankIndex);
+			}
 			const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(interaction.user.id, guild.id);
 			const nextRankXP = await logicLayer.seasons.nextRankXP(interaction.user.id, currentSeason, ranks);
+			let nextRankName = null;
+			if (ranks.length > 0) {
+				const nextRankIndex = Math.max((currentParticipation?.rankIndex ?? ranks.length) - 1, 0);
+				nextRankName = ranks[nextRankIndex].getMention(nextRankIndex);
+			}
+
+			let description = `${fillableTextBar(origin.hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} ${italic("Next Level:")} ${nextLevelThreshold - origin.hunter.xp} XP`;
+			if (currentParticipation) {
+				description += `\nYou have earned ${italic(`${currentParticipation.xp} XP`)} this season`;
+				if (rankName) {
+					description += ` which qualifies for ${rankName}`;
+				}
+			} else {
+				description += `\nYou have earned ${italic("0 XP")} this season`;
+			}
+			if (nextRankXP > 0 && nextRankName) {
+				description += `\nYou'll need ${nextRankXP} more XP to reach ${nextRankName}`
+			}
+			description += `\n\nYou have ${bountySlots} bounty slot${bountySlots === 1 ? '' : 's'}!`;
 
 			interaction.reply({
 				embeds: [
 					new EmbedBuilder().setColor(Colors[origin.hunter.profileColor])
 						.setAuthor(ihpAuthorPayload)
 						.setThumbnail(interaction.user.avatarURL())
-						.setTitle(`You are __Level ${currentHunterLevel}__ in ${guild.name}`)
-						.setDescription(
-							`${fillableTextBar(origin.hunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)} *Next Level:* ${nextLevelThreshold - origin.hunter.xp} XP\n\
-								You have earned *${currentParticipation?.xp ?? 0} XP* this season${currentParticipation.rankIndex != null ? ` which qualifies for ${rankName}` : ""}.${nextRankXP > 0 ? `You need ${nextRankXP} XP to reach the next rank.` : ""}\n\n\
-								You have ${bountySlots} bounty slot${bountySlots === 1 ? '' : 's'}!`
-						)
+						.setTitle(`You are ${underline(`Level ${currentHunterLevel}`)} in ${guild.name}`)
+						.setDescription(description)
 						.addFields(
 							{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 							{ name: "Total XP Earned", value: `${origin.hunter.xp} XP`, inline: true },
@@ -83,7 +105,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							{
 								name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(Hunter.getLevelUpRewards(level, origin.company.maxSimBounties).map(([kind, value]) => {
 									switch (kind) {
-										case "bountySlot":
+										case "bountySlotUnlocked":
 											return `You will unlock Bounty Slot #${value}.`;
 										case "oddSlotBaseRewardIncrease":
 											return `The base reward of your odd-numbered bounty slots will increase (max: ${value} Reward XP in Slot #1)!`;

@@ -118,6 +118,10 @@ function sendRewardMessage(embedMessage, content, threadTitle) {
  * @param {GuildMemberManager} guildMemberManager
  */
 async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager) {
+	if (descendingRanks.length < 1) {
+		return;
+	}
+
 	const rankChangeIds = [];
 	for (const [id, receipt] of hunterRecipts) {
 		if ("rankUp" in receipt && descendingRanks[receipt.rankUp.newRankIndex].roleId) {

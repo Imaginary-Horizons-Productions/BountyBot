@@ -172,7 +172,7 @@ function selectOptionsFromBounties(bounties) {
 function selectOptionsFromRanks(ranks, allGuildRoles) {
 	return ranks.map((rank, index) => {
 		const option = {
-			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
+			label: rank.getName(allGuildRoles, index),
 			description: `Variance Threshold: ${rank.threshold}`,
 			value: rank.threshold.toString()
 		};
@@ -422,17 +422,26 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
  * @param {number} currentLevel
  * @param {number} currentLevelThreshold
  * @param {number} nextLevelThreshold
- * @param {Participation} currentParticipation
- * @param {string} rankName
+ * @param {Participation | undefined} currentParticipation
+ * @param {string | null} rankName
  * @param {Participation[]} previousParticipations
  * @param {Toast} mostSecondedToast
  */
 function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, currentLevelThreshold, nextLevelThreshold, currentParticipation, rankName, previousParticipations, mostSecondedToast) {
+	let description = `${fillableTextBar(targetHunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}`;
+	if (currentParticipation) {
+		description += `\nThey have earned ${italic(`${currentParticipation.xp} XP`)} this season`;
+		if (rankName) {
+			description += ` which qualifies for ${rankName}`;
+		}
+	} else {
+		description += `\nThey have earned ${italic("0 XP")} this season`;
+	}
 	return new EmbedBuilder().setColor(Colors[targetHunter.profileColor])
 		.setAuthor(module.exports.ihpAuthorPayload)
 		.setThumbnail(targetGuildMember.user.avatarURL())
 		.setTitle(`${targetGuildMember.displayName} is ${underline(`Level ${currentLevel}`)}`)
-		.setDescription(`${fillableTextBar(targetHunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}\nThey have earned ${italic(`${currentParticipation?.xp ?? 0} XP`)} this season${currentParticipation.rankIndex !== null ? ` which qualifies for ${rankName}` : ""}.`)
+		.setDescription(description)
 		.addFields(
 			{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 			{ name: "Total XP Earned", value: `${targetHunter.xp} XP`, inline: true },
