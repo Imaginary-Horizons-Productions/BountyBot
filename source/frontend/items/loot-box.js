@@ -1,6 +1,6 @@
 const { MessageFlags, bold } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { commandMention, listifyEN } = require("../shared");
+const { commandMention, sentenceListEN } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,7 +16,7 @@ module.exports = new ItemTemplateSet(
 					rolledItems.push(`a ${bold(itemRow.itemName)}`);
 				}
 			}
-			interaction.reply({ content: `Inside the Loot Box was ${listifyEN(rolledItems)}! Use one with ${commandMention("item")}?`, flags: MessageFlags.Ephemeral });
+			interaction.reply({ content: `Inside the Loot Box was ${sentenceListEN(rolledItems)}! Use one with ${commandMention("item")}?`, flags: MessageFlags.Ephemeral });
 		}
 	)
 ).setLogicLinker(logicBlob => {

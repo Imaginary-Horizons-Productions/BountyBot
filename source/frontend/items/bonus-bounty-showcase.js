@@ -1,7 +1,7 @@
-const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, PermissionFlagsBits } = require("discord.js");
+const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { timeConversion } = require("../../shared");
-const { commandMention, bountiesToSelectOptions, buildBountyEmbed, updatePosting, unarchiveAndUnlockThread } = require("../shared");
+const { commandMention, selectOptionsFromBounties, bountyEmbed, refreshBountyThreadStarterMessage, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /** @type {typeof import("../../logic")} */
@@ -23,7 +23,7 @@ module.exports = new ItemTemplateSet(
 					new ActionRowBuilder().addComponents(
 						new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(bountiesToSelectOptions(openBounties))
+							.setOptions(selectOptionsFromBounties(openBounties))
 					)
 				],
 				flags: MessageFlags.Ephemeral,
@@ -49,16 +49,12 @@ module.exports = new ItemTemplateSet(
 				await bounty.reload();
 				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				updatePosting(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
-				return buildBountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
+				refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
+				return bountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty showcased");
 					return collectedInteraction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
 				})
-			}).catch(error => {
-				if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-					console.error(error);
-				}
-			}).finally(() => {
+			}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 				if (interaction.channel) {
 					interaction.deleteReply();

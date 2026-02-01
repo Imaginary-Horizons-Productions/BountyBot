@@ -1,6 +1,6 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, bountiesToSelectOptions, syncRankRoles } = require("../../shared");
+const { commandMention, selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
@@ -13,7 +13,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 						new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 							.setPlaceholder("Select a bounty to take down...")
 							.setMaxValues(1)
-							.setOptions(bountiesToSelectOptions(openBounties))
+							.setOptions(selectOptionsFromBounties(openBounties))
 					)
 				],
 				flags: MessageFlags.Ephemeral,
@@ -27,7 +27,9 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				if (origin.company.bountyBoardId) {
 					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
-					postingThread.delete("Bounty taken down by poster");
+					if (postingThread) {
+						postingThread.delete("Bounty taken down by poster");
+					}
 				}
 				bounty.destroy();
 
@@ -35,15 +37,11 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 				await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-				const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
-				syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+				const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await collectedInteraction.guild.roles.fetch());
+				syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 
 				collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
-			}).catch(error => {
-				if (error.codes !== DiscordjsErrorCodes.InteractionCollectorError) {
-					console.error(error);
-				}
-			}).finally(() => {
+			}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 				if (interaction.channel) {
 					interaction.deleteReply();

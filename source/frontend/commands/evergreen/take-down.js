@@ -1,6 +1,6 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, bountiesToSelectOptions, updateEvergreenBountyBoard } = require("../../shared");
+const { commandMention, selectOptionsFromBounties, refreshEvergreenBountiesThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
@@ -14,7 +14,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to take down...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(openBounties))
+						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,
@@ -33,7 +33,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 					for (const bounty of openBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					updateEvergreenBountyBoard(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
+					refreshEvergreenBountiesThread(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
 				} else {
 					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
 						thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
@@ -47,11 +47,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			bounty.destroy();
 
 			collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", flags: MessageFlags.Ephemeral });
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		}).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

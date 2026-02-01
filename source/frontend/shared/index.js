@@ -1,6 +1,9 @@
 module.exports = {
 	...require("./dAPIRequests"),
-	...require("./messageParts"),
+	...require("./dAPIResponses"),
+	...require("./dAPISerializers"),
+	...require("./infrastructure.js"),
+	...require("./stringConstructors"),
 	...require("./storeManagement"),
 	...require("./validations")
 };

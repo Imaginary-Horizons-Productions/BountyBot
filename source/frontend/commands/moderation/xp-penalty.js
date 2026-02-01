@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { syncRankRoles } = require("../../shared");
+const { syncRankRoles, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -16,11 +16,12 @@ module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's X
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 		await logicLayer.seasons.changeSeasonXP(member.id, interaction.guildId, season.id, penaltyValue * -1);
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks);
-		syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await interaction.guild.roles.fetch());
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		interaction.reply({ content: `<@${member.id}> has been penalized ${penaltyValue} XP.`, flags: MessageFlags.Ephemeral });
 		if (!member.user.bot) {
-			member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`);
+			member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`)
+				.catch(butIgnoreCantDirectMessageThisUserErrors);
 		}
 	}
 ).setOptions(

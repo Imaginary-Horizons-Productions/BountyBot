@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
+const { refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset all bounty hunter stats on this server",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -17,7 +17,8 @@ module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset a
 		} else {
 			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, new Map(), goalProgress));
 		}
-		updateScoreboard(origin.company, interaction.guild, embeds);
-		interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`);
+		refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
+		interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`)
+			.catch(butIgnoreCantDirectMessageThisUserErrors);
 	}
 );

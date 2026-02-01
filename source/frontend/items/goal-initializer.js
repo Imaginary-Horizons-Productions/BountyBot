@@ -1,6 +1,6 @@
-const { MessageFlags } = require("discord.js");
+const { MessageFlags, bold } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { sendAnnouncement } = require("../shared");
+const { addCompanyAnnouncementPrefix } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -21,7 +21,7 @@ module.exports = new ItemTemplateSet(
 			const activeHunters = previousSeason ? await logicLayer.seasons.getParticipantCount(previousSeason.id) : 0;
 			const requiredGP = Math.max(activeHunters * 20, 60);
 			await logicLayer.goals.createGoal(interaction.guildId, goalType, requiredGP);
-			interaction.channel.send(sendAnnouncement(origin.company, { content: `${interaction.member} has started a Server Goal! This time **${goalType} are worth double GP**!` }));
+			interaction.channel.send(addCompanyAnnouncementPrefix(origin.company, { content: `${interaction.member} has started a Server Goal! Completing bounties, raising toasts, and seconding toasts on this server contributes Goal Points (GP) toward completing the goal.\n\nThis time, ${bold(`${goalType} are worth double GP`)}!` }));
 		}
 	)
 ).setLogicLinker(logicBlob => {

@@ -14,6 +14,7 @@ module.exports = {
 	// Discord Constants
 	serverGuideMention: "<id:guide>",
 	channelBrowserMention: "<id:customize>",
+	discordIconURL: "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png",
 
 	// Config
 	authPath,
@@ -25,6 +26,7 @@ module.exports = {
 	commandIds: {},
 
 	// Internal Constants
+	bountyBotIconURL: "https://cdn.discordapp.com/attachments/618523876187570187/1138968614364528791/BountyBotIcon.jpg",
 	BOUNTYBOT_INVITE_URL: "https://discord.com/oauth2/authorize?client_id=536330483852771348&permissions=2269452465006624&integration_type=0&scope=bot",
 	SAFE_DELIMITER: "→",
 	SKIP_INTERACTION_HANDLING: "❌",

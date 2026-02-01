@@ -1,6 +1,6 @@
 const { userMention, MessageFlags } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { generateCompletionEmbed } = require("../shared");
+const { goalCompletionEmbed } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -18,7 +18,7 @@ module.exports = new ItemTemplateSet(
 			const progressData = await logicLayer.goals.progressGoal(interaction.guildId, goal.type, origin.hunter, season);
 			const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${progressData.gpContributed} GP the Server Goal!` };
 			if (progressData.goalCompleted) {
-				resultPayload.embeds = [generateCompletionEmbed(progressData.contributorIds)];
+				resultPayload.embeds = [goalCompletionEmbed(progressData.contributorIds)];
 			}
 			interaction.channel.send(resultPayload);
 		}

@@ -1,7 +1,7 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, DiscordjsErrorCodes, PermissionFlagsBits } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountiesToSelectOptions, buildBountyEmbed } = require("../../shared");
+const { selectOptionsFromBounties, bountyEmbed, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to showcase...")
 						.setMaxValues(1)
-						.setOptions(bountiesToSelectOptions(existingBounties))
+						.setOptions(selectOptionsFromBounties(existingBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,
@@ -31,7 +31,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 				}
 
 				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id)));
-				buildBountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set()).then(embed => {
+				bountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set()).then(embed => {
 					const payload = { embeds: [embed] };
 					const extraText = interaction.options.get("extra-text");
 					if (extraText) {
@@ -46,11 +46,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 			});
 		}).then(interactionToAcknowledge => {
 			return interactionToAcknowledge.update({ components: [] });
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		}).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

@@ -16,9 +16,7 @@ for (const file of [
 	"loot-box.js",
 	"progress-in-a-can.js",
 	"unidentified-item.js",
-	"xp-boost-epic.js",
-	"xp-boost-legendary.js",
-	"xp-boost.js"
+	"xp-boosts.js"
 ]) {
 	/** @type {ItemTemplateSet} */
 	const itemTemplateSet = require(`./${file}`);

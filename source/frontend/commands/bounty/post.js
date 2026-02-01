@@ -1,8 +1,8 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, DiscordjsErrorCodes, unorderedList, LabelBuilder } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { getNumberEmoji, textsHaveAutoModInfraction, commandMention, buildBountyEmbed, generateBountyCommandSelect, sendAnnouncement, updateScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, createBountyEventPayload } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -16,7 +16,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 		for (let slotNumber = 1; slotNumber <= bountySlots; slotNumber++) {
 			if (!occupiedSlots.includes(slotNumber)) {
 				slotOptions.push({
-					emoji: getNumberEmoji(slotNumber),
+					emoji: emojiFromNumber(slotNumber),
 					label: `Slot ${slotNumber}`,
 					description: `Reward: ${Bounty.calculateCompleterReward(currentHunterLevel, slotNumber, 0)} XP`,
 					value: slotNumber.toString()
@@ -149,8 +149,8 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				origin.hunter.increment({ xp: 1 }).then(async () => {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-					const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks);
-					syncRankRoles(seasonUpdates, descendingRanks, interaction.guild.members);
+					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
+					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
@@ -158,11 +158,11 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					} else {
 						embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 					}
-					updateScoreboard(origin.company, interaction.guild, embeds);
+					refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 				});
 
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = createBountyEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
 					const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 					rawBounty.scheduledEventId = event.id;
 				}
@@ -171,13 +171,13 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				// post in bounty board forum
 				await origin.hunter.reload();
-				const bountyEmbed = await buildBountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set());
-				modalSubmission.reply(sendAnnouncement(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds: [bountyEmbed] })).then(() => {
+				const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set())];
+				modalSubmission.reply(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(() => {
 					if (origin.company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
 								name: bounty.title,
-								message: { embeds: [bountyEmbed], components: generateBountyCommandSelect(bounty.id) },
+								message: { embeds, components: bountyControlPanelSelectRow(bounty.id) },
 								appliedTags: [origin.company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {
@@ -191,11 +191,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					}
 				});
 			});
-		}).catch(error => {
-			if (error.code !== DiscordjsErrorCodes.InteractionCollectorError) {
-				console.error(error);
-			}
-		}).finally(() => {
+		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 			if (interaction.channel) {
 				interaction.deleteReply();

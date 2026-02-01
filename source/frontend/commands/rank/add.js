@@ -35,8 +35,8 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 		await logicLayer.ranks.createCustomRank(rawRank);
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const allRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-		const seasonUpdates = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), allRanks);
-		syncRankRoles(seasonUpdates, allRanks, interaction.guild.members);
+		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), allRanks, await interaction.guild.roles.fetch());
+		syncRankRoles(seasonalHunterReceipts, allRanks, interaction.guild.members);
 		interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
