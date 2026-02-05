@@ -8,6 +8,10 @@ module.exports = new SubcommandWrapper("remove", "Remove one or more existing se
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const guildRoles = await interaction.guild.roles.fetch();
+		const rankNames = {};
+		for (let i = 0; i < ranks.length; i++) {
+			rankNames[ranks[i].threshold] = ranks[i].getName(guildRoles, i);
+		}
 		interaction.reply({
 			content: "Removing a seasonal rank will delete the Discord role (if one is linked) and recalculate all bounty hunter ranks.",
 			components: [
@@ -23,24 +27,18 @@ module.exports = new SubcommandWrapper("remove", "Remove one or more existing se
 		}).then(response => response.resource.message).then(message => {
 			const selectCollector = message.createMessageComponentCollector({ time: timeConversion(5, "m", "ms"), componentType: ComponentType.StringSelect })
 			const selectedRanks = [];
-			let selectedRankNames;
+			const selectedRankNames = [];
 			selectCollector.on("collect", selectInteraction => {
 				for (const varianceString of selectInteraction.values) {
 					selectedRanks.push(ranks.find(rank => {
 						const threshold = parseFloat(varianceString);
 						return rank.threshold === threshold;
 					}))
+					selectedRankNames.push(rankNames[parseFloat(varianceString)]);
 				}
-				selectedRankNames = sentenceListEN(selectedRanks.map(rank => {
-					if (rank.roleId) {
-						return guildRoles.get(rank.roleId).name;
-					} else {
-						return `Rank ${index + 1}`;
-					}
-				}));
 				selectInteraction.update({
 					components: [
-						disabledSelectRow(selectedRankNames),
+						disabledSelectRow(sentenceListEN(selectedRankNames)),
 						new ActionRowBuilder().addComponents(
 							new ButtonBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}confirmation`)
 								.setStyle(ButtonStyle.Danger)

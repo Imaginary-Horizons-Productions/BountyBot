@@ -33,13 +33,13 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			const unvalidatedMembers = await interaction.guild.members.fetch({ user: [...hunterMap.keys()] });
 			const eligibleMembers = unvalidatedMembers.filter(member => member.manageable);
 			if (eligibleMembers.size < 1) {
-				collectedInteraction.editReply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.roleId ? `<@&${rank.roleId}>` : `Rank ${threshold + 1}`}).`, components: [] });
+				collectedInteraction.editReply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above the rank ${rank.getMention(rankIndex)}).`, components: [] });
 				skipDeleteReply = true;
 				return;
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
 			collectedInteraction.editReply({ components: [] });
-			collectedInteraction.channel.send({ embeds: [raffleResultEmbed(hunterMap.get(winner.id).profileColor, collectedInteraction.guild, origin.company.raffleThumbnailURL, winner, `Rank ${rank.roleId ? roleMention(rank.roleId) : `Rank ${ranks.reduce((checkedRank, matchingIndex, index) => rank.threshold === checkedRank.threshold ? index : matchingIndex, 0) + 1}`} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
+			collectedInteraction.channel.send({ embeds: [raffleResultEmbed(hunterMap.get(winner.id).profileColor, collectedInteraction.guild, origin.company.raffleThumbnailURL, winner, `Rank: ${rank.getMention(rankIndex)} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
 			origin.company.update("nextRaffleString", null);
 		}).catch(error => {
 			if (error.code === DiscordjsErrorCodes.InteractionCollectorError) {

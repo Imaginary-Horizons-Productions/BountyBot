@@ -41,7 +41,10 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				const description = modalSubmission.fields.getTextInputValue("description");
 
 				const errors = [];
-				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "evergreen edit")) {
+				const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "evergreen edit");
+				if (autoModInfraction == null) {
+					errors.push(`Could not check if the toast breaks automod rules. ${modalSubmission.client.user} may not have the Manage Server permission required to check the automod rules.`);
+				} else if (autoModInfraction) {
 					errors.push("The bounty's new title or description would trip this server's AutoMod.");
 				}
 

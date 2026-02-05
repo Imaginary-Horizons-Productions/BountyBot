@@ -103,7 +103,11 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
 
-				if (await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post")) {
+				const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post");
+				if (autoModInfraction == null) {
+					modalSubmission.reply({ content: `Could not check if the toast breaks automod rules. ${modalSubmission.client.user} may not have the Manage Server permission required to check the automod rules.`, flags: MessageFlags.Ephemeral });
+					return;
+				} else if (autoModInfraction) {
 					modalSubmission.reply({ content: "Your bounty could not be posted because it tripped AutoMod.", flags: MessageFlags.Ephemeral });
 					return;
 				}

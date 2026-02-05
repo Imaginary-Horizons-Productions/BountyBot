@@ -58,7 +58,11 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}
 
 		const toastText = interaction.options.getString("message");
-		if (await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")) {
+		const autoModInfraction = await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")
+		if (autoModInfraction == null) {
+			interaction.reply({ content: `Could not check if the toast breaks automod rules. ${interaction.client.user} may not have the Manage Server permission required to check the automod rules.`, flags: MessageFlags.Ephemeral });
+			return;
+		} else if (autoModInfraction) {
 			interaction.reply({ content: "Your toast was blocked by AutoMod.", flags: MessageFlags.Ephemeral });
 			return;
 		}

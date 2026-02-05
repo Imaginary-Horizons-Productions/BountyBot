@@ -110,7 +110,7 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
 async function nextRankXP(userId, season, descendingRanks) {
 	const participationMap = await getParticipationMap(season.id);
 	const participation = participationMap.get(userId);
-	if (participation?.rankIndex === null || participation.rankIndex === 0) {
+	if (!participation || participation.rankIndex === null || participation.rankIndex === 0) {
 		return 0;
 	}
 	const mean = calculateXPMean(participationMap);
@@ -147,8 +147,7 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks, allGu
 			updatePayload.rankIndex = index;
 			if (isIncrease) {
 				const rank = descendingRanks[index];
-				const rankName = rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`;
-				rawReceipt.rankUp = { name: rankName, newRankIndex: index };
+				rawReceipt.rankUp = { name: rank.getName(allGuildRoles, index), newRankIndex: index };
 			}
 		}
 		await participationMap.get(id).update(updatePayload);

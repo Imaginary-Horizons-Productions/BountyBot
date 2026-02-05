@@ -1,6 +1,6 @@
 const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
-const { Bounty, Rank, Company, Participation, Hunter, Season, Completion } = require("../../database/models");
+const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast } = require("../../database/models");
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
@@ -172,7 +172,7 @@ function selectOptionsFromBounties(bounties) {
 function selectOptionsFromRanks(ranks, allGuildRoles) {
 	return ranks.map((rank, index) => {
 		const option = {
-			label: rank.roleId ? allGuildRoles.get(rank.roleId).name : `Rank ${index + 1}`,
+			label: rank.getName(allGuildRoles, index),
 			description: `Variance Threshold: ${rank.threshold}`,
 			value: rank.threshold.toString()
 		};
@@ -284,7 +284,7 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
 	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(module.exports.ihpAuthorPayload)
-		.setTitle(`${guild.name} is __Level ${currentCompanyLevel}__`)
+		.setTitle(`${guild.name} is ${underline(`Level ${currentCompanyLevel}`)}`)
 		.setThumbnail(guild.iconURL())
 		.setDescription(`${fillableTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}${italic("Next Level:")} ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
 		.addFields(
@@ -414,6 +414,43 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	}
 
 	return embed;
+}
+
+/**
+ * @param {Hunter} targetHunter
+ * @param {GuildMember} targetGuildMember
+ * @param {number} currentLevel
+ * @param {number} currentLevelThreshold
+ * @param {number} nextLevelThreshold
+ * @param {Participation | undefined} currentParticipation
+ * @param {string | null} rankName
+ * @param {Participation[]} previousParticipations
+ * @param {Toast} mostSecondedToast
+ */
+function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, currentLevelThreshold, nextLevelThreshold, currentParticipation, rankName, previousParticipations, mostSecondedToast) {
+	let description = `${fillableTextBar(targetHunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}`;
+	if (currentParticipation) {
+		description += `\nThey have earned ${italic(`${currentParticipation.xp} XP`)} this season`;
+		if (rankName) {
+			description += ` which qualifies for ${rankName}`;
+		}
+	} else {
+		description += `\nThey have earned ${italic("0 XP")} this season`;
+	}
+	return new EmbedBuilder().setColor(Colors[targetHunter.profileColor])
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setThumbnail(targetGuildMember.user.avatarURL())
+		.setTitle(`${targetGuildMember.displayName} is ${underline(`Level ${currentLevel}`)}`)
+		.setDescription(description)
+		.addFields(
+			{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
+			{ name: "Total XP Earned", value: `${targetHunter.xp} XP`, inline: true },
+			{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with ${bold(`${mostSecondedToast.secondings} secondings`)}` : "No toasts seconded yet..." },
+			{ name: "Bounty Stats", value: `Bounties Hunted: ${targetHunter.othersFinished} bount${targetHunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${targetHunter.mineFinished} bount${targetHunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
+			{ name: "Toast Stats", value: `Toasts Raised: ${targetHunter.toastsRaised} toast${targetHunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${targetHunter.toastsSeconded} toast${targetHunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${targetHunter.toastsReceived} toast${targetHunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
+		)
+		.setFooter(randomFooterTip())
+		.setTimestamp()
 }
 
 /** Generate an embed for the given bounty
@@ -574,6 +611,7 @@ module.exports = {
 	companyStatsEmbed,
 	seasonalScoreboardEmbed,
 	overallScoreboardEmbed,
+	hunterProfileEmbed,
 	bountyEmbed,
 	toastEmbed,
 	secondingButtonRow,
