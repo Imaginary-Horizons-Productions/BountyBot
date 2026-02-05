@@ -16,7 +16,7 @@ const fsa = require('fs').promises;
 const { Sequelize } = require('sequelize');
 const path = require('path');
 const basename = path.basename(__filename);
-const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags, TimestampStyles } = require("discord.js");
+const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags, TimestampStyles, Partials } = require("discord.js");
 const { MessageComponentWrapper, InteractionOrigin } = require('./frontend/classes');
 const cron = require('node-cron');
 
@@ -56,6 +56,7 @@ const dAPIClient = new Client({
 			name: "🔰 Get started with /tutorial"
 		}]
 	},
+	partials: [Partials.GuildMember],
 	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages]
 });
 //#endregion
