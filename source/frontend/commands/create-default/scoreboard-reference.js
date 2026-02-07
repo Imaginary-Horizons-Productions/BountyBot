@@ -1,6 +1,6 @@
 const { ChannelType, PermissionFlagsBits, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
+const { seasonalScoreboardEmbed, overallScoreboardEmbed, isMissingPermissionError } = require("../../shared");
 
 module.exports = new SubcommandWrapper("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
