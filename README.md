@@ -2,12 +2,13 @@
 BountyBot is a Discord bot that facilitates community interaction by allowing users to create server-wide quests and rewarding active server particpation.
 
 ## Adding BountyBot to your Server
-[Click here](https://discord.com/oauth2/authorize?client_id=536330483852771348&permissions=2269452465006624&integration_type=0&scope=bot) to add BountyBot to your server! The bot will be managable by anyone who has a role above the bot's roles, so make sure to check role order when the bot joins!
+[Click here](https://discord.com/oauth2/authorize?client_id=536330483852771348&permissions=2252135156869168&integration_type=0&scope=bot) to add BountyBot to your server! The bot will be managable by anyone who has a role above the bot's roles, so make sure to check role order when the bot joins!
 
 ### Permissions
 Here are the permissions BountyBot asks for and a summary of what it uses each for:
 - Manage Server: BountyBot uses this to check the server's automod rules to verify that bot posts made from user input follow the server's rules
 - Manage Roles: BountyBot can be configured to distinguish active Bounty Hunters by making and granting roles
+- Manage Channels: BountyBot can create and maintain a bounty board forum channel or a reference channel for the scoreboard
 - Change Nickname: BountyBot nicknames itself to promote XP Festivals
 - Create Events: Bounties created with start and end timestamps automatically create Discord events
 - Manage Events: Discord events created for bounties with are updated when their bounty is

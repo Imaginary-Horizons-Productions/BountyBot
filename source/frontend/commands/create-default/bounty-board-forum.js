@@ -1,32 +1,42 @@
 const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { makeEvergreenBountiesThread, bountyEmbed, bountyControlPanelSelectRow } = require("../../shared");
+const { makeEvergreenBountiesThread, bountyEmbed, bountyControlPanelSelectRow, isMissingPermissionError } = require("../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const bountyBoard = await interaction.guild.channels.create({
-			parent: interaction.channel.parentId,
-			name: "the-bounty-board",
-			type: ChannelType.GuildForum,
-			permissionOverwrites: [
-				{
-					id: interaction.client.user,
-					allow: [PermissionFlagsBits.SendMessages],
-					type: OverwriteType.Member
-				},
-				{
-					id: interaction.guildId,
-					deny: [PermissionFlagsBits.SendMessages],
-					allow: [PermissionFlagsBits.SendMessagesInThreads]
-				}
-			],
-			availableTags: [{ name: "Open", moderated: true }, { name: "Completed", moderated: true }],
-			defaultReactionEmoji: { name: "👀" },
-			defaultSortOrder: SortOrderType.CreationDate,
-			defaultForumLayout: ForumLayoutType.ListView,
-			reason: `/create-default bounty-board-forum by ${interaction.user}`
-		});
+		let bountyBoard;
+		try {
+			bountyBoard = await interaction.guild.channels.create({
+				parent: interaction.channel.parentId,
+				name: "the-bounty-board",
+				type: ChannelType.GuildForum,
+				permissionOverwrites: [
+					{
+						id: interaction.client.user,
+						allow: [PermissionFlagsBits.SendMessages],
+						type: OverwriteType.Member
+					},
+					{
+						id: interaction.guildId,
+						deny: [PermissionFlagsBits.SendMessages],
+						allow: [PermissionFlagsBits.SendMessagesInThreads]
+					}
+				],
+				availableTags: [{ name: "Open", moderated: true }, { name: "Completed", moderated: true }],
+				defaultReactionEmoji: { name: "👀" },
+				defaultSortOrder: SortOrderType.CreationDate,
+				defaultForumLayout: ForumLayoutType.ListView,
+				reason: `/create-default bounty-board-forum by ${interaction.user}`
+			});
+		} catch (error) {
+			if (isMissingPermissionError(error)) {
+				interaction.reply({ content: "Could not create a Bounty Board Forum because BountyBot appears to be missing the `ManageChannels` permission.", flags: MessageFlags.Ephemeral });
+				return;
+			} else {
+				console.error(error);
+			}
+		}
 
 		origin.company.bountyBoardId = bountyBoard.id;
 		const [{ id: openTagId }, { id: completedTagId }] = bountyBoard.availableTags;
