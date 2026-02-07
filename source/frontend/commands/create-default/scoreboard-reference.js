@@ -1,27 +1,37 @@
 const { ChannelType, PermissionFlagsBits, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { seasonalScoreboardEmbed, overallScoreboardEmbed } = require("../../shared");
+const { seasonalScoreboardEmbed, overallScoreboardEmbed, isMissingPermissionError } = require("../../shared");
 
 module.exports = new SubcommandWrapper("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const scoreboard = await interaction.guild.channels.create({
-			parent: interaction.channel.parentId,
-			name: "bountybot-scoreboard",
-			type: ChannelType.GuildText,
-			permissionOverwrites: [
-				{
-					id: interaction.client.user,
-					allow: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages],
-					type: OverwriteType.Member
-				},
-				{
-					id: interaction.guildId,
-					allow: [PermissionFlagsBits.ViewChannel],
-					deny: [PermissionFlagsBits.SendMessages]
-				}
-			],
-			reason: `/create-default scoreboard-reference by ${interaction.user}`
-		});
+		let scoreboard;
+		try {
+			scoreboard = await interaction.guild.channels.create({
+				parent: interaction.channel.parentId,
+				name: "bountybot-scoreboard",
+				type: ChannelType.GuildText,
+				permissionOverwrites: [
+					{
+						id: interaction.client.user,
+						allow: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages],
+						type: OverwriteType.Member
+					},
+					{
+						id: interaction.guildId,
+						allow: [PermissionFlagsBits.ViewChannel],
+						deny: [PermissionFlagsBits.SendMessages]
+					}
+				],
+				reason: `/create-default scoreboard-reference by ${interaction.user}`
+			});
+		} catch (error) {
+			if (isMissingPermissionError(error)) {
+				interaction.reply({ content: "Could not create a Scoreboard Reference Channel because BountyBot appears to be missing the `ManageChannels` permission.", flags: MessageFlags.Ephemeral });
+				return;
+			} else {
+				console.error(error);
+			}
+		}
 		const isSeasonal = interaction.options.getString("scoreboard-type") === "season";
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
