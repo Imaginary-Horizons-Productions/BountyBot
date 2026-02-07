@@ -251,6 +251,14 @@ async function deleteCompanySeasons(companyId) {
 	return db.models.Season.destroy({ where: { companyId } });
 }
 
+/**
+ * @param {string} userId
+ * @param {string} companyId
+ */
+async function deleteHunterParticipations(userId, companyId) {
+	return db.models.Participation.destroy({ where: { userId, companyId } });
+}
+
 /** *Delete all Participations associated with the specified Season*
  * @param {string} seasonId
  */
@@ -276,5 +284,6 @@ module.exports = {
 	incrementSeasonStat,
 	toggleHunterSeasonDisqualification,
 	deleteCompanySeasons,
+	deleteHunterParticipations,
 	deleteSeasonParticipations
 }

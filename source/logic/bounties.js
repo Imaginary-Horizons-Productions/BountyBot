@@ -190,6 +190,22 @@ async function deleteCompanyBounties(companyId) {
 	return db.models.Bounty.destroy({ where: { companyId } });
 }
 
+/** *Deletes all Bounties and Completions associated with the given Company by the given User, then return the Snowflakes of the deleted bounties's postings*
+ * @param {string} userId
+ * @param {string} companyId
+ */
+async function deleteHunterBountiesAndCompletionsFromCompany(userId, companyId) {
+	await db.models.Completion.destroy({ where: { userId, companyId } });
+	const bountyPostingIds = [];
+	for (const bounty of await db.models.Bounty.findAll({ where: { userId, companyId } })) {
+		if (bounty.postingId) {
+			bountyPostingIds.push(bounty.postingId);
+		}
+	}
+	await db.models.Bounty.destroy({ where: { userId, companyId } });
+	return bountyPostingIds;
+}
+
 /** *Delete the Completions (pending credit) of the specified Hunters on the specified Bounty*
  * @param {string} bountyId
  * @param {string[]} userIds
@@ -219,6 +235,7 @@ module.exports = {
 	findHuntersLastFiveBounties,
 	completeBounty,
 	deleteCompanyBounties,
+	deleteHunterBountiesAndCompletionsFromCompany,
 	deleteSelectedBountyCompletions,
 	deleteBountyCompletions
 }

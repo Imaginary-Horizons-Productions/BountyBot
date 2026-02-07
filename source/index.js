@@ -16,7 +16,7 @@ const fsa = require('fs').promises;
 const { Sequelize } = require('sequelize');
 const path = require('path');
 const basename = path.basename(__filename);
-const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags, TimestampStyles } = require("discord.js");
+const { Client, ActivityType, IntentsBitField, Events, Routes, REST, MessageFlags, TimestampStyles, Partials } = require("discord.js");
 const { MessageComponentWrapper, InteractionOrigin } = require('./frontend/classes');
 const cron = require('node-cron');
 
@@ -56,6 +56,7 @@ const dAPIClient = new Client({
 			name: "🔰 Get started with /tutorial"
 		}]
 	},
+	partials: [Partials.GuildMember],
 	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages]
 });
 //#endregion
@@ -271,6 +272,21 @@ dAPIClient.on(Events.ThreadDelete, async thread => {
 			company.save();
 		}
 	})
+})
+
+dAPIClient.on(Events.GuildMemberRemove, async guildMember => {
+	await dbReady;
+	const postingIds = await logicBlob.bounties.deleteHunterBountiesAndCompletionsFromCompany(guildMember.id, guildMember.guild.id);
+	const company = await logicBlob.companies.findCompanyByPK(guildMember.guild.id);
+	if (company.bountyBoardId) {
+		const bountyBoard = await guildMember.guild.channels.fetch(company.bountyBoardId);
+		for (const postingId of postingIds) {
+			(await bountyBoard.threads.fetch(postingId)).delete("Poster removed from server");
+		}
+	}
+	await logicBlob.toasts.deleteHunterToasts(guildMember.id, guildMember.guild.id);
+	await logicBlob.seasons.deleteHunterParticipations(guildMember.id, guildMember.guild.id);
+	await logicBlob.hunters.deleteHunter(guildMember.id, guildMember.guild.id);
 })
 
 dAPIClient.on(Events.GuildDelete, async guild => {

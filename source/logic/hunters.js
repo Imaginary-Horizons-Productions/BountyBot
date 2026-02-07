@@ -98,6 +98,14 @@ function deleteCompanyHunters(companyId) {
 	return db.models.Hunter.destroy({ where: { companyId } });
 }
 
+/**
+ * @param {string} userId
+ * @param {string} companyId
+ */
+function deleteHunter(userId, companyId) {
+	return db.models.Hunter.destroy({ where: { userId, companyId } })
+}
+
 module.exports = {
 	setDB,
 	findOrCreateBountyHunter,
@@ -107,5 +115,6 @@ module.exports = {
 	findCompanyHuntersByDescendingXP,
 	findHuntersAtOrAboveLevel,
 	setHunterProfileColor,
-	deleteCompanyHunters
+	deleteCompanyHunters,
+	deleteHunter
 }

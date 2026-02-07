@@ -206,6 +206,18 @@ function deleteCompanyToasts(companyId) {
 	});
 }
 
+/**
+ * @param {string} userId
+ * @param {string} companyId
+ */
+async function deleteHunterToasts(userId, companyId) {
+	for (const toast of await db.models.Toast.findAll({ where: { senderId: userId, companyId } })) {
+		await db.models.Recipient.destroy({ where: { toastId: toast.id } });
+		await db.models.Seconding.destroy({ where: { toastId: toast.id } });
+		await toast.destroy();
+	}
+}
+
 module.exports = {
 	setDB,
 	findRecentSecondings,
@@ -215,5 +227,6 @@ module.exports = {
 	wasAlreadySeconded,
 	findToastByPK,
 	raiseToast,
-	deleteCompanyToasts
+	deleteCompanyToasts,
+	deleteHunterToasts
 }
