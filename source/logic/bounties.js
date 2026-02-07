@@ -195,14 +195,15 @@ async function deleteCompanyBounties(companyId) {
  * @param {string} companyId
  */
 async function deleteHunterBountiesAndCompletionsFromCompany(userId, companyId) {
-	await db.models.Completion.destroy({ where: { userId, companyId } });
 	const bountyPostingIds = [];
 	for (const bounty of await db.models.Bounty.findAll({ where: { userId, companyId } })) {
+		await db.models.Completion.destroy({ where: { bountyId: bounty.id } });
 		if (bounty.postingId) {
 			bountyPostingIds.push(bounty.postingId);
 		}
+		await bounty.destroy();
 	}
-	await db.models.Bounty.destroy({ where: { userId, companyId } });
+	await db.models.Completion.destroy({ where: { userId, companyId } });
 	return bountyPostingIds;
 }
 
