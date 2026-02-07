@@ -13,7 +13,7 @@ module.exports = new CommandWrapper(mainId, "Get BountyBot's description and con
 				embeds: [
 					new EmbedBuilder().setColor(Colors.Blurple)
 						.setAuthor({ name: "Imaginary Horizons Productions", iconURL: "https://cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://discord.gg/3QqFqHc" })
-						.setTitle("About BountyBot (v2.10.0fi)")
+						.setTitle("About BountyBot (v2.10.1bi)")
 						.setURL(BOUNTYBOT_INVITE_URL)
 						.setThumbnail(avatarURL)
 						.setDescription("BountyBot is a Discord bot that facilitates community interaction by allowing users to create server-wide quests and rewarding active server particpation.")
