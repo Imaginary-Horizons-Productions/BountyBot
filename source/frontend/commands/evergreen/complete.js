@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Company } = require("../../../database/models");
-const { fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset, rewardSummary, consolidateHunterReceipts } = require("../../shared");
+const { bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset, rewardSummary, consolidateHunterReceipts } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -70,8 +70,12 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						await logicLayer.bounties.bulkCreateCompletions(bounty.id, collectedInteraction.guild.id, [...validatedHunters.keys()], bountyValue);
 
 						const xpMultiplierString = origin.company.festivalMultiplierString();
-						let totalGP = 0;
-						let wasGoalCompleted = false;
+						const goalProgress = {
+							totalGP: 0,
+							goalCompleted: false,
+							currentGP: 0,
+							requiredGP: 0
+						};
 						const finalContributorIds = new Set(validatedHunters.keys());
 						for (const userId of validatedHunters.keys()) {
 							const hunterReceipt = { xp: bountyBaseValue, xpMultiplier: xpMultiplierString };
@@ -84,9 +88,11 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 							}
 							hunterReceipts.set(userId, hunterReceipt);
 							logicLayer.seasons.changeSeasonXP(userId, collectedInteraction.guildId, season.id, bountyValue);
-							const { gpContributed, goalCompleted, contributorIds } = await logicLayer.goals.progressGoal(collectedInteraction.guildId, "bounties", hunter, season);
-							totalGP += gpContributed;
-							wasGoalCompleted ||= goalCompleted;
+							const { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } = await logicLayer.goals.progressGoal(collectedInteraction.guildId, "bounties", hunter, season);
+							goalProgress.totalGP += gpContributed;
+							goalProgress.goalCompleted ||= goalCompleted;
+							goalProgress.currentGP = currentGP;
+							goalProgress.requiredGP = requiredGP;
 							contributorIds.forEach(id => finalContributorIds.add(id));
 						}
 
@@ -95,18 +101,12 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						if (previousCompanyLevel < currentCompanyLevel) {
 							companyReceipt.levelUp = currentCompanyLevel;
 						}
-						const completedBountyEmbed = await bountyEmbed(bounty, collectedInteraction.guild, currentCompanyLevel, false, origin.company, finalContributorIds);
+						const completedBountyEmbed = await bountyEmbed(bounty, collectedInteraction.guild, currentCompanyLevel, false, origin.company, finalContributorIds, goalProgress);
 						const announcementPayload = { embeds: [completedBountyEmbed], withResponse: true };
-						if (totalGP > 0) {
-							companyReceipt.gpExpression = totalGP.toString();
-							const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guildId);
-							if (goalId !== null) {
-								completedBountyEmbed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-							} else {
-								completedBountyEmbed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-							}
+						if (goalProgress.totalGP > 0) {
+							companyReceipt.gp = goalProgress.totalGP;
 						}
-						if (wasGoalCompleted) {
+						if (goalProgress.goalCompleted) {
 							announcementPayload.embeds.push(goalCompletionEmbed([...finalContributorIds.keys()]));
 						}
 						await collectedInteraction.update({ components: [] });
@@ -119,7 +119,6 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 						sendRewardMessage(message, rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties), `${bounty.title} Rewards`);
 						const embeds = [];
-						const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
 						if (origin.company.scoreboardIsSeasonal) {
 							embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
 						} else {

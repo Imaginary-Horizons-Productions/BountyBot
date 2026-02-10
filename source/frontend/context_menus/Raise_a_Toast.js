@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
+const { textsHaveAutoModInfraction, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -60,23 +60,26 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			if (previousCompanyLevel < currentCompanyLevel) {
 				companyReceipt.levelUp = currentCompanyLevel;
 			}
-			const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member)];
 
+			const embeds = [];
+			const goalProgress = {
+				goalCompleted: false,
+				currentGP: 0,
+				requiredGP: 0
+			};
 			if (hunterReceipts.size > 0) {
 				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", hunterMap[interaction.user.id], season);
+				goalProgress.goalCompleted = goalUpdate.goalCompleted;
+				goalProgress.currentGP = goalUpdate.currentGP;
+				goalProgress.requiredGP = goalUpdate.requiredGP;
 				if (goalUpdate.gpContributed > 0) {
 					companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
 					if (goalUpdate.goalCompleted) {
 						embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
 					}
-					const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-					if (goalId !== null) {
-						embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-					} else {
-						embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-					}
 				}
 			}
+			embeds.unshift(toastEmbed(origin.company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member, goalProgress));
 
 			modalSubmission.reply({
 				embeds,
@@ -92,7 +95,6 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
 					const embeds = [];
-					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
 						embeds.push(await seasonalScoreboardEmbed(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress));
 					} else {

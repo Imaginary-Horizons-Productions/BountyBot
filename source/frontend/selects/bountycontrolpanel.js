@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, fillableTextBar, goalCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, goalCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -210,16 +210,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
-					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
+					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys(), goalUpdate))
 						.then(async embed => {
-							if (goalUpdate.gpContributed > 0) {
-								const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
-								if (goalId !== null) {
-									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-								} else {
-									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-								}
-							}
 							interaction.message.edit({ embeds: [embed], components: [] });
 							collectedInteraction.channel.setArchived(true, "bounty completed");
 						})
@@ -229,11 +221,10 @@ module.exports = new SelectWrapper(mainId, 3000,
 					}
 					collectedInteraction.channels.first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
 					const embeds = [];
-					const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
+						embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalUpdate));
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, hunterMap, goalProgress));
+						embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, hunterMap, goalUpdate));
 					}
 					refreshReferenceChannelScoreboard(origin.company, collectedInteraction.guild, embeds);
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
