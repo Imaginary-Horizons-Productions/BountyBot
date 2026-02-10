@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, fillableTextBar, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts } = require("../../shared");
+const { commandMention, fillableTextBar, bountyEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -105,14 +105,12 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 				})
 			}
 
-			const embeds = [];
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 			if (origin.company.scoreboardIsSeasonal) {
-				embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
+				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 			} else {
-				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
+				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
 			}
-			refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 		});
 	}
 ).setOptions(

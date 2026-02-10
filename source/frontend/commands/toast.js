@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, fillableTextBar, sentenceListEN, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, rewardSummary, consolidateHunterReceipts } = require('../shared');
+const { textsHaveAutoModInfraction, fillableTextBar, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -115,14 +115,12 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 				sendRewardMessage(response.resource.message, rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties), "Rewards");
-				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (origin.company.scoreboardIsSeasonal) {
-					embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
+					refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 				} else {
-					embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
+					refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
 				}
-				refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 			}
 		});
 	}

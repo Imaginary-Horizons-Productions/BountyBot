@@ -1,6 +1,6 @@
 const { Company } = require("../../../database/models");
 const { SubcommandWrapper } = require("../../classes");
-const { addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshEvergreenBountiesThread } = require("../../shared");
+const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
 
 module.exports = new SubcommandWrapper("close", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -9,15 +9,13 @@ module.exports = new SubcommandWrapper("close", "End the festival, returning to 
 			bountyBot.setNickname(null);
 		})
 		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
-		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (origin.company.scoreboardIsSeasonal) {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
+			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress);
 		} else {
-			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
+			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
 		}
-		refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 		if (origin.company.bountyBoardId) {
 			const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 			const existingBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
