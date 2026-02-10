@@ -98,7 +98,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						const completedBountyEmbed = await bountyEmbed(bounty, collectedInteraction.guild, currentCompanyLevel, false, origin.company, finalContributorIds);
 						const announcementPayload = { embeds: [completedBountyEmbed], withResponse: true };
 						if (totalGP > 0) {
-							companyReceipt.gpExpression = totalGP.toString();
+							companyReceipt.gp = totalGP;
 							const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guildId);
 							if (goalId !== null) {
 								completedBountyEmbed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });

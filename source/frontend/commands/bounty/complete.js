@@ -61,7 +61,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", origin.hunter, season);
 		if (goalUpdate.gpContributed > 0) {
-			companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+			companyReceipt.gp = goalUpdate.gpContributed;
 		}
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
