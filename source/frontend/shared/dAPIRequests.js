@@ -72,8 +72,24 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, posterL
 		return bountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
 			posting.edit({ embeds: [embed] });
 			return posting;
-		})
+		});
 	})
+}
+
+/** Add a message to the bounty in the bounty board to log state changes.
+ * @param {Guild} guild
+ * @param {Company} company
+ * @param {Bounty} bounty
+ * @param {string} auditMessage
+ */
+async function addLogMessageToBountyThread(guild, company, bounty, auditMessage) {
+	if (!company.bountyBoardId || !bounty.postingId) {
+		return null;
+	}
+	const bountyBoard = await guild.channels.fetch(company.bountyBoardId);
+	const thread = await bountyBoard.threads.fetch(bounty.postingId);
+	await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
+	return thread.send(auditMessage);
 }
 
 /** If the server has a scoreboard reference channel, update the embed in it
@@ -159,6 +175,7 @@ module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	refreshBountyThreadStarterMessage,
+	addLogMessageToBountyThread,
 	refreshReferenceChannelScoreboard,
 	sendRewardMessage,
 	syncRankRoles,

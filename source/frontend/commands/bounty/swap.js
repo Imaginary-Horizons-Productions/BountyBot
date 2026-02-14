@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, selectOptionsFromBounties, refreshBountyThreadStarterMessage, addCompanyAnnouncementPrefix, disabledSelectRow } = require("../../shared");
+const { emojiFromNumber, selectOptionsFromBounties, refreshBountyThreadStarterMessage, addLogMessageToBountyThread, addCompanyAnnouncementPrefix, disabledSelectRow } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
@@ -78,10 +78,12 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 
 							previousBounty = await previousBounty.update({ slotNumber: destinationSlot });
 							refreshBountyThreadStarterMessage(interaction.guild, origin.company, previousBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
+							addLogMessageToBountyThread(interaction.guild, origin.company, previousBounty, `Switched this bounty's slot from ${sourceSlot} to ${destinationSlot}. It is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.`);
 
 							if (destinationBounty?.state === "open") {
 								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
 								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+								addLogMessageToBountyThread(interaction.guild, origin.company, destinationBounty, `Switched this bounty's slot from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(hunterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`);
 							}
 
 							interaction.channel.send(addCompanyAnnouncementPrefix(origin.company, { content: `${interaction.member}'s bounty, ${bold(previousBounty.title)} is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.` }));
