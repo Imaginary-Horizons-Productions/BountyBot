@@ -106,7 +106,7 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 		summary += `\n- ${companyReceipt.guildName} is now Level ${companyReceipt.levelUp}! Evergreen bounties now award more XP!`;
 	}
 	if ("gp" in companyReceipt) {
-		summary += `\n- This ${actionType} contributed ${companyReceipt.gp} GP${companyReceipt.gpMultiplier} to the Server Goal!`;
+		summary += `\n- This ${actionType} contributed ${companyReceipt.gp} GP${companyReceipt.gpMultiplier ?? ""} to the Server Goal!`;
 	}
 
 	for (const [id, receipt] of hunterReceipts) {

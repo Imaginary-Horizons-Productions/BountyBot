@@ -65,7 +65,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			if (hunterReceipts.size > 0) {
 				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", hunterMap[interaction.user.id], season);
 				if (goalUpdate.gpContributed > 0) {
-					companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+					companyReceipt.gp = goalUpdate.gpContributed;
 					if (goalUpdate.goalCompleted) {
 						embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
 					}

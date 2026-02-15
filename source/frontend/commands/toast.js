@@ -86,7 +86,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		if (hunterReceipts.size > 0) {
 			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", hunterMap.get(interaction.user.id), season);
 			if (goalUpdate.gpContributed > 0) {
-				companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+				companyReceipt.gp = goalUpdate.gpContributed;
 				if (goalUpdate.goalCompleted) {
 					embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
 				}
