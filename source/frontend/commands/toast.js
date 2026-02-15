@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, fillableTextBar, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
+const { textsHaveAutoModInfraction, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -78,26 +78,22 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
-		const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member)];
-		if (imageURL) {
-			embeds[0].setImage(imageURL);
-		}
 
+		const embeds = [];
+		const goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 		if (hunterReceipts.size > 0) {
 			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", hunterMap.get(interaction.user.id), season);
+			goalProgress.goalCompleted = goalUpdate.goalCompleted;
+			goalProgress.currentGP = goalUpdate.currentGP;
+			goalProgress.requiredGP = goalUpdate.requiredGP;
 			if (goalUpdate.gpContributed > 0) {
-				companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+				companyReceipt.gp = goalUpdate.gpContributed;
 				if (goalUpdate.goalCompleted) {
 					embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
 				}
-				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-				if (goalId !== null) {
-					embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-				} else {
-					embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-				}
 			}
 		}
+		embeds.unshift(toastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member, goalProgress, imageURL));
 
 		interaction.reply({
 			embeds,
@@ -115,7 +111,6 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 				sendRewardMessage(response.resource.message, rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties), "Rewards");
-				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (origin.company.scoreboardIsSeasonal) {
 					refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 				} else {

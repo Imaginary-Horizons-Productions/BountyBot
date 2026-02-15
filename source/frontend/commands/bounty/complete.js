@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, fillableTextBar, bountyEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
+const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -61,7 +61,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", origin.hunter, season);
 		if (goalUpdate.gpContributed > 0) {
-			companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+			companyReceipt.gp = goalUpdate.gpContributed;
 		}
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
@@ -70,15 +70,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		const content = rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 
-		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()])).then(async embed => {
-			if (goalUpdate.gpContributed > 0) {
-				const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
-				if (goalId !== null) {
-					embed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-				} else {
-					embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-				}
-			}
+		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), goalUpdate).then(async embed => {
 			const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 			if (goalUpdate.goalCompleted) {
 				acknowledgeOptions.embeds = [goalCompletionEmbed(goalUpdate.contributorIds)];
@@ -105,11 +97,10 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 				})
 			}
 
-			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 			if (origin.company.scoreboardIsSeasonal) {
-				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalUpdate);
 			} else {
-				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
+				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalUpdate);
 			}
 		});
 	}

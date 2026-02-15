@@ -81,7 +81,7 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, posterL
  * @param {Guild} guild
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} descendingRanks
- * @param {{ goalId: string | null; requiredGP: number; currentGP: number; }} goalProgress
+ * @param {{ requiredGP: number; currentGP: number; }} goalProgress
  */
 async function refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress) {
 	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
@@ -105,7 +105,7 @@ async function refreshReferenceChannelScoreboardSeasonal(company, guild, partici
  * @param {Company} company
  * @param {Guild} guild
  * @param {Map<string, Hunter>} hunterMap
- * @param {{ goalId: string | null; requiredGP: number; currentGP: number; }} goalProgress
+ * @param {{ requiredGP: number; currentGP: number; }} goalProgress
  */
 async function refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress) {
 	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {

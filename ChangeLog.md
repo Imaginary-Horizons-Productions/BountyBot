@@ -1,4 +1,6 @@
 # BountyBot Change Log
+## BountyBot Version 2.11.0bfi:
+- Fixed Goal Point contributions not showing up in reward messages
 ## BountyBot Version 2.10.1bi:
 This version includes the addition of the "b" version category, for "bug fixes".
 - Fixed several crashes related to missing permissions, modal timeouts, trying to DM users who've blocked BountyBot, and residual data from former server members

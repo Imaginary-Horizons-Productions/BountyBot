@@ -1,6 +1,6 @@
-const { EmbedBuilder, MessageFlags } = require('discord.js');
+const { MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { fillableTextBar, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
+const { goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -32,7 +32,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", origin.hunter, season);
 		const companyReceipt = { guildName: interaction.guild.name };
 		if (progressData.gpContributed > 0) {
-			companyReceipt.gpExpression = progressData.gpContributed.toString();
+			companyReceipt.gp = progressData.gpContributed;
 		}
 
 		const recipientIds = [];
@@ -92,9 +92,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 			}
 
-			// f(x) = 150/(x+2)^(1/3)
-			const critRoll = Math.random() * 100;
-			if (critRoll * critRoll * critRoll > 3375000 / lowestEffectiveToastLevel) {
+			if (logicLayer.toasts.isToastCrit(Math.random() * 100, lowestEffectiveToastLevel)) {
 				critSeconds++;
 				recipientIds.push(interaction.user.id);
 			}
@@ -117,34 +115,17 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, critSeconds);
 		}
 
-		const embed = new EmbedBuilder(interaction.message.embeds[0].data);
-		const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by") ?? -1;
-		if (secondedFieldIndex === -1) {
-			embed.addFields({ name: "Seconded by", value: interaction.member.toString() });
-		} else {
-			embed.spliceFields(secondedFieldIndex, 1, { name: "Seconded by", value: `${interaction.message.embeds[0].data.fields[secondedFieldIndex].value}, ${interaction.member.toString()}` });
-		}
-		const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal") ?? -1;
-		if (goalProgressFieldIndex !== -1) {
-			const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
-			if (goalId !== null) {
-				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-			} else {
-				embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
-			}
-		}
-		interaction.update({ embeds: [embed] });
+		interaction.update({ embeds: [toastEmbed(origin.company.toastThumbnailURL, originalToast.text, recipientIds, interaction.member, progressData, originalToast.imageURL, await logicLayer.toasts.findSecondingMentions(originalToast.id))] });
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		sendRewardMessage(interaction.message, `${interaction.member.displayName} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, origin.company.maxSimBounties)}`, "Rewards");
-		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (origin.company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, progressData);
 		} else {
-			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
+			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), progressData);
 		}
 
 		if (progressData.goalCompleted) {

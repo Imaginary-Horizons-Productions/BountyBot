@@ -1,4 +1,4 @@
-const { Guild } = require("discord.js");
+const { Guild, userMention } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { dateInPast } = require("../shared");
 const { Company, Hunter, Toast, Recipient } = require("../database/models");
@@ -68,6 +68,30 @@ async function wasAlreadySeconded(toastId, seconderId) {
  */
 function findToastByPK(toastId) {
 	return db.models.Toast.findByPk(toastId, { include: db.models.Toast.Recipients });
+}
+
+/** *Get the Mentions of Bounty Hunters that have seconded a given Toast*
+ * @param {string} toastId
+ */
+async function findSecondingMentions(toastId) {
+	return (await db.models.Seconding.findAll({ where: { toastId } })).map(seconding => userMention(seconding.seconderId));
+}
+
+/**
+ *	f(x) > 150/(x+2)^(1/3)
+ *	where:
+ *	- f(x) = critRoll
+ *	- x + 2 = effectiveToastLevel
+ *	- 150^3 = 3375000
+ *
+ * notes:
+ * - cubing both sides of the equation avoids the third root operation and prebakes the constant exponentiation
+ * - constants set arbitrarily by user experience design
+ * @param {number} critRoll
+ * @param {number} effectiveToastLevel
+ */
+function isToastCrit(critRoll, effectiveToastLevel) {
+	return critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel
 }
 
 /**
@@ -147,17 +171,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 					}
 				};
 
-				/* f(x) > 150/(x+2)^(1/3)
-				where:
-				  f(x) = critRoll
-				  x + 2 = effectiveToastLevel
-				  150^3 = 3375000
-
-				notes:
-				- cubing both sides of the equation avoids the third root operation and prebakes the constant exponentiation
-				- constants set arbitrarily by user experience design
-				*/
-				if (critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel) {
+				if (isToastCrit(critRoll, effectiveToastLevel)) {
 					rawToast.wasCrit = true;
 					critValue += 1;
 					critToastsAvailable--;
@@ -226,6 +240,8 @@ module.exports = {
 	findMostSecondedToast,
 	wasAlreadySeconded,
 	findToastByPK,
+	findSecondingMentions,
+	isToastCrit,
 	raiseToast,
 	deleteCompanyToasts,
 	deleteHunterToasts
