@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, goalCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -220,13 +220,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 						announcementOptions.embeds = [goalCompletionEmbed(goalUpdate.contributorIds)];
 					}
 					collectedInteraction.channels.first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
-					const embeds = [];
 					if (origin.company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalUpdate));
+						refreshReferenceChannelScoreboardSeasonal(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalUpdate);
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, hunterMap, goalUpdate));
+						refreshReferenceChannelScoreboardOverall(origin.company, collectedInteraction.guild, hunterMap, goalUpdate);
 					}
-					refreshReferenceChannelScoreboard(origin.company, collectedInteraction.guild, embeds);
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {

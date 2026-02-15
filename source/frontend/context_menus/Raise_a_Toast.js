@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
+const { textsHaveAutoModInfraction, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -94,13 +94,11 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
-					const embeds = [];
 					if (origin.company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress));
+						refreshReferenceChannelScoreboardSeasonal(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, modalSubmission.guild, hunterMap, goalProgress));
+						refreshReferenceChannelScoreboardOverall(origin.company, modalSubmission.guild, hunterMap, goalProgress);
 					}
-					refreshReferenceChannelScoreboard(origin.company, modalSubmission.guild, embeds);
 				}
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);

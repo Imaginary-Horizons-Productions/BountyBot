@@ -1,6 +1,6 @@
 const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
 const { Bounty, Company, Rank } = require("../../database/models");
-const { bountyEmbed } = require("./dAPISerializers");
+const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
 
 /**
@@ -76,18 +76,52 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, posterL
 	})
 }
 
-/** If the server has a scoreboard reference channel, update the embed in it
+/** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
  * @param {Company} company
  * @param {Guild} guild
- * @param {EmbedBuilder[]} embeds
+ * @param {Map<string, Participation>} participationMap
+ * @param {Rank[]} descendingRanks
+ * @param {{ requiredGP: number; currentGP: number; }} goalProgress
  */
-async function refreshReferenceChannelScoreboard(company, guild, embeds) {
-	if (company.scoreboardChannelId && company.scoreboardMessageId) {
-		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
-			return scoreboard.messages.fetch(company.scoreboardMessageId);
-		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds });
-		});
+async function refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress) {
+	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
+		return;
+	}
+
+	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
+	if (!scoreboard) {
+		return;
+	}
+	const embeds = [await seasonalScoreboardEmbed(company, guild, participationMap, descendingRanks, goalProgress)];
+	const scoreboardMessage = await scoreboard.messages.fetch(company.scoreboardMessageId);
+	if (scoreboardMessage) {
+		scoreboardMessage.edit({ embeds });
+	} else {
+		scoreboard.send({ embeds });
+	}
+}
+
+/** Update the Overall Scoreboard embed in a server's scoreboard reference channel
+ * @param {Company} company
+ * @param {Guild} guild
+ * @param {Map<string, Hunter>} hunterMap
+ * @param {{ requiredGP: number; currentGP: number; }} goalProgress
+ */
+async function refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress) {
+	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
+		return;
+	}
+
+	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
+	if (!scoreboard) {
+		return;
+	}
+	const embeds = [await overallScoreboardEmbed(company, guild, hunterMap, goalProgress)];
+	const scoreboardMessage = await scoreboard.messages.fetch(company.scoreboardMessageId);
+	if (scoreboardMessage) {
+		scoreboardMessage.edit({ embeds });
+	} else {
+		scoreboard.send({ embeds });
 	}
 }
 
@@ -159,7 +193,8 @@ module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	refreshBountyThreadStarterMessage,
-	refreshReferenceChannelScoreboard,
+	refreshReferenceChannelScoreboardSeasonal,
+	refreshReferenceChannelScoreboardOverall,
 	sendRewardMessage,
 	syncRankRoles,
 	unarchiveAndUnlockThread

@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -151,14 +151,12 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
-					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
+						refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
+						refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
 					}
-					refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 				});
 
 				if (startTimestamp && endTimestamp) {

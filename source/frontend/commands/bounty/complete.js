@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts } = require("../../shared");
+const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 
@@ -97,13 +97,11 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 				})
 			}
 
-			const embeds = [];
 			if (origin.company.scoreboardIsSeasonal) {
-				embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalUpdate));
+				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalUpdate);
 			} else {
-				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalUpdate));
+				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalUpdate);
 			}
-			refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 		});
 	}
 ).setOptions(

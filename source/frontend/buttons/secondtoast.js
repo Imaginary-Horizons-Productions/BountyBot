@@ -1,6 +1,6 @@
 const { MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, toastEmbed } = require('../shared');
+const { goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -122,13 +122,11 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		sendRewardMessage(interaction.message, `${interaction.member.displayName} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, origin.company.maxSimBounties)}`, "Rewards");
-		const embeds = [];
 		if (origin.company.scoreboardIsSeasonal) {
-			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, progressData));
+			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, progressData);
 		} else {
-			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), progressData));
+			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), progressData);
 		}
-		refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 
 		if (progressData.goalCompleted) {
 			interaction.channel.send({

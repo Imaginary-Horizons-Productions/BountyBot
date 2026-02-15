@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Company } = require("../../../database/models");
-const { bountyEmbed, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, goalCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset, rewardSummary, consolidateHunterReceipts } = require("../../shared");
+const { bountyEmbed, goalCompletionEmbed, disabledSelectRow, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, reloadHunterMapSubset, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING, SAFE_DELIMITER } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 
@@ -118,13 +118,11 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						syncRankRoles(seasonalHunterReceipts, descendingRanks, collectedInteraction.guild.members);
 						consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 						sendRewardMessage(message, rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties), `${bounty.title} Rewards`);
-						const embeds = [];
 						if (origin.company.scoreboardIsSeasonal) {
-							embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
+							refreshReferenceChannelScoreboardSeasonal(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress);
 						} else {
-							embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, hunterMap, goalProgress));
+							refreshReferenceChannelScoreboardOverall(origin.company, collectedInteraction.guild, hunterMap, goalProgress);
 						}
-						refreshReferenceChannelScoreboard(origin.company, collectedInteraction.guild, embeds);
 						if (origin.company.bountyBoardId) {
 							const hunterIdMap = {};
 							for (const bounty of evergreenBounties) {
