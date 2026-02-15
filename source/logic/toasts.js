@@ -1,4 +1,4 @@
-const { Guild } = require("discord.js");
+const { Guild, userMention } = require("discord.js");
 const { Sequelize, Op } = require("sequelize");
 const { dateInPast } = require("../shared");
 const { Company, Hunter, Toast, Recipient } = require("../database/models");
@@ -68,6 +68,13 @@ async function wasAlreadySeconded(toastId, seconderId) {
  */
 function findToastByPK(toastId) {
 	return db.models.Toast.findByPk(toastId, { include: db.models.Toast.Recipients });
+}
+
+/** *Get the Mentions of Bounty Hunters that have seconded a given Toast*
+ * @param {string} toastId
+ */
+async function findSecondingMentions(toastId) {
+	return (await db.models.Seconding.findAll({ where: { toastId } })).map(seconding => userMention(seconding.seconderId));
 }
 
 /**
@@ -226,6 +233,7 @@ module.exports = {
 	findMostSecondedToast,
 	wasAlreadySeconded,
 	findToastByPK,
+	findSecondingMentions,
 	raiseToast,
 	deleteCompanyToasts,
 	deleteHunterToasts

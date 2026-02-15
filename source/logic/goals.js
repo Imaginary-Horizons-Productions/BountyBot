@@ -65,10 +65,13 @@ async function progressGoal(companyId, progressType, hunter, season) {
 	const returnData = {
 		gpContributed: 0,
 		goalCompleted: false,
-		contributorIds: []
+		contributorIds: [],
+		currentGP: 0,
+		requiredGP: 0
 	};
 	const goal = await db.models.Goal.findOne({ where: { companyId, state: "ongoing" }, order: [["createdAt", "DESC"]] });
 	if (goal) {
+		returnData.requiredGP = goal.requiredGP;
 		returnData.gpContributed = GOAL_POINT_MAP[progressType];
 		if (goal.type === progressType) {
 			returnData.gpContributed *= 2;
@@ -78,13 +81,15 @@ async function progressGoal(companyId, progressType, hunter, season) {
 		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId: hunter.userId, seasonId: season.id } });
 		participation.increment("goalContributions");
 		const contributions = await db.models.Contribution.findAll({ where: { goalId: goal.id } });
-		returnData.goalCompleted = goal.requiredGP <= contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
+		const currentGP = contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
+		returnData.goalCompleted = goal.requiredGP <= currentGP;
 		if (returnData.goalCompleted) {
 			returnData.contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
 			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: returnData.contributorIds } } });
 			goal.update({ state: "completed" });
 		} else {
 			returnData.contributorIds.push(hunter.userId);
+			returnData.currentGP = currentGP;
 		}
 	}
 	return returnData;
