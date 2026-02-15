@@ -301,7 +301,7 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
  * @param {Guild} guild
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} ranks
- * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
+ * @param {{ currentGP: number; requiredGP: number; }} goalProgress
  */
 async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(participationMap.keys()) });
@@ -360,7 +360,7 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
  * @param {Guild} guild
  * @param {Map<string, Hunter>} hunterMap
  * @param {Rank[]} ranks
- * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
+ * @param {{ currentGP: number; requiredGP: number; }} goalProgress
  */
 async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
@@ -460,8 +460,9 @@ function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, curre
  * @param {boolean} shouldOmitRewardsField
  * @param {Company} company
  * @param {Set<string>} hunterIdSet
+ * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; } | undefined} goalProgress
  */
-async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet) {
+async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet, goalProgress) {
 	const author = await guild.members.fetch(bounty.userId);
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(author.displayColor)
@@ -495,6 +496,11 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 			fields.push({ name: "Turned in by:", value: "Too many to display!" });
 		}
 	}
+	if (goalProgress?.goalCompleted) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
+	} else if (goalProgress?.requiredGP > 0) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(goalProgress.currentGP, goalProgress.requiredGP, 15)} ${goalProgress.currentGP}/${goalProgress.requiredGP} GP` });
+	}
 
 	if (fields.length > 0) {
 		embed.addFields(fields);
@@ -507,13 +513,28 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
  * @param {string} toastText
  * @param {Set<string>} recipientIdSet
  * @param {GuildMember} senderMember
+ * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; }} goalProgress
+ * @param {string | null} imageURL
+ * @param {string[] | undefined} seconderMentions
  */
-function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
-	return new EmbedBuilder().setColor("e5b271")
+function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember, goalProgress, imageURL, seconderMentions) {
+	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
 		.setDescription(`A toast to ${sentenceListEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
+	if (goalProgress.goalCompleted) {
+		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
+	} else if (goalProgress.requiredGP > 0) {
+		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(goalProgress.currentGP, goalProgress.requiredGP, 15)} ${goalProgress.currentGP}/${goalProgress.requiredGP} GP` });
+	}
+	if (imageURL) {
+		embed.setImage(imageURL);
+	}
+	if (seconderMentions) {
+		embed.addFields({ name: "Seconded by", value: sentenceListEN(seconderMentions, false) });
+	}
+	return embed;
 }
 
 /** @param {string} toastId */
