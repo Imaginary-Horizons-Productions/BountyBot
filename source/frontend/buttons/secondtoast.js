@@ -92,9 +92,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 				}
 			}
 
-			// f(x) = 150/(x+2)^(1/3)
-			const critRoll = Math.random() * 100;
-			if (critRoll * critRoll * critRoll > 3375000 / lowestEffectiveToastLevel) {
+			if (logicLayer.toasts.isToastCrit(Math.random() * 100, lowestEffectiveToastLevel)) {
 				critSeconds++;
 				recipientIds.push(interaction.user.id);
 			}

@@ -78,6 +78,23 @@ async function findSecondingMentions(toastId) {
 }
 
 /**
+ *	f(x) > 150/(x+2)^(1/3)
+ *	where:
+ *	- f(x) = critRoll
+ *	- x + 2 = effectiveToastLevel
+ *	- 150^3 = 3375000
+ *
+ * notes:
+ * - cubing both sides of the equation avoids the third root operation and prebakes the constant exponentiation
+ * - constants set arbitrarily by user experience design
+ * @param {number} critRoll
+ * @param {number} effectiveToastLevel
+ */
+function isToastCrit(critRoll, effectiveToastLevel) {
+	return critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel
+}
+
+/**
  * @param {Guild} guild
  * @param {Company} company
  * @param {string} senderId
@@ -154,17 +171,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 					}
 				};
 
-				/* f(x) > 150/(x+2)^(1/3)
-				where:
-				  f(x) = critRoll
-				  x + 2 = effectiveToastLevel
-				  150^3 = 3375000
-
-				notes:
-				- cubing both sides of the equation avoids the third root operation and prebakes the constant exponentiation
-				- constants set arbitrarily by user experience design
-				*/
-				if (critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel) {
+				if (isToastCrit(critRoll, effectiveToastLevel)) {
 					rawToast.wasCrit = true;
 					critValue += 1;
 					critToastsAvailable--;
@@ -234,6 +241,7 @@ module.exports = {
 	wasAlreadySeconded,
 	findToastByPK,
 	findSecondingMentions,
+	isToastCrit,
 	raiseToast,
 	deleteCompanyToasts,
 	deleteHunterToasts
