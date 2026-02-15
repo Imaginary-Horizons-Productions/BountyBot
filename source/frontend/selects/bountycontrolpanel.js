@@ -199,7 +199,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					}
 					const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", hunterMap.get(bounty.userId), season);
 					if (goalUpdate.gpContributed > 0) {
-						companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+						companyReceipt.gp = goalUpdate.gpContributed;
 					}
 					const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);

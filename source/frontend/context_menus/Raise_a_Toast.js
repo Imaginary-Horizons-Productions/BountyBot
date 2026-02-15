@@ -73,7 +73,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				goalProgress.currentGP = goalUpdate.currentGP;
 				goalProgress.requiredGP = goalUpdate.requiredGP;
 				if (goalUpdate.gpContributed > 0) {
-					companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
+					companyReceipt.gp = goalUpdate.gpContributed;
 					if (goalUpdate.goalCompleted) {
 						embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
 					}
