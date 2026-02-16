@@ -13,6 +13,12 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			content += `\n- The announcment prefix was set to ${prefix}`;
 		}
 
+		const disableReactionToasts = interaction.options.getBoolean("disable-reaction-toasts", false);
+		if (disableReactionToasts !== null) {
+			updatePayload.disableReactionToasts = disableReactionToasts;
+			content += `\n- Reaction Toasts were set to ${disableReactionToasts ? "dis" : ""}allowed`;
+		}
+
 		origin.company.update(updatePayload);
 		interaction.reply({ content, flags: MessageFlags.Ephemeral });
 	}
@@ -28,5 +34,11 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			{ name: "No prefix", value: "(nothing)" },
 			{ name: "Suppress notifications (@silent)", value: "@silent" }
 		]
+	},
+	{
+		type: "Boolean",
+		name: "allow-reaction-toasts",
+		description: "Allow reacting with 🥂 to quickly raise a toast",
+		required: false
 	}
 );

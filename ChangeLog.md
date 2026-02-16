@@ -1,5 +1,9 @@
 # BountyBot Change Log
 ## BountyBot Version 2.11.0bfi:
+### Reaction Toasts
+- Bounty Hunters can now raise a messageless toast by reacting to another Bounty Hunter's discord message with 🥂
+- Reaction toasts can be toggled off in `/server-config`
+### Bug Fixes
 - Fixed Goal Point contributions not showing up in reward messages
 ## BountyBot Version 2.10.1bi:
 This version includes the addition of the "b" version category, for "bug fixes".

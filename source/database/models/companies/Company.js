@@ -73,6 +73,9 @@ function initModel(sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 3600000
 		},
+		disableReactionToasts: {
+			type: DataTypes.BOOLEAN
+		},
 		festivalMultiplier: {
 			type: DataTypes.REAL,
 			defaultValue: 1

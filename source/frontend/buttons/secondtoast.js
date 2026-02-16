@@ -1,6 +1,6 @@
 const { MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
-const { goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
+const { goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, toastEmbed } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -26,93 +26,26 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		await origin.hunter.increment("toastsSeconded");
-		await originalToast.increment("secondings");
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", origin.hunter, season);
-		const companyReceipt = { guildName: interaction.guild.name };
-		if (progressData.gpContributed > 0) {
-			companyReceipt.gp = progressData.gpContributed;
-		}
-
+		const previousCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 		const recipientIds = [];
 		originalToast.Recipients.forEach(reciept => {
 			if (reciept.recipientId !== interaction.user.id) {
 				recipientIds.push(reciept.recipientId);
 			}
 		});
-		const hunterReceipts = new Map();
 
-		const previousCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
-		const xpMultiplierString = origin.company.festivalMultiplierString();
-		for (const userId of recipientIds) {
-			const hunterReceipt = {};
-			await logicLayer.seasons.changeSeasonXP(userId, interaction.guildId, season.id, 1);
-			let hunter = await logicLayer.hunters.findOneHunter(userId, interaction.guild.id);
-			const previousLevel = hunter.getLevel(origin.company.xpCoefficient);
-			hunter = await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
-			hunterReceipt.xp = 1;
-			hunterReceipt.xpMultiplier = xpMultiplierString;
-			const currentLevel = hunter.getLevel(origin.company.xpCoefficient);
-			if (currentLevel > previousLevel) {
-				hunterReceipt.levelUp = { achievedLevel: currentLevel, previousLevel };
-			}
-			hunterReceipts.set(userId, hunterReceipt);
+		const hunterReceipts = await logicLayer.toasts.secondToast(origin.hunter, originalToast, origin.company, recipientIds);
+
+		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", origin.hunter, season);
+		const companyReceipt = { guildName: interaction.guild.name };
+		if (progressData.gpContributed > 0) {
+			companyReceipt.gpExpression = progressData.gpContributed.toString();
 		}
 
-		const recentToasts = await logicLayer.toasts.findRecentSecondings(interaction.user.id);
-		let critSecondsAvailable = 2;
-		for (const seconding of recentToasts) {
-			if (seconding.wasCrit) {
-				critSecondsAvailable--;
-				if (critSecondsAvailable < 1) {
-					break;
-				}
-			}
-		}
-
-		let critSeconds = 0;
-		const startingSeconderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-		if (critSecondsAvailable > 0) {
-			const staleToastees = await logicLayer.toasts.findStaleToasteeIds(interaction.user.id, interaction.guild.id);
-			let lowestEffectiveToastLevel = startingSeconderLevel + 2;
-			for (const userId of recipientIds) {
-				// Calculate crit
-				let effectiveToastLevel = startingSeconderLevel + 2;
-				for (const staleId of staleToastees) {
-					if (userId == staleId) {
-						effectiveToastLevel--;
-						if (effectiveToastLevel < 2) {
-							break;
-						}
-					}
-				};
-				if (effectiveToastLevel < lowestEffectiveToastLevel) {
-					lowestEffectiveToastLevel = effectiveToastLevel;
-				}
-			}
-
-			if (logicLayer.toasts.isToastCrit(Math.random() * 100, lowestEffectiveToastLevel)) {
-				critSeconds++;
-				recipientIds.push(interaction.user.id);
-			}
-		}
 		const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
-		}
-
-		await logicLayer.toasts.createSeconding(originalToast.id, interaction.user.id, critSeconds > 0);
-		if (critSeconds > 0) {
-			const hunterReceipt = { title: "Critical Toast!", xp: critSeconds };
-			const previousSenderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-			await origin.hunter.increment({ xp: critSeconds }).then(seconder => seconder.reload());
-			const currentSenderLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-			if (currentSenderLevel > previousSenderLevel) {
-				hunterReceipt.levelUp = { achievedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
-			}
-			hunterReceipts.set(interaction.user.id, hunterReceipt);
-			await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, critSeconds);
 		}
 
 		interaction.update({ embeds: [toastEmbed(origin.company.toastThumbnailURL, originalToast.text, recipientIds, interaction.member, progressData, originalToast.imageURL, await logicLayer.toasts.findSecondingMentions(originalToast.id))] });

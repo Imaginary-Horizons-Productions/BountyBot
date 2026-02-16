@@ -34,6 +34,9 @@ function initModel(sequelize) {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
+		messageId: { // For reaction toasts/secondings: the id of the original message being reacted to
+			type: DataTypes.STRING
+		},
 		text: {
 			type: DataTypes.STRING,
 			allowNull: false
