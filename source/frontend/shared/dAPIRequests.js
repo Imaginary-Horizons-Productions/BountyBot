@@ -1,6 +1,6 @@
 const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
-const { bountyEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed } = require("./dAPISerializers");
+const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
 
 /**
