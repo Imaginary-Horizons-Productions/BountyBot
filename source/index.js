@@ -316,7 +316,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		const hunterMap = await logicBlob.hunters.getCompanyHunterMap(guild.id);
 		const recipientSet = new Set([hostMessage.author.id]);
 		const toastText = `${randomCongratulatoryPhrase()}! (${hostMessage.url})`;
-		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientSet, hunterMap, season.id, toastText);
+		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientSet, hunterMap, season.id, toastText, null, hostMessage.id);
 
 		const companyReceipt = { guildName: guild.name };
 		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
