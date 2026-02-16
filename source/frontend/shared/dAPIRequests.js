@@ -2,7 +2,6 @@ const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, Guil
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
-const { fillableTextBar } = require("./stringConstructors");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -147,26 +146,6 @@ function sendRewardMessage(embedMessage, content, threadTitle) {
 	}
 }
 
-async function updateSecondersField(toastMessage, goalProgress) {
-	const embed = new EmbedBuilder(toastMessage.embeds[0].data);
-	const secondedFieldIndex = embed.data.fields?.findIndex(field => field.name === "Seconded by") ?? -1;
-	if (secondedFieldIndex === -1) {
-		embed.addFields({ name: "Seconded by", value: user.toString() });
-	} else {
-		embed.spliceFields(secondedFieldIndex, 1, { name: "Seconded by", value: `${toastMessage.embeds[0].data.fields[secondedFieldIndex].value}, ${user.toString()}` });
-	}
-	const goalProgressFieldIndex = embed.data.fields?.findIndex(field => field.name === "Server Goal") ?? -1;
-	if (goalProgressFieldIndex !== -1) {
-		const { goalId, currentGP, requiredGP } = await logicBlob.goals.findLatestGoalProgress(reaction.message.guildId);
-		if (goalId !== null) {
-			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-		} else {
-			embed.spliceFields(goalProgressFieldIndex, 1, { name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
-		}
-	}
-	toastMessage.edit({ embeds: [embed] });
-}
-
 /** Requests dAPI change the roles on guild members based on the provided `seasonResults`
  * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterRecipts
  * @param {Rank[]} descendingRanks
@@ -217,7 +196,6 @@ module.exports = {
 	refreshReferenceChannelScoreboardSeasonal,
 	refreshReferenceChannelScoreboardOverall,
 	sendRewardMessage,
-	updateSecondersField,
 	syncRankRoles,
 	unarchiveAndUnlockThread
 };
