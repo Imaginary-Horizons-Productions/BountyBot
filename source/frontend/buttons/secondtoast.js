@@ -35,7 +35,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			}
 		});
 
-		const hunterReceipts = await logicLayer.toasts.secondToast(origin.hunter, originalToast, origin.company, recipientIds);
+		const hunterReceipts = await logicLayer.toasts.secondToast(origin.hunter, originalToast, origin.company, recipientIds, season.id);
 
 		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", origin.hunter, season);
 		const companyReceipt = { guildName: interaction.guild.name };

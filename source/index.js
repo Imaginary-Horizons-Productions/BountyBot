@@ -26,7 +26,7 @@ const { getSelect, setLogic: setSelectLogic, updateCooldownMap: updateSelectCool
 const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic, updateCooldownMap: updateContextMenuCooldownMap, updatePremiumList: updatePremiumContextMenus } = require("./frontend/context_menus/_contextMenuDictionary.js");
 const { setLogic: setItemLogic, updateCooldownMap: updateItemCooldownMap } = require("./frontend/items/_itemDictionary.js")
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
-const { latestVersionChangesEmbed, commandMention, sendRewardMessage, consolidateHunterReceipts, syncRankRoles, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, toastEmbed, goalCompletionEmbed, secondingButtonRow, rewardSummary } = require("./frontend/shared");
+const { latestVersionChangesEmbed, commandMention, sendRewardMessage, consolidateHunterReceipts, syncRankRoles, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, toastEmbed, goalCompletionEmbed, secondingButtonRow, rewardSummary, randomCongratulatoryPhrase } = require("./frontend/shared");
 const logicBlob = require("./logic");
 const { Company } = require('./database/models/index.js');
 const runMode = process.argv[4] || "development";
@@ -237,101 +237,118 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	await dbReady;
-	console.log(reaction, user);
 	if (reaction.emoji.name !== "🥂") {
 		return;
 	}
 
-	if (!reaction.message.guild) {
+	// Reject DM reactions (which lack `.message.guild` and `.message.guildId`), but keep Partials (which lack `.message.guild`)
+	if (!reaction.message.guildId) {
 		return;
 	}
 
-	if (runMode !== "development" && (reaction.message.author.bot || reaction.message.author.id === user.id)) {
+	// If receiving a Partial, fetch entities
+	let guild = reaction.message.guild;
+	let hostChannel = reaction.message?.channel;
+	let hostMessage = reaction.message;
+	if (reaction.partial) {
+		guild = await dAPIClient.guilds.fetch(reaction.message.guildId);
+		hostChannel = await guild.channels.fetch(reaction.message.channelId);
+		hostMessage = await hostChannel.messages.fetch(reaction.message.id);
+	}
+
+	// Reject toasts on own message or toasts on bot messages if in development mode
+	if (runMode !== "development" && (hostMessage.author.bot || hostMessage.author.id === user.id)) {
 		return;
 	}
 
-	const company = await logicBlob.companies.findCompanyByPK(reaction.message.guildId);
+	// Reject in companies that have disabled reaction toasts
+	const company = await logicBlob.companies.findCompanyByPK(guild.id);
 	if (company.disableReactionToasts) {
 		return;
 	}
 
-	const interactingHunter = await logicBlob.hunters.findOneHunter(user.id, company.id);
+	// Reject if interacting user is banned from BountyBot
+	const { hunter: interactingHunter } = await logicBlob.hunters.findOrCreateBountyHunter(user.id, guild.id);
 	if (interactingHunter.isBanned) {
 		return;
 	}
 
-	const authorHunter = await logicBlob.hunters.findOneHunter(reaction.message.author.id, company.id);
+	// Reject if message author is banned from BountyBot
+	const { hunter: authorHunter } = await logicBlob.hunters.findOrCreateBountyHunter(hostMessage.author.id, guild.id);
 	if (authorHunter.isBanned) {
 		return;
 	}
 
-	const previousCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(reaction.message.guild.id)));
-	const existingToast = await logicBlob.toasts.findToastByMessageId(reaction.message.id);
-	const season = await logicBlob.seasons.findOrCreateCurrentSeason(company.id);
-	const descendingRanks = await logicBlob.ranks.findAllRanks(reaction.message.guildId);
-	const guildRoles = await reaction.message.guild.roles.fetch();
+	const previousCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+	const existingToast = await logicBlob.toasts.findToastByMessageId(hostMessage.id);
+	const [season] = await logicBlob.seasons.findOrCreateCurrentSeason(guild.id);
+	const descendingRanks = await logicBlob.ranks.findAllRanks(guild.id);
+	const guildRoles = await guild.roles.fetch();
 	let goalProgress;
 	if (existingToast) {
-		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, [reaction.message.author.id], season.id);
-		const toastMessage = await reaction.message.channel.messages.fetch(existingToast.messageId);
-		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, [reaction.message.author.id], await reaction.message.guild.members.fetch(user.id), existingToast.imageURL, goalProgress, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
+		// If extant toast, create Seconding
+		const recipientIds = [hostMessage.author.id];
+		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, recipientIds, season.id);
+		hostMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await reaction.message.guild.members.fetch(user.id), existingToast.imageURL, goalProgress, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
 
 		const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
-		syncRankRoles(seasonalHunterReceipts, descendingRanks, reaction.message.guild.members);
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-		const companyReceipt = { guildName: reaction.message.guild.name };
-		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(reaction.message.guild.id)));
+		const companyReceipt = { guildName: guild.name };
+		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
-		goalProgress = await logicBlob.goals.progressGoal(reaction.message.guild.id, "secondings", interactingHunter, season);
+		goalProgress = await logicBlob.goals.progressGoal(guild.id, "secondings", interactingHunter, season);
 		if (goalProgress.gpContributed > 0) {
 			companyReceipt.gp = goalProgress.gpContributed;
 		}
 		if (company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(company, reaction.message.guild, participationMap, descendingRanks, goalProgress);
+			refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
 		} else {
-			refreshReferenceChannelScoreboardOverall(company, reaction.message.guild, await logicBlob.hunters.getCompanyHunterMap(reaction.message.guild.id), goalProgress);
+			refreshReferenceChannelScoreboardOverall(company, guild, await logicBlob.hunters.getCompanyHunterMap(guild.id), goalProgress);
 		}
 
-		sendRewardMessage(toastMessage, `${user.toString()} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, company.maxSimBounties)}`, "Rewards");
+		sendRewardMessage(hostMessage, `${user.toString()} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, company.maxSimBounties)}`, "Rewards");
 	} else {
-		const hunterMap = await logicBlob.hunters.getCompanyHunterMap(reaction.message.guild.id);
-		const recipientSet = new Set([reaction.message.author.id]);
-		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(reaction.message.guild, company, user.id, recipientSet, hunterMap);
+		// If no extant toast, create Toast
+		const hunterMap = await logicBlob.hunters.getCompanyHunterMap(guild.id);
+		const recipientSet = new Set([hostMessage.author.id]);
+		const toastText = `${randomCongratulatoryPhrase()}! (${hostMessage.url})`;
+		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientSet, hunterMap, season.id, toastText);
 
-		const companyReceipt = { guildName: reaction.message.guild.name };
-		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(reaction.message.guild.id)));
+		const companyReceipt = { guildName: guild.name };
+		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
-		goalProgress = await logicBlob.goals.progressGoal(reaction.message.guild.id, "toasts", interactingHunter, season);
+		goalProgress = await logicBlob.goals.progressGoal(guild.id, "toasts", interactingHunter, season);
 		if (goalProgress.gpContributed > 0) {
 			companyReceipt.gp = goalProgress.gpContributed;
 		}
 
 		reaction.message.channel.send({
-			embeds: [toastEmbed(company.toastThumbnailURL, `A toast to ${reaction.message.author}!`, recipientSet, interaction.member, goalProgress)],
+			embeds: [toastEmbed(company.toastThumbnailURL, toastText, recipientSet, await guild.members.fetch(user.id), goalProgress)],
 			components: [secondingButtonRow(toastId)],
 		}).then(async message => {
 			if (hunterReceipts.size > 0) {
 				const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
 				const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
-				syncRankRoles(seasonalHunterReceipts, descendingRanks, reaction.message.guild.members);
+				syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
 
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 				sendRewardMessage(message, rewardSummary("toast", companyReceipt, hunterReceipts, company.maxSimBounties), "Rewards");
 				if (company.scoreboardIsSeasonal) {
-					refreshReferenceChannelScoreboardSeasonal(company, reaction.message.guild, participationMap, descendingRanks, goalProgress);
+					refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
 				} else {
-					refreshReferenceChannelScoreboardOverall(company, reaction.message.guild, hunterMap, goalProgress);
+					refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress);
 				}
 			}
 		});
 	}
 	if (goalProgress.goalCompleted) {
-		reaction.message.channel.send({
+		hostChannel.send({
 			embeds: [goalCompletionEmbed(goalProgress.contributorIds)],
 			flags: MessageFlags.SuppressNotifications
 		});
