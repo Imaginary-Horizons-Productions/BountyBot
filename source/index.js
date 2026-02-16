@@ -268,13 +268,13 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	}
 
 	// Reject if interacting user is banned from BountyBot
-	const { hunter: interactingHunter } = await logicBlob.hunters.findOrCreateBountyHunter(user.id, guild.id);
+	const { hunter: [interactingHunter] } = await logicBlob.hunters.findOrCreateBountyHunter(user.id, guild.id);
 	if (interactingHunter.isBanned) {
 		return;
 	}
 
 	// Reject if message author is banned from BountyBot
-	const { hunter: authorHunter } = await logicBlob.hunters.findOrCreateBountyHunter(hostMessage.author.id, guild.id);
+	const { hunter: [authorHunter] } = await logicBlob.hunters.findOrCreateBountyHunter(hostMessage.author.id, guild.id);
 	if (authorHunter.isBanned) {
 		return;
 	}
