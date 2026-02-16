@@ -203,6 +203,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
  * @param {string} seasonId
  */
 async function secondToast(seconder, toast, company, recipientIds, seasonId) {
+	await seconder.increment("toastsSeconded");
 	await toast.increment("secondings");
 
 	const hunterReceipts = new Map();
@@ -276,9 +277,9 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 			hunterReceipt.levelUp = { achievedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
 		}
 		hunterReceipts.set(seconder.userId, hunterReceipt);
-		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: company.id, userId: seconder.userId, seasonId }, defaults: { xp: critSeconds, toastsSeconded: 1 } });
+		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: company.id, userId: seconder.userId, seasonId }, defaults: { xp: critSeconds } });
 		if (!participationCreated) {
-			participation.increment({ xp: critSeconds, toastsSeconded: 1 });
+			participation.increment({ xp: critSeconds });
 		}
 	}
 	return hunterReceipts;
