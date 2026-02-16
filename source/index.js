@@ -279,8 +279,13 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		return;
 	}
 
-	const previousCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+	// Reject if interacting user has already seconded toast
 	const existingToast = await logicBlob.toasts.findToastByMessageId(hostMessage.id);
+	if (existingToast && await logicBlob.toasts.wasAlreadySeconded(existingToast.id, user.id)) {
+		return;
+	}
+
+	const previousCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 	const [season] = await logicBlob.seasons.findOrCreateCurrentSeason(guild.id);
 	const descendingRanks = await logicBlob.ranks.findAllRanks(guild.id);
 	const guildRoles = await guild.roles.fetch();
