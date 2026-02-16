@@ -54,7 +54,7 @@ function findToastByMessageId(messageId) {
 	if (messageId === null) {
 		return null;
 	}
-	return db.models.Toast.findOne({ where: { messageId } });
+	return db.models.Toast.findOne({ where: { hostMessageId: messageId } });
 }
 
 /** *Get the Mentions of Bounty Hunters that have seconded a given Toast*
@@ -90,9 +90,9 @@ function isToastCrit(critRoll, effectiveToastLevel) {
  * @param {string} seasonId
  * @param {string} toastText
  * @param {string | null} imageURL
- * @param {string | null} messageId
+ * @param {string | null} hostMessageId
  */
-async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seasonId, toastText, imageURL = null, messageId = null) {
+async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seasonId, toastText, imageURL = null, hostMessageId = null) {
 	const hunterReceipts = new Map();
 	// Make database entities
 	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.models.Toast.Recipients });
@@ -118,7 +118,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 
 	const staleToastees = await findStaleToasteeIds(senderId, guild.id);
 
-	const toast = await db.models.Toast.create({ companyId: guild.id, senderId, text: toastText, imageURL, messageId });
+	const toast = await db.models.Toast.create({ companyId: guild.id, senderId, text: toastText, imageURL, hostMessageId });
 	const rawRecipients = [];
 	let critValue = 0;
 	const startingSenderLevel = hunterMap.get(senderId).getLevel(company.xpCoefficient);
@@ -285,6 +285,14 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 	return hunterReceipts;
 }
 
+/**
+ * @param {string} toastId
+ * @param {string} messageId
+ */
+function setToastMessageId(toastId, messageId) {
+	return db.models.Toast.update({ toastMessageId: messageId }, { where: { id: toastId } });
+}
+
 /** *Deletes all Toasts, Recipients, and Secondings for a specified Company*
  * @param {string} companyId
  */
@@ -320,6 +328,7 @@ module.exports = {
 	findSecondingMentions,
 	raiseToast,
 	secondToast,
+	setToastMessageId,
 	deleteCompanyToasts,
 	deleteHunterToasts
 }

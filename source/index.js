@@ -299,7 +299,8 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 			companyReceipt.gp = goalProgress.gpContributed;
 		}
 		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, recipientIds, season.id);
-		hostMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await reaction.message.guild.members.fetch(user.id), existingToast.imageURL, goalProgress, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
+		const toastMessage = await reaction.message.channel.messages.fetch(existingToast.toastMessageId);
+		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await reaction.message.guild.members.fetch(user.id), goalProgress, existingToast.imageURL, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
 
 		const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
@@ -315,12 +316,12 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 			refreshReferenceChannelScoreboardOverall(company, guild, await logicBlob.hunters.getCompanyHunterMap(guild.id), goalProgress);
 		}
 
-		sendRewardMessage(hostMessage, `${user.toString()} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, company.maxSimBounties)}`, "Rewards");
+		sendRewardMessage(toastMessage, `${user.toString()} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, company.maxSimBounties)}`, "Rewards");
 	} else {
 		// If no extant toast, create Toast
 		const hunterMap = await logicBlob.hunters.getCompanyHunterMap(guild.id);
 		const recipientSet = new Set([hostMessage.author.id]);
-		const toastText = `${randomCongratulatoryPhrase()}! (${hostMessage.url})`;
+		const toastText = `${randomCongratulatoryPhrase()}! Reaction Toast: ${hostMessage.url}`;
 		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientSet, hunterMap, season.id, toastText, null, hostMessage.id);
 
 		const companyReceipt = { guildName: guild.name };
@@ -337,6 +338,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 			embeds: [toastEmbed(company.toastThumbnailURL, toastText, recipientSet, await guild.members.fetch(user.id), goalProgress)],
 			components: [secondingButtonRow(toastId)],
 		}).then(async message => {
+			await logicBlob.toasts.setToastMessageId(toastId, message.id);
 			if (hunterReceipts.size > 0) {
 				const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
 				const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);

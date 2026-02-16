@@ -4,8 +4,11 @@
 module.exports = {
 	async up(queryInterface, Sequelize) {
 		const toastDescription = await queryInterface.describeTable("Toast");
-		if (!("messageId" in toastDescription)) {
-			await queryInterface.addColumn("Toast", "messageId", Sequelize.STRING);
+		if (!("hostMessageId" in toastDescription)) {
+			await queryInterface.addColumn("Toast", "hostMessageId", Sequelize.STRING);
+		}
+		if (!("toastMessageId" in toastDescription)) {
+			await queryInterface.addColumn("Toast", "toastMessageId", Sequelize.STRING);
 		}
 		const companyDecription = await queryInterface.describeTable("Company");
 		if (!("disableReactionToasts" in companyDecription)) {
@@ -14,8 +17,11 @@ module.exports = {
 	},
 	async down(queryInterface, Sequelize) {
 		const toastDescription = await queryInterface.describeTable("Toast");
-		if ("messageId" in toastDescription) {
-			await queryInterface.sequelize.query("ALTER TABLE Toast DROP COLUMN messageId;");
+		if ("hostMessageId" in toastDescription) {
+			await queryInterface.sequelize.query("ALTER TABLE Toast DROP COLUMN hostMessageId;");
+		}
+		if ("toastMessageId" in toastDescription) {
+			await queryInterface.sequelize.query("ALTER TABLE Toast DROP COLUMN toastMessageId;");
 		}
 		const companyDescription = await queryInterface.describeTable("Company");
 		if ("disableReactionToasts" in companyDescription) {
