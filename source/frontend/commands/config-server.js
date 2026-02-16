@@ -37,8 +37,8 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 	},
 	{
 		type: "Boolean",
-		name: "allow-reaction-toasts",
-		description: "Allow reacting with 🥂 to quickly raise a toast",
+		name: "disable-reaction-toasts",
+		description: "Toggle whether reacting with 🥂 to quickly raise a toast",
 		required: false
 	}
 );
