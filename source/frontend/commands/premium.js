@@ -16,9 +16,9 @@ module.exports = new CommandWrapper(mainId, "List perks for supporting IHP devel
 						.setDescription("Thank you for using BountyBot! You can chip in for server costs and net some premium perks at the [BountyBot Github page](https://github.com/Imaginary-Horizons-Productions/BountyBot). Sponsors will also gain the following perks:")
 						.addFields(
 							{ name: "/evergreen", value: "Evergreen Bounties are posted by the server and aren't taken down when completed, making them ideal for server goals." },
-							{ name: "/festival", value: "This command allows server admins to create BountyBot festivals that multiply all XP gained by a selected multiplier for their duration." },
+							{ name: "/festival", value: "This command allows BountyBot's managers to start or close festivals that multiply XP or GP gained by a selected multiplier for their duration." },
 							{ name: "/config-premium", value: "Premium configurations include configuring the multiplier applied to XP thresholds for bounty hunters to level up in the server and setting the maximum number of bounty slots bounty hunters can acquire." },
-							{ name: "/rank", value: "This command allows server admins to customize the seasonal BountyBot ranks." }
+							{ name: "/rank", value: "This command allows BountyBot's managers to customize the seasonal BountyBot ranks." }
 						)
 						.setFooter(randomFooterTip())
 						.setTimestamp(stats.mtime)

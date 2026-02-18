@@ -7,8 +7,10 @@ let logicLayer;
 
 const mainId = "festival";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = aggregateSubcommands(mainId, [
-	"start.js",
-	"close.js"
+	"start-gp.js",
+	"start-xp.js",
+	"close-gp.js",
+	"close-xp.js"
 ]);
 module.exports = new CommandWrapper(mainId, "Manage a server-wide festival to multiply XP of bounty completions, toast reciepts, and crit toasts", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
 	/** Allow users to manage an XP multiplier festival */
