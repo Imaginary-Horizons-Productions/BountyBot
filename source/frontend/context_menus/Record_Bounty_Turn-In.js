@@ -47,7 +47,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
 			const [bountyId] = modalSubmission.fields.getStringSelectValues("bounty-id");
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
-			if (bounty.state !== "open") {
+			if (bounty?.state !== "open") {
 				modalSubmission.reply({ content: "The bounty you selected no longer appears to be open.", flags: MessageFlags.Ephemeral });
 				return;
 			}
