@@ -68,12 +68,10 @@ function initModel(sequelize) {
 			type: DataTypes.STRING
 		},
 		attachmentURL: {
-			type: DataTypes.STRING,
-			defaultValue: null
+			type: DataTypes.STRING
 		},
 		scheduledEventId: {
-			type: DataTypes.STRING,
-			defaultValue: null
+			type: DataTypes.STRING
 		},
 		state: { // Allowed values: "open", "completed", "deleted"
 			type: DataTypes.STRING,
@@ -84,8 +82,7 @@ function initModel(sequelize) {
 			defaultValue: 0
 		},
 		completedAt: {
-			type: DataTypes.DATE,
-			defaultValue: null
+			type: DataTypes.DATE
 		},
 		editCount: {
 			type: DataTypes.INTEGER,

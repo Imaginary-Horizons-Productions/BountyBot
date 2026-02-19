@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder, FileUploadBuilder } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
@@ -76,12 +76,6 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 								.setStyle(TextInputStyle.Paragraph)
 								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
 						),
-					new LabelBuilder().setLabel("Image URL")
-						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("imageURL")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Short)
-						),
 					new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
 						.setTextInputComponent(
 							new TextInputBuilder().setCustomId("startTimestamp")
@@ -95,6 +89,12 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 								.setRequired(false)
 								.setStyle(TextInputStyle.Short)
 								.setPlaceholder("Required if making an event with the bounty")
+						),
+					new LabelBuilder().setLabel("Image")
+						.setFileUploadComponent(
+							new FileUploadBuilder().setCustomId("imageURL")
+								.setMaxValues(1)
+								.setRequired(false)
 						)
 				);
 			collectedInteraction.showModal(modal);
@@ -123,13 +123,11 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				}
 				const errors = [];
 
-				const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
-				if (imageURL) {
-					try {
-						new URL(imageURL);
-						rawBounty.attachmentURL = imageURL;
-					} catch (error) {
-						errors.push(error.message);
+				const attachmentFileCollection = modalSubmission.fields.getUploadedFiles("imageURL");
+				if (attachmentFileCollection) {
+					const firstAttachment = attachmentFileCollection.first();
+					if (firstAttachment) {
+						rawBounty.attachmentURL = firstAttachment.url;
 					}
 				}
 
@@ -145,7 +143,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				}
 
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(modalSubmission.guild.id);
-				logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
+				await logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
 				origin.hunter.increment({ xp: 1 }).then(async () => {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
