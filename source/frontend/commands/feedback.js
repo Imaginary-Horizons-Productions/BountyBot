@@ -1,4 +1,4 @@
-const { TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder, InteractionContextType, MessageFlags, LabelBuilder } = require('discord.js');
+const { TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder, InteractionContextType, MessageFlags, LabelBuilder, FileUploadBuilder } = require('discord.js');
 const { EmbedLimits } = require('@sapphire/discord.js-utilities');
 const { CommandWrapper } = require('../classes');
 const { testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../../constants');
@@ -40,10 +40,10 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 									.setStyle(TextInputStyle.Short)
 							),
 						new LabelBuilder().setLabel("Screenshot/diagram URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("image")
+							.setFileUploadComponent(
+								new FileUploadBuilder().setCustomId("image")
+									.setMaxValues(1)
 									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
 							)
 					)
 				);
@@ -62,14 +62,9 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 						embed.setColor(modalSubmission.user.hexAccentColor);
 					}
 
-					const unvalidatedImageURL = modalSubmission.fields.getTextInputValue("image");
-					try {
-						if (unvalidatedImageURL) {
-							new URL(unvalidatedImageURL);
-							embed.setImage(unvalidatedImageURL);
-						}
-					} catch (error) {
-						errors.push(error.message);
+					const imageFileCollection = modalSubmission.fields.getUploadedFiles("image");
+					if (imageFileCollection?.size > 0) {
+						embed.setImage(imageFileCollection.first().url);
 					}
 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
@@ -111,10 +106,10 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 									.setStyle(TextInputStyle.Short)
 							),
 						new LabelBuilder().setLabel("Diagram URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("image")
+							.setFileUploadComponent(
+								new FileUploadBuilder().setCustomId("image")
+									.setMaxValues(1)
 									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
 							)
 					)
 				);
@@ -133,14 +128,9 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 						embed.setColor(modalSubmission.user.hexAccentColor);
 					}
 
-					const unvalidatedImageURL = modalSubmission.fields.getTextInputValue("image");
-					try {
-						if (unvalidatedImageURL) {
-							new URL(unvalidatedImageURL);
-							embed.setImage(unvalidatedImageURL);
-						}
-					} catch (error) {
-						errors.push(error.message);
+					const imageFileCollection = modalSubmission.fields.getUploadedFiles("image");
+					if (imageFileCollection?.size > 0) {
+						embed.setImage(imageFileCollection.first().url);
 					}
 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
