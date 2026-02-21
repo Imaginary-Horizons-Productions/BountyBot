@@ -1,6 +1,9 @@
 # BountyBot Change Log
 ## BountyBot Version 2.11.0bfi:
 - Fixed Goal Point contributions not showing up in reward messages
+### Premium Features
+- Added premium commands `/festival start-gp` and `/festival close-gp` for toggling times where gp contributions are multiplied (old festival commands renamed to `/festival start-xp` and `/festival close-xp`)
+- Added the `nickname` option to `/config-premium` to allow bot managers to set a nickname for BountyBot that won't get cleared by toggling festivals on or off
 ## BountyBot Version 2.10.1bi:
 This version includes the addition of the "b" version category, for "bug fixes".
 - Fixed several crashes related to missing permissions, modal timeouts, trying to DM users who've blocked BountyBot, and residual data from former server members
