@@ -248,8 +248,8 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 	// If receiving a Partial, fetch entities
 	let guild = reaction.message.guild;
-	let hostChannel = reaction.message?.channel;
 	let hostMessage = reaction.message;
+	let hostChannel = hostMessage?.channel;
 	if (reaction.partial) {
 		guild = await dAPIClient.guilds.fetch(reaction.message.guildId);
 		hostChannel = await guild.channels.fetch(reaction.message.channelId);
