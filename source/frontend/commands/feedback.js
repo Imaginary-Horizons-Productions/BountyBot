@@ -1,4 +1,4 @@
-const { TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder, InteractionContextType, MessageFlags, LabelBuilder } = require('discord.js');
+const { TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder, InteractionContextType, MessageFlags, LabelBuilder, FileUploadBuilder, userMention } = require('discord.js');
 const { EmbedLimits } = require('@sapphire/discord.js-utilities');
 const { CommandWrapper } = require('../classes');
 const { testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../../constants');
@@ -14,62 +14,62 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 		}
 
 		switch (interaction.options.getString("feedback-type")) {
-			case "bug":
+			case "bug": {
+				const titleId = "title";
+				const stepsId = "steps";
+				const actualId = "actual";
+				const expectedId = "expected";
+				const imageId = "image";
 				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Bug Report")
 					.addLabelComponents(
 						new LabelBuilder().setLabel("Title")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("title")
+								new TextInputBuilder().setCustomId(titleId)
 									.setMaxLength(EmbedLimits.MaximumTitleLength - 12)
 									.setStyle(TextInputStyle.Short)
 							),
 						new LabelBuilder().setLabel("Steps to reproduce")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("steps")
+								new TextInputBuilder().setCustomId(stepsId)
 									.setStyle(TextInputStyle.Paragraph)
 							),
 						new LabelBuilder().setLabel("What happened")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("actual")
+								new TextInputBuilder().setCustomId(actualId)
 									.setStyle(TextInputStyle.Short)
 							),
 						new LabelBuilder().setLabel("What I was expecting to happen")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("expected")
+								new TextInputBuilder().setCustomId(expectedId)
 									.setStyle(TextInputStyle.Short)
 							),
-						new LabelBuilder().setLabel("Screenshot/diagram URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("image")
+						new LabelBuilder().setLabel("Screenshot/Diagram")
+							.setFileUploadComponent(
+								new FileUploadBuilder().setCustomId(imageId)
+									.setMaxValues(1)
 									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
 							)
 					)
 				);
 				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: 300000 }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
-						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue("title")}`)
+						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue(titleId)}`)
 						.addFields(
-							{ name: "Reporter", value: `<@${modalSubmission.user.id}>` },
-							{ name: "Steps to Reproduce", value: modalSubmission.fields.getTextInputValue("steps") },
-							{ name: "Actual Behavior", value: modalSubmission.fields.getTextInputValue("actual") },
-							{ name: "Expected Behavior", value: modalSubmission.fields.getTextInputValue("expected") }
+							{ name: "Reporter", value: userMention(modalSubmission.user.id) },
+							{ name: "Steps to Reproduce", value: modalSubmission.fields.getTextInputValue(stepsId) },
+							{ name: "Actual Behavior", value: modalSubmission.fields.getTextInputValue(actualId) },
+							{ name: "Expected Behavior", value: modalSubmission.fields.getTextInputValue(expectedId) }
 						);
 
 					if (modalSubmission.user.hexAccentColor) {
 						embed.setColor(modalSubmission.user.hexAccentColor);
 					}
 
-					const unvalidatedImageURL = modalSubmission.fields.getTextInputValue("image");
-					try {
-						if (unvalidatedImageURL) {
-							new URL(unvalidatedImageURL);
-							embed.setImage(unvalidatedImageURL);
-						}
-					} catch (error) {
-						errors.push(error.message);
+					const imageFileCollection = modalSubmission.fields.getUploadedFiles(imageId);
+					if (imageFileCollection?.size > 0) {
+						embed.setImage(imageFileCollection.first().url);
 					}
 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
@@ -81,66 +81,66 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 						})
 					})
 				}).catch(butIgnoreInteractionCollectorErrors);
-				break;
-			case "feature":
+			} break;
+			case "feature": {
+				const titleId = "title";
+				const userInputId = "user";
+				const functionalityId = "functionality";
+				const benefitId = "benefit";
+				const imageId = "image";
 				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Feature Request")
 					.addLabelComponents(
 						new LabelBuilder().setLabel("Title")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("title")
+								new TextInputBuilder().setCustomId(titleId)
 									.setMaxLength(EmbedLimits.MaximumTitleLength - 17)
 									.setStyle(TextInputStyle.Short)
 							),
 						new LabelBuilder().setLabel("For who?")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("user")
+								new TextInputBuilder().setCustomId(userInputId)
 									.setPlaceholder("As a ___")
 									.setStyle(TextInputStyle.Short)
 							),
 						new LabelBuilder().setLabel("What kind of feature?")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("functionality")
+								new TextInputBuilder().setCustomId(functionalityId)
 									.setPlaceholder("I'd like to ___")
 									.setStyle(TextInputStyle.Paragraph)
 							),
 						new LabelBuilder().setLabel("Why?")
 							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("benefit")
+								new TextInputBuilder().setCustomId(benefitId)
 									.setPlaceholder("So that I can ___")
 									.setStyle(TextInputStyle.Short)
 							),
-						new LabelBuilder().setLabel("Diagram URL")
-							.setTextInputComponent(
-								new TextInputBuilder().setCustomId("image")
+						new LabelBuilder().setLabel("Diagram")
+							.setFileUploadComponent(
+								new FileUploadBuilder().setCustomId(imageId)
+									.setMaxValues(1)
 									.setRequired(false)
-									.setStyle(TextInputStyle.Short)
 							)
 					)
 				);
 				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: 300000 }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
-						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue("title")}`)
+						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue(titleId)}`)
 						.addFields(
-							{ name: "Reporter", value: `<@${modalSubmission.user.id}>` },
-							{ name: "User Demographic", value: modalSubmission.fields.getTextInputValue("user") },
-							{ name: "Functionality", value: modalSubmission.fields.getTextInputValue("functionality") },
-							{ name: "Benefit", value: modalSubmission.fields.getTextInputValue("benefit") }
+							{ name: "Reporter", value: userMention(modalSubmission.user.id) },
+							{ name: "User Demographic", value: modalSubmission.fields.getTextInputValue(userInputId) },
+							{ name: "Functionality", value: modalSubmission.fields.getTextInputValue(functionalityId) },
+							{ name: "Benefit", value: modalSubmission.fields.getTextInputValue(benefitId) }
 						);
 
 					if (modalSubmission.user.hexAccentColor) {
 						embed.setColor(modalSubmission.user.hexAccentColor);
 					}
 
-					const unvalidatedImageURL = modalSubmission.fields.getTextInputValue("image");
-					try {
-						if (unvalidatedImageURL) {
-							new URL(unvalidatedImageURL);
-							embed.setImage(unvalidatedImageURL);
-						}
-					} catch (error) {
-						errors.push(error.message);
+					const imageFileCollection = modalSubmission.fields.getUploadedFiles(imageId);
+					if (imageFileCollection?.size > 0) {
+						embed.setImage(imageFileCollection.first().url);
 					}
 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
@@ -153,6 +153,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 					})
 				}).catch(butIgnoreInteractionCollectorErrors);
 				break;
+			}
 		}
 	}
 ).setOptions(
