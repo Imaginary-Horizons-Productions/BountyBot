@@ -76,6 +76,8 @@ Configure BountyBot settings for this server
 > Choices: `Notify online members (@here)`, `Notify all members (@everyone)`, `No prefix`, `Suppress notifications (@silent)`
 
 Configure who to send notifications to (default @here)
+#### disable-reaction-toasts (optional)
+Toggle whether reacting with 🥂 to quickly raise a toast
 ### /create-default
 > Usable in: Servers
 

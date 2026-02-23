@@ -85,7 +85,8 @@ const bountyBotTips = [
 	"Server level is based on total bounty hunter level--higher server level means better evergreen bounty rewards.",
 	"A bounty poster cannot complete their own bounty.",
 	"Adding a description, image or time to a bounty all add 1 bonus XP for the poster.",
-	"Bounty posters have double the chance to find items compared to completers."
+	"Bounty posters have double the chance to find items compared to completers.",
+	"Quickly raise a toast to a Discord message by reacting with 🥂!"
 ].map(text => ({ text, iconURL: bountyBotIconURL }));
 const tipPool = bountyBotTips.concat(bountyBotTips, discordTips);
 

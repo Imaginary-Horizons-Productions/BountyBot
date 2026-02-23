@@ -95,6 +95,9 @@ function initModel(sequelize) {
 			type: DataTypes.REAL,
 			defaultValue: 1
 		},
+		disableReactionToasts: {
+			type: DataTypes.BOOLEAN
+		},
 		xpCoefficient: {
 			type: DataTypes.INTEGER,
 			defaultValue: 3
