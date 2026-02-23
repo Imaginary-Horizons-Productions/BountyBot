@@ -4,7 +4,7 @@ const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshRef
 
 module.exports = new SubcommandWrapper("close-gp", "End the festival, returning to normal GP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		origin.company.update({ "gpFestivalMultiplier": 1 });
+		await origin.company.update({ "gpFestivalMultiplier": 1 });
 		updateBotNicknameForFestival(await interaction.guild.members.fetchMe(), origin.company);
 		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: "The GP multiplier festival has ended. Hope you participate next time!" }));
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(origin.company.id);

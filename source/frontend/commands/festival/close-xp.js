@@ -4,7 +4,7 @@ const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshRef
 
 module.exports = new SubcommandWrapper("close-xp", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		origin.company.update({ "xpFestivalMultiplier": 1 });
+		await origin.company.update({ "xpFestivalMultiplier": 1 });
 		updateBotNicknameForFestival(await interaction.guild.members.fetchMe(), origin.company);
 		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: "The XP multiplier festival has ended. Hope you participate next time!" }));
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(origin.company.id);
