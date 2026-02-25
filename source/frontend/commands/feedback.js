@@ -3,6 +3,7 @@ const { EmbedLimits } = require('@sapphire/discord.js-utilities');
 const { CommandWrapper } = require('../classes');
 const { testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { butIgnoreInteractionCollectorErrors } = require('../shared');
+const { timeConversion } = require('../../shared');
 
 const mainId = "feedback";
 module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
@@ -20,7 +21,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 				const actualId = "actual";
 				const expectedId = "expected";
 				const imageId = "image";
-				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Bug Report")
 					.addLabelComponents(
 						new LabelBuilder().setLabel("Title")
@@ -50,9 +51,9 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 									.setMaxValues(1)
 									.setRequired(false)
 							)
-					)
-				);
-				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: 300000 }).then(modalSubmission => {
+					);
+				interaction.showModal(modal);
+				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue(titleId)}`)
@@ -88,7 +89,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 				const functionalityId = "functionality";
 				const benefitId = "benefit";
 				const imageId = "image";
-				interaction.showModal(new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Feature Request")
 					.addLabelComponents(
 						new LabelBuilder().setLabel("Title")
@@ -121,9 +122,9 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 									.setMaxValues(1)
 									.setRequired(false)
 							)
-					)
-				);
-				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: 300000 }).then(modalSubmission => {
+					);
+				interaction.showModal(modal);
+				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(modalSubmission => {
 					const errors = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue(titleId)}`)

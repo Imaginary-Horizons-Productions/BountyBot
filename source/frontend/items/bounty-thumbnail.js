@@ -16,25 +16,24 @@ module.exports = new ItemTemplateSet(
 				interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: MessageFlags.Ephemeral });
 				return true;
 			}
-			interaction.showModal(
-				new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-					.setTitle("Add Bounty Thumbnail")
-					.addLabelComponents(
-						new LabelBuilder().setLabel("Bounty")
-							.setStringSelectMenuComponent(
-								new StringSelectMenuBuilder().setCustomId("bounty-id")
-									.setPlaceholder("Select a bounty...")
-									.setOptions(selectOptionsFromBounties(openBounties))
-							),
-						new LabelBuilder().setLabel("Image URL")
-							.setFileUploadComponent(
-								new FileUploadBuilder().setCustomId("imageURL")
-									.setMaxValues(1)
-							)
-					)
-			);
+			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+				.setTitle("Add Bounty Thumbnail")
+				.addLabelComponents(
+					new LabelBuilder().setLabel("Bounty")
+						.setStringSelectMenuComponent(
+							new StringSelectMenuBuilder().setCustomId("bounty-id")
+								.setPlaceholder("Select a bounty...")
+								.setOptions(selectOptionsFromBounties(openBounties))
+						),
+					new LabelBuilder().setLabel("Image URL")
+						.setFileUploadComponent(
+							new FileUploadBuilder().setCustomId("imageURL")
+								.setMaxValues(1)
+						)
+				);
+			interaction.showModal(modal);
 
-			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === `${SKIP_INTERACTION_HANDLING}${interaction.id}`, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				const bounty = await openBounties.find(bounty => bounty.id === modalSubmission.fields.getStringSelectValues("bounty-id")[0]).reload();
 				if (bounty?.state !== "open") {
 					return modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });

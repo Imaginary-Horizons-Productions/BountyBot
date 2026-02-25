@@ -3,6 +3,7 @@ const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { textsHaveAutoModInfraction, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
+const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -27,8 +28,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		const modalId = `${SKIP_INTERACTION_HANDLING}${interaction.id}`;
-		interaction.showModal(new ModalBuilder().setCustomId(modalId)
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Raising a Toast")
 			.addLabelComponents(
 				new LabelBuilder().setLabel("Toast Message")
@@ -36,9 +36,9 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 						new TextInputBuilder().setCustomId("message")
 							.setStyle(TextInputStyle.Short)
 					)
-			)
-		);
-		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
+			);
+		interaction.showModal(modal);
+		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 			const toastText = modalSubmission.fields.getTextInputValue("message");
 			const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [toastText], "toast");
 			if (autoModInfraction == null) {

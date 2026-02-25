@@ -2,6 +2,7 @@ const { InteractionContextType, PermissionFlagsBits, ModalBuilder, userMention, 
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { commandMention, randomCongratulatoryPhrase, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties } = require('../shared');
+const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -32,8 +33,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		const modalId = `${SKIP_INTERACTION_HANDLING}${interaction.id}`;
-		interaction.showModal(new ModalBuilder().setCustomId(modalId)
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Record a Bounty Turn-In")
 			.setLabelComponents(
 				new LabelBuilder().setLabel(`Bounty Hunter: ${interaction.targetMember.displayName}`)
@@ -43,8 +43,8 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 							.setOptions(selectOptionsFromBounties(bounties))
 					)
 			)
-		);
-		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
+		interaction.showModal(modal);
+		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 			const [bountyId] = modalSubmission.fields.getStringSelectValues("bounty-id");
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
 			if (bounty?.state !== "open") {
