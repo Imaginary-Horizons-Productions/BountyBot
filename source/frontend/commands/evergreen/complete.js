@@ -66,10 +66,10 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 						// Evergreen bounties are not eligible for showcase bonuses
 						const bountyBaseValue = Bounty.calculateCompleterReward(previousCompanyLevel, bounty.slotNumber, 0);
-						const bountyValue = Math.floor(bountyBaseValue * origin.company.xpFestivalMultiplier);
+						const bountyValue = Math.floor(bountyBaseValue * origin.company.festivalMultiplier);
 						await logicLayer.bounties.bulkCreateCompletions(bounty.id, collectedInteraction.guild.id, [...validatedHunters.keys()], bountyValue);
 
-						const xpMultiplierString = origin.company.festivalMultiplierString("xp");
+						const xpMultiplierString = origin.company.festivalMultiplierString();
 						const goalProgress = {
 							totalGP: 0,
 							goalCompleted: false,
@@ -88,7 +88,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 							}
 							hunterReceipts.set(userId, hunterReceipt);
 							logicLayer.seasons.changeSeasonXP(userId, collectedInteraction.guildId, season.id, bountyValue);
-							const { goalProgress: { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } } = await logicLayer.goals.progressGoal(origin.company, "bounties", hunter, season);
+							const { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } = await logicLayer.goals.progressGoal(collectedInteraction.guildId, "bounties", hunter, season);
 							goalProgress.totalGP += gpContributed;
 							goalProgress.goalCompleted ||= goalCompleted;
 							goalProgress.currentGP = currentGP;
@@ -105,7 +105,6 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						const announcementPayload = { embeds: [completedBountyEmbed], withResponse: true };
 						if (goalProgress.totalGP > 0) {
 							companyReceipt.gp = goalProgress.totalGP;
-							companyReceipt.gpMultiplier = origin.company.festivalMultiplierString("gp");
 						}
 						if (goalProgress.goalCompleted) {
 							announcementPayload.embeds.push(goalCompletionEmbed([...finalContributorIds.keys()]));

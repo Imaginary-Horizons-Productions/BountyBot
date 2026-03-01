@@ -122,7 +122,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 	const rawRecipients = [];
 	let critValue = 0;
 	const startingSenderLevel = hunterMap.get(senderId).getLevel(company.xpCoefficient);
-	const xpMultiplierString = company.festivalMultiplierString("xp");
+	const xpMultiplierString = company.festivalMultiplierString();
 	for (const id of toasteeIds.values()) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
@@ -132,7 +132,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 
 			let hunter = hunterMap.get(id);
 			const previousLevel = hunter.getLevel(company.xpCoefficient);
-			const xpAwarded = Math.floor(company.xpFestivalMultiplier);
+			const xpAwarded = Math.floor(company.festivalMultiplier);
 			hunter = await hunter.increment({ toastsReceived: 1, xp: xpAwarded });
 			const currentLevel = hunter.getLevel(company.xpCoefficient);
 			if (currentLevel > previousLevel) {

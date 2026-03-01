@@ -189,15 +189,17 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 					let hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
+					const companyReceipt = { guildName: collectedInteraction.guild.name };
 					const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 					const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, origin.company);
-					const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(origin.company, "bounties", hunterMap.get(bounty.userId), season);
-					companyReceipt.guildName = collectedInteraction.guild.name;
-
 					hunterMap = await reloadHunterMapSubset(hunterMap, [...validatedHunters.keys(), bounty.userId]);
 					const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 					if (previousCompanyLevel < currentCompanyLevel) {
 						companyReceipt.levelUp = currentCompanyLevel;
+					}
+					const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", hunterMap.get(bounty.userId), season);
+					if (goalUpdate.gpContributed > 0) {
+						companyReceipt.gp = goalUpdate.gpContributed;
 					}
 					const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
@@ -208,20 +210,20 @@ module.exports = new SelectWrapper(mainId, 3000,
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
-					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys(), goalProgress))
+					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys(), goalUpdate))
 						.then(async embed => {
 							interaction.message.edit({ embeds: [embed], components: [] });
 							collectedInteraction.channel.setArchived(true, "bounty completed");
 						})
 					const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
-					if (goalProgress.goalCompleted) {
-						announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
+					if (goalUpdate.goalCompleted) {
+						announcementOptions.embeds = [goalCompletionEmbed(goalUpdate.contributorIds)];
 					}
 					collectedInteraction.channels.first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
 					if (origin.company.scoreboardIsSeasonal) {
-						refreshReferenceChannelScoreboardSeasonal(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress);
+						refreshReferenceChannelScoreboardSeasonal(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalUpdate);
 					} else {
-						refreshReferenceChannelScoreboardOverall(origin.company, collectedInteraction.guild, hunterMap, goalProgress);
+						refreshReferenceChannelScoreboardOverall(origin.company, collectedInteraction.guild, hunterMap, goalUpdate);
 					}
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply

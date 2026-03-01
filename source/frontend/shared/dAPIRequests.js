@@ -1,8 +1,7 @@
-const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember } = require("discord.js");
+const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
-const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -190,31 +189,6 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 	}
 }
 
-/**
- * @param {GuildMember} bountyBotGuildMember
- * @param {Company} company
- */
-async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
-	const tagComponents = [];
-	if (company.xpFestivalMultiplier > 1) {
-		tagComponents.push(["XP", company.xpFestivalMultiplier]);
-	}
-	if (company.gpFestivalMultiplier > 1) {
-		tagComponents.push(["GP", company.gpFestivalMultiplier]);
-	}
-
-	if (tagComponents.length > 0) {
-		const multiplierTag = tagComponents.map(([type, multiplier]) => `${type} x ${multiplier}`).join(" & ");
-		const previousNickname = company.nickname ?? "BountyBot";
-		if (previousNickname.length + multiplierTag.length <= GuildMemberLimits.MaximumDisplayNameLength) {
-			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`);
-		}
-	} else {
-		// company.nickname will be null if unset, which is the correct value to send dAPI to unset a nickname
-		bountyBotGuildMember.setNickname(company.nickname);
-	}
-}
-
 module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
@@ -223,6 +197,5 @@ module.exports = {
 	refreshReferenceChannelScoreboardOverall,
 	sendRewardMessage,
 	syncRankRoles,
-	unarchiveAndUnlockThread,
-	updateBotNicknameForFestival
+	unarchiveAndUnlockThread
 };

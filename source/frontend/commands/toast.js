@@ -69,28 +69,31 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const companyReceipt = { guildName: interaction.guild.name };
 
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, origin.company, interaction.user.id, validatedToasteeIds, hunterMap, season.id, toastText, imageURL);
-		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
-		let companyReceipt = {};
-		if (hunterReceipts.size > 0) {
-			const results = await logicLayer.goals.progressGoal(origin.company, "toasts", hunterMap.get(interaction.user.id), season);
-			companyReceipt = results.companyReceipt;
-			goalProgress = results.goalProgress;
+		hunterMap = await reloadHunterMapSubset(hunterMap, Array.from(hunterReceipts.keys()));
+		const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+		if (previousCompanyLevel < currentCompanyLevel) {
+			companyReceipt.levelUp = currentCompanyLevel;
+		}
 
-			hunterMap = await reloadHunterMapSubset(hunterMap, Array.from(hunterReceipts.keys()));
-			const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-			if (previousCompanyLevel < currentCompanyLevel) {
-				companyReceipt.levelUp = currentCompanyLevel;
+		const embeds = [];
+		const goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
+		if (hunterReceipts.size > 0) {
+			const goalUpdate = await logicLayer.goals.progressGoal(interaction.guild.id, "toasts", hunterMap.get(interaction.user.id), season);
+			goalProgress.goalCompleted = goalUpdate.goalCompleted;
+			goalProgress.currentGP = goalUpdate.currentGP;
+			goalProgress.requiredGP = goalUpdate.requiredGP;
+			if (goalUpdate.gpContributed > 0) {
+				companyReceipt.gp = goalUpdate.gpContributed;
+				if (goalUpdate.goalCompleted) {
+					embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
+				}
 			}
 		}
-		companyReceipt.guildName = interaction.guild.name;
-
-		const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member, goalProgress, imageURL)];
-		if (goalProgress.goalCompleted) {
-			embeds.push(goalCompletionEmbed(goalProgress.contributorIds));
-		}
+		embeds.unshift(toastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member, goalProgress, imageURL));
 
 		interaction.reply({
 			embeds,

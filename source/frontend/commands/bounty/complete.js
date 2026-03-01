@@ -50,15 +50,18 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const companyReceipt = { guildName: interaction.guild.name };
 
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 		const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, origin.hunter, validatedHunters, season, origin.company);
-		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(origin.company, "bounties", origin.hunter, season);
-		companyReceipt.guildName = interaction.guild.name;
 		hunterMap = await reloadHunterMapSubset(hunterMap, [...validatedHunters.keys(), origin.hunter.userId]);
 		const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
+		}
+		const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", origin.hunter, season);
+		if (goalUpdate.gpContributed > 0) {
+			companyReceipt.gp = goalUpdate.gpContributed;
 		}
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
@@ -67,10 +70,10 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		const content = rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 
-		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), goalProgress).then(async embed => {
+		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), goalUpdate).then(async embed => {
 			const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
-			if (goalProgress.goalCompleted) {
-				acknowledgeOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
+			if (goalUpdate.goalCompleted) {
+				acknowledgeOptions.embeds = [goalCompletionEmbed(goalUpdate.contributorIds)];
 			}
 
 			if (origin.company.bountyBoardId) {
@@ -95,9 +98,9 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			}
 
 			if (origin.company.scoreboardIsSeasonal) {
-				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalUpdate);
 			} else {
-				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
+				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalUpdate);
 			}
 		});
 	}
