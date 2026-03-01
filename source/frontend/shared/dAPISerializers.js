@@ -343,8 +343,11 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	if (currentGP < requiredGP) {
 		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
+	if (company.xpFestivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString("xp")}.` });
+	}
+	if (company.gpFestivalMultiplier !== 1) {
+		fields.push({ name: "GP Festival", value: `A GP multiplier festival is currently active for ${company.festivalMultiplierString("gp")}.` });
 	}
 	if (company.nextRaffleString) {
 		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
@@ -403,8 +406,11 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	if (currentGP < requiredGP) {
 		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
+	if (company.xpFestivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString("xp")}.` });
+	}
+	if (company.gpFestivalMultiplier !== 1) {
+		fields.push({ name: "GP Festival", value: `A GP multiplier festival is currently active for ${company.festivalMultiplierString("gp")}.` });
 	}
 	if (company.nextRaffleString) {
 		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
@@ -481,7 +487,7 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
-		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
+		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString("xp")}`, inline: true });
 	}
 
 	if (bounty.isEvergreen) {

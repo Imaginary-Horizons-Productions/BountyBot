@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Hunter, Season } = require("../database/models");
+const { Hunter, Season, Company } = require("../database/models");
 
 /** @type {Sequelize} */
 let db;
@@ -56,43 +56,54 @@ const GOAL_POINT_MAP = {
 };
 
 /**
- * @param {string} companyId
+ * @param {Company} company
  * @param {"bounties" | "toasts" | "secondings"} progressType
  * @param {Hunter} hunter
  * @param {Season} season
  */
-async function progressGoal(companyId, progressType, hunter, season) {
-	const returnData = {
-		gpContributed: 0,
-		goalCompleted: false,
-		contributorIds: [],
-		currentGP: 0,
-		requiredGP: 0
-	};
-	const goal = await db.models.Goal.findOne({ where: { companyId, state: "ongoing" }, order: [["createdAt", "DESC"]] });
+async function progressGoal(company, progressType, hunter, season) {
+	const contributorIds = [];
+	let gpDisplay = 0, gpEarned = 0, gpMultiplierString = "", goalCompleted = false, currentGP = 0, requiredGP = 0;
+	const goal = await db.models.Goal.findOne({ where: { companyId: company.id, state: "ongoing" }, order: [["createdAt", "DESC"]] });
 	if (goal) {
-		returnData.requiredGP = goal.requiredGP;
-		returnData.gpContributed = GOAL_POINT_MAP[progressType];
+		requiredGP = goal.requiredGP;
+		gpDisplay += GOAL_POINT_MAP[progressType];
 		if (goal.type === progressType) {
-			returnData.gpContributed *= 2;
+			gpDisplay *= 2;
 		}
-		await createGoalContribution(goal.id, hunter.userId, returnData.gpContributed);
+		gpEarned = gpDisplay;
+		if (company.gpFestivalMultiplier > 1) {
+			gpEarned *= company.gpFestivalMultiplier;
+			gpMultiplierString = company.festivalMultiplierString("gp");
+		}
+		await createGoalContribution(goal.id, hunter.userId, gpEarned);
 		hunter.increment("goalContributions");
-		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId, userId: hunter.userId, seasonId: season.id } });
+		const [participation] = await db.models.Participation.findOrCreate({ where: { companyId: company.id, userId: hunter.userId, seasonId: season.id } });
 		participation.increment("goalContributions");
 		const contributions = await db.models.Contribution.findAll({ where: { goalId: goal.id } });
-		const currentGP = contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
-		returnData.goalCompleted = goal.requiredGP <= currentGP;
-		if (returnData.goalCompleted) {
-			returnData.contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
-			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: returnData.contributorIds } } });
+		currentGP = contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
+		goalCompleted = goal.requiredGP <= currentGP;
+		if (goalCompleted) {
+			contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
+			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: contributorIds } } });
 			goal.update({ state: "completed" });
 		} else {
-			returnData.contributorIds.push(hunter.userId);
-			returnData.currentGP = currentGP;
+			contributorIds.push(hunter.userId);
 		}
 	}
-	return returnData;
+	return {
+		companyReceipt: {
+			gp: gpDisplay,
+			gpMultiplier: gpMultiplierString
+		},
+		goalProgress: {
+			gpContributed: gpEarned,
+			goalCompleted,
+			contributorIds,
+			currentGP,
+			requiredGP
+		}
+	};
 }
 
 /** *Destroy all Goals and Contributions for the specified Company*
