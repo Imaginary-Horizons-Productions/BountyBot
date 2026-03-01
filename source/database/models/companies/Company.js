@@ -1,6 +1,7 @@
 const { italic } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Hunter } = require('../users/Hunter');
+const { GuildMemberLimits } = require('@sapphire/discord.js-utilities');
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
 class Company extends Model {
@@ -45,11 +46,21 @@ class Company extends Model {
 		return Math.floor(Math.sqrt(xp / 3) + 1);
 	}
 
-	festivalMultiplierString() {
-		if (this.festivalMultiplier != 1) {
-			return ` ${italic(`x${this.festivalMultiplier}`)}`;
-		} else {
-			return "";
+	/** @param {"xp" | "gp"} kind */
+	festivalMultiplierString(kind) {
+		switch (kind) {
+			case 'xp':
+				if (this.xpFestivalMultiplier != 1) {
+					return ` ${italic(`x${this.xpFestivalMultiplier}`)}`;
+				} else {
+					return "";
+				}
+			case 'gp':
+				if (this.gpFestivalMultiplier != 1) {
+					return ` ${italic(`x${this.gpFestivalMultiplier}`)}`;
+				} else {
+					return "";
+				}
 		}
 	}
 }
@@ -73,12 +84,19 @@ function initModel(sequelize) {
 			type: DataTypes.BIGINT,
 			defaultValue: 3600000
 		},
-		disableReactionToasts: {
-			type: DataTypes.BOOLEAN
+		nickname: { // Let managers save a nickname for BountyBot for constructing festival tags
+			type: DataTypes.STRING(GuildMemberLimits.MaximumDisplayNameLength)
 		},
-		festivalMultiplier: {
+		xpFestivalMultiplier: {
 			type: DataTypes.REAL,
 			defaultValue: 1
+		},
+		gpFestivalMultiplier: {
+			type: DataTypes.REAL,
+			defaultValue: 1
+		},
+		disableReactionToasts: {
+			type: DataTypes.BOOLEAN
 		},
 		xpCoefficient: {
 			type: DataTypes.INTEGER,

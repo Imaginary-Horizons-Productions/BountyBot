@@ -1,6 +1,8 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { GLOBAL_MAX_BOUNTY_SLOTS } = require('../../constants');
+const { GuildMemberLimits } = require('@sapphire/discord.js-utilities');
+const { updateBotNicknameForFestival } = require('../shared');
 
 const mainId = "config-premium";
 module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
@@ -8,6 +10,19 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 		const updatePayload = {};
 		let content = "The following server settings have been configured:";
 		const errors = [];
+
+		const nickname = interaction.options.getString("nickname");
+		if (nickname !== null) {
+			if (nickname.length > GuildMemberLimits.MaximumDisplayNameLength) {
+				errors.push(`${nickname} could not be set for Nickname. Nicknames cannot be longer than ${GuildMemberLimits.MaximumDisplayNameLength}.`);
+			} else {
+				updatePayload.nickname = nickname;
+				interaction.guild.members.fetchMe().then(bountybotGuildMember => {
+					updateBotNicknameForFestival(bountybotGuildMember, origin.company);
+				})
+				content += `\n- This sever's nickname for BountyBot has been set to ${nickname}.`;
+			}
+		}
 
 		const xpCoefficient = interaction.options.getNumber("level-threshold-multiplier");
 		if (xpCoefficient !== null) {
@@ -113,6 +128,12 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 		interaction.reply({ content, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
+	{
+		type: "String",
+		name: "nickname",
+		description: "The nickname BountyBot should revert to after festivals end",
+		required: false
+	},
 	{
 		type: "Number",
 		name: "level-threshold-multiplier",

@@ -3,6 +3,9 @@
 ### Reaction Toasts
 - Bounty Hunters can now raise a messageless toast by reacting to another Bounty Hunter's discord message with 🥂
 - Reaction toasts can be toggled off in `/server-config`
+### Premium Features
+- Added premium commands `/festival start-gp` and `/festival close-gp` for toggling times where gp contributions are multiplied (old festival commands renamed to `/festival start-xp` and `/festival close-xp`)
+- Added the `nickname` option to `/config-premium` to allow bot managers to set a nickname for BountyBot that won't get cleared by toggling festivals on or off
 ### Bug Fixes
 - Fixed Goal Point contributions not showing up in reward messages
 ## BountyBot Version 2.10.1bi:

@@ -15,10 +15,10 @@ module.exports = new ItemTemplateSet(
 				return true;
 			}
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
-			const progressData = await logicLayer.goals.progressGoal(interaction.guildId, goal.type, origin.hunter, season);
-			const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${progressData.gpContributed} GP the Server Goal!` };
-			if (progressData.goalCompleted) {
-				resultPayload.embeds = [goalCompletionEmbed(progressData.contributorIds)];
+			const { goalProgress } = await logicLayer.goals.progressGoal(origin.company, goal.type, origin.hunter, season);
+			const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${goalProgress.gpContributed} GP the Server Goal!` };
+			if (goalProgress.goalCompleted) {
+				resultPayload.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 			}
 			interaction.channel.send(resultPayload);
 		}

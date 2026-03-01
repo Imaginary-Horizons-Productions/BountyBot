@@ -28,6 +28,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+
 		const recipientIds = [];
 		originalToast.Recipients.forEach(reciept => {
 			if (reciept.recipientId !== interaction.user.id) {
@@ -37,18 +38,15 @@ module.exports = new ButtonWrapper(mainId, 3000,
 
 		const hunterReceipts = await logicLayer.toasts.secondToast(origin.hunter, originalToast, origin.company, recipientIds, season.id);
 
-		const progressData = await logicLayer.goals.progressGoal(interaction.guildId, "secondings", origin.hunter, season);
-		const companyReceipt = { guildName: interaction.guild.name };
-		if (progressData.gpContributed > 0) {
-			companyReceipt.gpExpression = progressData.gpContributed.toString();
-		}
+		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(origin.company, "secondings", origin.hunter, season);
+		companyReceipt.guildName = interaction.guild.name;
 
 		const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
 
-		interaction.update({ embeds: [toastEmbed(origin.company.toastThumbnailURL, originalToast.text, recipientIds, interaction.member, progressData, originalToast.imageURL, await logicLayer.toasts.findSecondingMentions(originalToast.id))] });
+		interaction.update({ embeds: [toastEmbed(origin.company.toastThumbnailURL, originalToast.text, recipientIds, interaction.member, goalProgress, originalToast.imageURL, await logicLayer.toasts.findSecondingMentions(originalToast.id))] });
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
@@ -56,14 +54,14 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		sendRewardMessage(interaction.message, `${interaction.member.displayName} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, origin.company.maxSimBounties)}`, "Rewards");
 		if (origin.company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, progressData);
+			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 		} else {
-			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), progressData);
+			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
 		}
 
-		if (progressData.goalCompleted) {
+		if (goalProgress.goalCompleted) {
 			interaction.channel.send({
-				embeds: [goalCompletionEmbed(progressData.contributorIds)]
+				embeds: [goalCompletionEmbed(goalProgress.contributorIds)]
 			});
 		}
 	}
