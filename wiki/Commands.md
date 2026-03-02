@@ -46,6 +46,8 @@ Get a link to BountyBot's commands wiki
 > Permission Level: ManageGuild
 
 Configure premium BountyBot settings for this server
+#### nickname (optional)
+The nickname BountyBot should revert to after festivals end
 #### level-threshold-multiplier (optional)
 Configure the XP coefficient for bounty hunter levels (default 3)
 #### bounty-slots (optional)
@@ -139,9 +141,13 @@ the type of feedback you'd like to provide
 
 > Permission Level: ManageGuild
 
-#### /festival start
+#### /festival start-gp
+Start a GP multiplier festival
+#### /festival start-xp
 Start an XP multiplier festival
-#### /festival close
+#### /festival close-gp
+End the festival, returning to normal GP
+#### /festival close-xp
 End the festival, returning to normal XP
 ### /inventory
 > Usable in: DMs, Servers, and Group DMs
