@@ -102,13 +102,7 @@ async function rollItemForHunter(dropRate, hunter) {
 	}
 	if (!droppedItem) return [null, false];
 
-	return db.models.Item.findOrCreate({ where: { userId: hunter.userId, itemName: droppedItem } }).then((result) => {
-		const [itemRow, itemWasCreated] = result;
-		if (!itemWasCreated) {
-			itemRow.increment("count");
-		}
-		return result;
-	});
+	return [ await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true ];
 }
 
 /** *Finds the count of the specified Items of User*
