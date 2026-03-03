@@ -55,7 +55,7 @@ async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBount
  * @param {Guild} guild
  * @param {Company} company
  * @param {Bounty} bounty
- * @param {GuildScheduledEvent | undefined} bountyScheduledEvent
+ * @param {GuildScheduledEvent | null} bountyScheduledEvent
  * @param {GuildMember} posterGuildMember
  * @param {number} posterLevel
  * @param {Set<string>} hunterIdSet

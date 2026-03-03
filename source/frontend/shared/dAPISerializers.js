@@ -466,7 +466,7 @@ function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, curre
  * @param {boolean} shouldOmitRewardsField
  * @param {Company} company
  * @param {Set<string>} hunterIdSet
- * @param {GuildScheduledEvent | undefined} event
+ * @param {GuildScheduledEvent | null} event
  * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; } | undefined} goalProgress
  */
 function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsField, company, hunterIdSet, event, goalProgress) {
