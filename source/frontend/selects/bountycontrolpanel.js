@@ -267,7 +267,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						return;
 					}
 
-					let event;
+					let event = null;
 					if (startTimestamp && endTimestamp) {
 						const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 						if (bounty.scheduledEventId) {

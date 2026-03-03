@@ -74,7 +74,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					return;
 				}
 
-				let event;
+				let event = null;
 				if (startTimestamp && endTimestamp) {
 					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 					if (bounty.scheduledEventId) {
