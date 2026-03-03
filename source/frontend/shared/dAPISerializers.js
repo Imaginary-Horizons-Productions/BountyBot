@@ -4,7 +4,7 @@ const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast 
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
-const { descendingByProperty } = require("../../shared");
+const { descendingByProperty, timeConversion } = require("../../shared");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
