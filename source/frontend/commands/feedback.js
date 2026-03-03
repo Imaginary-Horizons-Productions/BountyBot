@@ -48,7 +48,6 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 						new LabelBuilder().setLabel("Screenshot/Diagram")
 							.setFileUploadComponent(
 								new FileUploadBuilder().setCustomId(imageId)
-									.setMaxValues(1)
 									.setRequired(false)
 							)
 					);
@@ -119,7 +118,6 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 						new LabelBuilder().setLabel("Diagram")
 							.setFileUploadComponent(
 								new FileUploadBuilder().setCustomId(imageId)
-									.setMaxValues(1)
 									.setRequired(false)
 							)
 					);

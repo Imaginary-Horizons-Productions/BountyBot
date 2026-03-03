@@ -233,31 +233,16 @@ module.exports = new SelectWrapper(mainId, 3000,
 			case "edit": {
 				const { modal, submissionOptions } = await editBountyModalAndSubmissionOptions(bounty, false, interaction.id, interaction.guild);
 				interaction.showModal(modal).then(() => interaction.awaitModalSubmit(submissionOptions)).then(async modalSubmission => {
+					await bounty.reload();
+					const errors = [];
+
 					const title = modalSubmission.fields.getTextInputValue("title");
 					const description = modalSubmission.fields.getTextInputValue("description");
-
-					const updatePayload = {};
-					const errors = [];
 					const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty");
 					if (autoModInfraction == null) {
 						errors.push(`Could not check if the toast breaks automod rules. ${modalSubmission.client.user} may not have the Manage Server permission required to check the automod rules.`);
 					} else if (autoModInfraction) {
 						errors.push("The bounty's new title or description would trip this server's AutoMod.");
-					} else {
-						updatePayload.title = title;
-						updatePayload.description = description;
-					}
-
-					const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
-					if (imageURL) {
-						try {
-							new URL(imageURL);
-							updatePayload.attachmentURL = imageURL;
-						} catch (error) {
-							errors.push(error.message);
-						}
-					} else {
-						updatePayload.attachmentURL = null;
 					}
 
 					const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
@@ -272,6 +257,25 @@ module.exports = new SelectWrapper(mainId, 3000,
 						return;
 					}
 
+					const updatePayload = { editCount: bounty.editCount + 1 };
+					if (title) {
+						updatePayload.title = title;
+					}
+
+					updatePayload.description = description;
+
+					const imageAttachmentCollection = modalSubmission.fields.getUploadedFiles("image");
+					if (imageAttachmentCollection) {
+						const firstAttachment = imageAttachmentCollection.first();
+						if (firstAttachment) {
+							updatePayload.attachmentURL = imageAttachmentCollection;
+						} else {
+							updatePayload.attachmentURL = null;
+						}
+					} else {
+						updatePayload.attachmentURL = null;
+					}
+
 					if (startTimestamp && endTimestamp) {
 						const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 						if (bounty.scheduledEventId) {
@@ -284,8 +288,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId);
 						updatePayload.scheduledEventId = null;
 					}
-					bounty.increment("editCount");
-					bounty.update(updatePayload);
+					await bounty.update(updatePayload);
 
 					// update bounty board
 					const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))];

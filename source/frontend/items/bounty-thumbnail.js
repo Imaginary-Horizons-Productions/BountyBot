@@ -25,10 +25,9 @@ module.exports = new ItemTemplateSet(
 								.setPlaceholder("Select a bounty...")
 								.setOptions(selectOptionsFromBounties(openBounties))
 						),
-					new LabelBuilder().setLabel("Image URL")
+					new LabelBuilder().setLabel("Image")
 						.setFileUploadComponent(
-							new FileUploadBuilder().setCustomId("imageURL")
-								.setMaxValues(1)
+							new FileUploadBuilder().setCustomId("image")
 						)
 				);
 			interaction.showModal(modal);
@@ -39,7 +38,7 @@ module.exports = new ItemTemplateSet(
 					return modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 				}
 
-				const imageFileCollection = modalSubmission.fields.getUploadedFiles("imageURL", true);
+				const imageFileCollection = modalSubmission.fields.getUploadedFiles("image", true);
 				const firstAttachment = imageFileCollection.first();
 				if (!firstAttachment) {
 					return modalSubmission.reply({ content: "There was an error handling the submitted image.", flags: MessageFlags.Ephemeral });
