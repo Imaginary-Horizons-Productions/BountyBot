@@ -53,11 +53,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 					if (!collectedInteraction.channel) return;
 					await unarchiveAndUnlockThread(collectedInteraction.channel, "Unarchived to update posting");
 					collectedInteraction.channel.send({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
-					const starterMessage = await collectedInteraction.channel.fetchStarterMessage();
-					starterMessage.edit({ embeds: [await bountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds)] });
-					return collectedInteraction.update({
-						components: []
-					});
+					(await collectedInteraction.channel.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, collectedInteraction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))] });
+					collectedInteraction.update({ components: [] });
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {
@@ -80,13 +77,10 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
 					const removedIds = collectedInteraction.members.map((_, key) => key);
 					await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
-					bountyEmbed(bounty, collectedInteraction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))
-						.then(async embed => {
-							await unarchiveAndUnlockThread(collectedInteraction.channel, "completers removed from bounty");
-							interaction.message.edit({ embeds: [embed] })
-						});
+					await unarchiveAndUnlockThread(collectedInteraction.channel, "completers removed from bounty");
+					interaction.message.edit({ embeds: [bountyEmbed(bounty, collectedInteraction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))] })
 
-					collectedInteraction.channel.send({ content: `${sentenceListEN(removedIds.map(id => `<@${id}>`))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
+					collectedInteraction.channel.send({ content: `${sentenceListEN(removedIds.map(id => userMention(id)))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 					return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: MessageFlags.Ephemeral });
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
@@ -136,11 +130,12 @@ module.exports = new SelectWrapper(mainId, 3000,
 					origin.hunter.update({ lastShowcaseTimestamp: new Date() });
 					const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
 					const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-					refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
-					return bountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
-						await unarchiveAndUnlockThread(channel, "bounty showcased");
-						return channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
-					})
+					refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), collectedInteraction.member, currentPosterLevel, hunterIdSet);
+					await unarchiveAndUnlockThread(channel, "bounty showcased");
+					channel.send({
+						content: `${collectedInteraction.member} increased the reward on their bounty!`,
+						embeds: [bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, hunterIdSet, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))]
+					});
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {
@@ -208,11 +203,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
-					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys(), goalProgress))
-						.then(async embed => {
-							interaction.message.edit({ embeds: [embed], components: [] });
-							collectedInteraction.channel.setArchived(true, "bounty completed");
-						})
+					interaction.message.edit({
+						embeds: [bountyEmbed(bounty, collectedInteraction.member, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys(), goalProgress), await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))],
+						components: []
+					});
+					collectedInteraction.channel.setArchived(true, "bounty completed");
 					const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
 					if (goalProgress.goalCompleted) {
 						announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
@@ -231,7 +226,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				});
 			} break;
 			case "edit": {
-				const { modal, submissionOptions } = await editBountyModalAndSubmissionOptions(bounty, false, interaction.id, interaction.guild);
+				const { modal, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);
 				interaction.showModal(modal).then(() => interaction.awaitModalSubmit(submissionOptions)).then(async modalSubmission => {
 					const title = modalSubmission.fields.getTextInputValue("title");
 					const description = modalSubmission.fields.getTextInputValue("description");
@@ -272,12 +267,13 @@ module.exports = new SelectWrapper(mainId, 3000,
 						return;
 					}
 
+					let event;
 					if (startTimestamp && endTimestamp) {
 						const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 						if (bounty.scheduledEventId) {
-							modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
+							event = await modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 						} else {
-							const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
+							event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 							updatePayload.scheduledEventId = event.id;
 						}
 					} else if (bounty.scheduledEventId) {
@@ -288,7 +284,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					bounty.update(updatePayload);
 
 					// update bounty board
-					const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))];
+					const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event)];
 					if (origin.company.bountyBoardId) {
 						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.fetch(bounty.postingId);
@@ -371,11 +367,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 							const posterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 
 							bounty = await bounty.update({ slotNumber: destinationSlot });
-							refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
+							refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
 
 							if (destinationBounty?.state === "open") {
 								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, await destinationBounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 							}
 
 							const destinationRewardValue = Bounty.calculateCompleterReward(posterLevel, destinationSlot, bounty.showcaseCount);

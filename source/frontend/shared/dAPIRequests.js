@@ -1,4 +1,4 @@
-const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember } = require("discord.js");
+const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember, GuildScheduledEvent } = require("discord.js");
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
@@ -35,11 +35,11 @@ function makeEvergreenBountiesThread(threadManager, embeds, company) {
  * @param {Bounty[]} evergreenBounties
  * @param {Company} company
  * @param {number} companyLevel
- * @param {Guild} guild
+ * @param {GuildMember} bountyBotGuildMember
  * @param {Record<string, Set<string>>} hunterIdMap
  */
-async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBounties, company, companyLevel, guild, hunterIdMap) {
-	const embeds = await Promise.all(evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => bountyEmbed(bounty, guild, companyLevel, false, company, hunterIdMap[bounty.id])));
+async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBounties, company, companyLevel, bountyBotGuildMember, hunterIdMap) {
+	const embeds = evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => bountyEmbed(bounty, bountyBotGuildMember, companyLevel, false, company, hunterIdMap[bounty.id]));
 	if (company.evergreenThreadId) {
 		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
 			const message = await thread.fetchStarterMessage();
@@ -55,10 +55,12 @@ async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBount
  * @param {Guild} guild
  * @param {Company} company
  * @param {Bounty} bounty
+ * @param {GuildScheduledEvent | undefined} bountyScheduledEvent
+ * @param {GuildMember} posterGuildMember
  * @param {number} posterLevel
  * @param {Set<string>} hunterIdSet
  */
-async function refreshBountyThreadStarterMessage(guild, company, bounty, posterLevel, hunterIdSet) {
+async function refreshBountyThreadStarterMessage(guild, company, bounty, bountyScheduledEvent, posterGuildMember, posterLevel, hunterIdSet) {
 	if (!company.bountyBoardId || !bounty.postingId) {
 		return null;
 	}
@@ -70,10 +72,8 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, posterL
 		thread.edit({ name: bounty.title });
 		return thread.fetchStarterMessage();
 	}).then(async posting => {
-		return bountyEmbed(bounty, guild, posterLevel, false, company, hunterIdSet).then(embed => {
-			posting.edit({ embeds: [embed] });
-			return posting;
-		})
+		posting.edit({ embeds: [bountyEmbed(bounty, posterGuildMember, posterLevel, false, company, hunterIdSet, bountyScheduledEvent)] });
+		return posting;
 	})
 }
 

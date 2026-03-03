@@ -162,9 +162,10 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					}
 				});
 
+				let event;
 				if (startTimestamp && endTimestamp) {
 					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
-					const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
+					event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 					rawBounty.scheduledEventId = event.id;
 				}
 
@@ -172,7 +173,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				// post in bounty board forum
 				await origin.hunter.reload();
-				const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set())];
+				const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set(), event)];
 				modalSubmission.reply(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(() => {
 					if (origin.company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
@@ -182,8 +183,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 								appliedTags: [origin.company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {
-							bounty.postingId = posting.id;
-							bounty.save()
+							bounty.update({ postingId: posting.id });
 						});
 					} else {
 						if (!interaction.member.manageable) {

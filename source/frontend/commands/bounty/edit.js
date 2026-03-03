@@ -32,7 +32,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				return;
 			}
 
-			const { modal, submissionOptions } = await editBountyModalAndSubmissionOptions(bounty, false, interaction.id, interaction.guild);
+			const { modal, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), false, interaction.id);
 			collectedInteraction.showModal(modal);
 			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
 				const title = modalSubmission.fields.getTextInputValue("title");
@@ -74,12 +74,13 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					return;
 				}
 
+				let event;
 				if (startTimestamp && endTimestamp) {
 					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
 					if (bounty.scheduledEventId) {
-						modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
+						event = await modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 					} else {
-						const event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
+						event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 						updatePayload.scheduledEventId = event.id;
 					}
 				} else if (bounty.scheduledEventId) {
@@ -90,7 +91,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				bounty.update(updatePayload);
 
 				// update bounty board
-				const embeds = [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId))];
+				const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event)];
 				if (origin.company.bountyBoardId) {
 					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 						return bountyBoard.threads.fetch(bounty.postingId);
