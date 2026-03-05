@@ -78,6 +78,8 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, bountyS
 }
 
 /** Add a message to the bounty in the bounty board to log state changes.
+ * To avoid spam and for general bounty readability, limit using this to
+ * once per bounty per command.
  * @param {Guild} guild
  * @param {Company} company
  * @param {Bounty} bounty
