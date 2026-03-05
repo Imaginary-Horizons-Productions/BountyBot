@@ -1,4 +1,5 @@
-﻿const { Model, Sequelize, DataTypes } = require('sequelize');
+﻿const { GuildScheduledEventManager, GuildScheduledEvent } = require('discord.js');
+const { Model, Sequelize, DataTypes } = require('sequelize');
 
 /** Bounties are user created objectives for other server members to complete */
 class Bounty extends Model {
@@ -27,6 +28,18 @@ class Bounty extends Model {
 			}
 		}
 		return posterXP;
+	}
+
+	/**
+	 * @param {GuildScheduledEventManager} guildScheduledEventManager
+	 * @returns {GuildScheduledEvent | null}
+	 */
+	async getScheduledEvent(guildScheduledEventManager) {
+		if (!this.scheduledEventId) {
+			return null;
+		}
+
+		return (await guildScheduledEventManager.fetch(this.scheduledEventId)).first();
 	}
 }
 

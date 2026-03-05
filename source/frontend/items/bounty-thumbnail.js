@@ -46,7 +46,7 @@ module.exports = new ItemTemplateSet(
 				}
 
 				await bounty.update({ thumbnailURL: firstAttachment.url }).then(async bounty => {
-					refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, (await logicLayer.hunters.findOneHunter(interaction.user.id, interaction.guild.id)).getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id));
+					refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id));
 				});
 				return modalSubmission.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` ${channelMention(bounty.postingId)}` : ""}`, flags: MessageFlags.Ephemeral });
 			}).catch(butIgnoreInteractionCollectorErrors);

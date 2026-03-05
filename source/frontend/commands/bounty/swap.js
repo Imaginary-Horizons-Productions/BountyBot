@@ -77,12 +77,13 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 							let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id });
 
 							previousBounty = await previousBounty.update({ slotNumber: destinationSlot });
-							refreshBountyThreadStarterMessage(interaction.guild, origin.company, previousBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
+
+              refreshBountyThreadStarterMessage(interaction.guild, origin.company, previousBounty, await previousBounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, hunterLevel, await logicLayer.bounties.getHunterIdSet(previousBounty.id));
 							addLogMessageToBountyThread(interaction.guild, origin.company, previousBounty, `Switched this bounty's slot from ${sourceSlot} to ${destinationSlot}. It is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.`);
 
 							if (destinationBounty?.state === "open") {
 								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, await destinationBounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, hunterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
 								addLogMessageToBountyThread(interaction.guild, origin.company, destinationBounty, `Switched this bounty's slot from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(hunterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`);
 							}
 

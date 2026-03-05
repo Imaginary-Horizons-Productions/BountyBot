@@ -80,7 +80,7 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 							hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 						}
 						collectedInteraction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-							refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
+							refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap);
 						})
 					} else if (!collectedInteraction.member.manageable) {
 						interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
