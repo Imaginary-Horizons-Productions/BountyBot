@@ -1,7 +1,8 @@
-const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel } = require("discord.js");
-const { Bounty, Company, Rank } = require("../../database/models");
-const { bountyEmbed } = require("./dAPISerializers");
+const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember } = require("discord.js");
+const { Bounty, Company, Rank, Participation } = require("../../database/models");
+const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
+const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -92,18 +93,52 @@ async function addLogMessageToBountyThread(guild, company, bounty, auditMessage)
 	return thread.send({ content: auditMessage, flags: MessageFlags.SuppressNotifications });
 }
 
-/** If the server has a scoreboard reference channel, update the embed in it
+/** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
  * @param {Company} company
  * @param {Guild} guild
- * @param {EmbedBuilder[]} embeds
+ * @param {Map<string, Participation>} participationMap
+ * @param {Rank[]} descendingRanks
+ * @param {{ requiredGP: number; currentGP: number; }} goalProgress
  */
-async function refreshReferenceChannelScoreboard(company, guild, embeds) {
-	if (company.scoreboardChannelId && company.scoreboardMessageId) {
-		guild.channels.fetch(company.scoreboardChannelId).then(scoreboard => {
-			return scoreboard.messages.fetch(company.scoreboardMessageId);
-		}).then(async scoreboardMessage => {
-			scoreboardMessage.edit({ embeds });
-		});
+async function refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress) {
+	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
+		return;
+	}
+
+	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
+	if (!scoreboard) {
+		return;
+	}
+	const embeds = [await seasonalScoreboardEmbed(company, guild, participationMap, descendingRanks, goalProgress)];
+	const scoreboardMessage = await scoreboard.messages.fetch(company.scoreboardMessageId);
+	if (scoreboardMessage) {
+		scoreboardMessage.edit({ embeds });
+	} else {
+		scoreboard.send({ embeds });
+	}
+}
+
+/** Update the Overall Scoreboard embed in a server's scoreboard reference channel
+ * @param {Company} company
+ * @param {Guild} guild
+ * @param {Map<string, Hunter>} hunterMap
+ * @param {{ requiredGP: number; currentGP: number; }} goalProgress
+ */
+async function refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress) {
+	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
+		return;
+	}
+
+	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
+	if (!scoreboard) {
+		return;
+	}
+	const embeds = [await overallScoreboardEmbed(company, guild, hunterMap, goalProgress)];
+	const scoreboardMessage = await scoreboard.messages.fetch(company.scoreboardMessageId);
+	if (scoreboardMessage) {
+		scoreboardMessage.edit({ embeds });
+	} else {
+		scoreboard.send({ embeds });
 	}
 }
 
@@ -171,13 +206,41 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 	}
 }
 
+/**
+ * @param {GuildMember} bountyBotGuildMember
+ * @param {Company} company
+ */
+async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
+	const tagComponents = [];
+	if (company.xpFestivalMultiplier > 1) {
+		tagComponents.push(["XP", company.xpFestivalMultiplier]);
+	}
+	if (company.gpFestivalMultiplier > 1) {
+		tagComponents.push(["GP", company.gpFestivalMultiplier]);
+	}
+
+	if (tagComponents.length > 0) {
+		const multiplierTag = tagComponents.map(([type, multiplier]) => `${type} x ${multiplier}`).join(" & ");
+		const previousNickname = company.nickname ?? "BountyBot";
+		if (previousNickname.length + multiplierTag.length <= GuildMemberLimits.MaximumDisplayNameLength) {
+			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`);
+		}
+	} else {
+		// company.nickname will be null if unset, which is the correct value to send dAPI to unset a nickname
+		bountyBotGuildMember.setNickname(company.nickname);
+	}
+}
+
 module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	refreshBountyThreadStarterMessage,
 	addLogMessageToBountyThread,
 	refreshReferenceChannelScoreboard,
+	refreshReferenceChannelScoreboardSeasonal,
+	refreshReferenceChannelScoreboardOverall,
 	sendRewardMessage,
 	syncRankRoles,
-	unarchiveAndUnlockThread
+	unarchiveAndUnlockThread,
+	updateBotNicknameForFestival
 };

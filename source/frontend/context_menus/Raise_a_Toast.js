@@ -1,8 +1,9 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, fillableTextBar, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts } = require('../shared');
+const { textsHaveAutoModInfraction, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
+const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -27,8 +28,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		const modalId = `${SKIP_INTERACTION_HANDLING}${interaction.id}`;
-		interaction.showModal(new ModalBuilder().setCustomId(modalId)
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Raising a Toast")
 			.addLabelComponents(
 				new LabelBuilder().setLabel("Toast Message")
@@ -36,9 +36,9 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 						new TextInputBuilder().setCustomId("message")
 							.setStyle(TextInputStyle.Short)
 					)
-			)
-		);
-		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modalId, time: 300000 }).then(async modalSubmission => {
+			);
+		interaction.showModal(modal);
+		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 			const toastText = modalSubmission.fields.getTextInputValue("message");
 			const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [toastText], "toast");
 			if (autoModInfraction == null) {
@@ -51,31 +51,27 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 
 			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-			const companyReceipt = { guildName: interaction.guild.name };
 
 			const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, origin.company, interaction.user.id, new Set([interaction.targetId]), hunterMap, season.id, toastText, null);
-			hunterMap = await reloadHunterMapSubset(hunterMap, Array.from(hunterReceipts.keys()));
-			const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-			if (previousCompanyLevel < currentCompanyLevel) {
-				companyReceipt.levelUp = currentCompanyLevel;
-			}
-			const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member)];
-
+			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
+			let companyReceipt = {};
 			if (hunterReceipts.size > 0) {
-				const goalUpdate = await logicLayer.goals.progressGoal(modalSubmission.guild.id, "toasts", hunterMap[interaction.user.id], season);
-				if (goalUpdate.gpContributed > 0) {
-					companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
-					if (goalUpdate.goalCompleted) {
-						embeds.push(goalCompletionEmbed(goalUpdate.contributorIds));
-					}
-					const { goalId, currentGP, requiredGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-					if (goalId !== null) {
-						embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-					} else {
-						embeds[0].addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-					}
+				const results = await logicLayer.goals.progressGoal(origin.company, "toasts", hunterMap[interaction.user.id], season);
+				companyReceipt = results.companyReceipt;
+				goalProgress = results.goalProgress;
+
+				hunterMap = await reloadHunterMapSubset(hunterMap, Array.from(hunterReceipts.keys()));
+				const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+				if (previousCompanyLevel < currentCompanyLevel) {
+					companyReceipt.levelUp = currentCompanyLevel;
 				}
+			}
+			companyReceipt.guildName = interaction.guild.name;
+
+			const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member, goalProgress)];
+			if (goalProgress.goalCompleted) {
+				embeds.push(goalCompletionEmbed(goalProgress.contributorIds));
 			}
 
 			modalSubmission.reply({
@@ -91,14 +87,11 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
-					const embeds = [];
-					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress));
+						refreshReferenceChannelScoreboardSeasonal(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, modalSubmission.guild, hunterMap, goalProgress));
+						refreshReferenceChannelScoreboardOverall(origin.company, modalSubmission.guild, hunterMap, goalProgress);
 					}
-					refreshReferenceChannelScoreboard(origin.company, modalSubmission.guild, embeds);
 				}
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);

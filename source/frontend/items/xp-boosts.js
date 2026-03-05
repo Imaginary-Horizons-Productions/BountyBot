@@ -1,6 +1,6 @@
 const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { syncRankRoles, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, rewardSummary, consolidateHunterReceipts } = require("../shared");
+const { syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../shared");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -37,14 +37,12 @@ class XPBoost extends ItemTemplate {
 				syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 				interaction.reply({ content: `${interaction.member} used an ${itemName}.\n${rewardSummary("item", companyReceipt, hunterReceipts, origin.company.maxSimBounties)}` });
-				const embeds = [];
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 				if (origin.company.scoreboardIsSeasonal) {
-					embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
+					refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 				} else {
-					embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
+					refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
 				}
-				refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 			}
 		)
 	}

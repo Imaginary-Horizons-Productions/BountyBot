@@ -1,8 +1,8 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder, FileUploadBuilder } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -59,49 +59,54 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				return;
 			}
 
+			const titleId = "title";
+			const descriptionId = "description";
+			const startTimestampId = "startTimestamp";
+			const endTimestampId = "endTimestamp";
+			const imageId = "image";
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
 				.setTitle(`New Bounty (Slot ${slotNumber})`)
 				.addLabelComponents(
 					new LabelBuilder().setLabel("Title")
 						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("title")
+							new TextInputBuilder().setCustomId(titleId)
 								.setStyle(TextInputStyle.Short)
 								.setPlaceholder("Discord markdown allowed...")
 								.setMaxLength(EmbedLimits.MaximumTitleLength)
 						),
 					new LabelBuilder().setLabel("Description")
 						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("description")
+							new TextInputBuilder().setCustomId(descriptionId)
 								.setRequired(false)
 								.setStyle(TextInputStyle.Paragraph)
 								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
 						),
-					new LabelBuilder().setLabel("Image URL")
-						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("imageURL")
-								.setRequired(false)
-								.setStyle(TextInputStyle.Short)
-						),
 					new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
 						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("startTimestamp")
+							new TextInputBuilder().setCustomId(startTimestampId)
 								.setRequired(false)
 								.setStyle(TextInputStyle.Short)
 								.setPlaceholder("Required if making an event with the bounty")
 						),
 					new LabelBuilder().setLabel("Event End (Unix Timestamp)")
 						.setTextInputComponent(
-							new TextInputBuilder().setCustomId("endTimestamp")
+							new TextInputBuilder().setCustomId(endTimestampId)
 								.setRequired(false)
 								.setStyle(TextInputStyle.Short)
 								.setPlaceholder("Required if making an event with the bounty")
+						),
+					new LabelBuilder().setLabel("Image")
+						.setFileUploadComponent(
+							new FileUploadBuilder().setCustomId(imageId)
+								.setMaxValues(1)
+								.setRequired(false)
 						)
 				);
 			collectedInteraction.showModal(modal);
 
 			return collectedInteraction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
-				const title = modalSubmission.fields.getTextInputValue("title");
-				const description = modalSubmission.fields.getTextInputValue("description");
+				const title = modalSubmission.fields.getTextInputValue(titleId);
+				const description = modalSubmission.fields.getTextInputValue(descriptionId);
 
 				const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "bounty post");
 				if (autoModInfraction == null) {
@@ -123,18 +128,16 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				}
 				const errors = [];
 
-				const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
-				if (imageURL) {
-					try {
-						new URL(imageURL);
-						rawBounty.attachmentURL = imageURL;
-					} catch (error) {
-						errors.push(error.message);
+				const attachmentFileCollection = modalSubmission.fields.getUploadedFiles(imageId);
+				if (attachmentFileCollection) {
+					const firstAttachment = attachmentFileCollection.first();
+					if (firstAttachment) {
+						rawBounty.attachmentURL = firstAttachment.url;
 					}
 				}
 
-				const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
-				const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue("endTimestamp"));
+				const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue(startTimestampId));
+				const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue(endTimestampId));
 				if (startTimestamp || endTimestamp) {
 					errors.push(...validateScheduledEventTimestamps(startTimestamp, endTimestamp))
 				}
@@ -145,20 +148,18 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				}
 
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(modalSubmission.guild.id);
-				logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
+				await logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
 				origin.hunter.increment({ xp: 1 }).then(async () => {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
-					const embeds = [];
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress));
+						refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
+						refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
 					}
-					refreshReferenceChannelScoreboard(origin.company, interaction.guild, embeds);
 				});
 
 				if (startTimestamp && endTimestamp) {

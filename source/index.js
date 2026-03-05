@@ -26,8 +26,9 @@ const { getSelect, setLogic: setSelectLogic, updateCooldownMap: updateSelectCool
 const { getContextMenu, contextMenuData, setLogic: setContextMenuLogic, updateCooldownMap: updateContextMenuCooldownMap, updatePremiumList: updatePremiumContextMenus } = require("./frontend/context_menus/_contextMenuDictionary.js");
 const { setLogic: setItemLogic, updateCooldownMap: updateItemCooldownMap } = require("./frontend/items/_itemDictionary.js")
 const { SAFE_DELIMITER, authPath, testGuildId, announcementsChannelId, lastPostedVersion, premium, SKIP_INTERACTION_HANDLING, commandIds } = require("./constants.js");
-const { latestVersionChangesEmbed, commandMention } = require("./frontend/shared");
+const { latestVersionChangesEmbed, commandMention, sendRewardMessage, consolidateHunterReceipts, syncRankRoles, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, toastEmbed, goalCompletionEmbed, secondingButtonRow, rewardSummary, randomCongratulatoryPhrase } = require("./frontend/shared");
 const logicBlob = require("./logic");
+const { Company } = require('./database/models/index.js');
 const runMode = process.argv[4] || "development";
 const cooldownMap = {};
 const premiumCommandList = [];
@@ -56,8 +57,8 @@ const dAPIClient = new Client({
 			name: "🔰 Get started with /tutorial"
 		}]
 	},
-	partials: [Partials.GuildMember],
-	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages]
+	partials: [Partials.GuildMember, Partials.Message, Partials.Reaction],
+	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.GuildMessageReactions]
 });
 //#endregion
 
@@ -233,6 +234,133 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	}
 	//#endregion
 });
+
+dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
+	await dbReady;
+	if (reaction.emoji.name !== "🥂") {
+		return;
+	}
+
+	// Reject DM reactions (which lack `.message.guild` and `.message.guildId`), but keep Partials (which lack `.message.guild`)
+	if (!reaction.message.guildId) {
+		return;
+	}
+
+	// If receiving a Partial, fetch entities
+	let guild = reaction.message.guild;
+	let hostMessage = reaction.message;
+	let hostChannel = hostMessage?.channel;
+	if (reaction.partial) {
+		guild = await dAPIClient.guilds.fetch(reaction.message.guildId);
+		hostChannel = await guild.channels.fetch(reaction.message.channelId);
+		hostMessage = await hostChannel.messages.fetch(reaction.message.id);
+	}
+
+	// Reject toasts on own message or toasts on bot messages if in development mode
+	if (runMode !== "development" && (hostMessage.author.bot || hostMessage.author.id === user.id)) {
+		return;
+	}
+
+	// Reject in companies that have disabled reaction toasts
+	const company = await logicBlob.companies.findCompanyByPK(guild.id);
+	if (company.disableReactionToasts) {
+		return;
+	}
+
+	// Reject if interacting user is banned from BountyBot
+	const { hunter: [interactingHunter] } = await logicBlob.hunters.findOrCreateBountyHunter(user.id, guild.id);
+	if (interactingHunter.isBanned) {
+		return;
+	}
+
+	// Reject if message author is banned from BountyBot
+	const { hunter: [authorHunter] } = await logicBlob.hunters.findOrCreateBountyHunter(hostMessage.author.id, guild.id);
+	if (authorHunter.isBanned) {
+		return;
+	}
+
+	// Reject if interacting user has already seconded toast
+	const existingToast = await logicBlob.toasts.findToastByMessageId(hostMessage.id);
+	if (existingToast && await logicBlob.toasts.wasAlreadySeconded(existingToast.id, user.id)) {
+		return;
+	}
+
+	const previousCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+	const [season] = await logicBlob.seasons.findOrCreateCurrentSeason(guild.id);
+	const descendingRanks = await logicBlob.ranks.findAllRanks(guild.id);
+	const guildRoles = await guild.roles.fetch();
+	let goalProgress;
+	if (existingToast) {
+		// If extant toast, create Seconding
+		const recipientIds = [hostMessage.author.id];
+		const companyReceipt = { guildName: guild.name };
+		goalProgress = await logicBlob.goals.progressGoal(guild.id, "secondings", interactingHunter, season);
+		if (goalProgress.gpContributed > 0) {
+			companyReceipt.gp = goalProgress.gpContributed;
+		}
+		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, recipientIds, season.id);
+		const toastMessage = await reaction.message.channel.messages.fetch(existingToast.toastMessageId);
+		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await reaction.message.guild.members.fetch(user.id), goalProgress, existingToast.imageURL, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
+
+		const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
+		const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
+		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
+		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+		if (currentCompanyLevel > previousCompanyLevel) {
+			companyReceipt.levelUp = currentCompanyLevel;
+		}
+		if (company.scoreboardIsSeasonal) {
+			refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
+		} else {
+			refreshReferenceChannelScoreboardOverall(company, guild, await logicBlob.hunters.getCompanyHunterMap(guild.id), goalProgress);
+		}
+
+		sendRewardMessage(toastMessage, `${user.toString()} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, company.maxSimBounties)}`, "Rewards");
+	} else {
+		// If no extant toast, create Toast
+		const hunterMap = await logicBlob.hunters.getCompanyHunterMap(guild.id);
+		const recipientSet = new Set([hostMessage.author.id]);
+		const toastText = `${randomCongratulatoryPhrase()}! Reaction Toast: ${hostMessage.url}`;
+		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientSet, hunterMap, season.id, toastText, null, hostMessage.id);
+
+		const companyReceipt = { guildName: guild.name };
+		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+		if (currentCompanyLevel > previousCompanyLevel) {
+			companyReceipt.levelUp = currentCompanyLevel;
+		}
+		goalProgress = await logicBlob.goals.progressGoal(guild.id, "toasts", interactingHunter, season);
+		if (goalProgress.gpContributed > 0) {
+			companyReceipt.gp = goalProgress.gpContributed;
+		}
+
+		reaction.message.channel.send({
+			embeds: [toastEmbed(company.toastThumbnailURL, toastText, recipientSet, await guild.members.fetch(user.id), goalProgress)],
+			components: [secondingButtonRow(toastId)],
+		}).then(async message => {
+			await logicBlob.toasts.setToastMessageId(toastId, message.id);
+			if (hunterReceipts.size > 0) {
+				const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
+				const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
+				syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
+
+				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
+				sendRewardMessage(message, rewardSummary("toast", companyReceipt, hunterReceipts, company.maxSimBounties), "Rewards");
+				if (company.scoreboardIsSeasonal) {
+					refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
+				} else {
+					refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress);
+				}
+			}
+		});
+	}
+	if (goalProgress.goalCompleted) {
+		hostChannel.send({
+			embeds: [goalCompletionEmbed(goalProgress.contributorIds)],
+			flags: MessageFlags.SuppressNotifications
+		});
+	}
+})
 
 dAPIClient.on(Events.ChannelDelete, async channel => {
 	await dbReady;

@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { addCompanyAnnouncementPrefix, refreshReferenceChannelScoreboard, seasonalScoreboardEmbed, overallScoreboardEmbed, companyStatsEmbed } = require('../shared');
+const { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -55,14 +55,12 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 					}
 				})
 			}
-			const embeds = [];
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 			if (origin.company.scoreboardIsSeasonal) {
-				embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, new Map(), ranks, goalProgress));
+				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, new Map(), ranks, goalProgress);
 			} else {
-				embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, hunterMap, goalProgress));
+				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
 			}
-			refreshReferenceChannelScoreboard(origin.company, guild, embeds);
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n${unorderedList(shoutouts)}`;

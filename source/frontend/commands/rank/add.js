@@ -1,4 +1,4 @@
-const { MessageFlags } = require("discord.js");
+const { MessageFlags, unorderedList } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { commandMention, syncRankRoles } = require("../../shared");
@@ -22,22 +22,39 @@ module.exports = new SubcommandWrapper("add", "Add a seasonal rank for showing o
 			companyId: interaction.guildId,
 			threshold: newThreshold
 		};
-
-		const newRole = interaction.options.getRole("role");
-		if (newRole) {
-			rawRank.roleId = newRole.id;
-		}
+		let response = "A new seasonal rank ";
+		const errors = [];
 
 		const newRankmoji = interaction.options.getString("rankmoji");
 		if (newRankmoji) {
 			rawRank.rankmoji = newRankmoji;
+			response += `${newRankmoji} `;
 		}
+
+		response += `was created at ${newThreshold} standard deviations above mean season xp`;
+
+		const newRole = interaction.options.getRole("role");
+		if (newRole) {
+			const bountybotGuildMember = await interaction.guild.members.fetchMe();
+			if (interaction.guild.roles.comparePositions(bountybotGuildMember.roles.highest, newRole) > 0) {
+				rawRank.roleId = newRole.id;
+				response += ` with the role ${newRole}`;
+			} else {
+				errors.push(`Did not assign ${newRole} to the rank. ${bountybotGuildMember} would not be able to add or remove the role from bounty hunters (none of ${bountybotGuildMember}'s roles are above it).`);
+			}
+		}
+
+		response += ".";
+		if (errors.length > 0) {
+			response += ` However, the following errors were encountered:\n${unorderedList(errors)}`;
+		}
+
 		await logicLayer.ranks.createCustomRank(rawRank);
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const allRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), allRanks, await interaction.guild.roles.fetch());
 		syncRankRoles(seasonalHunterReceipts, allRanks, interaction.guild.members);
-		interaction.reply({ content: `A new seasonal rank ${newRankmoji ? `${newRankmoji} ` : ""}was created at ${newThreshold} standard deviations above mean season xp${newRole ? ` with the role ${newRole}` : ""}.`, flags: MessageFlags.Ephemeral });
+		interaction.reply({ content: response, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
 	{

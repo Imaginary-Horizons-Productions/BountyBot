@@ -1,4 +1,4 @@
-const { SubcommandWrapper } = require("../classes");
+const { SubcommandWrapper } = require("../../classes");
 
 module.exports = new SubcommandWrapper("", "",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {

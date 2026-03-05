@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, fillableTextBar, goalCompletionEmbed, seasonalScoreboardEmbed, overallScoreboardEmbed, refreshReferenceChannelScoreboard, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, addLogMessageToBountyThread } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread  } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -189,17 +189,15 @@ module.exports = new SelectWrapper(mainId, 3000,
 					const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 					let hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
-					const companyReceipt = { guildName: collectedInteraction.guild.name };
 					const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 					const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, origin.company);
+					const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(origin.company, "bounties", hunterMap.get(bounty.userId), season);
+					companyReceipt.guildName = collectedInteraction.guild.name;
+
 					hunterMap = await reloadHunterMapSubset(hunterMap, [...validatedHunters.keys(), bounty.userId]);
 					const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 					if (previousCompanyLevel < currentCompanyLevel) {
 						companyReceipt.levelUp = currentCompanyLevel;
-					}
-					const goalUpdate = await logicLayer.goals.progressGoal(bounty.companyId, "bounties", hunterMap.get(bounty.userId), season);
-					if (goalUpdate.gpContributed > 0) {
-						companyReceipt.gpExpression = goalUpdate.gpContributed.toString();
 					}
 					const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
@@ -210,32 +208,21 @@ module.exports = new SelectWrapper(mainId, 3000,
 					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
-					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()))
+					bountyEmbed(bounty, collectedInteraction.guild, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys(), goalProgress))
 						.then(async embed => {
-							if (goalUpdate.gpContributed > 0) {
-								const { goalId, requiredGP, currentGP } = await logicLayer.goals.findLatestGoalProgress(interaction.guildId);
-								if (goalId !== null) {
-									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
-								} else {
-									embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-								}
-							}
 							interaction.message.edit({ embeds: [embed], components: [] });
 							collectedInteraction.channel.setArchived(true, "bounty completed");
 						})
 					const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
-					if (goalUpdate.goalCompleted) {
-						announcementOptions.embeds = [goalCompletionEmbed(goalUpdate.contributorIds)];
+					if (goalProgress.goalCompleted) {
+						announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 					}
 					collectedInteraction.channels.first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
-					const embeds = [];
-					const goalProgress = await logicLayer.goals.findLatestGoalProgress(collectedInteraction.guild.id);
 					if (origin.company.scoreboardIsSeasonal) {
-						embeds.push(await seasonalScoreboardEmbed(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress));
+						refreshReferenceChannelScoreboardSeasonal(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress);
 					} else {
-						embeds.push(await overallScoreboardEmbed(origin.company, collectedInteraction.guild, hunterMap, goalProgress));
+						refreshReferenceChannelScoreboardOverall(origin.company, collectedInteraction.guild, hunterMap, goalProgress);
 					}
-					refreshReferenceChannelScoreboard(origin.company, collectedInteraction.guild, embeds);
 				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 					if (interaction.channel) {

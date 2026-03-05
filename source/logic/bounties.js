@@ -135,9 +135,9 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	bounty.update({ state: "completed", completedAt: new Date() });
 
 	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
-	const bountyValue = Math.floor(bountyBaseValue * company.festivalMultiplier);
+	const bountyValue = Math.floor(bountyBaseValue * company.xpFestivalMultiplier);
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
-	const xpMultiplierString = company.festivalMultiplierString();
+	const xpMultiplierString = company.festivalMultiplierString("xp");
 	for (const [hunterId, hunter] of validatedHunters) {
 		const hunterReceipt = {};
 		const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
@@ -162,7 +162,7 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	const posterReceipt = { title: "Bounty Poster" };
 	const posterXP = bounty.calculatePosterReward(validatedHunters.size);
 	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
-	poster = await poster.increment({ mineFinished: 1, xp: posterXP * company.festivalMultiplier }).then(poster => poster.reload());
+	poster = await poster.increment({ mineFinished: 1, xp: posterXP * company.xpFestivalMultiplier }).then(poster => poster.reload());
 	posterReceipt.xp = posterXP;
 	posterReceipt.xpMultiplier = xpMultiplierString;
 	const currentPosterLevel = poster.getLevel(company.xpCoefficient);
@@ -174,9 +174,9 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 		posterReceipt.item = itemRow.itemName;
 	}
 	hunterReceipts.set(poster.userId, posterReceipt);
-	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 } });
+	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: bounty.userId, seasonId: season.id }, defaults: { xp: posterXP * company.xpFestivalMultiplier, postingsCompleted: 1 } });
 	if (!participationCreated) {
-		participation.increment({ xp: posterXP * company.festivalMultiplier, postingsCompleted: 1 });
+		participation.increment({ xp: posterXP * company.xpFestivalMultiplier, postingsCompleted: 1 });
 	}
 
 	return hunterReceipts;

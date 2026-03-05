@@ -4,7 +4,7 @@ const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast 
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
-const { descendingByProperty } = require("../../shared");
+const { descendingByProperty, timeConversion } = require("../../shared");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
@@ -85,7 +85,8 @@ const bountyBotTips = [
 	"Server level is based on total bounty hunter level--higher server level means better evergreen bounty rewards.",
 	"A bounty poster cannot complete their own bounty.",
 	"Adding a description, image or time to a bounty all add 1 bonus XP for the poster.",
-	"Bounty posters have double the chance to find items compared to completers."
+	"Bounty posters have double the chance to find items compared to completers.",
+	"Quickly raise a toast to a Discord message by reacting with 🥂!"
 ].map(text => ({ text, iconURL: bountyBotIconURL }));
 const tipPool = bountyBotTips.concat(bountyBotTips, discordTips);
 
@@ -301,7 +302,7 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
  * @param {Guild} guild
  * @param {Map<string, Participation>} participationMap
  * @param {Rank[]} ranks
- * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
+ * @param {{ currentGP: number; requiredGP: number; }} goalProgress
  */
 async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(participationMap.keys()) });
@@ -342,8 +343,11 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	if (currentGP < requiredGP) {
 		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
+	if (company.xpFestivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString("xp")}.` });
+	}
+	if (company.gpFestivalMultiplier !== 1) {
+		fields.push({ name: "GP Festival", value: `A GP multiplier festival is currently active for ${company.festivalMultiplierString("gp")}.` });
 	}
 	if (company.nextRaffleString) {
 		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
@@ -360,7 +364,7 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
  * @param {Guild} guild
  * @param {Map<string, Hunter>} hunterMap
  * @param {Rank[]} ranks
- * @param {{ goalId: string | null, requiredGP: number, currentGP: number }} goalProgress
+ * @param {{ currentGP: number; requiredGP: number; }} goalProgress
  */
 async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
@@ -402,8 +406,11 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	if (currentGP < requiredGP) {
 		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
 	}
-	if (company.festivalMultiplier !== 1) {
-		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString()}.` });
+	if (company.xpFestivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString("xp")}.` });
+	}
+	if (company.gpFestivalMultiplier !== 1) {
+		fields.push({ name: "GP Festival", value: `A GP multiplier festival is currently active for ${company.festivalMultiplierString("gp")}.` });
 	}
 	if (company.nextRaffleString) {
 		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
@@ -460,8 +467,9 @@ function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, curre
  * @param {boolean} shouldOmitRewardsField
  * @param {Company} company
  * @param {Set<string>} hunterIdSet
+ * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; } | undefined} goalProgress
  */
-async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet) {
+async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet, goalProgress) {
 	const author = await guild.members.fetch(bounty.userId);
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(author.displayColor)
@@ -479,7 +487,7 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
-		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString()}`, inline: true });
+		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString("xp")}`, inline: true });
 	}
 
 	if (bounty.isEvergreen) {
@@ -495,6 +503,11 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 			fields.push({ name: "Turned in by:", value: "Too many to display!" });
 		}
 	}
+	if (goalProgress?.goalCompleted) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
+	} else if (goalProgress?.requiredGP > 0) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(goalProgress.currentGP, goalProgress.requiredGP, 15)} ${goalProgress.currentGP}/${goalProgress.requiredGP} GP` });
+	}
 
 	if (fields.length > 0) {
 		embed.addFields(fields);
@@ -507,13 +520,28 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
  * @param {string} toastText
  * @param {Set<string>} recipientIdSet
  * @param {GuildMember} senderMember
+ * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; }} goalProgress
+ * @param {string | null} imageURL
+ * @param {string[] | undefined} seconderMentions
  */
-function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember) {
-	return new EmbedBuilder().setColor("e5b271")
+function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember, goalProgress, imageURL, seconderMentions) {
+	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
 		.setDescription(`A toast to ${sentenceListEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
+	if (goalProgress.goalCompleted) {
+		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
+	} else if (goalProgress.requiredGP > 0) {
+		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(goalProgress.currentGP, goalProgress.requiredGP, 15)} ${goalProgress.currentGP}/${goalProgress.requiredGP} GP` });
+	}
+	if (imageURL) {
+		embed.setImage(imageURL);
+	}
+	if (seconderMentions) {
+		embed.addFields({ name: "Seconded by", value: sentenceListEN(seconderMentions, false) });
+	}
+	return embed;
 }
 
 /** @param {string} toastId */

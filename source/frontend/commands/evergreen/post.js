@@ -22,25 +22,28 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 			return;
 		}
 
+		const titleId = "title";
+		const descriptionId = "description";
+		const imageId = "image";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("New Evergreen Bounty")
 			.addLabelComponents(
 				new LabelBuilder().setLabel("Title")
 					.setTextInputComponent(
-						new TextInputBuilder().setCustomId("title")
+						new TextInputBuilder().setCustomId(titleId)
 							.setStyle(TextInputStyle.Short)
 							.setPlaceholder("Discord markdown allowed...")
 							.setMaxLength(EmbedLimits.MaximumTitleLength)
 					),
 				new LabelBuilder().setLabel("Description")
 					.setTextInputComponent(
-						new TextInputBuilder().setCustomId("description")
+						new TextInputBuilder().setCustomId(descriptionId)
 							.setStyle(TextInputStyle.Paragraph)
 							.setPlaceholder("Bounties with clear instructions are easier to complete...")
 					),
-				new LabelBuilder().setLabel("Image URL")
+				new LabelBuilder().setLabel("Image")
 					.setTextInputComponent(
-						new TextInputBuilder().setCustomId("imageURL")
+						new TextInputBuilder().setCustomId(imageId)
 							.setRequired(false)
 							.setStyle(TextInputStyle.Short)
 					)
@@ -48,8 +51,8 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 		interaction.showModal(modal);
 
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async interaction => {
-			const title = interaction.fields.getTextInputValue("title");
-			const description = interaction.fields.getTextInputValue("description");
+			const title = interaction.fields.getTextInputValue(titleId);
+			const description = interaction.fields.getTextInputValue(descriptionId);
 
 			const autoModInfraction = await textsHaveAutoModInfraction(interaction.channel, interaction.member, [title, description], "evergreen post");
 			if (autoModInfraction == null) {
@@ -71,15 +74,11 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 				rawBounty.description = description;
 			}
 
-			const imageURL = interaction.fields.getTextInputValue("imageURL");
-			if (imageURL) {
-				try {
-					new URL(imageURL);
-					rawBounty.attachmentURL = imageURL;
-				} catch (error) {
-					interaction.message.edit({ components: [] });
-					interaction.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n• ${error.message}`, flags: MessageFlags.Ephemeral });
-					return;
+			const imageFileCollection = interaction.fields.getUploadedFiles(imageId);
+			if (imageFileCollection) {
+				const firstAttachment = imageFileCollection.first();
+				if (firstAttachment) {
+					rawBounty.attachmentURL = firstAttachment.url;
 				}
 			}
 
