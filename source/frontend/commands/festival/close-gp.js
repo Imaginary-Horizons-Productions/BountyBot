@@ -21,7 +21,7 @@ module.exports = new SubcommandWrapper("close-gp", "End the festival, returning 
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	}
 );

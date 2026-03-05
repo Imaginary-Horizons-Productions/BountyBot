@@ -31,17 +31,15 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 				}
 
 				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id)));
-				bountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set()).then(embed => {
-					const payload = { embeds: [embed] };
-					const extraText = interaction.options.get("extra-text");
-					if (extraText) {
-						payload.content = extraText.value;
-					}
-					if (!interaction.memberPermissions?.has(PermissionFlagsBits.MentionEveryone)) {
-						payload.allowedMentions = { parse: [] };
-					}
-					collectedInteraction.channel.send(payload);
-				});
+				const payload = { embeds: [bountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set())] };
+				const extraText = interaction.options.get("extra-text");
+				if (extraText) {
+					payload.content = extraText.value;
+				}
+				if (!interaction.memberPermissions?.has(PermissionFlagsBits.MentionEveryone)) {
+					payload.allowedMentions = { parse: [] };
+				}
+				collectedInteraction.channel.send(payload);
 				return collectedInteraction;
 			});
 		}).then(interactionToAcknowledge => {

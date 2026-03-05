@@ -101,8 +101,10 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 						if (previousCompanyLevel < currentCompanyLevel) {
 							companyReceipt.levelUp = currentCompanyLevel;
 						}
-						const completedBountyEmbed = await bountyEmbed(bounty, collectedInteraction.guild, currentCompanyLevel, false, origin.company, finalContributorIds, goalProgress);
-						const announcementPayload = { embeds: [completedBountyEmbed], withResponse: true };
+						const announcementPayload = {
+							embeds: [bountyEmbed(bounty, collectedInteraction.guild.members.me, currentCompanyLevel, false, origin.company, finalContributorIds, goalProgress)],
+							withResponse: true
+						};
 						if (goalProgress.totalGP > 0) {
 							companyReceipt.gp = goalProgress.totalGP;
 							companyReceipt.gpMultiplier = origin.company.festivalMultiplierString("gp");
@@ -130,7 +132,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 								hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 							}
 							const bountyBoard = await collectedInteraction.guild.channels.fetch(origin.company.bountyBoardId);
-							refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, collectedInteraction.guild, hunterIdMap);
+							refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, collectedInteraction.guild.members.me, hunterIdMap);
 						} else if (!collectedInteraction.member.manageable) {
 							collectedInteraction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 						}

@@ -87,13 +87,13 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 
 			// post in bounty board forum
 			const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
-			interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [await bountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set())] })).then(async () => {
+			interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, origin.company, new Set())] })).then(async () => {
 				if (origin.company.bountyBoardId) {
 					const hunterIdMap = {};
 					for (const bounty of existingBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap)).then(thread => {
+					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap)).then(thread => {
 						bounty.postingId = thread.id;
 						bounty.save()
 					});

@@ -51,25 +51,23 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 					evergreenBounties.unshift(bounty);
 					continue;
 				}
-				bountyEmbed(bounty, interaction.guild, bounty.userId == interaction.client.user.id ? Company.getLevel(origin.company.getXP(hunterMap)) : hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)).then(bountyEmbed => {
-					return bountyBoard.threads.create({
-						name: bounty.title,
-						message: {
-							embeds: [bountyEmbed],
-							components: bountyControlPanelSelectRow(bounty.id)
-						},
-						appliedTags: [openTagId]
-					})
+
+				bountyBoard.threads.create({
+					name: bounty.title,
+					message: {
+						embeds: [bountyEmbed(bounty, bounty.userId === interaction.member.id ? interaction.member : await interaction.guild.members.fetch(bounty.userId), hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))],
+						components: bountyControlPanelSelectRow(bounty.id)
+					},
+					appliedTags: [openTagId]
 				}).then(posting => {
-					bounty.postingId = posting.id;
-					bounty.save()
+					bounty.update({ postingId: posting.id });
 				})
 			}
 
 			// make Evergreen Bounty list
 			if (evergreenBounties.length > 0) {
 				const companyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-				Promise.all(evergreenBounties.map(async bounty => bountyEmbed(bounty, interaction.guild, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
+				Promise.all(evergreenBounties.map(async bounty => bountyEmbed(bounty, interaction.guild.members.me, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
 					makeEvergreenBountiesThread(bountyBoard.threads, embeds, origin.company);
 				})
 			}

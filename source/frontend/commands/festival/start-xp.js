@@ -27,7 +27,7 @@ module.exports = new SubcommandWrapper("start-xp", "Start an XP multiplier festi
 			for (const bounty of existingBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	}
 ).setOptions(
