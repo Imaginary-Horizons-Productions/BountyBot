@@ -33,7 +33,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 					for (const bounty of openBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					refreshEvergreenBountiesThread(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild, hunterIdMap);
+					refreshEvergreenBountiesThread(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap);
 				} else {
 					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
 						thread.delete(`Evergreen bounty taken down by ${interaction.member}`);

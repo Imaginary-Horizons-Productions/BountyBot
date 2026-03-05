@@ -49,11 +49,12 @@ module.exports = new ItemTemplateSet(
 				await bounty.reload();
 				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, currentPosterLevel, hunterIdSet);
-				return bountyEmbed(bounty, collectedInteraction.guild, currentPosterLevel, false, origin.company, hunterIdSet).then(async embed => {
-					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty showcased");
-					return collectedInteraction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
-				})
+				refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), collectedInteraction.member, currentPosterLevel, hunterIdSet);
+				await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty showcased");
+				collectedInteraction.channel.send({
+					content: `${collectedInteraction.member} increased the reward on their bounty!`,
+					embeds: [bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, hunterIdSet, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))]
+				});
 			}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 				if (interaction.channel) {

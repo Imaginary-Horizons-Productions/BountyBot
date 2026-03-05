@@ -59,7 +59,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				const post = await boardChannel.threads.fetch(postingId);
 				await unarchiveAndUnlockThread(post, "Unarchived to update posting");
 				post.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${randomCongratulatoryPhrase()}!` });
-				(await post.fetchStarterMessage()).edit({ embeds: [await bountyEmbed(bounty, modalSubmission.guild, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]))] });
+				(await post.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 			}
 			modalSubmission.reply({ content: `${userMention(interaction.targetId)}'s turn-in of ${bold(bounty.title)} has been recorded! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: MessageFlags.Ephemeral });
 		}).catch(butIgnoreInteractionCollectorErrors);

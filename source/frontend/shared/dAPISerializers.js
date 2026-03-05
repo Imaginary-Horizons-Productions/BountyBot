@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
 const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, FileUploadBuilder } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, FileUploadBuilder, GuildScheduledEvent } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
 const { descendingByProperty, timeConversion } = require("../../shared");
@@ -186,11 +186,11 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 
 /**
  * @param {Bounty} bounty
+ * @param {GuildScheduledEvent | null} bountyScheduledEvent
  * @param {boolean} isEvergreen
  * @param {string} key for constructing the ModalBuilder's customId uniquely
- * @param {Guild} guild
  */
-async function editBountyModalAndSubmissionOptions(bounty, isEvergreen, key, guild) {
+function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEvergreen, key) {
 	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${key}`)
 		.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
 		.addLabelComponents(
@@ -226,10 +226,9 @@ async function editBountyModalAndSubmissionOptions(bounty, isEvergreen, key, gui
 			.setStyle(TextInputStyle.Short)
 			.setPlaceholder("Required if making an event with the bounty");
 
-		if (bounty.scheduledEventId) {
-			const scheduledEvent = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
-			eventStartComponent.setValue((scheduledEvent.scheduledStartTimestamp / 1000).toString());
-			eventEndComponent.setValue((scheduledEvent.scheduledEndTimestamp / 1000).toString());
+		if (bountyScheduledEvent) {
+			eventStartComponent.setValue((bountyScheduledEvent.scheduledStartTimestamp / 1000).toString());
+			eventEndComponent.setValue((bountyScheduledEvent.scheduledEndTimestamp / 1000).toString());
 		}
 		modal.addLabelComponents(
 			new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
@@ -460,17 +459,17 @@ function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, curre
 
 /** Generate an embed for the given bounty
  * @param {Bounty} bounty
- * @param {Guild} guild
+ * @param {GuildMember} posterGuildMember
  * @param {number} posterLevel
  * @param {boolean} shouldOmitRewardsField
  * @param {Company} company
  * @param {Set<string>} hunterIdSet
+ * @param {GuildScheduledEvent | null} event
  * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; } | undefined} goalProgress
  */
-async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, company, hunterIdSet, goalProgress) {
-	const author = await guild.members.fetch(bounty.userId);
+function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsField, company, hunterIdSet, event, goalProgress) {
 	const fields = [];
-	const embed = new EmbedBuilder().setColor(author.displayColor)
+	const embed = new EmbedBuilder().setColor(posterGuildMember.displayColor)
 		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
 		.setTitle(bounty.state == "complete" ? `Bounty Complete! ${bounty.title}` : bounty.title)
 		.setTimestamp();
@@ -480,8 +479,7 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 	if (bounty.attachmentURL) {
 		embed.setImage(bounty.attachmentURL);
 	}
-	if (bounty.scheduledEventId) {
-		const event = await guild.scheduledEvents.fetch(bounty.scheduledEventId);
+	if (event) {
 		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
@@ -489,9 +487,9 @@ async function bountyEmbed(bounty, guild, posterLevel, shouldOmitRewardsField, c
 	}
 
 	if (bounty.isEvergreen) {
-		embed.setAuthor({ name: `Evergreen Bounty #${bounty.slotNumber}`, iconURL: author.user.displayAvatarURL() });
+		embed.setAuthor({ name: `Evergreen Bounty #${bounty.slotNumber}`, iconURL: posterGuildMember.user.displayAvatarURL() });
 	} else {
-		embed.setAuthor({ name: `${author.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: author.user.displayAvatarURL() });
+		embed.setAuthor({ name: `${posterGuildMember.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: posterGuildMember.user.displayAvatarURL() });
 	}
 	if (hunterIdSet.size > 0) {
 		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));

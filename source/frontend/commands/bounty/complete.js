@@ -67,39 +67,40 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		const content = rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
 
-		bountyEmbed(bounty, interaction.guild, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), goalProgress).then(async embed => {
-			const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
-			if (goalProgress.goalCompleted) {
-				acknowledgeOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
-			}
+		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
+		if (goalProgress.goalCompleted) {
+			acknowledgeOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
+		}
 
-			if (origin.company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
-				bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
-					await unarchiveAndUnlockThread(thread, "bounty complete");
-					thread.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
-					thread.send({ content, flags: MessageFlags.SuppressNotifications });
-					return thread.fetchStarterMessage();
-				}).then(posting => {
-					posting.edit({ embeds: [embed], components: [] }).then(() => {
-						posting.channel.setArchived(true, "bounty completed");
-					});
+		if (origin.company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
+			bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
+				await unarchiveAndUnlockThread(thread, "bounty complete");
+				thread.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
+				thread.send({ content, flags: MessageFlags.SuppressNotifications });
+				return thread.fetchStarterMessage();
+			}).then(async posting => {
+				posting.edit({
+					embeds: [bountyEmbed(bounty, interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(interaction.guild.scheduledEvents), goalProgress)],
+					components: []
+				}).then(() => {
+					posting.channel.setArchived(true, "bounty completed");
 				});
-				acknowledgeOptions.content += `${channelMention(bounty.postingId)}, was completed!`;
-				interaction.editReply(acknowledgeOptions);
-			} else {
-				acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
-				interaction.editReply(acknowledgeOptions).then(message => {
-					sendRewardMessage(message, content, `${bounty.title} Rewards`);
-				})
-			}
+			});
+			acknowledgeOptions.content += `${channelMention(bounty.postingId)}, was completed!`;
+			interaction.editReply(acknowledgeOptions);
+		} else {
+			acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
+			interaction.editReply(acknowledgeOptions).then(message => {
+				sendRewardMessage(message, content, `${bounty.title} Rewards`);
+			})
+		}
 
-			if (origin.company.scoreboardIsSeasonal) {
-				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
-			} else {
-				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
-			}
-		});
+		if (origin.company.scoreboardIsSeasonal) {
+			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+		} else {
+			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
+		}
 	}
 ).setOptions(
 	{
