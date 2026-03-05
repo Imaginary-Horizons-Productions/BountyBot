@@ -53,11 +53,12 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 			origin.hunter.save();
 			const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 			const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-			refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), collectedInteraction.member, currentPosterLevel, hunterIdSet);
+			const bountyScheduledEvent = await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents);
+			refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, bountyScheduledEvent, collectedInteraction.member, currentPosterLevel, hunterIdSet);
 			await unarchiveAndUnlockThread(interaction.channel, "bounty showcased");
 			interaction.channel.send({
 				content: `${collectedInteraction.member} increased the reward on their bounty!`,
-				embeds: [bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, hunterIdSet, await bounty.getScheduledEvent(interaction.guild.scheduledEvents))]
+				embeds: [bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, hunterIdSet, bountyScheduledEvent)]
 			});
 		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
