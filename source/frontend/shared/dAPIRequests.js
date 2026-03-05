@@ -236,7 +236,6 @@ module.exports = {
 	makeEvergreenBountiesThread,
 	refreshBountyThreadStarterMessage,
 	addLogMessageToBountyThread,
-	refreshReferenceChannelScoreboard,
 	refreshReferenceChannelScoreboardSeasonal,
 	refreshReferenceChannelScoreboardOverall,
 	sendRewardMessage,
