@@ -385,10 +385,12 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 							bounty = await bounty.update({ slotNumber: destinationSlot });
 							refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
+							addLogMessageToBountyThread(interaction.guild, origin.company, bounty, `Switched this bounty's slot from ${sourceSlot} to ${destinationSlot}. It is now worth ${Bounty.calculateCompleterReward(hunterLevel, destinationSlot, previousBounty.showcaseCount)} XP.`);
 
 							if (destinationBounty?.state === "open") {
 								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
 								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+								addLogMessageToBountyThread(interaction.guild, origin.company, destinationBounty, `Switched this bounty's slot from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(hunterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`);
 							}
 
 							const destinationRewardValue = Bounty.calculateCompleterReward(posterLevel, destinationSlot, bounty.showcaseCount);
