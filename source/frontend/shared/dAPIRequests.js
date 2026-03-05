@@ -89,7 +89,7 @@ async function addLogMessageToBountyThread(guild, company, bounty, auditMessage)
 	const bountyBoard = await guild.channels.fetch(company.bountyBoardId);
 	const thread = await bountyBoard.threads.fetch(bounty.postingId);
 	await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
-	return thread.send(auditMessage);
+	return thread.send({ content: auditMessage, flags: MessageFlags.SuppressNotifications });
 }
 
 /** If the server has a scoreboard reference channel, update the embed in it
