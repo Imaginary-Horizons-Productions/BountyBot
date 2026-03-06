@@ -77,6 +77,24 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, bountyS
 	})
 }
 
+/** Add a message to the bounty in the bounty board to log state changes.
+ * To avoid spam and for general bounty readability, limit using this to
+ * once per bounty per command.
+ * @param {Guild} guild
+ * @param {Company} company
+ * @param {Bounty} bounty
+ * @param {string} auditMessage
+ */
+async function addLogMessageToBountyThread(guild, company, bounty, auditMessage) {
+	if (!company.bountyBoardId || !bounty.postingId) {
+		return null;
+	}
+	const bountyBoard = await guild.channels.fetch(company.bountyBoardId);
+	const thread = await bountyBoard.threads.fetch(bounty.postingId);
+	await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
+	return thread.send({ content: auditMessage, flags: MessageFlags.SuppressNotifications });
+}
+
 /** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
  * @param {Company} company
  * @param {Guild} guild
@@ -219,6 +237,7 @@ module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	refreshBountyThreadStarterMessage,
+	addLogMessageToBountyThread,
 	refreshReferenceChannelScoreboardSeasonal,
 	refreshReferenceChannelScoreboardOverall,
 	sendRewardMessage,
