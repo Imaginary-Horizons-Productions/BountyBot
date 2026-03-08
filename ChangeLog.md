@@ -1,5 +1,5 @@
 # BountyBot Change Log
-## BountyBot Version 2.11.0bfi:
+## BountyBot Version 2.11.0fib:
 ### Reaction Toasts
 - Bounty Hunters can now raise a messageless toast by reacting to another Bounty Hunter's discord message with 🥂
 - Reaction toasts can be toggled off in `/server-config`
@@ -8,6 +8,8 @@
 - Added the `nickname` option to `/config-premium` to allow bot managers to set a nickname for BountyBot that won't get cleared by toggling festivals on or off
 ### Bug Fixes
 - Fixed Goal Point contributions not showing up in reward messages
+### Known Issues
+- When editing a bounty, not submitting a description, image, or timestamp pair, always deletes those data from the bounty (this will be fixed with modal checkboxes in the future)
 ## BountyBot Version 2.10.1bi:
 This version includes the addition of the "b" version category, for "bug fixes".
 - Fixed several crashes related to missing permissions, modal timeouts, trying to DM users who've blocked BountyBot, and residual data from former server members

@@ -35,31 +35,16 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 			const { modal, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), false, interaction.id);
 			collectedInteraction.showModal(modal);
 			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
+				await bounty.reload();
+				const errors = [];
+
 				const title = modalSubmission.fields.getTextInputValue("title");
 				const description = modalSubmission.fields.getTextInputValue("description");
-
-				const updatePayload = {};
-				const errors = [];
 				const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty")
 				if (autoModInfraction == null) {
 					errors.push(`Could not check if the toast breaks automod rules. ${modalSubmission.client.user} may not have the Manage Server permission required to check the automod rules.`);
 				} else if (autoModInfraction) {
 					errors.push("The bounty's new title or description would trip this server's AutoMod.");
-				} else {
-					updatePayload.title = title;
-					updatePayload.description = description;
-				}
-
-				const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
-				if (imageURL) {
-					try {
-						new URL(imageURL);
-						updatePayload.attachmentURL = imageURL;
-					} catch (error) {
-						errors.push(error.message);
-					}
-				} else {
-					updatePayload.attachmentURL = null;
 				}
 
 				const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
@@ -72,6 +57,25 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					interaction.deleteReply();
 					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty ${bold(title)}:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
 					return;
+				}
+
+				const updatePayload = { editCount: bounty.editCount + 1 };
+				if (title) {
+					updatePayload.title = title;
+				}
+
+				updatePayload.description = description;
+
+				const imageAttachmentCollection = modalSubmission.fields.getUploadedFiles("image");
+				if (imageAttachmentCollection) {
+					const firstAttachment = imageAttachmentCollection.first();
+					if (firstAttachment) {
+						updatePayload.attachmentURL = firstAttachment.url;
+					} else {
+						updatePayload.attachmentURL = null;
+					}
+				} else {
+					updatePayload.attachmentURL = null;
 				}
 
 				let event = null;
@@ -87,8 +91,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId);
 					updatePayload.scheduledEventId = null;
 				}
-				await bounty.increment("editCount");
-				bounty.update(updatePayload);
+				await bounty.update(updatePayload);
 
 				// update bounty board
 				const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event)];

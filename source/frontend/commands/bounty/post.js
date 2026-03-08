@@ -98,7 +98,6 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					new LabelBuilder().setLabel("Image")
 						.setFileUploadComponent(
 							new FileUploadBuilder().setCustomId(imageId)
-								.setMaxValues(1)
 								.setRequired(false)
 						)
 				);

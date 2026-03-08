@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
 const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast } = require("../../database/models");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, GuildScheduledEvent } = require("discord.js");
+const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, FileUploadBuilder, GuildScheduledEvent } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
 const { descendingByProperty, timeConversion } = require("../../shared");
@@ -210,12 +210,10 @@ function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEve
 						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
 						.setValue(bounty.description ?? "")
 				),
-			new LabelBuilder().setLabel("Image URL")
-				.setTextInputComponent(
-					new TextInputBuilder().setCustomId("imageURL")
+			new LabelBuilder().setLabel("Image")
+				.setFileUploadComponent(
+					new FileUploadBuilder().setCustomId("image")
 						.setRequired(false)
-						.setStyle(TextInputStyle.Short)
-						.setValue(bounty.attachmentURL ?? "")
 				)
 		);
 	if (!isEvergreen) {

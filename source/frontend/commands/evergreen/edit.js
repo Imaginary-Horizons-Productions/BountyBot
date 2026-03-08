@@ -48,31 +48,31 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 					errors.push("The bounty's new title or description would trip this server's AutoMod.");
 				}
 
-				const imageURL = modalSubmission.fields.getTextInputValue("imageURL");
-				if (imageURL) {
-					try {
-						new URL(imageURL);
-					} catch (error) {
-						errors.push(error.message);
-					}
-				}
-
 				if (errors.length > 0) {
 					modalSubmission.reply({ content: `The following errors were encountered while editing your bounty **${title}**:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
+				const updatePayload = { editCount: selectedBounty.editCount + 1 };
 				if (title) {
-					selectedBounty.title = title;
+					updatePayload.title = title;
 				}
-				selectedBounty.description = description;
-				if (imageURL) {
-					selectedBounty.attachmentURL = imageURL;
-				} else if (selectedBounty.attachmentURL) {
-					selectedBounty.attachmentURL = null;
+
+				updatePayload.description = description;
+
+				const imageAttachmentCollection = modalSubmission.fields.getUploadedFiles("image");
+				if (imageAttachmentCollection) {
+					const firstAttachment = imageAttachmentCollection.first();
+					if (firstAttachment) {
+						updatePayload.attachmentURL = imageAttachmentCollection;
+					} else {
+						updatePayload.attachmentURL = null;
+					}
+				} else {
+					updatePayload.attachmentURL = null;
 				}
-				selectedBounty.editCount++;
-				selectedBounty.save();
+
+				selectedBounty.update(updatePayload);
 
 				// update bounty board
 				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
