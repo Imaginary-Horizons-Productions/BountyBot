@@ -9,7 +9,7 @@
 		"@sapphire/discord.js-utilities": "7.3.3",
 		"discord.js": "14.25.1",
 		"node-cron": "3.0.3",
-		"sequelize": "6.37.7",
+		"sequelize": "6.37.8",
 		"sqlite3": "5.1.7"
 	},
 	"devDependencies": {
