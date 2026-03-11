@@ -33,19 +33,20 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
+		const labelIdBountyId = "bounty-id";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Record a Bounty Turn-In")
 			.setLabelComponents(
 				new LabelBuilder().setLabel(`Bounty Hunter: ${interaction.targetMember.displayName}`)
 					.setStringSelectMenuComponent(
-						new StringSelectMenuBuilder().setCustomId("bounty-id")
+						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
 							.setOptions(selectOptionsFromBounties(bounties))
 					)
 			)
 		interaction.showModal(modal);
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
-			const [bountyId] = modalSubmission.fields.getStringSelectValues("bounty-id");
+			const [bountyId] = modalSubmission.fields.getStringSelectValues(labelIdBountyId);
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
 			if (bounty?.state !== "open") {
 				modalSubmission.reply({ content: "The bounty you selected no longer appears to be open.", flags: MessageFlags.Ephemeral });

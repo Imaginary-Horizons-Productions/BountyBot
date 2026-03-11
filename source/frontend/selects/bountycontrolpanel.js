@@ -1,8 +1,8 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles, ModalBuilder, LabelBuilder } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread  } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, reloadHunterMapSubset, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -31,36 +31,32 @@ module.exports = new SelectWrapper(mainId, 3000,
 				interaction.update({ content: ZERO_WIDTH_WHITE_SPACE });
 				break;
 			case "recordturnin": {
-				interaction.reply({
-					content: "Which bounty hunters should be credited with completing the bounty?",
-					components: [
-						new ActionRowBuilder().addComponents(
-							new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-								.setPlaceholder("Select bounty hunters...")
-								.setMaxValues(5)
-						)
-					],
-					flags: MessageFlags.Ephemeral,
-					withResponse: true
-				}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
-					const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(collectedInteraction.members.values()), runMode);
-					if (newTurnInIds.size < 1) {
-						collectedInteraction.reply({ content: `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedTurnInIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`, flags: MessageFlags.Ephemeral });
-						return;
-					}
+				const labelIdBountyHunters = "bounty-hunters";
+				const maxHunters = 10;
+				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+					.setTitle("Record Bounty Turn-Ins")
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Bounty Hunters")
+							.setUserSelectMenuComponent(
+								new UserSelectMenuBuilder().setCustomId(labelIdBountyHunters)
+									.setPlaceholder(`Select up to ${maxHunters} bounty hunters...`)
+									.setMaxValues(maxHunters)
+							)
+					);
+				await interaction.showModal(modal);
+				const modalSubmission = await interaction.awaitModalSubmit({ filter: interaction => interaction.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") });
+				// Bounty Existence Validation not required; if a bounty is deleted its modal is open, the modal does not submit
+				const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), runMode);
+				if (newTurnInIds.size < 1) {
+					modalSubmission.reply({ content: `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedTurnInIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`, flags: MessageFlags.Ephemeral });
+					return;
+				}
 
-					await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
-					if (!collectedInteraction.channel) return;
-					await unarchiveAndUnlockThread(collectedInteraction.channel, "Unarchived to update posting");
-					collectedInteraction.channel.send({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
-					(await collectedInteraction.channel.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, collectedInteraction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))] });
-					collectedInteraction.update({ components: [] });
-				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
-					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-					if (interaction.channel) {
-						interaction.deleteReply();
-					}
-				});
+				await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
+				if (!modalSubmission.channel) return;
+				await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
+				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
+				(await modalSubmission.channel.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 			} break;
 			case "revoketurnin": {
 				interaction.reply({
