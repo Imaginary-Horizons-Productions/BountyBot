@@ -1,8 +1,9 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
+const { StringSelectMenuBuilder, MessageFlags, PermissionFlagsBits, ModalBuilder, TextDisplayBuilder, LabelBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, bountyEmbed, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { Company } = require("../../../database/models");
+const { timeConversion } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -12,50 +13,50 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 			return;
 		}
 
-		interaction.reply({
-			content: "Unlike normal bounty showcases, an evergreen showcase does not increase the reward of the showcased bounty and is not rate-limited.",
-			components: [
-				new ActionRowBuilder().addComponents(
-					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-						.setPlaceholder("Select a bounty to showcase...")
-						.setMaxValues(1)
-						.setOptions(selectOptionsFromBounties(existingBounties))
-				)
-			],
-			flags: MessageFlags.Ephemeral,
-			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(collectedInteraction => {
-			return existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload().then(async bounty => {
-				if (bounty?.state !== "open") {
-					return collectedInteraction;
-				}
+		const labelIdBountyId = "bounty-id";
+		const labelIdCustomMessage = "custom-message";
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+			.setTitle("Showcase an Evergreen Bounty")
+			.addTextDisplayComponents(
+				new TextDisplayBuilder().setContent("Unlike normal bounty showcases, an evergreen showcase does not increase the reward of the showcased bounty and is not rate-limited.")
+			)
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Bounty")
+					.setStringSelectMenuComponent(
+						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
+							.setPlaceholder("Select a bounty...")
+							.setOptions(selectOptionsFromBounties(existingBounties))
+					),
+				new LabelBuilder().setLabel("Custom Message")
+					.setTextInputComponent(
+						new TextInputBuilder().setCustomId(labelIdCustomMessage)
+							.setStyle(TextInputStyle.Paragraph)
+							.setPlaceholder("Add a custom message to the showcase...")
+							.setRequired(false)
+					)
+			);
+		await interaction.showModal(modal);
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+			.catch(butIgnoreInteractionCollectorErrors);
+		if (!modalSubmission) {
+			return;
+		}
 
-				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id)));
-				const payload = { embeds: [bountyEmbed(bounty, interaction.guild, currentCompanyLevel, false, origin.company, new Set())] };
-				const extraText = interaction.options.get("extra-text");
-				if (extraText) {
-					payload.content = extraText.value;
-				}
-				if (!interaction.memberPermissions?.has(PermissionFlagsBits.MentionEveryone)) {
-					payload.allowedMentions = { parse: [] };
-				}
-				collectedInteraction.channel.send(payload);
-				return collectedInteraction;
-			});
-		}).then(interactionToAcknowledge => {
-			return interactionToAcknowledge.update({ components: [] });
-		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
-			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-			if (interaction.channel) {
-				interaction.deleteReply();
-			}
-		})
-	}
-).setOptions(
-	{
-		type: "String",
-		name: "extra-text",
-		description: "Text to show in the showcase message",
-		required: false
+		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
+		if (bounty?.state !== "open") {
+			modalSubmission.reply({ content: "The bounty you selected appears to have been taken-down before the showcase could resolve.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id)));
+		const payload = { embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, origin.company, new Set())] };
+		const extraText = modalSubmission.fields.getTextInputValue(labelIdCustomMessage);
+		if (extraText) {
+			payload.content = extraText;
+		}
+		if (!modalSubmission.memberPermissions?.has(PermissionFlagsBits.MentionEveryone)) {
+			payload.allowedMentions = { parse: [] };
+		}
+		modalSubmission.reply(payload);
 	}
 );
