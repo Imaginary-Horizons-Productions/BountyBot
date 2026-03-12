@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { commandMention, selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors, butIgnoreUnknownChannelErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
@@ -26,7 +26,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
 				if (origin.company.bountyBoardId) {
 					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
-					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
+					const postingThread = await bountyBoard.threads.fetch(bounty.postingId).catch(butIgnoreUnknownChannelErrors);
 					if (postingThread) {
 						postingThread.delete("Bounty taken down by poster");
 					}

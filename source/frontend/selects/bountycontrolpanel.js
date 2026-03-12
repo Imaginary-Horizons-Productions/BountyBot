@@ -44,8 +44,13 @@ module.exports = new SelectWrapper(mainId, 3000,
 							)
 					);
 				await interaction.showModal(modal);
-				const modalSubmission = await interaction.awaitModalSubmit({ filter: interaction => interaction.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") });
-				// Bounty Existence Validation not required; if a bounty is deleted its modal is open, the modal does not submit
+				const modalSubmission = await interaction.awaitModalSubmit({ filter: interaction => interaction.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+					.catch(butIgnoreInteractionCollectorErrors);
+				if (!modalSubmission) {
+					return;
+				}
+
+				// Unnecessary Validations: "bounty existence", "posting thread existence"; if a bounty thread (or the bounty, which cascades the delete to the thread) is deleted while its modal is open, the modal does not submit
 				const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), runMode);
 				if (newTurnInIds.size < 1) {
 					modalSubmission.reply({ content: `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedTurnInIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`, flags: MessageFlags.Ephemeral });
@@ -53,37 +58,38 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}
 
 				await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
-				if (!modalSubmission.channel) return;
 				await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
 				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
-				(await modalSubmission.channel.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+
+				interaction.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 			} break;
 			case "revoketurnin": {
-				interaction.reply({
-					content: "Which bounty hunters should be removed from bounty credit?",
-					components: [
-						new ActionRowBuilder().addComponents(
-							new UserSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}`)
-								.setPlaceholder("Select bounty hunters...")
-								.setMaxValues(5)
-						)
-					],
-					flags: MessageFlags.Ephemeral,
-					withResponse: true
-				}).then(response => response.resource.message.awaitMessageComponent({ time: timeConversion(2, "m", "ms"), componentType: ComponentType.UserSelect })).then(async collectedInteraction => {
-					const removedIds = collectedInteraction.members.map((_, key) => key);
-					await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
-					await unarchiveAndUnlockThread(collectedInteraction.channel, "completers removed from bounty");
-					interaction.message.edit({ embeds: [bountyEmbed(bounty, collectedInteraction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))] })
+				const labelIdBountyHunters = "bounty-hunters";
+				const maxHunters = 10;
+				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+					.setTitle("Record Bounty Turn-Ins")
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Bounty Hunters")
+							.setUserSelectMenuComponent(
+								new UserSelectMenuBuilder().setCustomId(labelIdBountyHunters)
+									.setPlaceholder(`Select up to ${maxHunters} bounty hunters...`)
+									.setMaxValues(maxHunters)
+							)
+					);
+				await interaction.showModal(modal);
+				const modalSubmission = await interaction.awaitModalSubmit({ filter: interaction => interaction.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+					.catch(butIgnoreInteractionCollectorErrors);
+				if (!modalSubmission) {
+					return;
+				}
 
-					collectedInteraction.channel.send({ content: `${sentenceListEN(removedIds.map(id => userMention(id)))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
-					return collectedInteraction.reply({ content: `The listed bounty hunter(s) will no longer recieve credit when this bounty is completed.`, flags: MessageFlags.Ephemeral });
-				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
-					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-					if (interaction.channel) {
-						interaction.deleteReply();
-					}
-				});
+				// Unnecessary Validations: "bounty existence", "posting thread existence"; if a bounty thread (or the bounty, which cascades the delete to the thread) is deleted while its modal is open, the modal does not submit
+				const removedIds = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).map((_, key) => key);
+				await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
+				await unarchiveAndUnlockThread(modalSubmission.channel, "completers removed from bounty");
+				modalSubmission.reply({ content: `${sentenceListEN(removedIds.map(id => userMention(id)))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
+
+				interaction.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] })
 			} break;
 			case "showcase": {
 				const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
