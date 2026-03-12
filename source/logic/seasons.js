@@ -223,8 +223,8 @@ async function changeSeasonXP(userId, companyId, seasonId, xp) {
  * @param {string} companyId
  * @param {string} stat
  */
-async function incrementSeasonStat(guildId, stat) {
-	const [season] = await findOrCreateCurrentSeason(guildId);
+async function incrementSeasonStat(companyId, stat) {
+	const [season] = await findOrCreateCurrentSeason(companyId);
 	return season.increment(stat);
 }
 
