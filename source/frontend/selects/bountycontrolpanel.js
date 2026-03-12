@@ -67,7 +67,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 				const labelIdBountyHunters = "bounty-hunters";
 				const maxHunters = 10;
 				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-					.setTitle("Record Bounty Turn-Ins")
+					.setTitle("Revoke Bounty Turn-Ins")
 					.addLabelComponents(
 						new LabelBuilder().setLabel("Bounty Hunters")
 							.setUserSelectMenuComponent(
