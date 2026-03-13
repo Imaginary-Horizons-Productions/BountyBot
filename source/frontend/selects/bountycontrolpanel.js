@@ -442,9 +442,6 @@ module.exports = new SelectWrapper(mainId, 3000,
 					flags: MessageFlags.Ephemeral,
 					withResponse: true
 				}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
-					await bounty.reload();
-					bounty.state = "deleted";
-					bounty.save();
 					logicLayer.bounties.deleteBountyCompletions(bountyId);
 					bounty.destroy();
 
