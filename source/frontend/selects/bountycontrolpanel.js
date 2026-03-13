@@ -2,8 +2,9 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, disabledSelectRow, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread, isMissingPermissionError, truncateTextToLength } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
+const { SelectMenuLimits } = require('@sapphire/discord.js-utilities');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -352,82 +353,88 @@ module.exports = new SelectWrapper(mainId, 3000,
 					return;
 				}
 
-				const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
+				const openBounties = await logicLayer.bounties.mapOpenBountiesBySlotNumber(origin.user.id, origin.company.id);
 				const slotOptions = [];
-				for (let i = 1; i <= bountySlotCount; i++) {
-					if (i !== bounty.slotNumber) {
-						const existingBounty = openBounties.find(checkedBounty => checkedBounty.slotNumber === i);
-						slotOptions.push(
-							{
-								emoji: emojiFromNumber(i),
-								label: `Slot ${i}: ${existingBounty?.title ?? "Empty"}`,
-								description: `XP Reward: ${Bounty.calculateCompleterReward(startingPosterLevel, i, existingBounty?.showcaseCount ?? 0)}`,
-								value: i.toString()
-							}
-						)
+				for (let i = 0; i < bountySlotCount; i++) {
+					const slotNumber = i + 1;
+					if (slotNumber !== bounty.slotNumber) {
+						const matchingBounty = openBounties.get(slotNumber);
+						const option = { emoji: emojiFromNumber(slotNumber), label: `Slot ${slotNumber} (Base Reward: ${Bounty.calculateCompleterReward(startingPosterLevel, slotNumber, 0)} XP)`, value: slotNumber.toString() };
+						if (matchingBounty) {
+							option.description = truncateTextToLength(`Swap With: ${matchingBounty.title}`, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
+						}
+						slotOptions.push(option);
 					}
 				}
-				const channelSelectPlaceholder = "Select a channel to announce the swap in...";
-				interaction.reply({
-					content: "Swapping this bounty to another slot will change its XP reward.",
-					components: [
-						new ActionRowBuilder().addComponents(
-							new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}destination`)
-								.setPlaceholder("Select a slot to swap the bounty to...")
-								.setMaxValues(1)
-								.setOptions(slotOptions)
-						),
-						disabledSelectRow(channelSelectPlaceholder)
-					],
-					flags: MessageFlags.Ephemeral,
-					withResponse: true
-				}).then(response => {
-					const sourceSlot = bounty.slotNumber;
-					let destinationSlot;
-					const collector = response.resource.message.createMessageComponentCollector({ time: timeConversion(2, "m", "ms"), max: 2 });
-					collector.on("collect", async collectedInteraction => {
-						const [_, stepId] = collectedInteraction.customId.split(SKIP_INTERACTION_HANDLING)
-						if (stepId === "destination") {
-							destinationSlot = parseInt(collectedInteraction.values[0]);
-							collectedInteraction.update({
-								components: [
-									disabledSelectRow(`Destination Slot: ${destinationSlot}`),
-									new ActionRowBuilder().addComponents(
-										new ChannelSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}channel`)
-											.setPlaceholder(channelSelectPlaceholder)
-											.addChannelTypes(ChannelType.GuildText, ChannelType.AnnouncementThread, ChannelType.PrivateThread, ChannelType.PublicThread)
-									)
-								]
-							})
+
+				const labelIdSlot = "slot";
+				const labelIdChannel = "channel";
+				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+					.setTitle("Move Bounty Slots")
+					.addTextDisplayComponents(new TextDisplayBuilder().setContent("Swapping this bounty to another slot will change its Base XP Reward."))
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Bounty Slot")
+							.setStringSelectMenuComponent(
+								new StringSelectMenuBuilder().setCustomId(labelIdSlot)
+									.setPlaceholder("Select a bounty slot...")
+									.setOptions(slotOptions)
+							),
+						new LabelBuilder().setLabel("Announcement Channel")
+							.setChannelSelectMenuComponent(
+								new ChannelSelectMenuBuilder().setCustomId(labelIdChannel)
+									.setPlaceholder("Select a channel...")
+									.setChannelTypes(ChannelType.GuildText)
+							)
+					);
+				await interaction.showModal(modal);
+				const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+					.catch(butIgnoreInteractionCollectorErrors);
+				if (!modalSubmission) {
+					return;
+				}
+
+				/** Unnecessary Validations
+				 * - "bounty existence", "posting thread existence"; if a bounty thread (or the bounty, which cascades the delete to the thread) is deleted while its modal is open, the modal does not submit
+				 * - "same slot"; slot filtered out of options before input
+				 */
+				await bounty.reload();
+				if (bounty.state !== "open") {
+					modalSubmission.reply({ content: "This bounty appears to already have been completed.", flags: MessageFlags.Ephemeral });
+					return;
+				}
+
+				const destinationSlot = Number(modalSubmission.fields.getStringSelectValues(labelIdSlot)[0]);
+
+				await origin.company.reload();
+				const currentPosterLevel = (await origin.hunter.reload()).getLevel(origin.company.xpCoefficient);
+				if (destinationSlot > Hunter.getBountySlotCount(currentPosterLevel, origin.company.maxSimBounties)) {
+					modalSubmission.reply({ content: "You no longer have the bounty slot you are trying to swap into.", flags: MessageFlags.Ephemeral });
+					return;
+				}
+
+				const sourceSlot = bounty.slotNumber;
+				let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id, state: "open" });
+				const destinationRewardValue = Bounty.calculateCompleterReward(currentPosterLevel, destinationSlot, bounty.showcaseCount);
+
+				bounty = await bounty.update({ slotNumber: destinationSlot });
+				refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, currentPosterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
+				modalSubmission.reply({ content: `Switched this bounty's slot from ${sourceSlot} to ${destinationSlot}. It is now worth ${destinationRewardValue} XP.` });
+
+				if (destinationBounty) {
+					destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
+					refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, destinationBounty, await destinationBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, currentPosterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
+					addLogMessageToBountyThread(modalSubmission.guild, origin.company, destinationBounty, `Switched this bounty's slot from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(currentPosterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`);
+				}
+
+				const channel = modalSubmission.fields.getSelectedChannels(labelIdChannel).first();
+				channel.send(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member}'s bounty, ${bold(bounty.title)} is now worth ${destinationRewardValue} XP.` }))
+					.catch(error => {
+						if (isMissingPermissionError) {
+							modalSubmission.followUp({ content: `Your bounty swap could not be announced in ${channel} because ${modalSubmission.client.user} doesn't have permission to view or send messages in that channel.`, flags: MessageFlags.Ephemeral });
 						} else {
-							await bounty.reload();
-							if (bounty.state !== "open") {
-								collectedInteraction.followUp({ content: "The selected bounty appears to already have been completed.", flags: MessageFlags.Ephemeral });
-								return;
-							}
-
-							let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id });
-							const posterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-							const destinationRewardValue = Bounty.calculateCompleterReward(posterLevel, destinationSlot, bounty.showcaseCount);
-
-							bounty = await bounty.update({ slotNumber: destinationSlot });
-
-							refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, posterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
-							addLogMessageToBountyThread(interaction.guild, origin.company, bounty, `Switched this bounty's slot from ${sourceSlot} to ${destinationSlot}. It is now worth ${destinationRewardValue} XP.`);
-
-							if (destinationBounty?.state === "open") {
-								destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-								refreshBountyThreadStarterMessage(interaction.guild, origin.company, destinationBounty, await destinationBounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, posterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
-								addLogMessageToBountyThread(interaction.guild, origin.company, destinationBounty, `Switched this bounty's slot from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(posterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`);
-							}
-
-							collectedInteraction.channels.first().send(addCompanyAnnouncementPrefix(origin.company, { content: `${interaction.member}'s bounty, ${bold(bounty.title)} is now worth ${destinationRewardValue} XP.` }));
-							collectedInteraction.update({ components: [] }).then(() => {
-								interaction.deleteReply();
-							})
+							console.error(error);
 						}
-					})
-				})
+					});
 			} break;
 			case "takedown": {
 				interaction.reply({
