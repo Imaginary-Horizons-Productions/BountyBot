@@ -119,7 +119,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 							.setChannelSelectMenuComponent(
 								new ChannelSelectMenuBuilder().setCustomId(labelIdChannel)
 									.setPlaceholder("Select a channel...")
-									.setChannelTypes(ChannelType.GuildText, ChannelType.PrivateThread, ChannelType.PublicThread)
+									.setChannelTypes(ChannelType.GuildText)
 							)
 					);
 				await interaction.showModal(modal);
@@ -167,80 +167,103 @@ module.exports = new SelectWrapper(mainId, 3000,
 					return;
 				}
 
-				// Early-out if no completers
 				const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
 				const memberCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
 				const validatedHunters = new Map();
+				const pendingTurnInDisplayNames = [];
 				for (const [memberId, member] of memberCollection) {
 					if (runMode !== "production" || !member.user.bot) {
-						const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, interaction.guild.id);
+						const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
 						if (!hunter.isBanned) {
 							validatedHunters.set(memberId, hunter);
+							pendingTurnInDisplayNames.push(member.displayName);
 						}
 					}
 				}
 
-				if (validatedHunters.size < 1) {
-					interaction.reply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.`, flags: MessageFlags.Ephemeral })
+				const labelIdChannel = "channel";
+				const labelIdBountyHunters = "bounty-hunters";
+				const maxHunters = 10;
+				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+					.setTitle("Mark your Bounty Complete!")
+					.addTextDisplayComponents(new TextDisplayBuilder().setContent(`Pending Turn-Ins: ${pendingTurnInDisplayNames.length > 0 ? sentenceListEN(pendingTurnInDisplayNames) : "None yet!"}`))
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Channel")
+							.setChannelSelectMenuComponent(
+								new ChannelSelectMenuBuilder().setCustomId(labelIdChannel)
+									.setPlaceholder("Select a channel...")
+									.setChannelTypes(ChannelType.GuildText)
+							),
+						new LabelBuilder().setLabel("Extra Turn-Ins")
+							.setUserSelectMenuComponent(
+								new UserSelectMenuBuilder().setCustomId(labelIdBountyHunters)
+									.setPlaceholder(`Select up to ${maxHunters} bounty hunters...`)
+									.setMaxValues(maxHunters)
+									.setRequired(false)
+							)
+					);
+				await interaction.showModal(modal);
+				const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+					.catch(butIgnoreInteractionCollectorErrors);
+				if (!modalSubmission) {
 					return;
 				}
 
-				interaction.reply({
-					content: `Which channel should the bounty's completion be announced in?\n\nPending Turn-Ins: ${sentenceListEN(Array.from(validatedHunters.keys()).map(id => userMention(id)))}`,
-					components: [
-						new ActionRowBuilder().addComponents(
-							new ChannelSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-								.setPlaceholder("Select channel...")
-								.setChannelTypes(ChannelType.GuildText)
-						)
-					],
-					flags: MessageFlags.Ephemeral,
-					withResponse: true
-				}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.ChannelSelect })).then(async collectedInteraction => {
-					await collectedInteraction.deferReply({ flags: MessageFlags.SuppressNotifications });
-					const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
+				// Early-out if no completers
+				const extraTurnIns = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters);
+				if (extraTurnIns !== null) {
+					for (const [memberId, member] of extraTurnIns) {
+						if (runMode !== "production" || !(member.user.bot || validatedHunters.has(memberId))) {
+							const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
+							if (!hunter.isBanned) {
+								validatedHunters.set(memberId, hunter);
+							}
+						}
+					}
+				}
+				if (validatedHunters.size < 1) {
+					modalSubmission.reply({ content: `There aren't any eligible bounty hunters to credit with completing this bounty. If you'd like to close your bounty without crediting anyone, use ${commandMention("bounty take-down")}.`, flags: MessageFlags.Ephemeral })
+					return;
+				}
 
-					let hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
-					const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-					const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, origin.company);
-					const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(origin.company, "bounties", hunterMap.get(bounty.userId), season);
-					companyReceipt.guildName = collectedInteraction.guild.name;
+				await modalSubmission.deferReply({ flags: MessageFlags.SuppressNotifications });
+				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
-					hunterMap = await logicLayer.hunters.getCompanyHunterMap(collectedInteraction.guild.id);
-					const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-					if (previousCompanyLevel < currentCompanyLevel) {
-						companyReceipt.levelUp = currentCompanyLevel;
-					}
-					const descendingRanks = await logicLayer.ranks.findAllRanks(collectedInteraction.guild.id);
-					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
-					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await collectedInteraction.guild.roles.fetch());
-					syncRankRoles(seasonalHunterReceipts, descendingRanks, collectedInteraction.guild.members);
+				let hunterMap = await logicLayer.hunters.getCompanyHunterMap(origin.company.id);
+				const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+				const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, origin.company);
+				const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(origin.company, "bounties", hunterMap.get(bounty.userId), season);
+				companyReceipt.guildName = modalSubmission.guild.name;
 
-					await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty complete");
-					collectedInteraction.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
-					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-					await collectedInteraction.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
-					interaction.message.edit({
-						embeds: [bountyEmbed(bounty, collectedInteraction.member, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys(), goalProgress), await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))],
-						components: []
-					});
-					collectedInteraction.channel.setArchived(true, "bounty completed");
-					const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${interaction.channel}, was completed!` };
-					if (goalProgress.goalCompleted) {
-						announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
-					}
-					collectedInteraction.channels.first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
-					if (origin.company.scoreboardIsSeasonal) {
-						refreshReferenceChannelScoreboardSeasonal(origin.company, collectedInteraction.guild, participationMap, descendingRanks, goalProgress);
-					} else {
-						refreshReferenceChannelScoreboardOverall(origin.company, collectedInteraction.guild, hunterMap, goalProgress);
-					}
-				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
-					// If the bounty thread was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-					if (interaction.channel) {
-						interaction.deleteReply();
-					}
+				hunterMap = await logicLayer.hunters.getCompanyHunterMap(origin.company.id);
+				const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+				if (previousCompanyLevel < currentCompanyLevel) {
+					companyReceipt.levelUp = currentCompanyLevel;
+				}
+				const descendingRanks = await logicLayer.ranks.findAllRanks(origin.company.id);
+				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+				const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await modalSubmission.guild.roles.fetch());
+				syncRankRoles(seasonalHunterReceipts, descendingRanks, modalSubmission.guild.members);
+
+				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty complete");
+				modalSubmission.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
+				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
+				await modalSubmission.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
+				await modalSubmission.message.edit({
+					embeds: [bountyEmbed(bounty, modalSubmission.member, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress)],
+					components: []
 				});
+				modalSubmission.channel.setArchived(true, "bounty completed");
+				const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${modalSubmission.channel}, was completed!` };
+				if (goalProgress.goalCompleted) {
+					announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
+				}
+				modalSubmission.fields.getSelectedChannels(labelIdChannel).first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
+				if (origin.company.scoreboardIsSeasonal) {
+					refreshReferenceChannelScoreboardSeasonal(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
+				} else {
+					refreshReferenceChannelScoreboardOverall(origin.company, modalSubmission.guild, hunterMap, goalProgress);
+				}
 			} break;
 			case "edit": {
 				const { modal, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);

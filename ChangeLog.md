@@ -6,7 +6,8 @@
 ### Premium Features
 - Added premium commands `/festival start-gp` and `/festival close-gp` for toggling times where gp contributions are multiplied (old festival commands renamed to `/festival start-xp` and `/festival close-xp`)
 - Added the `nickname` option to `/config-premium` to allow bot managers to set a nickname for BountyBot that won't get cleared by toggling festivals on or off
-### Bug Fixes
+### Other Changes
+- The completing a bounty via the select in the bounty board can now add turn-ins like the slash command
 - Fixed Goal Point contributions not showing up in reward messages
 ### Known Issues
 - When editing a bounty, not submitting a description, image, or timestamp pair, always deletes those data from the bounty (this will be fixed with modal checkboxes in the future)

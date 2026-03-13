@@ -29,7 +29,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			bounty.state = "deleted";
 			bounty.save();
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
-			if (origin.company.bountyBoardId) {
+			if (origin.company.bountyBoardId && bounty.postingId) {
 				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId).catch(butIgnoreUnknownChannelErrors);
 				if (postingThread) {

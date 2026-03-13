@@ -493,10 +493,11 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 	}
 	if (hunterIdSet.size > 0) {
 		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
+		const turnInFieldName = bounty.state === "open" ? "Pending Turn-Ins:" : "Turned-In By:";
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
-			fields.push({ name: "Turned in by:", value: completersFieldText });
+			fields.push({ name: turnInFieldName, value: completersFieldText });
 		} else {
-			fields.push({ name: "Turned in by:", value: "Too many to display!" });
+			fields.push({ name: turnInFieldName, value: "Too many to display!" });
 		}
 	}
 	if (goalProgress?.goalCompleted) {
