@@ -293,9 +293,11 @@ module.exports = new SelectWrapper(mainId, 3000,
 						return;
 					}
 
+					await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
 					const updatePayload = { editCount: bounty.editCount + 1 };
 					if (title) {
 						updatePayload.title = title;
+						modalSubmission.channel.edit({ name: bounty.title });
 					}
 
 					updatePayload.description = description;
@@ -329,18 +331,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 					// update bounty board
 					const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event)];
-					if (origin.company.bountyBoardId) {
-						interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-							return bountyBoard.threads.fetch(bounty.postingId);
-						}).then(async thread => {
-							await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
-							thread.edit({ name: bounty.title });
-							thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
-							return thread.fetchStarterMessage();
-						}).then(posting => {
-							posting.edit({ embeds });
-						})
-					}
+					modalSubmission.channel.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
+					interaction.message.edit({ embeds });
 
 					modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds, flags: MessageFlags.Ephemeral });
 				});
