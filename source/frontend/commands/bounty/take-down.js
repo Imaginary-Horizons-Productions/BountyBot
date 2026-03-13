@@ -17,7 +17,6 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to take down...")
-						.setMaxValues(1)
 						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],

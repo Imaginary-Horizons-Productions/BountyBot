@@ -17,7 +17,6 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to edit...")
-						.setMaxValues(1)
 						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],

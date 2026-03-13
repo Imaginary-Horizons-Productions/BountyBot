@@ -18,7 +18,6 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${poster.id}`)
 						.setPlaceholder("Select a bounty to take down...")
-						.setMaxValues(1)
 						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],
