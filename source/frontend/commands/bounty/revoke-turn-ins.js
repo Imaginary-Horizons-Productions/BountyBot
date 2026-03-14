@@ -32,7 +32,7 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 					)
 			);
 		await interaction.showModal(modal);
-		const modalSubmission = await interaction.awaitModalSubmit({ filter: interaction => interaction.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
 			.catch(butIgnoreInteractionCollectorErrors);
 		if (!modalSubmission) {
 			return;
