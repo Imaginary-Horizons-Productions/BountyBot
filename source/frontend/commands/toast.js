@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
+const { textsHaveAutoModInfraction, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 
 /** @type {typeof import("../../logic")} */
@@ -79,7 +79,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			companyReceipt = results.companyReceipt;
 			goalProgress = results.goalProgress;
 
-			hunterMap = await reloadHunterMapSubset(hunterMap, Array.from(hunterReceipts.keys()));
+			hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 			const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 			if (previousCompanyLevel < currentCompanyLevel) {
 				companyReceipt.levelUp = currentCompanyLevel;

@@ -1,8 +1,8 @@
-const { MessageFlags, userMention, bold, ActionRowBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } = require("discord.js");
+const { MessageFlags, userMention, bold, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, refreshBountyThreadStarterMessage, selectOptionsFromBounties, disabledSelectRow, commandMention } = require("../../shared");
+const { sentenceListEN, refreshBountyThreadStarterMessage, selectOptionsFromBounties, commandMention, butIgnoreUnknownChannelErrors, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
-const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -12,47 +12,47 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 			return;
 		}
 
-		interaction.reply({
-			content: "Select one of your bounties and some bounty hunters whose turn-ins you'd like to revoke.",
-			components: [
-				new ActionRowBuilder().addComponents(
-					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}bounty`)
-						.setPlaceholder("Select Bounty...")
-						.setOptions(selectOptionsFromBounties(openBounties))
-				),
-				disabledSelectRow("Select Bounty Hunters...")
-			],
-			flags: MessageFlags.Ephemeral,
-			withResponse: true
-		}).then(response => response.resource.message.createMessageComponentCollector({ time: timeConversion(2, "m", "ms") })).then(collector => {
-			let bounty;
-			collector.on("collect", async collectedInteraction => {
-				const [_, stepId] = collectedInteraction.customId.split(SAFE_DELIMITER);
-				switch (stepId) {
-					case "bounty":
-						bounty = openBounties.find(bounty => bounty.id === collectedInteraction.values[0]);
-						collectedInteraction.update({
-							components: [
-								disabledSelectRow(bounty.title),
-								new ActionRowBuilder().addComponents(
-									new UserSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}hunters`)
-										.setPlaceholder("Select bounty hunters...")
-										.setMaxValues(5)
-								)
-							]
-						});
-						break;
-					case "hunters":
-						await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, collectedInteraction.values);
-						const post = await refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), collectedInteraction.member, origin.hunter.getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id));
-						if (post) {
-							post.channel.send({ content: `${sentenceListEN(collectedInteraction.values.map(id => userMention(id)))} ${collectedInteraction.values.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
-						}
+		const labelIdBountyId = "bounty-id";
+		const labelIdBountyHunters = "bounty-hunters";
+		const maxHunters = 10;
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+			.setTitle("Revoke Bounty Turn-Ins")
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Bounty")
+					.setStringSelectMenuComponent(
+						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
+							.setPlaceholder("Select a bounty...")
+							.setOptions(selectOptionsFromBounties(openBounties))
+					),
+				new LabelBuilder().setLabel("Bounty Hunters")
+					.setUserSelectMenuComponent(
+						new UserSelectMenuBuilder().setCustomId(labelIdBountyHunters)
+							.setPlaceholder(`Select up to ${maxHunters} bounty hunters...`)
+							.setMaxValues(maxHunters)
+					)
+			);
+		await interaction.showModal(modal);
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+			.catch(butIgnoreInteractionCollectorErrors);
+		if (!modalSubmission) {
+			return;
+		}
 
-						collectedInteraction.update({ content: `These bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${sentenceListEN(collectedInteraction.values.map(id => userMention(id)))}`, components: [] });
-						break;
-				}
-			})
-		});
+		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
+		if (!bounty || bounty.state !== "open") {
+			modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		const removedIds = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).map((_, key) => key);
+		await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, removedIds);
+		const mentionList = sentenceListEN(removedIds.map(id => userMention(id)));
+		modalSubmission.reply({ content: `These bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${mentionList}`, flags: MessageFlags.Ephemeral });
+
+		const post = await refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id))
+			.catch(butIgnoreUnknownChannelErrors);
+		if (post) {
+			post.channel.send({ content: `${mentionList} ${removedIds.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
+		}
 	}
 );

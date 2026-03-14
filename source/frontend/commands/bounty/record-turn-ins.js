@@ -1,6 +1,6 @@
 const { userMention, bold, MessageFlags, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, commandMention, refreshBountyThreadStarterMessage, randomCongratulatoryPhrase, selectOptionsFromBounties } = require("../../shared");
+const { sentenceListEN, commandMention, refreshBountyThreadStarterMessage, randomCongratulatoryPhrase, selectOptionsFromBounties, butIgnoreUnknownChannelErrors, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -32,7 +32,12 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 					)
 			);
 		await interaction.showModal(modal);
-		const modalSubmission = await interaction.awaitModalSubmit({ filter: interaction => interaction.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") });
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+			.catch(butIgnoreInteractionCollectorErrors);
+		if (!modalSubmission) {
+			return;
+		}
+
 		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
 		if (!bounty || bounty.state !== "open") {
 			modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
@@ -50,7 +55,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
 			const newTurnInList = sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
 			sentences.unshift(`Turn-ins of ${bold(bounty.title)} have been recorded for the following hunters: ${newTurnInList}`);
-			const post = await refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), eligibleTurnInIds);
+			const post = await refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), eligibleTurnInIds).catch(butIgnoreUnknownChannelErrors);
 			if (post) {
 				post.channel.send({ content: `${newTurnInList} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 			}
