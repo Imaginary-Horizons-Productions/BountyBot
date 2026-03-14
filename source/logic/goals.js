@@ -63,18 +63,20 @@ const GOAL_POINT_MAP = {
  */
 async function progressGoal(company, progressType, hunter, season) {
 	const contributorIds = [];
-	let gpDisplay = 0, gpEarned = 0, gpMultiplierString = "", goalCompleted = false, currentGP = 0, requiredGP = 0;
+	const companyReceipt = {};
+	let gpDisplay = 0, gpEarned = 0, goalCompleted = false, currentGP = 0, requiredGP = 0;
 	const goal = await db.models.Goal.findOne({ where: { companyId: company.id, state: "ongoing" }, order: [["createdAt", "DESC"]] });
 	if (goal) {
 		requiredGP = goal.requiredGP;
-		gpDisplay += GOAL_POINT_MAP[progressType];
+		gpDisplay = GOAL_POINT_MAP[progressType];
 		if (goal.type === progressType) {
 			gpDisplay *= 2;
 		}
 		gpEarned = gpDisplay;
+		companyReceipt.gp = gpDisplay;
 		if (company.gpFestivalMultiplier > 1) {
 			gpEarned *= company.gpFestivalMultiplier;
-			gpMultiplierString = company.festivalMultiplierString("gp");
+			companyReceipt.gpMultiplier = company.festivalMultiplierString("gp");
 		}
 		await createGoalContribution(goal.id, hunter.userId, gpEarned);
 		hunter.increment("goalContributions");
@@ -92,10 +94,7 @@ async function progressGoal(company, progressType, hunter, season) {
 		}
 	}
 	return {
-		companyReceipt: {
-			gp: gpDisplay,
-			gpMultiplier: gpMultiplierString
-		},
+		companyReceipt,
 		goalProgress: {
 			gpContributed: gpEarned,
 			goalCompleted,
