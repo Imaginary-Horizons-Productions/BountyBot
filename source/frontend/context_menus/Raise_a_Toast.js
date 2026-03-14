@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, reloadHunterMapSubset, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
+const { textsHaveAutoModInfraction, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 const { timeConversion } = require('../../shared');
 
@@ -61,7 +61,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				companyReceipt = results.companyReceipt;
 				goalProgress = results.goalProgress;
 
-				hunterMap = await reloadHunterMapSubset(hunterMap, Array.from(hunterReceipts.keys()));
+				hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 				const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
 				if (previousCompanyLevel < currentCompanyLevel) {
 					companyReceipt.levelUp = currentCompanyLevel;
