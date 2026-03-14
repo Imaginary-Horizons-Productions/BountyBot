@@ -4,7 +4,7 @@ const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast 
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, FileUploadBuilder, GuildScheduledEvent } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
-const { descendingByProperty, timeConversion, discordTimestamp } = require("../../shared");
+const { descendingByProperty, timeConversion, discordTimestamp, ascendingByProperty } = require("../../shared");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
@@ -164,6 +164,20 @@ function selectOptionsFromBounties(bounties) {
 		}
 		return optionPayload;
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
+}
+
+/**
+ * @param {Map<number, Bounty>} bountyMap
+ * @param {number} posterLevel
+ */
+function selectOptionsFromBountiesWithBaseRewardAsDescription(bountyMap, posterLevel) {
+	// Since the bounty entries are tuples of [slotNumber, bounty], sorting by "property 0" sorts by slotNumber
+	return Array.from(bountyMap.entries()).sort(ascendingByProperty(0)).map(([slotNumber, bounty]) => ({
+		emoji: emojiFromNumber(slotNumber),
+		label: bounty.title,
+		description: truncateTextToLength(`Base Reward: ${Bounty.calculateCompleterReward(posterLevel, slotNumber, 0)} XP`, SelectMenuLimits.MaximumLengthOfDescriptionOfOption),
+		value: bounty.id
+	})).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
 
 /**
@@ -630,6 +644,7 @@ module.exports = {
 	bountyControlPanelSelectRow,
 	bountyScheduledEventPayload,
 	selectOptionsFromBounties,
+	selectOptionsFromBountiesWithBaseRewardAsDescription,
 	selectOptionsFromRanks,
 	editBountyModalAndSubmissionOptions,
 	latestVersionChangesEmbed,

@@ -35,7 +35,6 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("XP awarded depends on slot used...")
-						.setMaxValues(1)
 						.setOptions(slotOptions)
 				)
 			],
