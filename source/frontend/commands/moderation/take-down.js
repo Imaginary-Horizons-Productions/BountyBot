@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, userMention, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
@@ -18,7 +18,6 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${poster.id}`)
 						.setPlaceholder("Select a bounty to take down...")
-						.setMaxValues(1)
 						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],
@@ -29,14 +28,12 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 			const [bountyId] = collectedInteraction.values;
 			openBounties.find(bounty => bounty.id === bountyId).reload().then(async bounty => {
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
-				bounty.state = "deleted";
-				bounty.save();
+				bounty.update({ state: "deleted" });
 				if (origin.company.bountyBoardId) {
 					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 					postingThread.delete("Bounty taken down by moderator");
 				}
-				bounty.destroy();
 
 				let poster;
 				if (posterId === origin.hunter.userId) {
@@ -50,7 +47,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 				const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 				const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await interaction.guild.roles.fetch());
 				syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
-				collectedInteraction.reply({ content: `<@${posterId}>'s bounty **${bounty.title}** has been taken down by ${interaction.member}.` });
+				collectedInteraction.reply({ content: `${userMention(posterId)}'s bounty ${bold(bounty.title)} has been taken down by ${interaction.member}.` });
 			});
 		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
