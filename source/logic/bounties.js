@@ -59,6 +59,19 @@ function findOpenBounties(userId, companyId) {
 	return db.models.Bounty.findAll({ where: { userId, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
 }
 
+/**
+ * @param {string} userId
+ * @param {string} companyId
+ * @returns {Promise<Map<number, Bounty>>} a Map of the hunter's bounties with slotNumber as key
+ */
+async function mapOpenBountiesBySlotNumber(userId, companyId) {
+	const bountyMap = new Map();
+	for (const bounty of await db.models.Bounty.findAll({ where: { userId, companyId, state: "open" } })) {
+		bountyMap.set(bounty.slotNumber, bounty);
+	}
+	return bountyMap;
+}
+
 /** @param {string} companyId */
 function findEvergreenBounties(companyId) {
 	return db.models.Bounty.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
@@ -228,6 +241,7 @@ module.exports = {
 	bulkCreateCompletions,
 	findBounty,
 	findOpenBounties,
+	mapOpenBountiesBySlotNumber,
 	findEvergreenBounties,
 	findBountyCompletions,
 	getHunterIdSet,

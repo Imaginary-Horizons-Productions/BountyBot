@@ -17,7 +17,6 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to take down...")
-						.setMaxValues(1)
 						.setOptions(selectOptionsFromBounties(openBounties))
 				)
 			],
@@ -26,10 +25,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
-			bounty.state = "deleted";
-			bounty.save();
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
-			if (origin.company.bountyBoardId) {
+			if (origin.company.bountyBoardId && bounty.postingId) {
 				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 				const postingThread = await bountyBoard.threads.fetch(bounty.postingId).catch(butIgnoreUnknownChannelErrors);
 				if (postingThread) {
