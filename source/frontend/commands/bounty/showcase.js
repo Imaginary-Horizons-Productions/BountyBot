@@ -1,8 +1,8 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, PermissionFlagsBits, TimestampStyles } = require("discord.js");
+const { StringSelectMenuBuilder, MessageFlags, TimestampStyles, ModalBuilder, TextDisplayBuilder, LabelBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { selectOptionsFromBounties, bountyEmbed, refreshBountyThreadStarterMessage, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { selectOptionsFromBounties, bountyEmbed, refreshBountyThreadStarterMessage, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreUnknownChannelErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -18,53 +18,54 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 			return;
 		}
 
-		interaction.reply({
-			content: "You can showcase 1 bounty per week. The showcased bounty's XP reward will be increased.",
-			components: [
-				new ActionRowBuilder().addComponents(
-					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
-						.setPlaceholder("Select a bounty to showcase...")
-						.setMaxValues(1)
-						.setOptions(selectOptionsFromBounties(existingBounties))
-				)
-			],
-			flags: MessageFlags.Ephemeral,
-			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-			if (!interaction.channel.members.has(collectedInteraction.client.user.id)) {
-				collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
-				return;
-			}
+		if (!interaction.channel.members.has(interaction.client.user.id)) {
+			interaction.reply({ content: "BountyBot can't post public messages in this channel.", flags: MessageFlags.Ephemeral });
+			return;
+		}
 
-			if (!interaction.channel.permissionsFor(collectedInteraction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
-				collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
-				return;
-			}
+		const labelIdBountyId = "bounty-id";
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+			.setTitle("Showcase a Bounty")
+			.addTextDisplayComponents(
+				new TextDisplayBuilder().setContent("You can showcase 1 bounty per week. The showcased bounty's XP reward will be increased.")
+			)
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Bounty")
+					.setStringSelectMenuComponent(
+						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
+							.setPlaceholder("Select a bounty...")
+							.setOptions(selectOptionsFromBounties(existingBounties))
+					)
+			);
+		await interaction.showModal(modal);
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+			.catch(butIgnoreInteractionCollectorErrors);
+		if (!modalSubmission) {
+			return;
+		}
 
-			const bounty = await existingBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
-			if (bounty.state !== "open") {
-				collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
-				return;
-			}
+		/** Unnecessary Validations
+		 * "user can view and send messages in target channel"
+		 * - User could not have sent slash command if unable to view and send messages. In case of input persisting over permission change, a showcase is low enough stakes to allow.
+		 */
+		const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
+		let bounty = await logicLayer.bounties.findBounty(bountyId);
+		if (bounty.state !== "open") {
+			modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
+			return;
+		}
 
-			bounty.increment("showcaseCount");
-			await bounty.reload();
-			origin.hunter.lastShowcaseTimestamp = new Date();
-			origin.hunter.save();
-			const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
-			const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-			const bountyScheduledEvent = await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents);
-			refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, bountyScheduledEvent, collectedInteraction.member, currentPosterLevel, hunterIdSet);
-			await unarchiveAndUnlockThread(interaction.channel, "bounty showcased");
-			interaction.channel.send({
-				content: `${collectedInteraction.member} increased the reward on their bounty!`,
-				embeds: [bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, hunterIdSet, bountyScheduledEvent)]
-			});
-		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
-			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-			if (interaction.channel) {
-				interaction.deleteReply();
-			}
-		})
+		bounty = await bounty.increment("showcaseCount");
+		await origin.hunter.update({ lastShowcaseTimestamp: new Date() });
+		const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
+		const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
+		const bountyScheduledEvent = await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents);
+		refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, bountyScheduledEvent, modalSubmission.member, currentPosterLevel, hunterIdSet)
+			.catch(butIgnoreUnknownChannelErrors);
+		await unarchiveAndUnlockThread(modalSubmission.channel, "bounty showcased");
+		modalSubmission.reply({
+			content: `${modalSubmission.member} increased the reward on their bounty!`,
+			embeds: [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, hunterIdSet, bountyScheduledEvent)]
+		});
 	}
 );
