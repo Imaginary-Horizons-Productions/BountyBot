@@ -36,14 +36,14 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 							.setMaxLength(EmbedLimits.MaximumTitleLength)
 					),
 				new LabelBuilder().setLabel("Description")
-					.setDescription("A detailed description of the bounty. Leave empty to clear.")
+					.setDescription("A detailed description of the bounty.")
 					.setTextInputComponent(
 						new TextInputBuilder().setCustomId(labelIdDescription)
 							.setStyle(TextInputStyle.Paragraph)
 							.setPlaceholder("Bounties with clear instructions are easier to complete...")
 					),
 				new LabelBuilder().setLabel("Image")
-					.setDescription("A diagram or splash image for the bounty. Reupload to keep.")
+					.setDescription("A diagram or splash image for the bounty.")
 					.setFileUploadComponent(
 						new FileUploadBuilder().setCustomId(labelIdImage)
 							.setRequired(false)
