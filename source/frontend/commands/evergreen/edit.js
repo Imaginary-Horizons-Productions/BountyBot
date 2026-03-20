@@ -32,12 +32,12 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				return;
 			}
 
-			const { modal, submissionOptions } = editBountyModalAndSubmissionOptions(selectedBounty, await selectedBounty.get(collectedInteraction.guild.scheduledEvents), true, collectedInteraction.id);
+			const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(selectedBounty, await selectedBounty.get(collectedInteraction.guild.scheduledEvents), true, collectedInteraction.id);
 			collectedInteraction.showModal(modal);
 			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
 				interaction.deleteReply();
-				const title = modalSubmission.fields.getTextInputValue("title");
-				const description = modalSubmission.fields.getTextInputValue("description");
+				const title = modalSubmission.fields.getTextInputValue(inputIds.title);
+				const description = modalSubmission.fields.getTextInputValue(inputIds.description);
 
 				const errors = [];
 				const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "evergreen edit");
@@ -59,7 +59,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 
 				updatePayload.description = description;
 
-				const imageAttachmentCollection = modalSubmission.fields.getUploadedFiles("image");
+				const imageAttachmentCollection = modalSubmission.fields.getUploadedFiles(inputIds.image);
 				if (imageAttachmentCollection) {
 					const firstAttachment = imageAttachmentCollection.first();
 					if (firstAttachment) {

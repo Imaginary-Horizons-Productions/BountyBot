@@ -32,16 +32,18 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 					.setTextInputComponent(
 						new TextInputBuilder().setCustomId(labelIdTitle)
 							.setStyle(TextInputStyle.Short)
-							.setPlaceholder("Discord markdown allowed...")
+							.setPlaceholder("Most Discord markdown allowed...")
 							.setMaxLength(EmbedLimits.MaximumTitleLength)
 					),
 				new LabelBuilder().setLabel("Description")
+					.setDescription("A detailed description of the bounty. Leave empty to clear.")
 					.setTextInputComponent(
 						new TextInputBuilder().setCustomId(labelIdDescription)
 							.setStyle(TextInputStyle.Paragraph)
 							.setPlaceholder("Bounties with clear instructions are easier to complete...")
 					),
 				new LabelBuilder().setLabel("Image")
+					.setDescription("A diagram or splash image for the bounty. Reupload to keep.")
 					.setFileUploadComponent(
 						new FileUploadBuilder().setCustomId(labelIdImage)
 							.setRequired(false)
