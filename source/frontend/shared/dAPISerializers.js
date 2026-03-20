@@ -227,7 +227,7 @@ function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEve
 					new TextInputBuilder().setCustomId("description")
 						.setRequired(false)
 						.setStyle(TextInputStyle.Paragraph)
-						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image, timestamps")
 						.setValue(bounty.description ?? "")
 				),
 			new LabelBuilder().setLabel("Image")
