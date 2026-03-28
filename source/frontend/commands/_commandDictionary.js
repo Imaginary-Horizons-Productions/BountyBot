@@ -6,6 +6,8 @@ exports.commandFiles = [
 	"bounty",
 	"commands.js",
 	"config-premium.js",
+	"config-server-thumbnails-premium.js",
+	"config-user-thumbnails-premium.js",
 	"config-server.js",
 	"create-default",
 	"data-policy.js",
