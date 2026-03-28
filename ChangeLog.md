@@ -6,6 +6,7 @@
 ### Premium Features
 - Added premium commands `/festival start-gp` and `/festival close-gp` for toggling times where gp contributions are multiplied (old festival commands renamed to `/festival start-xp` and `/festival close-xp`)
 - Added the `nickname` option to `/config-premium` to allow bot managers to set a nickname for BountyBot that won't get cleared by toggling festivals on or off
+- Split premium configuration of thumbnails used for certain actions out of `/config-premium` into two new commands: `/config-server-thumbnails-premium` and `/config-user-thumbnails-premium`. These new commands use the newer image upload UI in modals for easier file selection.
 ### Other Changes
 - The completing a bounty via the select in the bounty board can now add turn-ins like the slash command
 - Fixed Goal Point contributions not showing up in reward messages
