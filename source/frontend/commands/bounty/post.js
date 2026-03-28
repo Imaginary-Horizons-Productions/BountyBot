@@ -70,24 +70,27 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 						.setTextInputComponent(
 							new TextInputBuilder().setCustomId(titleId)
 								.setStyle(TextInputStyle.Short)
-								.setPlaceholder("Discord markdown allowed...")
+								.setPlaceholder("Most Discord markdown allowed...")
 								.setMaxLength(EmbedLimits.MaximumTitleLength)
 						),
 					new LabelBuilder().setLabel("Description")
+						.setDescription("A detailed description of the bounty.")
 						.setTextInputComponent(
 							new TextInputBuilder().setCustomId(descriptionId)
 								.setRequired(false)
 								.setStyle(TextInputStyle.Paragraph)
-								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+								.setPlaceholder("Get a 1 XP bonus on completion for the following: description, image, timestamps")
 						),
-					new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
+					new LabelBuilder().setLabel("Event Start")
+						.setDescription("The Unix Timestamp for the start time.")
 						.setTextInputComponent(
 							new TextInputBuilder().setCustomId(startTimestampId)
 								.setRequired(false)
 								.setStyle(TextInputStyle.Short)
 								.setPlaceholder("Required if making an event with the bounty")
 						),
-					new LabelBuilder().setLabel("Event End (Unix Timestamp)")
+					new LabelBuilder().setLabel("Event End")
+						.setDescription("The Unix Timestamp for the end time.")
 						.setTextInputComponent(
 							new TextInputBuilder().setCustomId(endTimestampId)
 								.setRequired(false)
@@ -95,6 +98,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 								.setPlaceholder("Required if making an event with the bounty")
 						),
 					new LabelBuilder().setLabel("Image")
+						.setDescription("A diagram or splash image for the bounty.")
 						.setFileUploadComponent(
 							new FileUploadBuilder().setCustomId(imageId)
 								.setRequired(false)

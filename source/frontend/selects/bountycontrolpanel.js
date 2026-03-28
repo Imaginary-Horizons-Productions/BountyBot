@@ -267,13 +267,13 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}
 			} break;
 			case "edit": {
-				const { modal, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);
+				const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);
 				interaction.showModal(modal).then(() => interaction.awaitModalSubmit(submissionOptions)).then(async modalSubmission => {
 					await bounty.reload();
 					const errors = [];
 
-					const title = modalSubmission.fields.getTextInputValue("title");
-					const description = modalSubmission.fields.getTextInputValue("description");
+					const title = modalSubmission.fields.getTextInputValue(inputIds.title);
+					const description = modalSubmission.fields.getTextInputValue(inputIds.description);
 					const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [title, description], "edit bounty");
 					if (autoModInfraction == null) {
 						errors.push(`Could not check if the toast breaks automod rules. ${modalSubmission.client.user} may not have the Manage Server permission required to check the automod rules.`);
@@ -281,8 +281,8 @@ module.exports = new SelectWrapper(mainId, 3000,
 						errors.push("The bounty's new title or description would trip this server's AutoMod.");
 					}
 
-					const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue("startTimestamp"));
-					const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue("endTimestamp"));
+					const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue(inputIds.startTimestamp));
+					const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue(inputIds.endTimestamp));
 					if (startTimestamp || endTimestamp) {
 						errors.push(...validateScheduledEventTimestamps(startTimestamp, endTimestamp));
 					}
@@ -302,7 +302,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 					updatePayload.description = description;
 
-					const imageAttachmentCollection = modalSubmission.fields.getUploadedFiles("image");
+					const imageAttachmentCollection = modalSubmission.fields.getUploadedFiles(inputIds.image);
 					if (imageAttachmentCollection) {
 						const firstAttachment = imageAttachmentCollection.first();
 						if (firstAttachment) {

@@ -205,6 +205,11 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
  * @param {string} key for constructing the ModalBuilder's customId uniquely
  */
 function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEvergreen, key) {
+	const inputIds = {
+		title: "title",
+		description: "description",
+		image: "image"
+	};
 	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${key}`)
 		.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
 		.addLabelComponents(
@@ -213,24 +218,28 @@ function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEve
 					new TextInputBuilder().setCustomId("title")
 						.setRequired(false)
 						.setStyle(TextInputStyle.Short)
-						.setPlaceholder("Discord markdown allowed...")
+						.setPlaceholder("Most Discord markdown allowed...")
 						.setValue(bounty.title)
 				),
 			new LabelBuilder().setLabel("Description")
+				.setDescription("A detailed description of the bounty. Leave empty to clear.")
 				.setTextInputComponent(
 					new TextInputBuilder().setCustomId("description")
 						.setRequired(false)
 						.setStyle(TextInputStyle.Paragraph)
-						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image URL, timestamps")
+						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image, timestamps")
 						.setValue(bounty.description ?? "")
 				),
 			new LabelBuilder().setLabel("Image")
+				.setDescription("A diagram or splash image for the bounty. Reupload to keep.")
 				.setFileUploadComponent(
 					new FileUploadBuilder().setCustomId("image")
 						.setRequired(false)
 				)
 		);
 	if (!isEvergreen) {
+		inputIds.startTimestamp = "startTimestamp";
+		inputIds.endTimestamp = "endTimestamp";
 		const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
 			.setRequired(false)
 			.setStyle(TextInputStyle.Short)
@@ -245,13 +254,15 @@ function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEve
 			eventEndComponent.setValue((bountyScheduledEvent.scheduledEndTimestamp / 1000).toString());
 		}
 		modal.addLabelComponents(
-			new LabelBuilder().setLabel("Event Start (Unix Timestamp)")
+			new LabelBuilder().setLabel("Event Start")
+				.setDescription("The Unix Timestamp for the start time. Leave empty to clear.")
 				.setTextInputComponent(eventStartComponent),
-			new LabelBuilder().setLabel("Event End (Unix Timestamp)")
+			new LabelBuilder().setLabel("Event End")
+				.setDescription("The Unix Timestamp for the end time. Leave empty to clear.")
 				.setTextInputComponent(eventEndComponent)
 		)
 	}
-	return { modal, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
+	return { modal, inputIds, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */

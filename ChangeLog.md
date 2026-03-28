@@ -9,8 +9,6 @@
 ### Other Changes
 - The completing a bounty via the select in the bounty board can now add turn-ins like the slash command
 - Fixed Goal Point contributions not showing up in reward messages
-### Known Issues
-- When editing a bounty, not submitting a description, image, or timestamp pair, always deletes those data from the bounty (this will be fixed with modal checkboxes in the future)
 ## BountyBot Version 2.10.1bi:
 This version includes the addition of the "b" version category, for "bug fixes".
 - Fixed several crashes related to missing permissions, modal timeouts, trying to DM users who've blocked BountyBot, and residual data from former server members
