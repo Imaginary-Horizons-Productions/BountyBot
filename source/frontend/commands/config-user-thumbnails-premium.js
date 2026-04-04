@@ -1,4 +1,4 @@
-const { InteractionContextType, MessageFlags, ModalBuilder, LabelBuilder, FileUploadBuilder } = require("discord.js");
+const { PermissionFlagsBits, InteractionContextType, MessageFlags, ModalBuilder, LabelBuilder, FileUploadBuilder } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { CommandWrapper } = require("../classes");
 const { timeConversion } = require('../../shared');
@@ -30,11 +30,10 @@ const imageFieldToPayloadPropertyAndMessage = new Map(Object.entries({
 		modalLabel: "Deleted Bounty Thumbnail"
 	}
 }));
-module.exports = new CommandWrapper(mainId, "Configure premium thumbnails for BountyBot on this server", null, true, [InteractionContextType.Guild], 3000,
+module.exports = new CommandWrapper(mainId, "Configure thumbnails shown for Toasts and Bounties (Premium)", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
 	async (interaction, origin, runMode) => {
 		const modalLabelComponents = [];
-		for (const imageField of imageFieldToPayloadPropertyAndMessage.keys()) {
-			const { description, modalLabel } = imageFieldToPayloadPropertyAndMessage.get(imageField);
+		for (const [ imageField, { description, modalLabel } ] of imageFieldToPayloadPropertyAndMessage) {
 			modalLabelComponents.push(new LabelBuilder().setLabel(modalLabel).setDescription(description)
 				.setFileUploadComponent(
 					new FileUploadBuilder().setCustomId(imageField)
@@ -49,8 +48,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium thumbnails for Bo
 
 		let replyContent = "The following thumbnails have been configured:";
 
-		for (const imageField of imageFieldToPayloadPropertyAndMessage.keys()) {
-			const { payloadProperty, messageStub } = imageFieldToPayloadPropertyAndMessage.get(imageField);
+		for (const [ imageField, { payloadProperty, messageStub } ] of imageFieldToPayloadPropertyAndMessage) {
 			const thumbnailCollection = modalInteraction.fields.getUploadedFiles(imageField);
 			if (thumbnailCollection) {
 				const firstAttachment = thumbnailCollection.first();
