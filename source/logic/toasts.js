@@ -208,7 +208,7 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 
 	const hunterReceipts = new Map();
 
-	const xpMultiplierString = company.festivalMultiplierString();
+	const xpMultiplierString = company.festivalMultiplierString("xp");
 	for (const userId of recipientIds) {
 		const hunterReceipt = {};
 		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: company.id, userId, seasonId }, defaults: { xp: 1 } });
