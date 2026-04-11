@@ -18,7 +18,9 @@ module.exports = new CommandWrapper(mainId, "List perks for supporting IHP devel
 							{ name: "/evergreen", value: "Evergreen Bounties are posted by the server and aren't taken down when completed, making them ideal for server goals." },
 							{ name: "/festival", value: "This command allows BountyBot's managers to start or close festivals that multiply XP or GP gained by a selected multiplier for their duration." },
 							{ name: "/config-premium", value: "Premium configurations include configuring the multiplier applied to XP thresholds for bounty hunters to level up in the server and setting the maximum number of bounty slots bounty hunters can acquire." },
-							{ name: "/rank", value: "This command allows BountyBot's managers to customize the seasonal BountyBot ranks." }
+							{ name: "/rank", value: "This command allows BountyBot's managers to customize the seasonal BountyBot ranks." },
+							{ name: "/config-server-thumbnails-premium", value: "Configure thumbnails for server messages, such as the scoreboard, goal completions, and raffles."},
+							{ name: "/config-user-thumbnails-premium", value: "Configure default thumbnails for user interactions with BountyBot, such as on toasts and bounties."}
 						)
 						.setFooter(randomFooterTip())
 						.setTimestamp(stats.mtime)
