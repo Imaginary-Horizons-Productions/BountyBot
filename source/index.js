@@ -294,7 +294,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		// If extant toast, create Seconding
 		const recipientIds = [hostMessage.author.id];
 		const companyReceipt = { guildName: guild.name };
-		goalProgress = await logicBlob.goals.progressGoal(guild.id, "secondings", interactingHunter, season);
+		goalProgress = await logicBlob.goals.progressGoal(company, "secondings", interactingHunter, season);
 		if (goalProgress.gpContributed > 0) {
 			companyReceipt.gp = goalProgress.gpContributed;
 		}
@@ -329,7 +329,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
-		goalProgress = await logicBlob.goals.progressGoal(guild.id, "toasts", interactingHunter, season);
+		goalProgress = await logicBlob.goals.progressGoal(company, "toasts", interactingHunter, season);
 		if (goalProgress.gpContributed > 0) {
 			companyReceipt.gp = goalProgress.gpContributed;
 		}
