@@ -39,6 +39,7 @@ function resetCompanySettings(id) {
 			toastThumbnailURL: null,
 			openBountyThumbnailURL: null,
 			completedBountyThumbnailURL: null,
+			deletedBountyThumbnailURL: null,
 			scoreboardThumbnailURL: null,
 			goalCompletionThumbnailURL: null,
 			raffleThumbnailURL: null
