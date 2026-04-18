@@ -296,14 +296,13 @@ function setToastMessageId(toastId, messageId) {
 /** *Deletes all Toasts, Recipients, and Secondings for a specified Company*
  * @param {string} companyId
  */
-function deleteCompanyToasts(companyId) {
-	return db.models.Toast.findAll({ where: { companyId } }).then(toasts => {
-		toasts.forEach(toast => {
-			db.models.Recipient.destroy({ where: { toastId: toast.id } });
-			db.models.Seconding.destroy({ where: { toastId: toast.id } });
-			toast.destroy();
-		})
-	});
+async function deleteCompanyToasts(companyId) {
+	const toasts = await db.models.Toast.findAll({ where: { companyId } });
+	for (const toast of toasts) {
+		await db.models.Recipient.destroy({ where: { toastId: toast.id } });
+		await db.models.Seconding.destroy({ where: { toastId: toast.id } });
+		await toast.destroy();
+	}
 }
 
 /**

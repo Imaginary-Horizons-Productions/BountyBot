@@ -4,15 +4,17 @@ const { butIgnoreCantDirectMessageThisUserErrors, refreshReferenceChannelScorebo
 
 module.exports = new SubcommandWrapper("all-hunter-stats", "IRREVERSIBLY reset all bounty hunter stats on this server",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		logicLayer.hunters.deleteCompanyHunters(interaction.guild.id);
+		await logicLayer.toasts.deleteCompanyToasts(origin.company.id);
+		logicLayer.hunters.deleteCompanyHunters(origin.company.id);
 		interaction.reply({ content: "Resetting bounty hunter stats has begun.", flags: MessageFlags.Ephemeral });
-		const season = await logicLayer.seasons.findOneSeason(interaction.guild.id, "current");
+		const season = await logicLayer.seasons.findOneSeason(origin.company.id, "current");
 		if (season) {
 			await logicLayer.seasons.deleteSeasonParticipations(season.id);
+			await season.destroy();
 		}
-		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
+		const goalProgress = await logicLayer.goals.findLatestGoalProgress(origin.company.id);
 		if (origin.company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, new Map(), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress);
+			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, new Map(), await logicLayer.ranks.findAllRanks(origin.company.id), goalProgress);
 		} else {
 			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, new Map(), goalProgress);
 		}
