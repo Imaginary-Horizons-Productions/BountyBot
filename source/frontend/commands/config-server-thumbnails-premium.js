@@ -27,7 +27,7 @@ const imageFieldToPayloadPropertyAndMessage = new Map(Object.entries({
 module.exports = new CommandWrapper(mainId, "Configure thumbnails for server messages (Premium)", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
 	async (interaction, origin, runMode) => {
 		const modalLabelComponents = [];
-		for (const [ imageField, { description, modalLabel }  ] of imageFieldToPayloadPropertyAndMessage.keys()) {
+		for (const [imageField, { description, modalLabel }] of imageFieldToPayloadPropertyAndMessage) {
 			modalLabelComponents.push(new LabelBuilder().setLabel(modalLabel).setDescription(description)
 				.setFileUploadComponent(
 					new FileUploadBuilder().setCustomId(imageField)
@@ -35,14 +35,14 @@ module.exports = new CommandWrapper(mainId, "Configure thumbnails for server mes
 				))
 		}
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`).setTitle("Configure Server Thumbnails").addLabelComponents(modalLabelComponents);
-		
+
 		interaction.showModal(modal);
 		const modalInteraction = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") });
 		const updatePayload = {};
 
 		let replyContent = "The following thumbnails have been configured:";
 
-		for (const [ imageField, { payloadProperty, messageStub } ] of imageFieldToPayloadPropertyAndMessage.keys()) {
+		for (const [imageField, { payloadProperty, messageStub }] of imageFieldToPayloadPropertyAndMessage) {
 			const thumbnailCollection = modalInteraction.fields.getUploadedFiles(imageField);
 			if (thumbnailCollection) {
 				const firstAttachment = thumbnailCollection.first();
