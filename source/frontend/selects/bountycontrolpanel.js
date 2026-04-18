@@ -293,7 +293,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 						return;
 					}
 
-					await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
+					await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
 					const updatePayload = { editCount: bounty.editCount + 1 };
 					if (title) {
 						updatePayload.title = title;
@@ -306,7 +306,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					if (imageAttachmentCollection) {
 						const firstAttachment = imageAttachmentCollection.first();
 						if (firstAttachment) {
-							updatePayload.attachmentURL = imageAttachmentCollection;
+							updatePayload.attachmentURL = firstAttachment.url;
 						} else {
 							updatePayload.attachmentURL = null;
 						}
