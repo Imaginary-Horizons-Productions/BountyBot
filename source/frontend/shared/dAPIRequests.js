@@ -39,6 +39,10 @@ function makeEvergreenBountiesThread(threadManager, embeds, company) {
  * @param {Record<string, Set<string>>} hunterIdMap
  */
 async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBounties, company, companyLevel, bountyBotGuildMember, hunterIdMap) {
+	if (evergreenBounties.length < 1) {
+		return;
+	}
+
 	const embeds = evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => bountyEmbed(bounty, bountyBotGuildMember, companyLevel, false, company, hunterIdMap[bounty.id]));
 	if (company.evergreenThreadId) {
 		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
