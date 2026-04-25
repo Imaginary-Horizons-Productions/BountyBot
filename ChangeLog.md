@@ -10,6 +10,8 @@
 ### Other Changes
 - The completing a bounty via the select in the bounty board can now add turn-ins like the slash command
 - Fixed Goal Point contributions not showing up in reward messages
+### Known Issues
+- If the bot in your sever is assigned a long nickname using `/config-premium`, the processes which modify that nickname with festival information may exceed the nickname length limit, despite the nickname itself fitting the requirements. This does not otherwise affect bot functionality. We are planning on fixing this in a future release.
 ## BountyBot Version 2.10.1bi:
 This version includes the addition of the "b" version category, for "bug fixes".
 - Fixed several crashes related to missing permissions, modal timeouts, trying to DM users who've blocked BountyBot, and residual data from former server members
