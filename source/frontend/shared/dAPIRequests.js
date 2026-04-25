@@ -1,6 +1,7 @@
 const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember, GuildScheduledEvent } = require("discord.js");
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
+const { butIgnoreNicknameLengthError } = require("./dAPIResponses");
 const { ascendingByProperty } = require("../../shared");
 const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
 
@@ -228,12 +229,12 @@ async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
 	if (tagComponents.length > 0) {
 		const multiplierTag = tagComponents.map(([type, multiplier]) => `${type} x ${multiplier}`).join(" & ");
 		const previousNickname = company.nickname ?? "BountyBot";
-		if (previousNickname.length + multiplierTag.length <= GuildMemberLimits.MaximumDisplayNameLength) {
-			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`);
+		if (previousNickname.length + multiplierTag.length + 3 <= GuildMemberLimits.MaximumDisplayNameLength) {
+			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`).catch(butIgnoreNicknameLengthError);
 		}
 	} else {
 		// company.nickname will be null if unset, which is the correct value to send dAPI to unset a nickname
-		bountyBotGuildMember.setNickname(company.nickname);
+		bountyBotGuildMember.setNickname(company.nickname).catch(butIgnoreNicknameLengthError);
 	}
 }
 
