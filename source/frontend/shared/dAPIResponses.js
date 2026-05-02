@@ -21,7 +21,6 @@ const isInteractionCollectorError = error => error.code === DiscordjsErrorCodes.
 const isUnknownChannelError = error => error.code === 10003;
 const isMissingPermissionError = error => error.code === 50013;
 const isCantDirectMessageThisUserError = error => error.code === 50007;
-const isNicknameLengthError = error => error.code === 50035;
 
 /** Interaction collectors throw an error on timeout (which is a crash if uncaught) */
 const butIgnoreInteractionCollectorErrors = butIgnoreErrorIf(isInteractionCollectorError);
@@ -31,8 +30,6 @@ const butIgnoreUnknownChannelErrors = butIgnoreErrorIf(isUnknownChannelError);
 const butIgnoreMissingPermissionErrors = butIgnoreErrorIf(isMissingPermissionError);
 
 const butIgnoreCantDirectMessageThisUserErrors = butIgnoreErrorIf(isCantDirectMessageThisUserError);
-
-const butIgnoreNicknameLengthError = butIgnoreErrorIf(isNicknameLengthError);
 
 module.exports = {
 	butIgnoreErrorIf,
@@ -44,6 +41,5 @@ module.exports = {
 	butIgnoreInteractionCollectorErrors,
 	butIgnoreUnknownChannelErrors,
 	butIgnoreMissingPermissionErrors,
-	butIgnoreCantDirectMessageThisUserErrors,
-	butIgnoreNicknameLengthError
+	butIgnoreCantDirectMessageThisUserErrors
 }

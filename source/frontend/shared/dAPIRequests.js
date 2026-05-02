@@ -230,11 +230,11 @@ async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
 		const multiplierTag = tagComponents.map(([type, multiplier]) => `${type} x ${multiplier}`).join(" & ");
 		const previousNickname = company.nickname ?? "BountyBot";
 		if (previousNickname.length + multiplierTag.length + 3 <= GuildMemberLimits.MaximumDisplayNameLength) {
-			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`).catch(butIgnoreNicknameLengthError);
+			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`);
 		}
 	} else {
 		// company.nickname will be null if unset, which is the correct value to send dAPI to unset a nickname
-		bountyBotGuildMember.setNickname(company.nickname).catch(butIgnoreNicknameLengthError);
+		bountyBotGuildMember.setNickname(company.nickname);
 	}
 }
 
