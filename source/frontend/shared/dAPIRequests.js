@@ -1,7 +1,6 @@
 const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember, GuildScheduledEvent } = require("discord.js");
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
-const { butIgnoreNicknameLengthError } = require("./dAPIResponses");
 const { ascendingByProperty } = require("../../shared");
 const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
 
