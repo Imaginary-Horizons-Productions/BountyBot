@@ -68,12 +68,13 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 		modalSubmission.reply(`Some evergreen bounties have been swapped, ${bold(sourceBounty.title)} is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, destinationSlot, 0)} XP and ${bold(destinationBounty.title)} is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, sourceSlot, 0)} XP.`);
 
 		if (origin.company.bountyBoardId) {
+			const reloadedBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
 			const hunterIdMap = {};
-			for (const bounty of existingBounties) {
+			for (const bounty of reloadedBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
 			modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-				refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+				refreshEvergreenBountiesThread(bountyBoard, reloadedBounties, origin.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
 			})
 		} else if (!modalSubmission.member.manageable) {
 			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
