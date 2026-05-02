@@ -385,18 +385,17 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
  * @param {Company} company
  * @param {Guild} guild
  * @param {Map<string, Hunter>} hunterMap
- * @param {Rank[]} ranks
  * @param {{ currentGP: number; requiredGP: number; }} goalProgress
  */
 async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
 
 	const scorelines = [];
-	for (const guildMember of Array.from(hunterMembers.values()).sort(descendingByProperty("xp"))) {
-		const hunter = hunterMap.get(guildMember.id);
+	for (const hunter of Array.from(hunterMap.values()).sort(descendingByProperty("xp"))) {
 		if (hunter?.xp < 1) {
 			break;
 		}
+		const guildMember = hunterMembers.get(hunter.userId);
 		scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
