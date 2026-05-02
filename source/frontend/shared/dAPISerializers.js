@@ -518,7 +518,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 	}
 	if (hunterIdSet.size > 0) {
 		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
-		const turnInFieldName = bounty.state === "open" ? "Pending Turn-Ins:" : "Turned-In By:";
+		const turnInFieldName = !bounty.isEvergreen && bounty.state === "open" ? "Pending Turn-Ins:" : "Turned-In By:";
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: turnInFieldName, value: completersFieldText });
 		} else {
