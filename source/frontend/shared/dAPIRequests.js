@@ -228,7 +228,7 @@ async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
 	if (tagComponents.length > 0) {
 		const multiplierTag = tagComponents.map(([type, multiplier]) => `${type} x ${multiplier}`).join(" & ");
 		const previousNickname = company.nickname ?? "BountyBot";
-		if (previousNickname.length + multiplierTag.length <= GuildMemberLimits.MaximumDisplayNameLength) {
+		if (previousNickname.length + multiplierTag.length + 3 <= GuildMemberLimits.MaximumDisplayNameLength) {
 			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`);
 		}
 	} else {
