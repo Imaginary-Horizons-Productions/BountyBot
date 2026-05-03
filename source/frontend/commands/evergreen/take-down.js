@@ -4,11 +4,11 @@ const { commandMention, selectOptionsFromBounties, refreshEvergreenBountiesThrea
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 
-module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
+module.exports = new SubcommandWrapper("take-down", "Take down one of the server's Evergreen Bounties",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
+		const openBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
 		interaction.reply({
-			content: `If you'd like to change the title, description, or image of an evergreen bounty, you can use ${commandMention("evergreen edit")} instead.`,
+			content: `If you'd like to change the title, description, or image of an evergreen bounty instead, you can use ${commandMention("evergreen edit")}.`,
 			components: [
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -21,13 +21,11 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
 			const [bounty] = openBounties.splice(openBounties.findIndex(bounty => bounty.id === bountyId), 1);
-			bounty.state = "deleted";
-			bounty.save();
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
 			if (origin.company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
 				if (openBounties.length > 0) {
-					const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+					const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id)));
 					const hunterIdMap = {};
 					for (const bounty of openBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
@@ -35,9 +33,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 					refreshEvergreenBountiesThread(bountyBoard, openBounties, origin.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap);
 				} else {
 					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
-						thread.delete(`Evergreen bounty taken down by ${interaction.member}`);
-						origin.company.evergreenThreadId = null;
-						origin.company.save();
+						thread.delete(`Last Evergreen Bounty taken down by ${interaction.member}`);
+						origin.company.update({ evergreenThreadId: null });
 					});
 				}
 			} else if (!collectedInteraction.member.manageable) {
@@ -45,12 +42,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			}
 			bounty.destroy();
 
-			collectedInteraction.reply({ content: "The evergreen bounty has been taken down.", flags: MessageFlags.Ephemeral });
-		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
-			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-			if (interaction.channel) {
-				interaction.deleteReply();
-			}
-		});
+			collectedInteraction.update({ content: "The evergreen bounty has been taken down.", components: [] });
+		}).catch(butIgnoreInteractionCollectorErrors);
 	}
 );
