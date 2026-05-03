@@ -331,9 +331,13 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
-	for (const [id, participation] of Array.from(participationMap.entries()).sort((a, b) => b[1].xp - a[1].xp)) {
-		if (participation.xp > 0 && hunterMembers.has(id)) {
-			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) && rankmojiArray[participation.rankIndex] ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** ${participation.xp} season XP`);
+	for (const participation of Array.from(participationMap.values()).sort(descendingByProperty("xp"))) {
+		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
+			let scoreline = `#${participation.placement} ${bold(hunterMembers.get(participation.userId).displayName)} ${participation.xp} season XP`;
+			if (rankmojiArray[participation.rankIndex] && !participation.isRankDisqualified && participation.rankIndex !== null) {
+				scoreline = `${rankmojiArray[participation.rankIndex]} ${scoreline}`;
+			}
+			scorelines.push(scoreline);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -392,7 +396,7 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 
 	const scorelines = [];
 	for (const hunter of Array.from(hunterMap.values()).sort(descendingByProperty("xp"))) {
-		if (hunter?.xp < 1) {
+		if (hunter.xp < 1) {
 			break;
 		}
 		const guildMember = hunterMembers.get(hunter.userId);
