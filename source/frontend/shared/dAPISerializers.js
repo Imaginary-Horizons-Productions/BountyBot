@@ -333,7 +333,7 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	const scorelines = [];
 	for (const [id, participation] of Array.from(participationMap.entries()).sort((a, b) => b[1].xp - a[1].xp)) {
 		if (participation.xp > 0 && hunterMembers.has(id)) {
-			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** ${participation.xp} season XP`);
+			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) && rankmojiArray[participation.rankIndex] ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** ${participation.xp} season XP`);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
