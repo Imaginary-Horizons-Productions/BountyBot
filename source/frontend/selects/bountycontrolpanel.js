@@ -1,10 +1,11 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles, ModalBuilder, LabelBuilder, TextDisplayBuilder } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles, ModalBuilder, LabelBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
 const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread, isMissingPermissionError, truncateTextToLength } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 const { SelectMenuLimits } = require('@sapphire/discord.js-utilities');
+const { bountyPing } = require('../shared/flows/bountyPing');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -23,7 +24,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			return;
 		}
 
-		switch (interaction.values[0]) {
+		switch (interaction.values[0]) { //TODONOW add ping
 			case "nochange":
 				/* Discord Selects keep their selection after resolving. If a user wants to use the same command
 				   twice in a row but doesn't want other changes to be applied (like to fix a typo in a previous
@@ -161,6 +162,42 @@ module.exports = new SelectWrapper(mainId, 3000,
 				modalSubmission.reply({ content: `Your bounty ${bold(bounty.title)} was showcased in ${channel} and its reward was increased!`, flags: MessageFlags.Ephemeral });
 				interaction.message.edit({ embeds: updatedEmbeds })
 			} break;
+			case "ping":
+				const labelIdMessage = "message";
+				const labelIdExcludedBountyHunters = "bounty-hunters";
+				const maxHunters = 10;
+				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+					.setTitle("Ping Interested Bounty Hunters")
+					.addLabelComponents(
+						new LabelBuilder().setLabel("Message")
+							.setTextInputComponent(
+								new TextInputBuilder().setCustomId(labelIdMessage)
+									.setStyle(TextInputStyle.Short)
+									.setPlaceholder("Add a message to go with the ping...")
+							),
+						new LabelBuilder().setLabel("Hunters to Exclude")
+							.setUserSelectMenuComponent(
+								new UserSelectMenuBuilder().setCustomId(labelIdExcludedBountyHunters)
+									.setPlaceholder(`Select up to ${maxHunters} bounty hunters...`)
+									.setMaxValues(maxHunters)
+									.setRequired(false)
+							)
+					);
+				await interaction.showModal(modal);
+				const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+					.catch(butIgnoreInteractionCollectorErrors);
+				if (!modalSubmission) {
+					return;
+				}
+
+				bounty = await logicLayer.bounties.findBounty(bountyId);
+				if (!bounty || bounty.state !== "open") {
+					modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
+					return;
+				}
+
+				bountyPing(logicLayer, modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, origin.company.bountyBoardId, interaction.channel);
+				break;
 			case "complete": {
 				// disallow completion within 5 minutes of creating bounty
 				if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {

@@ -1,4 +1,6 @@
 # BountyBot Change Log
+## BountyBot Version 2.12.0fi:
+- Added command `/bounty ping` to mention bounty hunters who have reacted to the bounty's thread or marked themselves interested in the bounty's event
 ## BountyBot Version 2.11.0fib:
 ### Reaction Toasts
 - Bounty Hunters can now raise a messageless toast by reacting to another Bounty Hunter's discord message with 🥂

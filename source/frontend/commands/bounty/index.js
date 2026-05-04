@@ -10,6 +10,7 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"complete.js",
 	"edit.js",
 	"list.js",
+	"ping.js",
 	"post.js",
 	"record-turn-ins.js",
 	"revoke-turn-ins.js",
