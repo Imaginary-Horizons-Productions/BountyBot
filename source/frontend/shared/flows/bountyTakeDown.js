@@ -1,6 +1,6 @@
-const { MessageFlags, Guild } = require("discord.js");
+const { Guild } = require("discord.js");
 const { Bounty, Hunter } = require("../../../database/models");
-const { butIgnoreUnknownChannelErrors, butIgnoreMissingPermissionErrors } = require("../dAPIResponses");
+const { butIgnoreMissingPermissionErrors } = require("../dAPIResponses");
 const { syncRankRoles } = require("../dAPIRequests");
 
 /**

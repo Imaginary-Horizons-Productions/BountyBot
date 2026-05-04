@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors, butIgnoreUnknownChannelErrors } = require("../../shared");
+const { commandMention, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, butIgnoreUnknownChannelErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { bountyTakeDown } = require("../../shared/flows/bountyTakeDown");
 
