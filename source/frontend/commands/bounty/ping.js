@@ -1,4 +1,4 @@
-const { ModalBuilder, UserSelectMenuBuilder, TextInputBuilder, StringSelectMenuBuilder, LabelBuilder, TextInputStyle } = require("discord.js");
+const { ModalBuilder, UserSelectMenuBuilder, TextInputBuilder, StringSelectMenuBuilder, LabelBuilder, TextInputStyle, MessageFlags } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { SubcommandWrapper } = require("../../classes");
 const { bountyPing } = require("../../shared/flows/bountyPing");
@@ -7,6 +7,12 @@ const { timeConversion } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+		const openBounties = await logicLayer.bounties.findOpenBounties(origin.user.id, origin.company.id);
+		if (openBounties.length < 1) {
+			interaction.reply({ content: "You don't have any open bounties on this server.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
 		const labelIdBountyId = "bounty-id";
 		const labelIdMessage = "message";
 		const labelIdExcludedBountyHunters = "bounty-hunters";
@@ -18,7 +24,7 @@ module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reac
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(await logicLayer.bounties.findOpenBounties(origin.user.id, origin.company.id)))
+							.setOptions(selectOptionsFromBounties(openBounties))
 					),
 				new LabelBuilder().setLabel("Message")
 					.setTextInputComponent(
@@ -47,6 +53,14 @@ module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reac
 			return;
 		}
 
-		bountyPing(logicLayer, modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, origin.company.bountyBoardId);
+		let bountyThread;
+		if (origin.company.bountyBoardId && bounty.postingId) {
+			const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
+			if (bountyBoard) {
+				bountyThread = await bountyBoard.threads.fetch(bounty.postingId);
+			}
+		}
+
+		bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, bountyThread);
 	}
 );

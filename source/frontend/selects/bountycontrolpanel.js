@@ -24,7 +24,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 			return;
 		}
 
-		switch (interaction.values[0]) { //TODONOW add ping
+		switch (interaction.values[0]) {
 			case "nochange":
 				/* Discord Selects keep their selection after resolving. If a user wants to use the same command
 				   twice in a row but doesn't want other changes to be applied (like to fix a typo in a previous
@@ -196,7 +196,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 					return;
 				}
 
-				bountyPing(logicLayer, modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, origin.company.bountyBoardId, interaction.channel);
+				bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, interaction.channel);
 				break;
 			case "complete": {
 				// disallow completion within 5 minutes of creating bounty
