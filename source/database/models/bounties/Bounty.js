@@ -34,12 +34,12 @@ class Bounty extends Model {
 	 * @param {GuildScheduledEventManager} guildScheduledEventManager
 	 * @returns {GuildScheduledEvent | null}
 	 */
-	async getScheduledEvent(guildScheduledEventManager) {
+	getScheduledEvent(guildScheduledEventManager) {
 		if (!this.scheduledEventId) {
 			return null;
 		}
 
-		return (await guildScheduledEventManager.fetch(this.scheduledEventId)).first();
+		return guildScheduledEventManager.fetch(this.scheduledEventId);
 	}
 }
 
