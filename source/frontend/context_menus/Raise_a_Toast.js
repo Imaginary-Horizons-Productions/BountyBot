@@ -53,7 +53,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
 			const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, origin.company, interaction.user.id, new Set([interaction.targetId]), hunterMap, season.id, toastText, null);
+			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, origin.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText, null);
 			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 			let companyReceipt = {};
 			if (hunterReceipts.size > 0) {
@@ -69,7 +69,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			}
 			companyReceipt.guildName = interaction.guild.name;
 
-			const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, new Set([interaction.targetId]), modalSubmission.member, goalProgress)];
+			const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, [interaction.targetId], modalSubmission.member, goalProgress)];
 			if (goalProgress.goalCompleted) {
 				embeds.push(goalCompletionEmbed(goalProgress.contributorIds));
 			}

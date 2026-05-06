@@ -29,14 +29,9 @@ module.exports = new ButtonWrapper(mainId, 3000,
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 
-		const recipientIds = [];
-		originalToast.Recipients.forEach(reciept => {
-			if (reciept.recipientId !== interaction.user.id) {
-				recipientIds.push(reciept.recipientId);
-			}
-		});
+		const recipientIds = originalToast.Recipients.map(receipt => receipt.recipientId);
 
-		const hunterReceipts = await logicLayer.toasts.secondToast(origin.hunter, originalToast, origin.company, recipientIds, season.id);
+		const hunterReceipts = await logicLayer.toasts.secondToast(origin.hunter, originalToast, origin.company, recipientIds.filter(id => id !== interaction.user.id), season.id);
 
 		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(origin.company, "secondings", origin.hunter, season);
 		companyReceipt.guildName = interaction.guild.name;
