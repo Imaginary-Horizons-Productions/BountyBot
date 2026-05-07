@@ -2,7 +2,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilde
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../../shared");
+const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, isMissingPermissionError } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -129,6 +129,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 					rawBounty.description = description;
 				}
 				const errors = [];
+				const warnings = [];
 
 				const attachmentFileCollection = modalSubmission.fields.getUploadedFiles(imageId);
 				if (attachmentFileCollection) {
@@ -141,7 +142,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const startTimestamp = parseInt(modalSubmission.fields.getTextInputValue(startTimestampId));
 				const endTimestamp = parseInt(modalSubmission.fields.getTextInputValue(endTimestampId));
 				if (startTimestamp || endTimestamp) {
-					errors.push(...validateScheduledEventTimestamps(startTimestamp, endTimestamp))
+					errors.push(...validateScheduledEventTimestamps(startTimestamp, endTimestamp));
 				}
 
 				if (errors.length > 0) {
@@ -167,8 +168,14 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				let event = null;
 				if (startTimestamp && endTimestamp) {
 					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, rawBounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
-					event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
-					rawBounty.scheduledEventId = event.id;
+					event = await modalSubmission.guild.scheduledEvents.create(eventPayload).then(createdEvent => {
+						rawBounty.scheduledEventId = createdEvent.id;
+						return createdEvent;
+					}).catch(error => {
+						if (isMissingPermissionError(error)) {
+							warnings.push(`Could not create an Event for this bounty; ${modalSubmission.client.user} is missing permission to create Events.`);
+						}
+					});
 				}
 
 				const bounty = await logicLayer.bounties.createBounty(rawBounty);
@@ -177,6 +184,9 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				await origin.hunter.reload();
 				const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set(), event)];
 				modalSubmission.reply(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(() => {
+					if (warnings.length > 0) {
+						modalSubmission.followUp({ content: `The following issues were encountered while posting your bounty (your bounty was still posted):\n${unorderedList(warnings)}`, flags: MessageFlags.Ephemeral });
+					}
 					if (origin.company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
