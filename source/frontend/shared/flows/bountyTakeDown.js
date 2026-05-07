@@ -1,6 +1,6 @@
 const { Guild } = require("discord.js");
 const { Bounty, Hunter } = require("../../../database/models");
-const { butIgnoreMissingPermissionErrors } = require("../dAPIResponses");
+const { butIgnoreMissingPermissionErrors, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError } = require("../dAPIResponses");
 const { syncRankRoles } = require("../dAPIRequests");
 
 /**
@@ -16,7 +16,7 @@ async function bountyTakeDown(logicLayer, guild, bounty, posterHunter, bountyThr
 		bountyThread.delete("Bounty taken down by poster").catch(butIgnoreMissingPermissionErrors);
 	}
 	if (bounty.scheduledEventId) {
-		guild.scheduledEvents.delete(bounty.scheduledEventId).catch(butIgnoreMissingPermissionErrors);
+		guild.scheduledEvents.delete(bounty.scheduledEventId).catch(butIgnoreErrorIf(isUnknownGuildScheduledEventError, isMissingPermissionError));
 	}
 	bounty.destroy();
 
