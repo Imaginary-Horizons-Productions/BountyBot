@@ -1,4 +1,6 @@
 # BountyBot Change Log
+## BountyBot Version 2.12.0fi:
+- `/create-default bounty-board-forum` now has an option for customizing the new channel's name
 ## BountyBot Version 2.11.0fib:
 ### Reaction Toasts
 - Bounty Hunters can now raise a messageless toast by reacting to another Bounty Hunter's discord message with 🥂
