@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder, FileUploadBuilder } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder, FileUploadBuilder, PermissionFlagsBits } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
@@ -168,14 +168,12 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				let event = null;
 				if (startTimestamp && endTimestamp) {
 					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, rawBounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
-					event = await modalSubmission.guild.scheduledEvents.create(eventPayload).then(createdEvent => {
-						rawBounty.scheduledEventId = createdEvent.id;
-						return createdEvent;
-					}).catch(error => {
-						if (isMissingPermissionError(error)) {
-							warnings.push(`Could not create an Event for this bounty; ${modalSubmission.client.user} is missing permission to create Events.`);
-						}
-					});
+					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.CreateEvents)) {
+						event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
+						rawBounty.scheduledEventId = event.id;
+					} else {
+						warnings.push(`Could not create an Event for this bounty; ${modalSubmission.client.user} is missing permission to create Events.`);
+					}
 				}
 
 				const bounty = await logicLayer.bounties.createBounty(rawBounty);
