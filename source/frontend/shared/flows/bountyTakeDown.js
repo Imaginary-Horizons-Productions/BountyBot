@@ -25,7 +25,7 @@ async function bountyTakeDown(logicLayer, guild, bounty, posterHunter, bountyThr
 	await logicLayer.seasons.changeSeasonXP(bounty.userId, bounty.companyId, season.id, -1);
 	const descendingRanks = await logicLayer.ranks.findAllRanks(bounty.companyId);
 	const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await guild.roles.fetch());
-	syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
+	return syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
 }
 
 module.exports = {
