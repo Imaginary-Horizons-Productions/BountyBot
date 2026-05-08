@@ -1,6 +1,7 @@
 # BountyBot Change Log
 ## BountyBot Version 2.11.1ib:
 - Fixed a crash when attempting to make an event for a bounty while missing permission
+- Fixed some issues where rank calculation was assigning the incorrect rank or failing to announce rank ups
 ## BountyBot Version 2.11.0fib:
 ### Reaction Toasts
 - Bounty Hunters can now raise a messageless toast by reacting to another Bounty Hunter's discord message with 🥂
