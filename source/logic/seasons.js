@@ -130,8 +130,25 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks, allGu
 	}
 	const placementChanges = await calculatePlacementChanges(participationMap);
 	const mean = calculateXPMean(participationMap);
-	const xpStandardDeviation = calculateXPStandardDeviation(participationMap, mean);
-	const rankChanges = await calculateRankChanges(xpStandardDeviation, participationMap, descendingRanks);
+	const standardDeviation = calculateXPStandardDeviation(participationMap, mean);
+
+	// Calculate Rank Changes
+	const rankChanges = {};
+	if (descendingRanks.length > 0) {
+		for (const [id, participation] of participationMap) {
+			const standardDeviationsFromMean = (participation.xp - mean) / standardDeviation;
+			let index = 0;
+			for (const rank of descendingRanks) {
+				if (standardDeviationsFromMean >= rank.threshold) {
+					break;
+				}
+				index++;
+			}
+			const previousRankIndex = participation.rankIndex === null ? descendingRanks.length : participation.rankIndex;
+			rankChanges[id] = { index: index === descendingRanks.length ? null : index, isRankUp: index < previousRankIndex };
+		}
+	}
+
 	const seasonalHunterReceipts = new Map();
 	for (const id of new Set(Object.keys(placementChanges).concat(Object.keys(rankChanges)))) {
 		const updatePayload = {};
@@ -143,9 +160,9 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks, allGu
 			}
 		}
 		if (id in rankChanges) {
-			const { index, isIncrease } = rankChanges[id];
+			const { index, isRankUp } = rankChanges[id];
 			updatePayload.rankIndex = index;
-			if (isIncrease) {
+			if (isRankUp) {
 				const rank = descendingRanks[index];
 				rawReceipt.rankUp = { name: rank.getName(allGuildRoles, index), newRankIndex: index };
 			}
@@ -154,33 +171,6 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks, allGu
 		seasonalHunterReceipts.set(id, rawReceipt);
 	}
 	return seasonalHunterReceipts;
-}
-
-/**
- * @param {number} standardDeviation
- * @param {Map<string, Participation>} participationMap
- * @param {Rank[]} descendingRanks
- */
-async function calculateRankChanges(standardDeviation, participationMap, descendingRanks) {
-	/** @type {Record<string, { index: number; isIncrease: boolean; } | { index: null; isIncrease: false; }>} */
-	const rankChanges = {};
-	if (descendingRanks.length > 0) {
-		for (const [id, participation] of participationMap) {
-			const standardDeviationsFromMean = (participation.xp - calculateXPMean(participationMap)) / standardDeviation;
-			let index = -1;
-			for (const rank of descendingRanks) {
-				index++;
-				if (standardDeviationsFromMean >= rank.threshold) {
-					break;
-				}
-			}
-			if (index === -1) {
-				index = null;
-			}
-			rankChanges[id] = { index, isIncrease: index > participation.rankIndex };
-		}
-	}
-	return rankChanges;
 }
 
 /** *Generates a map of all of a Season's Participations' placement changes*
