@@ -71,7 +71,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
 		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, origin.company, interaction.user.id, validatedToasteeIds, hunterMap, season.id, toastText, imageURL);
+		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, origin.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, imageURL);
 		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 		let companyReceipt = {};
 		if (hunterReceipts.size > 0) {
@@ -87,7 +87,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		}
 		companyReceipt.guildName = interaction.guild.name;
 
-		const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, validatedToasteeIds, interaction.member, goalProgress, imageURL)];
+		const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, Array.from(validatedToasteeIds), interaction.member, goalProgress, imageURL)];
 		if (goalProgress.goalCompleted) {
 			embeds.push(goalCompletionEmbed(goalProgress.contributorIds));
 		}
