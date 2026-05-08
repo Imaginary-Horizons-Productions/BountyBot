@@ -1,6 +1,8 @@
 # BountyBot Change Log
 ## BountyBot Version 2.11.1ib:
 - Completing or taking down bounties now cancel the bounty's event if it hasn't been closed already
+- Fixed a crash when attempting to make an event for a bounty while missing permission
+- Fixed some issues where rank calculation was assigning the incorrect rank or failing to announce rank ups
 ## BountyBot Version 2.11.0fib:
 ### Reaction Toasts
 - Bounty Hunters can now raise a messageless toast by reacting to another Bounty Hunter's discord message with 🥂
