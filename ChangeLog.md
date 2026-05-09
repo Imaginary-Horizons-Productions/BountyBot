@@ -1,4 +1,6 @@
 # BountyBot Change Log
+## BountyBot Version 2.12.0fi:
+- `/create-default bounty-board-forum` now has an option for customizing the new channel's name
 ## BountyBot Version 2.11.1ib:
 - Completing or taking down bounties now cancel the bounty's event if it hasn't been closed already
 - Fixed a crash when attempting to make an event for a bounty while missing permission
