@@ -85,7 +85,7 @@ function isToastCrit(critRoll, effectiveToastLevel) {
  * @param {Guild} guild
  * @param {Company} company
  * @param {string} senderId
- * @param {Set<string>} toasteeIds
+ * @param {string[]} toasteeIds
  * @param {Map<string, Hunter>} hunterMap
  * @param {string} seasonId
  * @param {string} toastText
@@ -123,7 +123,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 	let critValue = 0;
 	const startingSenderLevel = hunterMap.get(senderId).getLevel(company.xpCoefficient);
 	const xpMultiplierString = company.festivalMultiplierString("xp");
-	for (const id of toasteeIds.values()) {
+	for (const id of toasteeIds) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
 			const hunterReceipt = {};

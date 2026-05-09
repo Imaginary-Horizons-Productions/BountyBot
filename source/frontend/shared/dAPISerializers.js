@@ -543,17 +543,17 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 /**
  * @param {string} thumbnailURL
  * @param {string} toastText
- * @param {Set<string>} recipientIdSet
+ * @param {string[]} recipientIds
  * @param {GuildMember} senderMember
  * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; }} goalProgress
  * @param {string | null} imageURL
  * @param {string[] | undefined} seconderMentions
  */
-function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember, goalProgress, imageURL, seconderMentions) {
+function toastEmbed(thumbnailURL, toastText, recipientIds, senderMember, goalProgress, imageURL, seconderMentions) {
 	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
-		.setDescription(`A toast to ${sentenceListEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
+		.setDescription(`A toast to ${sentenceListEN(recipientIds.map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
 	if (goalProgress.goalCompleted) {
 		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
