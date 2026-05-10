@@ -97,7 +97,7 @@ function sentenceListEN(texts, isMutuallyExclusive) {
  * @param {number} companyMaxBountySlots
  */
 function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBountySlots) {
-	if (Object.keys(companyReceipt).length + hunterReceipts.size === 0) {
+	if (Object.keys(companyReceipt).length + hunterReceipts.size === 1) { // `guildName` is a guaranteed key in `companyReciept`
 		return "";
 	}
 

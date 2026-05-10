@@ -2,10 +2,11 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread, isMissingPermissionError, truncateTextToLength } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread, isMissingPermissionError, truncateTextToLength, butIgnoreErrorIf, isUnknownGuildScheduledEventError } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 const { SelectMenuLimits } = require('@sapphire/discord.js-utilities');
 const { bountyPing } = require('../shared/flows/bountyPing');
+const { bountyTakeDown } = require('../shared/flows/bountyTakeDown');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -302,6 +303,10 @@ module.exports = new SelectWrapper(mainId, 3000,
 				} else {
 					refreshReferenceChannelScoreboardOverall(origin.company, modalSubmission.guild, hunterMap, goalProgress);
 				}
+
+				if (bounty.scheduledEventId) {
+					modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId).catch(butIgnoreErrorIf(isUnknownGuildScheduledEventError, isMissingPermissionError));
+				}
 			} break;
 			case "edit": {
 				const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);
@@ -479,20 +484,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 					flags: MessageFlags.Ephemeral,
 					withResponse: true
 				}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
-					logicLayer.bounties.deleteBountyCompletions(bountyId);
-					bounty.destroy();
-
-					origin.hunter.decrement("xp");
-					const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-					await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, -1);
-					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
-					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await collectedInteraction.guild.roles.fetch());
-					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
-
-					return collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
-				}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
-					interaction.channel.delete("Bounty taken down by poster");
-				});
+					await collectedInteraction.update({ content: "Your bounty has been taken down.", components: [] });
+					bountyTakeDown(logicLayer, collectedInteraction.guild, bounty, origin.hunter, collectedInteraction.channel);
+				}).catch(butIgnoreInteractionCollectorErrors);
 			} break;
 		}
 	}

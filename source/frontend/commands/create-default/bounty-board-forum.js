@@ -5,11 +5,13 @@ const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+		const customChannelName = interaction.options.getString("channel-name");
+
 		let bountyBoard;
 		try {
 			bountyBoard = await interaction.guild.channels.create({
 				parent: interaction.channel.parentId,
-				name: "the-bounty-board",
+				name: customChannelName ?? "the-bounty-board",
 				type: ChannelType.GuildForum,
 				permissionOverwrites: [
 					{
@@ -75,5 +77,12 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 
 		origin.company.save();
 		interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, flags: MessageFlags.Ephemeral });
+	}
+).setOptions(
+	{
+		type: "String",
+		name: "channel-name",
+		description: "The name for the bounty board forum",
+		required: false
 	}
 );

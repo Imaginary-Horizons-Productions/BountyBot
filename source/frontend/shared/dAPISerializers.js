@@ -332,9 +332,13 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
 	const scorelines = [];
-	for (const [id, participation] of Array.from(participationMap.entries()).sort((a, b) => b[1].xp - a[1].xp)) {
-		if (participation.xp > 0 && hunterMembers.has(id)) {
-			scorelines.push(`${!(participation.rankIndex === null || participation.isRankDisqualified) && rankmojiArray[participation.rankIndex] ? `${rankmojiArray[participation.rankIndex]} ` : ""}#${participation.placement} **${hunterMembers.get(id).displayName}** ${participation.xp} season XP`);
+	for (const participation of Array.from(participationMap.values()).sort(descendingByProperty("xp"))) {
+		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
+			let scoreline = `#${participation.placement} ${bold(hunterMembers.get(participation.userId).displayName)} ${participation.xp} season XP`;
+			if (rankmojiArray[participation.rankIndex] && !participation.isRankDisqualified && participation.rankIndex !== null) {
+				scoreline = `${rankmojiArray[participation.rankIndex]} ${scoreline}`;
+			}
+			scorelines.push(scoreline);
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
@@ -393,7 +397,7 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 
 	const scorelines = [];
 	for (const hunter of Array.from(hunterMap.values()).sort(descendingByProperty("xp"))) {
-		if (hunter?.xp < 1) {
+		if (hunter.xp < 1) {
 			break;
 		}
 		const guildMember = hunterMembers.get(hunter.userId);
@@ -540,17 +544,17 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 /**
  * @param {string} thumbnailURL
  * @param {string} toastText
- * @param {Set<string>} recipientIdSet
+ * @param {string[]} recipientIds
  * @param {GuildMember} senderMember
  * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; }} goalProgress
  * @param {string | null} imageURL
  * @param {string[] | undefined} seconderMentions
  */
-function toastEmbed(thumbnailURL, toastText, recipientIdSet, senderMember, goalProgress, imageURL, seconderMentions) {
+function toastEmbed(thumbnailURL, toastText, recipientIds, senderMember, goalProgress, imageURL, seconderMentions) {
 	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
-		.setDescription(`A toast to ${sentenceListEN(Array.from(recipientIdSet).map(id => userMention(id)))}!`)
+		.setDescription(`A toast to ${sentenceListEN(recipientIds.map(id => userMention(id)))}!`)
 		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
 	if (goalProgress.goalCompleted) {
 		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });

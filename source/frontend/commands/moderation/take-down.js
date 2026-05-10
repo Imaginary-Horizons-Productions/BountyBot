@@ -34,6 +34,9 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
 					postingThread.delete("Bounty taken down by moderator");
 				}
+				if (bounty.scheduledEventId) {
+					collectedInteraction.guild.scheduledEvents.delete(bounty.scheduledEventId);
+				}
 
 				let poster;
 				if (posterId === origin.hunter.userId) {
