@@ -115,6 +115,7 @@ function bountyControlPanelSelectRow(bountyId) {
 					{ emoji: "📥", label: "Record other hunters' turn-ins", description: "Confirm another hunter has turned-in this bounty", value: "recordturnin" },
 					{ emoji: "🚫", label: "Revoke other hunters' turn-ins", description: "Remove credit for turning in this bounty from another hunter", value: "revoketurnin" },
 					{ emoji: "🔝", label: "Showcase this bounty", description: "Increase the rewards on this bounty and promote it in another channel", value: "showcase" },
+					{ emoji: "🔴", label: "Ping interested bounty hunters", description: "Message and mention interested bounty hunters (reacted to bounty board thread or marked on event)", value: "ping" },
 					{ emoji: "✅", label: "Complete this bounty", description: "Distribute rewards for turn-ins and mark this bounty completed", value: "complete" },
 					{ emoji: "📝", label: "Edit this bounty", description: "Change details about this bounty", value: "edit" },
 					{ emoji: "🔄", label: "Swap this bounty to another slot", description: "Move this bounty to another slot, changing its base reward", value: "swap" },
