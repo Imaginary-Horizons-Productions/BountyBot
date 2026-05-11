@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, addLogMessageToBountyThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -95,16 +95,13 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				// update bounty board
 				const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event)];
 				if (origin.company.bountyBoardId) {
-					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-						return bountyBoard.threads.fetch(bounty.postingId);
-					}).then(async thread => {
-						await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
-						thread.edit({ name: bounty.title });
-						thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
-						return thread.fetchStarterMessage();
-					}).then(posting => {
-						posting.edit({ embeds });
-					})
+					const logMessage = await addLogMessageToBountyThread(modalSubmission.guild, origin.company, bounty, "The bounty was edited.");
+					if (logMessage) {
+						const thread = logMessage.channel;
+						await thread.edit({ name: bounty.title });
+						const posting = await thread.fetchStarterMessage();
+						await posting.edit({ embeds });
+					}
 				}
 
 				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds, components: [] });

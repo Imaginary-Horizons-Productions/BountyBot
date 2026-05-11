@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold, ModalBuilder, LabelBuilder, UserSelectMenuBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, sentenceListEN, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError } = require("../../shared");
+const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, sentenceListEN, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError, addLogMessageToBountyThread } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
@@ -110,21 +110,18 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 
 		if (origin.company.bountyBoardId) {
 			acknowledgeOptions.content += `${channelMention(bounty.postingId)}, was completed!`;
-			modalSubmission.editReply(acknowledgeOptions);
-			const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
-			bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
-				await unarchiveAndUnlockThread(thread, "bounty complete");
-				thread.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
-				thread.send({ content: rewardMessageContent, flags: MessageFlags.SuppressNotifications });
-				return thread.fetchStarterMessage();
-			}).then(async posting => {
-				posting.edit({
+			await modalSubmission.editReply(acknowledgeOptions);
+			const logMessage = await addLogMessageToBountyThread(modalSubmission.guild, origin.company, bounty, rewardMessageContent);
+			if (logMessage) {
+				const thread = logMessage.channel;
+				await thread.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
+				const posting = await thread.fetchStarterMessage();
+				await posting.edit({
 					embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress)],
 					components: []
-				}).then(() => {
-					posting.channel.setArchived(true, "bounty completed");
 				});
-			});
+				await thread.setArchived(true, "bounty completed");
+			}
 		} else {
 			acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
 			modalSubmission.editReply(acknowledgeOptions).then(message => {

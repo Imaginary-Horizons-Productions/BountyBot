@@ -82,12 +82,17 @@ async function refreshBountyThreadStarterMessage(guild, company, bounty, bountyS
 }
 
 /** Add a message to the bounty in the bounty board to log state changes.
- * To avoid spam and for general bounty readability, limit using this to
- * once per bounty per command.
+ * This fetches the bounty board and bounty thread from dAPI, so call it at
+ * most once per flow and reuse the returned message's channel when follow-up
+ * work needs the thread.
+ *
+ * Prefer direct thread operations instead of this helper when the flow already
+ * has natural access to the bounty thread.
  * @param {Guild} guild
  * @param {Company} company
  * @param {Bounty} bounty
  * @param {string} auditMessage
+ * @returns {Promise<Message | null>}
  */
 async function addLogMessageToBountyThread(guild, company, bounty, auditMessage) {
 	if (!company.bountyBoardId || !bounty.postingId) {
