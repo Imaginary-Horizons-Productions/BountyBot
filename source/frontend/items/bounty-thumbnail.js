@@ -1,7 +1,7 @@
-const { StringSelectMenuBuilder, ModalBuilder, MessageFlags, LabelBuilder, FileUploadBuilder, channelMention } = require("discord.js");
+const { StringSelectMenuBuilder, ModalBuilder, MessageFlags, LabelBuilder, FileUploadBuilder, channelMention, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
-const { selectOptionsFromBounties, refreshBountyThreadStarterMessage, butIgnoreInteractionCollectorErrors } = require("../shared");
+const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread, threadCanRecieveMessages, commandMention } = require("../shared");
 const { timeConversion } = require("../../shared");
 
 /** @type {typeof import("../../logic")} */
@@ -35,19 +35,30 @@ module.exports = new ItemTemplateSet(
 			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 				const bounty = await openBounties.find(bounty => bounty.id === modalSubmission.fields.getStringSelectValues("bounty-id")[0]).reload();
 				if (bounty?.state !== "open") {
-					return modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
+					return;
 				}
 
 				const imageFileCollection = modalSubmission.fields.getUploadedFiles("image", true);
 				const firstAttachment = imageFileCollection.first();
 				if (!firstAttachment) {
-					return modalSubmission.reply({ content: "There was an error handling the submitted image.", flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: "There was an error handling the submitted image.", flags: MessageFlags.Ephemeral });
+					return;
 				}
 
-				await bounty.update({ thumbnailURL: firstAttachment.url }).then(async bounty => {
-					refreshBountyThreadStarterMessage(interaction.guild, origin.company, bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id));
-				});
-				return modalSubmission.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` ${channelMention(bounty.postingId)}` : ""}`, flags: MessageFlags.Ephemeral });
+				await bounty.update({ thumbnailURL: firstAttachment.url });
+				modalSubmission.reply({ content: `The thumbnail on ${bounty.title} has been updated.${bounty.postingId !== null ? ` ${channelMention(bounty.postingId)}` : ""}`, flags: MessageFlags.Ephemeral });
+
+				const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+				if (bountyThread) {
+					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))] });
+						await unarchiveAndUnlockThread(bountyThread, "Bounty Thumbnail item used");
+					}
+					if (threadCanRecieveMessages(bountyThread)) {
+						bountyThread.send({ content: `This bounty's poster used ${commandMention("item")} to add a thumbnail to this bounty.`, flags: MessageFlags.SuppressNotifications });
+					}
+				}
 			}).catch(butIgnoreInteractionCollectorErrors);
 		}
 	)

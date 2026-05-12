@@ -1,8 +1,8 @@
-const { StringSelectMenuBuilder, MessageFlags, TimestampStyles, ModalBuilder, TextDisplayBuilder, LabelBuilder } = require("discord.js");
+const { StringSelectMenuBuilder, MessageFlags, TimestampStyles, ModalBuilder, TextDisplayBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { selectOptionsFromBounties, bountyEmbed, refreshBountyThreadStarterMessage, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreUnknownChannelErrors } = require("../../shared");
+const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, threadCanRecieveMessages } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -57,15 +57,20 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 
 		bounty = await bounty.increment("showcaseCount");
 		await origin.hunter.update({ lastShowcaseTimestamp: new Date() });
-		const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
 		const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-		const bountyScheduledEvent = await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents);
-		refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, bountyScheduledEvent, modalSubmission.member, currentPosterLevel, hunterIdSet)
-			.catch(butIgnoreUnknownChannelErrors);
-		await unarchiveAndUnlockThread(modalSubmission.channel, "bounty showcased");
-		modalSubmission.reply({
-			content: `${modalSubmission.member} increased the reward on their bounty!`,
-			embeds: [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, hunterIdSet, bountyScheduledEvent)]
-		});
+		const embed = bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents));
+		const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+
+		modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds: [embed] });
+
+		if (bountyThread) {
+			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+				(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
+				await unarchiveAndUnlockThread(bountyThread, "bounty showcased by poster");
+			}
+			if (threadCanRecieveMessages(bountyThread)) {
+				bountyThread.send({ content: `${modalSubmission.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
+			}
+		}
 	}
 );

@@ -8,7 +8,7 @@ const { syncRankRoles } = require("../dAPIRequests");
  * @param {Guild} guild
  * @param {Bounty} bounty
  * @param {Hunter} posterHunter
- * @param {import("discord.js").ForumThreadChannel | undefined} bountyThread
+ * @param {import("discord.js").ForumThreadChannel | null} bountyThread
  */
 async function bountyTakeDown(logicLayer, guild, bounty, posterHunter, bountyThread) {
 	await logicLayer.bounties.deleteBountyCompletions(bounty.id);

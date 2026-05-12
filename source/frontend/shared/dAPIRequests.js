@@ -1,8 +1,9 @@
-const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember, GuildScheduledEvent } = require("discord.js");
+const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember } = require("discord.js");
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
 const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
+const { butIgnoreUnknownChannelErrors, butIgnoreUnknownMessageErrors } = require("./dAPIResponses");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -55,48 +56,56 @@ async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBount
 	}
 }
 
-/** Update the bounty's embed in the bounty board
- * @param {Guild} guild
- * @param {Company} company
- * @param {Bounty} bounty
- * @param {GuildScheduledEvent | null} bountyScheduledEvent
- * @param {GuildMember} posterGuildMember
- * @param {number} posterLevel
- * @param {Set<string>} hunterIdSet
+/**
+ * @param {ThreadChannel} thread
+ * @param {string} auditLogReason
  */
-async function refreshBountyThreadStarterMessage(guild, company, bounty, bountyScheduledEvent, posterGuildMember, posterLevel, hunterIdSet) {
-	if (!company.bountyBoardId || !bounty.postingId) {
-		return null;
+async function unarchiveAndUnlockThread(thread, auditLogReason) {
+	if (thread.archived) {
+		await thread.setArchived(false, auditLogReason);
 	}
-
-	return guild.channels.fetch(company.bountyBoardId).then(bountyBoard => {
-		return bountyBoard.threads.fetch(bounty.postingId);
-	}).then(async thread => {
-		await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
-		thread.edit({ name: bounty.title });
-		return thread.fetchStarterMessage();
-	}).then(async posting => {
-		posting.edit({ embeds: [bountyEmbed(bounty, posterGuildMember, posterLevel, false, company, hunterIdSet, bountyScheduledEvent)] });
-		return posting;
-	})
+	if (thread.locked) {
+		await thread.setLocked(false, auditLogReason);
+	}
 }
 
-/** Add a message to the bounty in the bounty board to log state changes.
- * To avoid spam and for general bounty readability, limit using this to
- * once per bounty per command.
- * @param {Guild} guild
- * @param {Company} company
- * @param {Bounty} bounty
- * @param {string} auditMessage
+/** @param {ThreadChannel} thread */
+function threadCanRecieveMessages(thread) {
+	return !(thread.archived || thread.locked);
+}
+
+/** Updates the embeds in a forum thread's title and starter message
+ * @param {Message} starterMessage
+ * @param {{ title: string; embed: EmbedBuilder; }} changes
+ * @param {string} auditLogReason the reason to group all changes under in the server's audit log
  */
-async function addLogMessageToBountyThread(guild, company, bounty, auditMessage) {
-	if (!company.bountyBoardId || !bounty.postingId) {
+async function refreshBountyBoardThread(starterMessage, { title, embed }, auditLogReason) {
+	if (title !== starterMessage.channel.name) {
+		starterMessage.channel.edit({ name: title, reason: auditLogReason });
+	}
+
+	const starterMessageEditPayload = { embeds: [embed] };
+	if (auditLogReason === "bounty marked completed by poster") {
+		starterMessageEditPayload.components = [];
+	}
+	starterMessage.edit(starterMessageEditPayload);
+}
+
+/** Fetches a bounty's thread from the bounty board forum
+ * @param {Guild} guild
+ * @param {string} bountyBoardId
+ * @param {string} postingId
+ * @returns {Promise<ThreadChannel | null>}
+ */
+async function getBountyBoardThread(guild, bountyBoardId, postingId) {
+	if (!bountyBoardId || !postingId) {
 		return null;
 	}
-	const bountyBoard = await guild.channels.fetch(company.bountyBoardId);
-	const thread = await bountyBoard.threads.fetch(bounty.postingId);
-	await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
-	return thread.send({ content: auditMessage, flags: MessageFlags.SuppressNotifications });
+	const bountyBoard = await guild.channels.fetch(bountyBoardId).catch(butIgnoreUnknownChannelErrors);
+	if (!bountyBoard) {
+		return null;
+	}
+	return bountyBoard.threads.fetch(postingId).catch(butIgnoreUnknownMessageErrors) ?? null;
 }
 
 /** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
@@ -200,19 +209,6 @@ async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager)
 }
 
 /**
- * @param {ThreadChannel} thread
- * @param {string} auditLogReason
- */
-async function unarchiveAndUnlockThread(thread, auditLogReason) {
-	if (thread.archived) {
-		await thread.setArchived(false, auditLogReason);
-	}
-	if (thread.locked) {
-		await thread.setLocked(false, auditLogReason);
-	}
-}
-
-/**
  * @param {GuildMember} bountyBotGuildMember
  * @param {Company} company
  */
@@ -240,12 +236,13 @@ async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
 module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
-	refreshBountyThreadStarterMessage,
-	addLogMessageToBountyThread,
+	unarchiveAndUnlockThread,
+	threadCanRecieveMessages,
+	refreshBountyBoardThread,
+	getBountyBoardThread,
 	refreshReferenceChannelScoreboardSeasonal,
 	refreshReferenceChannelScoreboardOverall,
 	sendRewardMessage,
 	syncRankRoles,
-	unarchiveAndUnlockThread,
 	updateBotNicknameForFestival
 };

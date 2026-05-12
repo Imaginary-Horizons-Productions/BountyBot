@@ -1,7 +1,7 @@
 const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { timeConversion } = require("../../shared");
-const { commandMention, selectOptionsFromBounties, bountyEmbed, refreshBountyThreadStarterMessage, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../shared");
+const { commandMention, selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, threadCanRecieveMessages } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /** @type {typeof import("../../logic")} */
@@ -47,14 +47,23 @@ module.exports = new ItemTemplateSet(
 
 				bounty.increment("showcaseCount");
 				await bounty.reload();
-				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]);
 				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				refreshBountyThreadStarterMessage(collectedInteraction.guild, origin.company, bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), collectedInteraction.member, currentPosterLevel, hunterIdSet);
-				await unarchiveAndUnlockThread(collectedInteraction.channel, "bounty showcased");
-				collectedInteraction.channel.send({
-					content: `${collectedInteraction.member} increased the reward on their bounty!`,
-					embeds: [bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, hunterIdSet, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents))]
-				});
+				const embed = bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]), await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents));
+				const bountyThread = await getBountyBoardThread(collectedInteraction.guild, origin.company.bountyBoardId, bounty.postingId);
+
+				// Send new message channel to avoid unloadable message reference in UI
+				collectedInteraction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
+				collectedInteraction.update({ components: [] });
+
+				if (bountyThread) {
+					if (collectedInteraction.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
+						await unarchiveAndUnlockThread(bountyThread, "Bonus Bounty Showcase item used");
+					}
+					if (threadCanRecieveMessages(bountyThread)) {
+						bountyThread.send({ content: `${collectedInteraction.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
+					}
+				}
 			}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 				if (interaction.channel) {

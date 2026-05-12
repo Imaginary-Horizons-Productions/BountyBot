@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { commandMention, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, butIgnoreUnknownChannelErrors } = require("../../shared");
+const { commandMention, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { bountyTakeDown } = require("../../shared/flows/bountyTakeDown");
 
@@ -27,12 +27,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			const [bountyId] = collectedInteraction.values;
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
 
-			let bountyThread;
-			if (origin.company.bountyBoardId && bounty.postingId) {
-				const bountyBoard = await collectedInteraction.guild.channels.fetch(origin.company.bountyBoardId);
-				bountyThread = await bountyBoard.threads.fetch(bounty.postingId).catch(butIgnoreUnknownChannelErrors);
-			}
-
+			const bountyThread = await getBountyBoardThread(collectedInteraction.guild, origin.company.bountyBoardId, bounty.postingId);
 			bountyTakeDown(logicLayer, collectedInteraction.guild, bounty, origin.hunter, bountyThread);
 			collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {

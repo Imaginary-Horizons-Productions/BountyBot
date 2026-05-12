@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, userMention, bold } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down another user's bounty",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -29,10 +29,9 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 			openBounties.find(bounty => bounty.id === bountyId).reload().then(async bounty => {
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
 				bounty.update({ state: "deleted" });
-				if (origin.company.bountyBoardId) {
-					const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
-					const postingThread = await bountyBoard.threads.fetch(bounty.postingId);
-					postingThread.delete("Bounty taken down by moderator");
+				const bountyThread = await getBountyBoardThread(interaction.guild, origin.company.bountyBoardId, bounty.postingId);
+				if (bountyThread) {
+					bountyThread.delete(`bounty taken down by moderator (id: ${interaction.user.id})`);
 				}
 				if (bounty.scheduledEventId) {
 					collectedInteraction.guild.scheduledEvents.delete(bounty.scheduledEventId);

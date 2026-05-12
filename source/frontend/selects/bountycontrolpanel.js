@@ -1,8 +1,8 @@
-const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles, ModalBuilder, LabelBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, userMention, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits, ButtonBuilder, StringSelectMenuBuilder, bold, ButtonStyle, TimestampStyles, ModalBuilder, LabelBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle, strikethrough } = require('discord.js');
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, refreshBountyThreadStarterMessage, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, addLogMessageToBountyThread, isMissingPermissionError, truncateTextToLength, butIgnoreErrorIf, isUnknownGuildScheduledEventError } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, isMissingPermissionError, truncateTextToLength, butIgnoreErrorIf, isUnknownGuildScheduledEventError, getBountyBoardThread, threadCanRecieveMessages, refreshBountyBoardThread } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 const { SelectMenuLimits } = require('@sapphire/discord.js-utilities');
 const { bountyPing } = require('../shared/flows/bountyPing');
@@ -67,10 +67,14 @@ module.exports = new SelectWrapper(mainId, 3000,
 				}
 
 				await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
-				await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
-				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 
-				interaction.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins recorded by poster");
+				}
+				if (threadCanRecieveMessages(modalSubmission.channel)) {
+					modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
+				}
 			} break;
 			case "revoketurnin": {
 				const labelIdBountyHunters = "bounty-hunters";
@@ -101,10 +105,14 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 				const removedIds = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).map((_, key) => key);
 				await logicLayer.bounties.deleteSelectedBountyCompletions(bountyId, removedIds);
-				await unarchiveAndUnlockThread(modalSubmission.channel, "completers removed from bounty");
-				modalSubmission.reply({ content: `${sentenceListEN(removedIds.map(id => userMention(id)))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 
-				interaction.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] })
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins revoked by poster");
+				}
+				if (threadCanRecieveMessages(modalSubmission.channel)) {
+					modalSubmission.reply({ content: `${sentenceListEN(removedIds.map(id => userMention(id)))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
+				}
 			} break;
 			case "showcase": {
 				const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
@@ -152,16 +160,18 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 				bounty = await bounty.increment("showcaseCount");
 				await origin.hunter.update({ lastShowcaseTimestamp: new Date() });
-				const hunterIdSet = await logicLayer.bounties.getHunterIdSet(bountyId);
 				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				const updatedEmbeds = [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, hunterIdSet, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))]
-				channel.send({
-					content: `${modalSubmission.member} increased the reward on their bounty!`,
-					embeds: updatedEmbeds
-				});
-				await unarchiveAndUnlockThread(channel, "bounty showcased");
-				modalSubmission.reply({ content: `Your bounty ${bold(bounty.title)} was showcased in ${channel} and its reward was increased!`, flags: MessageFlags.Ephemeral });
-				interaction.message.edit({ embeds: updatedEmbeds })
+				const embeds = [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))];
+
+				channel.send({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds });
+
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					modalSubmission.message.edit({ embeds });
+					await unarchiveAndUnlockThread(modalSubmission.channel, "bounty showcased by poster");
+				}
+				if (threadCanRecieveMessages(modalSubmission.channel)) {
+					modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on this bounty!` });
+				}
 			} break;
 			case "ping":
 				const labelIdMessage = "message";
@@ -265,7 +275,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 					return;
 				}
 
-				await modalSubmission.deferReply({ flags: MessageFlags.SuppressNotifications });
+				if (threadCanRecieveMessages(modalSubmission.channel)) {
+					await modalSubmission.deferReply({ flags: MessageFlags.SuppressNotifications });
+				}
 				const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 				let hunterMap = await logicLayer.hunters.getCompanyHunterMap(origin.company.id);
@@ -283,16 +295,17 @@ module.exports = new SelectWrapper(mainId, 3000,
 				const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 				const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await modalSubmission.guild.roles.fetch());
 				syncRankRoles(seasonalHunterReceipts, descendingRanks, modalSubmission.guild.members);
-
-				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty complete");
-				modalSubmission.channel.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
+
 				await modalSubmission.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
-				await modalSubmission.message.edit({
-					embeds: [bountyEmbed(bounty, modalSubmission.member, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress)],
-					components: []
-				});
-				modalSubmission.channel.setArchived(true, "bounty completed");
+
+				const auditLogReason = "bounty marked completed by poster";
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					refreshBountyBoardThread(modalSubmission.message, { title: strikethrough(bounty.title), embed: bountyEmbed(bounty, modalSubmission.member, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress) }, auditLogReason);
+					await unarchiveAndUnlockThread(modalSubmission.channel, auditLogReason);
+				}
+				modalSubmission.channel.edit({ archived: true, appliedTags: [origin.company.bountyBoardCompletedTagId], reason: auditLogReason });
+
 				const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${modalSubmission.channel}, was completed!` };
 				if (goalProgress.goalCompleted) {
 					announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
@@ -335,11 +348,9 @@ module.exports = new SelectWrapper(mainId, 3000,
 						return;
 					}
 
-					await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
 					const updatePayload = { editCount: bounty.editCount + 1 };
 					if (title) {
 						updatePayload.title = title;
-						modalSubmission.channel.edit({ name: bounty.title });
 					}
 
 					updatePayload.description = description;
@@ -371,12 +382,18 @@ module.exports = new SelectWrapper(mainId, 3000,
 					}
 					await bounty.update(updatePayload);
 
-					// update bounty board
-					const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event)];
-					modalSubmission.channel.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
-					interaction.message.edit({ embeds });
+					const embed = bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event);
 
-					modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds, flags: MessageFlags.Ephemeral });
+					// update bounty board
+					const auditLogReason = "bounty edited by poster";
+					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed }, auditLogReason);
+						await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
+					}
+					if (threadCanRecieveMessages(modalSubmission.channel)) {
+						await modalSubmission.reply({ content: "This bounty was edited.", flags: MessageFlags.SuppressNotifications });
+						modalSubmission.followUp({ content: `You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [embed], flags: MessageFlags.Ephemeral })
+					}
 				});
 			} break;
 			case "swap": {
@@ -449,15 +466,31 @@ module.exports = new SelectWrapper(mainId, 3000,
 				const sourceSlot = bounty.slotNumber;
 				let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id, state: "open" });
 				const destinationRewardValue = Bounty.calculateCompleterReward(currentPosterLevel, destinationSlot, bounty.showcaseCount);
+				const auditLogReason = destinationBounty ?
+					`bounty poster swapped slots of bounties ${sourceSlot} and ${destinationSlot}` :
+					`bounty swapped from slot ${sourceSlot} to ${destinationSlot} by poster`;
 
 				bounty = await bounty.update({ slotNumber: destinationSlot });
-				refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, currentPosterLevel, await logicLayer.bounties.getHunterIdSet(bounty.id));
-				modalSubmission.reply({ content: `Switched this bounty's slot from ${sourceSlot} to ${destinationSlot}. It is now worth ${destinationRewardValue} XP.` });
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.guild, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					await unarchiveAndUnlockThread(modalSubmission.channel, auditLogReason);
+				}
+				if (threadCanRecieveMessages(modalSubmission.channel)) {
+					modalSubmission.channel.send({ content: `This bounty's slot was switched from ${sourceSlot} to ${destinationSlot}. It is now worth ${destinationRewardValue} XP.`, flags: MessageFlags.SuppressNotifications });
+				}
 
 				if (destinationBounty) {
 					destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-					refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, destinationBounty, await destinationBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, currentPosterLevel, await logicLayer.bounties.getHunterIdSet(destinationBounty.id));
-					addLogMessageToBountyThread(modalSubmission.guild, origin.company, destinationBounty, `Switched this bounty's slot from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(currentPosterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`);
+					const destinationBountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, destinationBounty.postingId);
+					if (destinationBountyThread) {
+						if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+							(await destinationBountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.guild, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(destinationBounty.id), await destinationBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+							await unarchiveAndUnlockThread(destinationBountyThread, auditLogReason);
+						}
+						if (threadCanRecieveMessages(destinationBountyThread)) {
+							destinationBountyThread.send({ content: `This bounty's slot was switched from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(currentPosterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`, flags: MessageFlags.SuppressNotifications });
+						}
+					}
 				}
 
 				const channel = modalSubmission.fields.getSelectedChannels(labelIdChannel).first();

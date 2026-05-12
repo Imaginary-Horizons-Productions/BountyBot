@@ -1,6 +1,6 @@
-const { MessageFlags, userMention, channelMention, bold, ModalBuilder, LabelBuilder, UserSelectMenuBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { MessageFlags, userMention, channelMention, bold, ModalBuilder, LabelBuilder, UserSelectMenuBuilder, StringSelectMenuBuilder, PermissionFlagsBits, strikethrough } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, sentenceListEN, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError } = require("../../shared");
+const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError, getBountyBoardThread, refreshBountyBoardThread, threadCanRecieveMessages } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
@@ -111,20 +111,19 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		if (origin.company.bountyBoardId) {
 			acknowledgeOptions.content += `${channelMention(bounty.postingId)}, was completed!`;
 			modalSubmission.editReply(acknowledgeOptions);
-			const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
-			bountyBoard.threads.fetch(bounty.postingId).then(async thread => {
-				await unarchiveAndUnlockThread(thread, "bounty complete");
-				thread.setAppliedTags([origin.company.bountyBoardCompletedTagId]);
-				thread.send({ content: rewardMessageContent, flags: MessageFlags.SuppressNotifications });
-				return thread.fetchStarterMessage();
-			}).then(async posting => {
-				posting.edit({
-					embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress)],
-					components: []
-				}).then(() => {
-					posting.channel.setArchived(true, "bounty completed");
-				});
-			});
+
+			const auditLogReason = "bounty marked completed by poster";
+			const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+			if (bountyThread) {
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed: bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), true, origin.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress), title: strikethrough(bounty.title) }, auditLogReason);
+					await unarchiveAndUnlockThread(bountyThread, auditLogReason);
+				}
+				if (threadCanRecieveMessages(bountyThread)) {
+					bountyThread.send({ content: rewardMessageContent, flags: MessageFlags.SuppressNotifications });
+				}
+				bountyThread.edit({ archived: true, appliedTags: [origin.company.bountyBoardCompletedTagId], reason: auditLogReason });
+			}
 		} else {
 			acknowledgeOptions.content += `${bold(bounty.title)}, was completed!`;
 			modalSubmission.editReply(acknowledgeOptions).then(message => {
