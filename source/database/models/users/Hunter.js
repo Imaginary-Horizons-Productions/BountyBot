@@ -74,38 +74,38 @@ function initModel(sequelize) {
 			type: DataTypes.STRING
 		},
 		xp: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		lastShowcaseTimestamp: {
 			type: DataTypes.DATE
 		},
 		mineFinished: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		othersFinished: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		toastsRaised: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		toastsSeconded: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		toastsReceived: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		goalsInitiated: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		goalContributions: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		isBanned: {
@@ -117,11 +117,11 @@ function initModel(sequelize) {
 			defaultValue: false
 		},
 		penaltyCount: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		penaltyPointTotal: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		profileColor: {

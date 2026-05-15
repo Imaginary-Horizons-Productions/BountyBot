@@ -63,7 +63,7 @@ function initModel(sequelize) {
 			type: DataTypes.STRING
 		},
 		slotNumber: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.INTEGER.UNSIGNED,
 			allowNull: false
 		},
 		isEvergreen: {

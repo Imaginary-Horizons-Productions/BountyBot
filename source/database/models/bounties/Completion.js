@@ -33,7 +33,7 @@ function initModel(sequelize) {
 			type: DataTypes.STRING
 		},
 		xpAwarded: {
-			type: DataTypes.INTEGER
+			type: DataTypes.INTEGER.UNSIGNED
 		}
 	}, {
 		sequelize,

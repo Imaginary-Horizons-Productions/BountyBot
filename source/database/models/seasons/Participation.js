@@ -40,30 +40,30 @@ function initModel(sequelize) {
 			defaultValue: false
 		},
 		xp: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		placement: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.INTEGER.UNSIGNED,
 			defaultValue: 0
 		},
 		rankIndex: {
-			type: DataTypes.INTEGER
+			type: DataTypes.INTEGER.UNSIGNED
 		},
 		postingsCompleted: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.INTEGER.UNSIGNED,
 			defaultValue: 0
 		},
 		toastsRaised: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.INTEGER.UNSIGNED,
 			defaultValue: 0
 		},
 		goalContributions: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.INTEGER.UNSIGNED,
 			defaultValue: 0
 		},
 		dqCount: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.INTEGER.UNSIGNED,
 			defaultValue: 0
 		}
 	}, {

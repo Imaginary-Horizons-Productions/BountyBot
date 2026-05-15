@@ -30,7 +30,7 @@ function initModel(sequelize) {
 			allowNull: false
 		},
 		requiredGP: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			allowNull: false
 		}
 	}, {

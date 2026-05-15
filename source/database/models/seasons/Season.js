@@ -35,11 +35,11 @@ function initModel(sequelize) {
 			}
 		},
 		bountiesCompleted: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		},
 		toastsRaised: {
-			type: DataTypes.BIGINT,
+			type: DataTypes.BIGINT.UNSIGNED,
 			defaultValue: 0
 		}
 	}, {
