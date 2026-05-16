@@ -2,7 +2,7 @@ const { StringSelectMenuBuilder, MessageFlags, TimestampStyles, ModalBuilder, Te
 const { SubcommandWrapper } = require("../../classes");
 const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, threadCanRecieveMessages } = require("../../shared");
+const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
@@ -68,7 +68,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 				(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
 				await unarchiveAndUnlockThread(bountyThread, "bounty showcased by poster");
 			}
-			if (threadCanRecieveMessages(bountyThread)) {
+			if (bountyThread.sendable) {
 				bountyThread.send({ content: `${modalSubmission.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
 			}
 		}

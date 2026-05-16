@@ -69,11 +69,6 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 	}
 }
 
-/** @param {ThreadChannel} thread */
-function threadCanRecieveMessages(thread) {
-	return !(thread.archived || thread.locked);
-}
-
 /** Updates the embeds in a forum thread's title and starter message
  * @param {Message} starterMessage
  * @param {{ title: string; embed: EmbedBuilder; }} changes
@@ -237,7 +232,6 @@ module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	unarchiveAndUnlockThread,
-	threadCanRecieveMessages,
 	refreshBountyBoardThread,
 	getBountyBoardThread,
 	refreshReferenceChannelScoreboardSeasonal,

@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, userMention, bold, MessageFlags, LabelBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { commandMention, randomCongratulatoryPhrase, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, getBountyBoardThread, threadCanRecieveMessages } = require('../shared');
+const { commandMention, randomCongratulatoryPhrase, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, getBountyBoardThread } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -61,7 +61,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 					await unarchiveAndUnlockThread(bountyThread, "bounty turn-in recorded by poster");
 				}
-				if (threadCanRecieveMessages(bountyThread)) {
+				if (bountyThread.sendable) {
 					bountyThread.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${randomCongratulatoryPhrase()}!` });
 				}
 			}

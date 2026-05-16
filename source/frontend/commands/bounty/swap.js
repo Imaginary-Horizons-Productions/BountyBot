@@ -1,7 +1,7 @@
 const { StringSelectMenuBuilder, MessageFlags, bold, ModalBuilder, LabelBuilder, TextDisplayBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { Bounty, Hunter } = require("../../../database/models");
-const { emojiFromNumber, addCompanyAnnouncementPrefix, butIgnoreInteractionCollectorErrors, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, getBountyBoardThread, unarchiveAndUnlockThread, threadCanRecieveMessages, bountyEmbed } = require("../../shared");
+const { emojiFromNumber, addCompanyAnnouncementPrefix, butIgnoreInteractionCollectorErrors, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, getBountyBoardThread, unarchiveAndUnlockThread, bountyEmbed } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
@@ -91,7 +91,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 				(await sourceBountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(sourceBounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(sourceBounty.id), await sourceBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(sourceBountyThread, auditLogReason);
 			}
-			if (threadCanRecieveMessages(sourceBountyThread)) {
+			if (sourceBountyThread.sendable) {
 				sourceBountyThread.send({ content: `This bounty's slot was switched from ${sourceSlot} to ${destinationSlot}. It is now worth ${destinationRewardValue} XP.`, flags: MessageFlags.SuppressNotifications });
 			}
 		}
@@ -104,7 +104,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 					(await destinationBountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(destinationBounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(destinationBounty.id), await destinationBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 					await unarchiveAndUnlockThread(destinationBountyThread, auditLogReason);
 				}
-				if (threadCanRecieveMessages(destinationBountyThread)) {
+				if (destinationBountyThread.sendable) {
 					destinationBountyThread.send({ content: `This bounty's slot was switched from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(currentPosterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`, flags: MessageFlags.SuppressNotifications });
 				}
 			}

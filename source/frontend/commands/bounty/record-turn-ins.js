@@ -1,6 +1,6 @@
 const { userMention, bold, MessageFlags, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, commandMention, randomCongratulatoryPhrase, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, threadCanRecieveMessages, unarchiveAndUnlockThread } = require("../../shared");
+const { sentenceListEN, commandMention, randomCongratulatoryPhrase, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -62,7 +62,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 					await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins recorded by poster");
 				}
-				if (threadCanRecieveMessages(bountyThread)) {
+				if (bountyThread.sendable) {
 					bountyThread.send({ content: `${newTurnInList} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 				}
 			}

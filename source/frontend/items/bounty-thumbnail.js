@@ -1,7 +1,7 @@
 const { StringSelectMenuBuilder, ModalBuilder, MessageFlags, LabelBuilder, FileUploadBuilder, channelMention, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
-const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread, threadCanRecieveMessages, commandMention } = require("../shared");
+const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread, commandMention } = require("../shared");
 const { timeConversion } = require("../../shared");
 
 /** @type {typeof import("../../logic")} */
@@ -55,7 +55,7 @@ module.exports = new ItemTemplateSet(
 						(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))] });
 						await unarchiveAndUnlockThread(bountyThread, "Bounty Thumbnail item used");
 					}
-					if (threadCanRecieveMessages(bountyThread)) {
+					if (bountyThread.sendable) {
 						bountyThread.send({ content: `This bounty's poster used ${commandMention("item")} to add a thumbnail to this bounty.`, flags: MessageFlags.SuppressNotifications });
 					}
 				}

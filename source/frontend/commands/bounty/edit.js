@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, refreshBountyBoardThread, threadCanRecieveMessages } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, refreshBountyBoardThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -103,7 +103,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 						refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed }, auditLogReason);
 						await unarchiveAndUnlockThread(bountyThread, auditLogReason);
 					}
-					if (threadCanRecieveMessages(bountyThread)) {
+					if (bountyThread.sendable) {
 						bountyThread.send({ content: "This bounty was edited.", flags: MessageFlags.SuppressNotifications });
 					}
 				}

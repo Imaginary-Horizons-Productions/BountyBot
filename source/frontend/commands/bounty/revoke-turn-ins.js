@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, bold, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, selectOptionsFromBounties, commandMention, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread, threadCanRecieveMessages } = require("../../shared");
+const { sentenceListEN, selectOptionsFromBounties, commandMention, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -55,7 +55,7 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 				(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins revoked by poster");
 			}
-			if (threadCanRecieveMessages(bountyThread)) {
+			if (bountyThread.sendable) {
 				bountyThread.send({ content: `${mentionList} ${removedIds.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
 			}
 		}

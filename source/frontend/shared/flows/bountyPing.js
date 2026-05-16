@@ -1,6 +1,5 @@
 const { MessageFlags, userMention, ModalSubmitInteraction, ThreadChannel } = require("discord.js");
 const { Bounty } = require("../../../database/models");
-const { threadCanRecieveMessages } = require("../dAPIRequests");
 
 /**
  * @param {ModalSubmitInteraction} modalSubmission
@@ -44,7 +43,7 @@ async function bountyPing(modalSubmission, labelIds, bounty, bountyThread) {
 		}
 	}
 
-	if (threadCanRecieveMessages(modalSubmission.channel)) {
+	if (modalSubmission.channel.sendable) {
 		modalSubmission.reply({ content: `${Array.from(interestedHunterIds.values()).map(id => userMention(id))} ${modalSubmission.fields.getTextInputValue(labelIds.message)}` });
 	}
 }

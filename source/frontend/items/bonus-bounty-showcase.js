@@ -1,7 +1,7 @@
 const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { timeConversion } = require("../../shared");
-const { commandMention, selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, threadCanRecieveMessages } = require("../shared");
+const { commandMention, selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /** @type {typeof import("../../logic")} */
@@ -60,7 +60,7 @@ module.exports = new ItemTemplateSet(
 						(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
 						await unarchiveAndUnlockThread(bountyThread, "Bonus Bounty Showcase item used");
 					}
-					if (threadCanRecieveMessages(bountyThread)) {
+					if (bountyThread.sendable) {
 						bountyThread.send({ content: `${collectedInteraction.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
 					}
 				}
