@@ -1,6 +1,6 @@
 const authPath = "../config/auth.json";
 const { testGuildId, feedbackChannelId } = require(authPath);
-const { MessageLimits } = require("@sapphire/discord.js-utilities");
+const { MessageLimits, GuildMemberLimits } = require("@sapphire/discord.js-utilities");
 const { announcementsChannelId, lastPostedVersion } = require("../config/versionData.json");
 
 module.exports = {
@@ -33,5 +33,6 @@ module.exports = {
 	COMPANY_XP_COEFFICIENT: 3,
 	GLOBAL_MAX_BOUNTY_SLOTS: MessageLimits.MaximumEmbeds,
 	MAX_EVERGREEN_SLOTS: MessageLimits.MaximumEmbeds,
-	GLOBAL_COMMAND_COOLDOWN: 2000 // in ms
+	GLOBAL_COMMAND_COOLDOWN: 2000, // in ms
+	MAX_BOT_NICKNAME_LENGTH: GuildMemberLimits.MaximumDisplayNameLength - 3 // We reserve 3 characters for festival tag nicknaming
 };
