@@ -1,6 +1,6 @@
 const { MessageFlags, userMention, channelMention, bold, ModalBuilder, LabelBuilder, UserSelectMenuBuilder, StringSelectMenuBuilder, PermissionFlagsBits, strikethrough } = require("discord.js");
 const { timeConversion } = require("../../../shared");
-const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError, getBountyBoardThread, refreshBountyBoardThread } = require("../../shared");
+const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError, getBountyBoardThread, refreshBountyBoardThread, auditReasonBountyComplete } = require("../../shared");
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
@@ -112,7 +112,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 			acknowledgeOptions.content += `${channelMention(bounty.postingId)}, was completed!`;
 			modalSubmission.editReply(acknowledgeOptions);
 
-			const auditLogReason = "bounty marked completed by poster";
+			const auditLogReason = auditReasonBountyComplete;
 			const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
 			if (bountyThread) {
 				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {

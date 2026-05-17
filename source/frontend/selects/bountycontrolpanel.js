@@ -2,7 +2,7 @@ const { MessageFlags, ActionRowBuilder, UserSelectMenuBuilder, ComponentType, us
 const { SelectWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING, ZERO_WIDTH_WHITE_SPACE } = require('../../constants');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, isMissingPermissionError, truncateTextToLength, butIgnoreErrorIf, isUnknownGuildScheduledEventError, getBountyBoardThread, refreshBountyBoardThread } = require('../shared');
+const { sentenceListEN, randomCongratulatoryPhrase, bountyEmbed, commandMention, syncRankRoles, goalCompletionEmbed, emojiFromNumber, addCompanyAnnouncementPrefix, textsHaveAutoModInfraction, bountyScheduledEventPayload, validateScheduledEventTimestamps, editBountyModalAndSubmissionOptions, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, isMissingPermissionError, truncateTextToLength, butIgnoreErrorIf, isUnknownGuildScheduledEventError, getBountyBoardThread, refreshBountyBoardThread, auditReasonBountyComplete } = require('../shared');
 const { Company, Bounty, Hunter } = require('../../database/models');
 const { SelectMenuLimits } = require('@sapphire/discord.js-utilities');
 const { bountyPing } = require('../shared/flows/bountyPing');
@@ -299,7 +299,7 @@ module.exports = new SelectWrapper(mainId, 3000,
 
 				await modalSubmission.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties) });
 
-				const auditLogReason = "bounty marked completed by poster";
+				const auditLogReason = auditReasonBountyComplete;
 				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
 					refreshBountyBoardThread(modalSubmission.message, { title: strikethrough(bounty.title), embed: bountyEmbed(bounty, modalSubmission.member, hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), true, origin.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress) }, auditLogReason);
 					await unarchiveAndUnlockThread(modalSubmission.channel, auditLogReason);

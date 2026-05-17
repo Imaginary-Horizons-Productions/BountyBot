@@ -3,7 +3,7 @@ const { Bounty, Company, Rank, Participation } = require("../../database/models"
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
 const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
-const { butIgnoreUnknownChannelErrors, butIgnoreUnknownMessageErrors } = require("./dAPIResponses");
+const { butIgnoreUnknownChannelErrors, isUnknownMessageError } = require("./dAPIResponses");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -69,6 +69,8 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 	}
 }
 
+const auditReasonBountyComplete = "bounty marked completed by poster";
+
 /** Updates the embeds in a forum thread's title and starter message
  * @param {Message} starterMessage
  * @param {{ title: string; embed: EmbedBuilder; }} changes
@@ -80,7 +82,7 @@ async function refreshBountyBoardThread(starterMessage, { title, embed }, auditL
 	}
 
 	const starterMessageEditPayload = { embeds: [embed] };
-	if (auditLogReason === "bounty marked completed by poster") {
+	if (auditLogReason === auditReasonBountyComplete) {
 		starterMessageEditPayload.components = [];
 	}
 	starterMessage.edit(starterMessageEditPayload);
@@ -100,7 +102,12 @@ async function getBountyBoardThread(guild, bountyBoardId, postingId) {
 	if (!bountyBoard) {
 		return null;
 	}
-	return bountyBoard.threads.fetch(postingId).catch(butIgnoreUnknownMessageErrors) ?? null;
+	return bountyBoard.threads.fetch(postingId).catch(error => {
+		if (!isUnknownMessageError(error)) {
+			console.error(error);
+		}
+		return null;
+	});
 }
 
 /** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
@@ -232,6 +239,7 @@ module.exports = {
 	refreshEvergreenBountiesThread,
 	makeEvergreenBountiesThread,
 	unarchiveAndUnlockThread,
+	auditReasonBountyComplete,
 	refreshBountyBoardThread,
 	getBountyBoardThread,
 	refreshReferenceChannelScoreboardSeasonal,
