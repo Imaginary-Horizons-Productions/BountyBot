@@ -2,7 +2,6 @@ const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, Guil
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
-const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
 const { MAX_BOT_NICKNAME_LENGTH } = require("../../constants");
 
 /**
