@@ -1,7 +1,7 @@
 const { italic } = require('discord.js');
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const { Hunter } = require('../users/Hunter');
-const { GuildMemberLimits } = require('@sapphire/discord.js-utilities');
+const { MAX_BOT_NICKNAME_LENGTH } = require('../../../constants');
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
 class Company extends Model {
@@ -85,7 +85,7 @@ function initModel(sequelize) {
 			defaultValue: 3600000
 		},
 		nickname: { // Let managers save a nickname for BountyBot for constructing festival tags
-			type: DataTypes.STRING(GuildMemberLimits.MaximumDisplayNameLength)
+			type: DataTypes.STRING(MAX_BOT_NICKNAME_LENGTH)
 		},
 		xpFestivalMultiplier: {
 			type: DataTypes.REAL,
