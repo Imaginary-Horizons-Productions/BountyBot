@@ -210,6 +210,9 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 
 	const xpMultiplierString = company.festivalMultiplierString("xp");
 	for (const userId of recipientIds) {
+		if (userId === seconder.userId) {
+			continue;
+		}
 		const hunterReceipt = {};
 		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: company.id, userId, seasonId }, defaults: { xp: 1 } });
 		if (!participationCreated) {
@@ -263,7 +266,6 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 
 		if (isToastCrit(Math.random() * 100, lowestEffectiveToastLevel)) {
 			critSeconds++;
-			recipientIds.push(seconder.userId);
 		}
 	}
 
