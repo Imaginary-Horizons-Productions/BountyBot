@@ -2,7 +2,7 @@ const { ModalBuilder, UserSelectMenuBuilder, TextInputBuilder, StringSelectMenuB
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { SubcommandWrapper } = require("../../classes");
 const { bountyPing } = require("../../shared/flows/bountyPing");
-const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
@@ -53,14 +53,7 @@ module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reac
 			return;
 		}
 
-		let bountyThread;
-		if (origin.company.bountyBoardId && bounty.postingId) {
-			const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
-			if (bountyBoard) {
-				bountyThread = await bountyBoard.threads.fetch(bounty.postingId);
-			}
-		}
-
+		const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
 		bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, bountyThread);
 	}
 );

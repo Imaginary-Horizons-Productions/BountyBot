@@ -19,6 +19,7 @@ function butIgnoreErrorIf(...ignoreThese) {
 const isAutomodError = error => [200000, 200001].includes(error.code);
 const isInteractionCollectorError = error => error.code === DiscordjsErrorCodes.InteractionCollectorError;
 const isUnknownChannelError = error => error.code === 10003;
+const isUnknownMessageError = error => error.code === 10008;
 const isUnknownGuildScheduledEventError = error => error.code === 10070;
 const isMissingPermissionError = error => error.code === 50013;
 const isCantDirectMessageThisUserError = error => error.code === 50007;
@@ -27,6 +28,8 @@ const isCantDirectMessageThisUserError = error => error.code === 50007;
 const butIgnoreInteractionCollectorErrors = butIgnoreErrorIf(isInteractionCollectorError);
 
 const butIgnoreUnknownChannelErrors = butIgnoreErrorIf(isUnknownChannelError);
+
+const butIgnoreUnknownMessageErrors = butIgnoreErrorIf(isUnknownMessageError);
 
 const butIgnoreMissingPermissionErrors = butIgnoreErrorIf(isMissingPermissionError);
 
@@ -37,11 +40,13 @@ module.exports = {
 	isAutomodError,
 	isInteractionCollectorError,
 	isUnknownChannelError,
+	isUnknownMessageError,
 	isUnknownGuildScheduledEventError,
 	isMissingPermissionError,
 	isCantDirectMessageThisUserError,
 	butIgnoreInteractionCollectorErrors,
 	butIgnoreUnknownChannelErrors,
+	butIgnoreUnknownMessageErrors,
 	butIgnoreMissingPermissionErrors,
 	butIgnoreCantDirectMessageThisUserErrors
 }

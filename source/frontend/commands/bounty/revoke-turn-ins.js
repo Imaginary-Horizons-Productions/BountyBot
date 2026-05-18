@@ -1,6 +1,6 @@
-const { MessageFlags, userMention, bold, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder } = require("discord.js");
+const { MessageFlags, userMention, bold, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, refreshBountyThreadStarterMessage, selectOptionsFromBounties, commandMention, butIgnoreUnknownChannelErrors, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { sentenceListEN, selectOptionsFromBounties, commandMention, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
@@ -49,10 +49,15 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 		const mentionList = sentenceListEN(removedIds.map(id => userMention(id)));
 		modalSubmission.reply({ content: `These bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${mentionList}`, flags: MessageFlags.Ephemeral });
 
-		const post = await refreshBountyThreadStarterMessage(modalSubmission.guild, origin.company, bounty, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), await logicLayer.bounties.getHunterIdSet(bounty.id))
-			.catch(butIgnoreUnknownChannelErrors);
-		if (post) {
-			post.channel.send({ content: `${mentionList} ${removedIds.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
+		const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+		if (bountyThread) {
+			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+				(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+				await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins revoked by poster");
+			}
+			if (bountyThread.sendable) {
+				bountyThread.send({ content: `${mentionList} ${removedIds.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
+			}
 		}
 	}
 );

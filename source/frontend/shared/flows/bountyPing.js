@@ -1,11 +1,11 @@
-const { MessageFlags, userMention, ModalSubmitInteraction } = require("discord.js");
+const { MessageFlags, userMention, ModalSubmitInteraction, ThreadChannel } = require("discord.js");
 const { Bounty } = require("../../../database/models");
 
 /**
  * @param {ModalSubmitInteraction} modalSubmission
  * @param {{ message: string; excludedBountyHunters: string; }} labelIds
  * @param {Bounty} bounty
- * @param {import("discord.js").ForumThreadChannel | undefined} bountyThread
+ * @param {ThreadChannel | null} bountyThread
  */
 async function bountyPing(modalSubmission, labelIds, bounty, bountyThread) {
 	if (!bounty || bounty.state !== "open") {
@@ -43,7 +43,9 @@ async function bountyPing(modalSubmission, labelIds, bounty, bountyThread) {
 		}
 	}
 
-	modalSubmission.reply({ content: `${Array.from(interestedHunterIds.values()).map(id => userMention(id))} ${modalSubmission.fields.getTextInputValue(labelIds.message)}` });
+	if (modalSubmission.channel.sendable) {
+		modalSubmission.reply({ content: `${Array.from(interestedHunterIds.values()).map(id => userMention(id))} ${modalSubmission.fields.getTextInputValue(labelIds.message)}` });
+	}
 }
 
 module.exports = {

@@ -1,7 +1,7 @@
 const { InteractionContextType, PermissionFlagsBits, ModalBuilder, userMention, bold, MessageFlags, LabelBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { commandMention, randomCongratulatoryPhrase, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties } = require('../shared');
+const { commandMention, randomCongratulatoryPhrase, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, getBountyBoardThread } = require('../shared');
 const { timeConversion } = require('../../shared');
 
 /** @type {typeof import("../../logic")} */
@@ -53,16 +53,18 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 				return;
 			}
 			await logicLayer.bounties.bulkCreateCompletions(bountyId, bounty.companyId, [interaction.targetId], null);
-			const boardId = origin.company.bountyBoardId;
-			const { postingId } = bounty;
-			if (boardId && postingId) {
-				const boardChannel = await modalSubmission.guild.channels.fetch(boardId);
-				const post = await boardChannel.threads.fetch(postingId);
-				await unarchiveAndUnlockThread(post, "Unarchived to update posting");
-				post.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${randomCongratulatoryPhrase()}!` });
-				(await post.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
-			}
 			modalSubmission.reply({ content: `${userMention(interaction.targetId)}'s turn-in of ${bold(bounty.title)} has been recorded! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: MessageFlags.Ephemeral });
+
+			const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+			if (bountyThread) {
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					await unarchiveAndUnlockThread(bountyThread, "bounty turn-in recorded by poster");
+				}
+				if (bountyThread.sendable) {
+					bountyThread.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${randomCongratulatoryPhrase()}!` });
+				}
+			}
 		}).catch(butIgnoreInteractionCollectorErrors);
 	}
 ).setLogicLinker(logicBlob => {

@@ -1,6 +1,6 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, refreshBountyBoardThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
@@ -92,22 +92,21 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				}
 				await bounty.update(updatePayload);
 
-				// update bounty board
-				const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event)];
-				if (origin.company.bountyBoardId) {
-					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-						return bountyBoard.threads.fetch(bounty.postingId);
-					}).then(async thread => {
-						await unarchiveAndUnlockThread(thread, "Unarchived to update posting");
-						thread.edit({ name: bounty.title });
-						thread.send({ content: "The bounty was edited.", flags: MessageFlags.SuppressNotifications });
-						return thread.fetchStarterMessage();
-					}).then(posting => {
-						posting.edit({ embeds });
-					})
-				}
+				const embed = bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event);
+				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [embed], components: [] });
 
-				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds, components: [] });
+				// update bounty board
+				const auditLogReason = "bounty edited by poster";
+				const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+				if (bountyThread) {
+					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed }, auditLogReason);
+						await unarchiveAndUnlockThread(bountyThread, auditLogReason);
+					}
+					if (bountyThread.sendable) {
+						bountyThread.send({ content: "This bounty was edited.", flags: MessageFlags.SuppressNotifications });
+					}
+				}
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
 	}
