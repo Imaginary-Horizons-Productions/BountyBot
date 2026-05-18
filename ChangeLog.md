@@ -1,10 +1,11 @@
 # BountyBot Change Log
-## BountyBot Version 2.12.0fi:
+## BountyBot Version 2.12.0fib:
 - Added command `/bounty ping` to mention bounty hunters who have reacted to the bounty's thread or marked themselves interested in the bounty's event
 - `/create-default bounty-board-forum` now has an option for customizing the new channel's name
 - Completing a bounty now applies ~~strikethrough~~ to its title on the bounty board
 - The following actions now sends record keeping messages to bounty board threads: showcasing a bounty, adding a thumbnail
 - Fixed several crashes related to missed fetches on the bounty board
+- Fixed Critical Secondings adding the Seconder to the Toast's list of recipients
 ## BountyBot Version 2.11.1ib:
 - Completing or taking down bounties now cancel the bounty's event if it hasn't been closed already
 - Fixed a crash when attempting to make an event for a bounty while missing permission

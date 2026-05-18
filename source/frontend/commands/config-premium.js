@@ -1,7 +1,6 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { GLOBAL_MAX_BOUNTY_SLOTS } = require('../../constants');
-const { GuildMemberLimits } = require('@sapphire/discord.js-utilities');
+const { GLOBAL_MAX_BOUNTY_SLOTS, MAX_BOT_NICKNAME_LENGTH } = require('../../constants');
 const { updateBotNicknameForFestival } = require('../shared');
 
 const mainId = "config-premium";
@@ -13,8 +12,8 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 
 		const nickname = interaction.options.getString("nickname");
 		if (nickname !== null) {
-			if (nickname.length > GuildMemberLimits.MaximumDisplayNameLength) {
-				errors.push(`${nickname} could not be set for Nickname. Nicknames cannot be longer than ${GuildMemberLimits.MaximumDisplayNameLength}.`);
+			if (nickname.length > MAX_BOT_NICKNAME_LENGTH) {
+				errors.push(`\`${nickname}\` could not be set for Nickname. \`${nickname}\` is ${nickname.length} characters long, but cannot be longer than ${MAX_BOT_NICKNAME_LENGTH}.`);
 			} else {
 				updatePayload.nickname = nickname;
 				interaction.guild.members.fetchMe().then(bountybotGuildMember => {

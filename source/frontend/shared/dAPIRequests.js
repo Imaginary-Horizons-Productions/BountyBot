@@ -2,8 +2,8 @@ const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, Guil
 const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
-const { GuildMemberLimits } = require("@sapphire/discord.js-utilities");
 const { butIgnoreUnknownChannelErrors, isUnknownMessageError } = require("./dAPIResponses");
+const { MAX_BOT_NICKNAME_LENGTH } = require("../../constants");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -226,7 +226,7 @@ async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
 	if (tagComponents.length > 0) {
 		const multiplierTag = tagComponents.map(([type, multiplier]) => `${type} x ${multiplier}`).join(" & ");
 		const previousNickname = company.nickname ?? "BountyBot";
-		if (previousNickname.length + multiplierTag.length + 3 <= GuildMemberLimits.MaximumDisplayNameLength) {
+		if (previousNickname.length + multiplierTag.length <= MAX_BOT_NICKNAME_LENGTH) {
 			bountyBotGuildMember.setNickname(`${previousNickname} [${multiplierTag}]`);
 		}
 	} else {
