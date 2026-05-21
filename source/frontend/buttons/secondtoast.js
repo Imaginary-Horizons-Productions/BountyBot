@@ -41,7 +41,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
 
-		interaction.update({ embeds: [toastEmbed(origin.company.toastThumbnailURL, originalToast.text, recipientIds, interaction.member, goalProgress, originalToast.imageURL, await logicLayer.toasts.findSecondingMentions(originalToast.id))] });
+		interaction.update({ embeds: [toastEmbed(origin.company.toastThumbnailURL, originalToast.text, recipientIds, await interaction.guild.members.fetch(originalToast.senderId), goalProgress, originalToast.imageURL, await logicLayer.toasts.findSecondingMentions(originalToast.id))] });
 		const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
