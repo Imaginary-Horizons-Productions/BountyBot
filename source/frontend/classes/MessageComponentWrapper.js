@@ -36,4 +36,15 @@ class SelectWrapper extends MessageComponentWrapper {
 	}
 };
 
-module.exports = { MessageComponentWrapper, ButtonWrapper, SelectWrapper };
+class SelectOptionWrapper {
+	/**
+	 * @param {string} nameInput
+	 * @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js"), args: unknown[]) => Promise<void>} executeFunction
+	 */
+	constructor(nameInput, executeFunction) {
+		this.name = nameInput;
+		this.execute = executeFunction;
+	}
+}
+
+module.exports = { MessageComponentWrapper, ButtonWrapper, SelectWrapper, SelectOptionWrapper };

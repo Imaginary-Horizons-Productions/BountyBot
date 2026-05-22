@@ -1,5 +1,5 @@
 const { CommandInteraction } = require("discord.js");
-const { SubcommandWrapper } = require("../classes");
+const { SubcommandWrapper, SelectOptionWrapper } = require("../classes");
 
 /**
  * @param {string} mainId
@@ -21,6 +21,22 @@ function aggregateSubcommands(mainId, fileList) {
 	return mappings;
 };
 
+/**
+ * @param {string} mainId
+ * @param {string[]} fileList
+ * @returns {Map<string, SelectOptionWrapper>}
+ */
+function aggregateSelectOptionMap(mainId, fileList) {
+	const selectOptionMap = new Map();
+	for (const fileName of fileList) {
+		/** @type {SelectOptionWrapper} */
+		const option = require(`../selects/${mainId}/${fileName}`);
+		selectOptionMap.set(option.name, option.execute);
+	};
+	return selectOptionMap;
+}
+
 module.exports = {
-	aggregateSubcommands
+	aggregateSubcommands,
+	aggregateSelectOptionMap
 }
