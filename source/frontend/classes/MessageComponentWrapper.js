@@ -1,5 +1,6 @@
 const { ButtonInteraction, AnySelectMenuInteraction } = require("discord.js");
 const { InteractionWrapper, InteractionOrigin } = require("./InteractionWrapper.js");
+const { BuildError } = require("./BuildError.js");
 
 class MessageComponentWrapper extends InteractionWrapper {
 	/** IHP parent wrapper for buttons and selects
@@ -42,6 +43,12 @@ class SelectOptionWrapper {
 	 * @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js"), args: unknown[]) => Promise<void>} executeFunction
 	 */
 	constructor(nameInput, executeFunction) {
+		if (!nameInput) {
+			throw new BuildError("missing select option name");
+		}
+		if (!executeFunction) {
+			throw new BuildError(`missing execute function for select option: ${this.name}`);
+		}
 		this.name = nameInput;
 		this.execute = executeFunction;
 	}

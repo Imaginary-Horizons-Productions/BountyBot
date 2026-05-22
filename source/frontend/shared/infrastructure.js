@@ -1,5 +1,5 @@
-const { CommandInteraction } = require("discord.js");
-const { SubcommandWrapper, SelectOptionWrapper } = require("../classes");
+const { CommandInteraction, ChatInputCommandInteraction } = require("discord.js");
+const { SubcommandWrapper, SelectOptionWrapper, BuildError, InteractionOrigin } = require("../classes");
 
 /**
  * @param {string} mainId
@@ -24,14 +24,17 @@ function aggregateSubcommands(mainId, fileList) {
 /**
  * @param {string} mainId
  * @param {string[]} fileList
- * @returns {Map<string, SelectOptionWrapper>}
+ * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js"), args: unknown[]) => Promise<void>>}
  */
 function aggregateSelectOptionMap(mainId, fileList) {
-	const selectOptionMap = new Map();
+	const selectOptionMap = {};
 	for (const fileName of fileList) {
 		/** @type {SelectOptionWrapper} */
 		const option = require(`../selects/${mainId}/${fileName}`);
-		selectOptionMap.set(option.name, option.execute);
+		if (option.name in selectOptionMap) {
+			throw new BuildError(`duplicate select option name: ${option.name}`);
+		}
+		selectOptionMap[option.name] = option.execute;
 	};
 	return selectOptionMap;
 }
