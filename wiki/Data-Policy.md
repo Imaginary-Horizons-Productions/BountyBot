@@ -8,6 +8,7 @@ Here are the permissions BountyBot asks for and a summary of what it uses each f
 - Create Events: Bounties created with start and end timestamps automatically create Discord events
 - Manage Events: Discord events created for bounties with are updated when their bounty is
 - Send Messages: BountyBot responds to commands in text channels, announces festival starts, etc
+- Bypass Slowmode: BountyBot can post bounty showcases, announcements, and other bot-managed updates in channels or threads that have slowmode enabled
 - Create Public Threads: BountyBot can create a bounty board forum where each bounty gets a thread for discussion and organization
 - Send Messages in Threads: In bounty threads, BountyBot records updates or participation in bounties
 - Manage Messages: BountyBot edits the scoreboard message when Bounty Hunters earn XP, edits messages in bounty threads for updates, etc.
