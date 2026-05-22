@@ -1,17 +1,12 @@
 const { MessageFlags, userMention, bold, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, selectOptionsFromBounties, commandMention, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
+const { sentenceListEN, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
-		if (openBounties.length < 1) {
-			interaction.reply({ content: `You don't currently have any open bounties. Post one with ${commandMention("bounty post")}?`, flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "bounty-hunters";
 		const maxHunters = 10;
@@ -22,7 +17,7 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(openBounties))
+							.setOptions(selectOptionsFromBounties(bounties))
 					),
 				new LabelBuilder().setLabel("Bounty Hunters")
 					.setUserSelectMenuComponent(
@@ -59,5 +54,5 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 				bountyThread.send({ content: `${mentionList} ${removedIds.length === 1 ? "has had their turn-in" : "have had their turn-ins"} revoked.` });
 			}
 		}
-	}
+	})
 );

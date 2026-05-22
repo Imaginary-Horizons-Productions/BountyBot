@@ -4,15 +4,10 @@ const { SubcommandWrapper } = require("../../classes");
 const { bountyPing } = require("../../shared/flows/bountyPing");
 const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
+const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const openBounties = await logicLayer.bounties.findOpenBounties(origin.user.id, origin.company.id);
-		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't have any open bounties on this server.", flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdMessage = "message";
 		const labelIdExcludedBountyHunters = "bounty-hunters";
@@ -24,7 +19,7 @@ module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reac
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(openBounties))
+							.setOptions(selectOptionsFromBounties(bounties))
 					),
 				new LabelBuilder().setLabel("Message")
 					.setTextInputComponent(
@@ -55,5 +50,5 @@ module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reac
 
 		const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
 		bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, bountyThread);
-	}
+	})
 );

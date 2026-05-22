@@ -78,7 +78,7 @@ class SubcommandWrapper {
 	/**
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
-	 * @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: string, logicLayer: typeof import("../../logic/index.js")) => Promise<void>} executeFunction
+	 * @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js")) => Promise<void>} executeFunction
 	 */
 	constructor(nameInput, descriptionInput, executeFunction) {
 		this.data = {

@@ -3,18 +3,13 @@ const { SubcommandWrapper } = require("../../classes");
 const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
+const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
 		const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (runMode === "production" && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
-			return;
-		}
-
-		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
-		if (existingBounties.length < 1) {
-			interaction.reply({ content: "You doesn't have any open bounties posted.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -34,7 +29,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(existingBounties))
+							.setOptions(selectOptionsFromBounties(bounties))
 					)
 			);
 		await interaction.showModal(modal);
@@ -47,7 +42,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 		/** Unnecessary Validations
 		 * "user can view and send messages in target channel"
 		 * - User could not have sent slash command if unable to view and send messages. In case of input persisting over permission change, a showcase is low enough stakes to allow.
-		 */
+		*/
 		const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
 		let bounty = await logicLayer.bounties.findBounty(bountyId);
 		if (bounty.state !== "open") {
@@ -72,5 +67,5 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 				bountyThread.send({ content: `${modalSubmission.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
 			}
 		}
-	}
+	})
 );
