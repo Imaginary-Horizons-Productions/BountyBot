@@ -4,15 +4,10 @@ const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syn
 const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const openBounties = await logicLayer.bounties.findOpenBounties(origin.user.id, origin.company.id);
-		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't appear to have any open bounties in this server.", flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "hunters";
 		const maxHunters = 10;
@@ -23,7 +18,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(openBounties))
+							.setOptions(selectOptionsFromBounties(bounties))
 					),
 				new LabelBuilder().setLabel("Extra Turn-Ins")
 					.setUserSelectMenuComponent(
@@ -140,5 +135,5 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		if (bounty.scheduledEventId) {
 			modalSubmission.guild.scheduledEvents.delete(bounty.scheduledEventId).catch(butIgnoreErrorIf(isUnknownGuildScheduledEventError, isMissingPermissionError));
 		}
-	}
+	})
 );

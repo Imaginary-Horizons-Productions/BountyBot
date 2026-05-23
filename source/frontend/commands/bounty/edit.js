@@ -2,15 +2,10 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, 
 const { SubcommandWrapper } = require("../../classes");
 const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, refreshBountyBoardThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
-		if (openBounties.length < 1) {
-			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, openBounties) {
 		interaction.reply({
 			content: "You can select one of your open bounties to edit below.\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
 			components: [
@@ -109,5 +104,5 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				}
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
-	}
+	})
 );

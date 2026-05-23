@@ -1,5 +1,5 @@
-const { CommandInteraction } = require("discord.js");
-const { SubcommandWrapper } = require("../classes");
+const { CommandInteraction, ChatInputCommandInteraction } = require("discord.js");
+const { SubcommandWrapper, SelectOptionWrapper, BuildError, InteractionOrigin } = require("../classes");
 
 /**
  * @param {string} mainId
@@ -9,7 +9,7 @@ function aggregateSubcommands(mainId, fileList) {
 	const mappings = {
 		/** @type {import("discord.js").BaseApplicationCommandData[]} */
 		slashData: [],
-		/** @type {Record<string, (interaction: CommandInteraction, runMode: string, ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
+		/** @type {Record<string, (interaction: CommandInteraction, runMode: "development" | "test" | "production", ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
 		executeDictionary: {}
 	};
 	for (const fileName of fileList) {
@@ -21,6 +21,25 @@ function aggregateSubcommands(mainId, fileList) {
 	return mappings;
 };
 
+/**
+ * @param {string} mainId
+ * @param {string[]} fileList
+ * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js"), args: unknown[]) => Promise<void>>}
+ */
+function aggregateSelectOptionMap(mainId, fileList) {
+	const selectOptionMap = {};
+	for (const fileName of fileList) {
+		/** @type {SelectOptionWrapper} */
+		const option = require(`../selects/${mainId}/${fileName}`);
+		if (option.name in selectOptionMap) {
+			throw new BuildError(`duplicate select option name: ${option.name}`);
+		}
+		selectOptionMap[option.name] = option.execute;
+	};
+	return selectOptionMap;
+}
+
 module.exports = {
-	aggregateSubcommands
+	aggregateSubcommands,
+	aggregateSelectOptionMap
 }

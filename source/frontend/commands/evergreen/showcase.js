@@ -4,15 +4,10 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, bountyEmbed, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { Company } = require("../../../database/models");
 const { timeConversion } = require("../../../shared");
+const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
-		if (existingBounties.length < 1) {
-			interaction.reply({ content: "This server doesn't have any open evergreen bounties posted.", flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdCustomMessage = "custom-message";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -25,7 +20,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(existingBounties))
+							.setOptions(selectOptionsFromBounties(evergreenBounties))
 					),
 				new LabelBuilder().setLabel("Custom Message")
 					.setTextInputComponent(
@@ -58,5 +53,5 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 			payload.allowedMentions = { parse: [] };
 		}
 		modalSubmission.reply(payload);
-	}
+	})
 );

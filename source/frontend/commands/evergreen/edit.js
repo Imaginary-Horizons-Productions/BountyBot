@@ -3,22 +3,17 @@ const { SubcommandWrapper } = require("../../classes");
 const { textsHaveAutoModInfraction, selectOptionsFromBounties, bountyEmbed, refreshEvergreenBountiesThread, editBountyModalAndSubmissionOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
+const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const openBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
-		if (openBounties.length < 1) {
-			interaction.reply({ content: "This server doesn't seem to have any open evergreen bounties at the moment.", flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
 		interaction.reply({
 			content: "Editing an evergreen bounty will not change previous completions.",
 			components: [
 				new ActionRowBuilder().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to edit...")
-						.setOptions(selectOptionsFromBounties(openBounties))
+						.setOptions(selectOptionsFromBounties(evergreenBounties))
 				)
 			],
 			flags: MessageFlags.Ephemeral,
@@ -26,7 +21,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [bountyId] = collectedInteraction.values;
 			// Verify bounty exists
-			const selectedBounty = openBounties.find(bounty => bounty.id === bountyId);
+			const selectedBounty = evergreenBounties.find(bounty => bounty.id === bountyId);
 			if (selectedBounty?.state !== "open") {
 				interaction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
 				return;
@@ -77,11 +72,11 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
 				if (origin.company.bountyBoardId) {
 					const hunterIdMap = {};
-					for (const bounty of openBounties) {
+					for (const bounty of evergreenBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
 					const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
-					refreshEvergreenBountiesThread(bountyBoard, openBounties, origin.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+					refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
 				} else if (!modalSubmission.member.manageable) {
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
@@ -89,5 +84,5 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed(selectedBounty, modalSubmission.guild.members.me, currentCompanyLevel, false, origin.company, new Set())], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
-	}
+	})
 );
