@@ -1,15 +1,10 @@
 const { MessageFlags, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { syncRankRoles, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
+const { ensureUserFromSlashOptionHasBountyHunter } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's XP",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const member = interaction.options.getMember("bounty-hunter");
-		const hunter = member.id === origin.hunter.userId ? origin.hunter : await logicLayer.hunters.findOneHunter(member.id, origin.company.id);
-		if (!hunter) {
-			interaction.reply({ content: `${member} hasn't interacted with BountyBot yet.`, flags: MessageFlags.Ephemeral });
-			return;
-		}
+	ensureUserFromSlashOptionHasBountyHunter("bounty-hunter", async function executeSubcommand(interaction, origin, runMode, logicLayer, { member, hunter }) {
 		const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
 		hunter.decrement({ xp: penaltyValue });
 		hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
@@ -23,7 +18,7 @@ module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's X
 			member.send(`You have been penalized ${penaltyValue} XP by ${interaction.member}. The reason provided was: ${interaction.options.getString("reason")}`)
 				.catch(butIgnoreCantDirectMessageThisUserErrors);
 		}
-	}
+	})
 ).setOptions(
 	{
 		type: "User",

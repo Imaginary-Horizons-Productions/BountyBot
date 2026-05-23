@@ -4,15 +4,10 @@ const { selectOptionsFromBounties, refreshEvergreenBountiesThread, butIgnoreInte
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Bounty, Company } = require("../../../database/models");
 const { timeConversion } = require("../../../shared");
+const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergreen bounties",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const existingBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
-		if (existingBounties.length < 2) {
-			interaction.reply({ content: "There must be at least 2 evergreen bounties for this server to swap.", flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureCompanyHasEnoughOpenEvergreenBounties(2, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
 		const labelIdSourceBountyId = "first-bounty-id";
 		const labelIdDestinationBountyId = "second-bounty-id";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -23,13 +18,13 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdSourceBountyId)
 							.setPlaceholder("Select an evergreen bounty...")
-							.setOptions(selectOptionsFromBounties(existingBounties))
+							.setOptions(selectOptionsFromBounties(evergreenBounties))
 					),
 				new LabelBuilder().setLabel("Bounty 2")
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdDestinationBountyId)
 							.setPlaceholder("Select an evergreen bounty...")
-							.setOptions(selectOptionsFromBounties(existingBounties))
+							.setOptions(selectOptionsFromBounties(evergreenBounties))
 					)
 			);
 		await interaction.showModal(modal);
@@ -79,5 +74,5 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 		} else if (!modalSubmission.member.manageable) {
 			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 		}
-	}
+	})
 );

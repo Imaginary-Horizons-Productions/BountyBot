@@ -9,7 +9,7 @@ function aggregateSubcommands(mainId, fileList) {
 	const mappings = {
 		/** @type {import("discord.js").BaseApplicationCommandData[]} */
 		slashData: [],
-		/** @type {Record<string, (interaction: CommandInteraction, runMode: string, ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
+		/** @type {Record<string, (interaction: CommandInteraction, runMode: "development" | "test" | "production", ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
 		executeDictionary: {}
 	};
 	for (const fileName of fileList) {

@@ -4,15 +4,10 @@ const { Bounty, Company } = require("../../../database/models");
 const { bountyEmbed, goalCompletionEmbed, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
+const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
-		if (evergreenBounties.length < 1) {
-			interaction.reply({ content: `This server doesn't currently have any evergreen bounties. Post one with ${commandMention("evergreen post")}?`, flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "bounty-hunters";
 		const maxHunters = 10;
@@ -131,5 +126,5 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		} else if (!modalSubmission.member.manageable) {
 			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 		}
-	}
+	})
 );

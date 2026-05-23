@@ -1,15 +1,10 @@
-const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, updateBotNicknameForFestival } = require("../../shared");
 const { Company } = require("../../../database/models");
+const { ensureNumberFromSlashOptionIsGreaterThanOne } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("start-xp", "Start an XP multiplier festival",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const multiplier = interaction.options.getNumber("multiplier");
-		if (!(multiplier >= 1)) {
-			interaction.reply({ content: `Multiplier must be greater than 1.`, flags: MessageFlags.Ephemeral })
-			return;
-		}
+	ensureNumberFromSlashOptionIsGreaterThanOne("multiplier", async function executeSubcommand(interaction, origin, runMode, logicLayer, multiplier) {
 		origin.company.update({ "xpFestivalMultiplier": multiplier });
 		updateBotNicknameForFestival(await interaction.guild.members.fetchMe(), origin.company);
 		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: `An XP multiplier festival has started. Bounty and toast XP will be multiplied by ${multiplier}.` }));
@@ -29,7 +24,7 @@ module.exports = new SubcommandWrapper("start-xp", "Start an XP multiplier festi
 			}
 			refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
-	}
+	})
 ).setOptions(
 	{
 		type: "Number",

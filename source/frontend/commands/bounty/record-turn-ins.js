@@ -1,17 +1,12 @@
 const { userMention, bold, MessageFlags, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, commandMention, randomCongratulatoryPhrase, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
+const { sentenceListEN, randomCongratulatoryPhrase, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
-		if (openBounties.length < 1) {
-			interaction.reply({ content: `You don't currently have any open bounties. Post one with ${commandMention("bounty post")}?`, flags: MessageFlags.Ephemeral });
-			return;
-		}
-
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "bounty-hunters";
 		const maxHunters = 10;
@@ -22,7 +17,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 					.setStringSelectMenuComponent(
 						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(openBounties))
+							.setOptions(selectOptionsFromBounties(bounties))
 					),
 				new LabelBuilder().setLabel("Bounty Hunters")
 					.setUserSelectMenuComponent(
@@ -69,5 +64,5 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 		}
 
 		modalSubmission.reply({ content: sentences.join("\n\n"), flags: MessageFlags.Ephemeral });
-	}
+	})
 );
