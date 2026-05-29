@@ -111,7 +111,7 @@ class MessageContextMenuWrapper extends ContextMenuWrapper {
 	 */
 	constructor(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
 		super(mainIdInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction);
-		this.builder = this.builder.setType(ApplicationCommandType.User);
+		this.builder = this.builder.setType(ApplicationCommandType.Message);
 	}
 };
 
