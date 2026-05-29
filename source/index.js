@@ -109,7 +109,7 @@ dAPIClient.on(Events.ClientReady, () => {
 	if (runMode === "production") {
 		(() => {
 			try {
-				new REST({ version: 10 }).setToken(require(authPath).token).put(
+				new REST({ version: "10" }).setToken(require(authPath).token).put(
 					Routes.applicationCommands(dAPIClient.user.id),
 					{ body: [...slashData, ...contextMenuData] }
 				).then(commands => {
