@@ -1,4 +1,4 @@
-const { ContextMenuWrapper } = require("../classes");
+const { ContextMenuWrapper, BuildError } = require("../classes");
 
 /** @type {string[]} */
 exports.contextMenuFiles = [

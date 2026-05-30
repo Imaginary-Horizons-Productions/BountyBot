@@ -50,7 +50,6 @@ const dbConnection = new Sequelize(require(__dirname + '/../config/config.json')
 const models = {};
 
 const dAPIClient = new Client({
-	retryLimit: 5,
 	presence: {
 		activities: [{
 			type: ActivityType.Custom,
@@ -110,7 +109,7 @@ dAPIClient.on(Events.ClientReady, () => {
 	if (runMode === "production") {
 		(() => {
 			try {
-				new REST({ version: 10 }).setToken(require(authPath).token).put(
+				new REST({ version: "10" }).setToken(require(authPath).token).put(
 					Routes.applicationCommands(dAPIClient.user.id),
 					{ body: [...slashData, ...contextMenuData] }
 				).then(commands => {
@@ -133,7 +132,7 @@ dAPIClient.on(Events.ClientReady, () => {
 					return;
 				}
 
-				latestVersionChangesEmbed(dAPIClient.user.displayAvatarURL()).then(embed => {
+				latestVersionChangesEmbed().then(embed => {
 					dAPIClient.guilds.fetch(testGuildId).then(guild => {
 						guild.channels.fetch(announcementsChannelId).then(announcementsChannel => {
 							announcementsChannel.send({ embeds: [embed] }).then(message => {
