@@ -3,6 +3,7 @@ const { UserContextMenuWrapper } = require('../classes');
 const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { commandMention, randomCongratulatoryPhrase, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, getBountyBoardThread } = require('../shared');
 const { timeConversion } = require('../../shared');
+const { RunModeKind } = require('../../shared/types');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,7 +17,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		if (runMode === "production" && interaction.targetUser.bot) {
+		if (runMode !== RunModeKind.Development && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: MessageFlags.Ephemeral });
 			return;
 		}

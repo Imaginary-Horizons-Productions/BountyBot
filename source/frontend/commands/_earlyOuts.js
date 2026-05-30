@@ -3,12 +3,12 @@ const { commandMention } = require("../shared");
 const { InteractionOrigin } = require("../classes");
 const { Bounty, Hunter } = require("../../database/models");
 
-/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic"), entities: { member: GuildMember; hunter: Hunter; }) => Promise<void>} next */
+/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: import("../../shared/types").RunModeKindMember, logicLayer: typeof import("../../logic"), entities: { member: GuildMember; hunter: Hunter; }) => Promise<void>} next */
 function ensureUserFromSlashOptionHasBountyHunter(optionName, next) {
 	/**
 	 * @param {ChatInputCommandInteraction} interaction
 	 * @param {InteractionOrigin} origin
-	 * @param {"development" | "test" | "production"} runMode
+	 * @param {import("../../shared/types").RunModeKindMember} runMode
 	 * @param {typeof import("../../logic")} logicLayer
 	 */
 	return async (interaction, origin, runMode, logicLayer) => {
@@ -22,12 +22,12 @@ function ensureUserFromSlashOptionHasBountyHunter(optionName, next) {
 	}
 }
 
-/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic"), input: number) => Promise<void>} next */
+/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: import("../../shared/types").RunModeKindMember, logicLayer: typeof import("../../logic"), input: number) => Promise<void>} next */
 function ensureNumberFromSlashOptionIsGreaterThanOne(optionName, next) {
 	/**
 	 * @param {ChatInputCommandInteraction} interaction
 	 * @param {InteractionOrigin} origin
-	 * @param {"development" | "test" | "production"} runMode
+	 * @param {import("../../shared/types").RunModeKindMember} runMode
 	 * @param {typeof import("../../logic")} logicLayer
 	 */
 	return async (interaction, origin, runMode, logicLayer) => {
@@ -40,12 +40,12 @@ function ensureNumberFromSlashOptionIsGreaterThanOne(optionName, next) {
 	}
 }
 
-/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic"), bounties: Bounty[]) => Promise<void>} next */
+/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: import("../../shared/types").RunModeKindMember, logicLayer: typeof import("../../logic"), bounties: Bounty[]) => Promise<void>} next */
 function ensureCompanyHasEnoughOpenEvergreenBounties(countThreshold, next) {
 	/**
 	 * @param {ChatInputCommandInteraction} interaction
 	 * @param {InteractionOrigin} origin
-	 * @param {"development" | "test" | "production"} runMode
+	 * @param {import("../../shared/types").RunModeKindMember} runMode
 	 * @param {typeof import("../../logic")} logicLayer
 	 */
 	return async (interaction, origin, runMode, logicLayer) => {
@@ -61,12 +61,12 @@ function ensureCompanyHasEnoughOpenEvergreenBounties(countThreshold, next) {
 	}
 }
 
-/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic"), bounties: Bounty[]) => Promise<void>} next */
+/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: import("../../shared/types").RunModeKindMember, logicLayer: typeof import("../../logic"), bounties: Bounty[]) => Promise<void>} next */
 function ensureHunterHasOpenBounty(next) {
 	/**
 	 * @param {ChatInputCommandInteraction} interaction
 	 * @param {InteractionOrigin} origin
-	 * @param {"development" | "test" | "production"} runMode
+	 * @param {import("../../shared/types").RunModeKindMember} runMode
 	 * @param {typeof import("../../logic")} logicLayer
 	 */
 	return async (interaction, origin, runMode, logicLayer) => {

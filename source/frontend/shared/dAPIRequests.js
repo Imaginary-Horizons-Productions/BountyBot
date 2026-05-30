@@ -3,7 +3,7 @@ const { Bounty, Company, Rank, Participation } = require("../../database/models"
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
 const { butIgnoreUnknownChannelErrors, isUnknownMessageError } = require("./dAPIResponses");
-const { MAX_BOT_NICKNAME_LENGTH } = require("../../constants");
+const { MAX_BOT_NICKNAME_LENGTH } = require("../../shared/constants.ts");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions

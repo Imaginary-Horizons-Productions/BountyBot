@@ -5,12 +5,14 @@ const { commandMention, sentenceListEN, butIgnoreInteractionCollectorErrors, syn
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
+const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SelectOptionWrapper("complete",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, origin, runMode, logicLayer, [bounty]) => {
+			const isDevMode = runMode === RunModeKind.Development;
 			// disallow completion within 5 minutes of creating bounty
-			if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
+			if (!isDevMode && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
 				interaction.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty record-turn-ins")} so you won't forget instead.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -20,7 +22,7 @@ module.exports = new SelectOptionWrapper("complete",
 			const validatedHunters = new Map();
 			const pendingTurnInDisplayNames = [];
 			for (const [memberId, member] of memberCollection) {
-				if (runMode !== "production" || !member.user.bot) {
+				if (isDevMode || !member.user.bot) {
 					const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
 					if (!hunter.isBanned) {
 						validatedHunters.set(memberId, hunter);
@@ -61,7 +63,7 @@ module.exports = new SelectOptionWrapper("complete",
 			const extraTurnIns = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters);
 			if (extraTurnIns !== null) {
 				for (const [memberId, member] of extraTurnIns) {
-					if (runMode !== "production" || !(member.user.bot || validatedHunters.has(memberId))) {
+					if (isDevMode || !(member.user.bot || validatedHunters.has(memberId))) {
 						const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
 						if (!hunter.isBanned) {
 							validatedHunters.set(memberId, hunter);

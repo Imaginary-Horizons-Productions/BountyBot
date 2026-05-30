@@ -2,12 +2,12 @@ const { MessageFlags, ChatInputCommandInteraction } = require("discord.js");
 const { Bounty } = require("../../../database/models");
 const { InteractionOrigin } = require("../../classes");
 
-/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../../logic/index.js"), args: [bounty: Bounty]) => Promise<void>} next */
+/** @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: import("../../../shared/types.js").RunModeKindMember, logicLayer: typeof import("../../../logic/index.js"), args: [bounty: Bounty]) => Promise<void>} next */
 function ensureBountyExistsAndInteractorIsPoster(next) {
 	/**
 	 * @param {ChatInputCommandInteraction} interaction
 	 * @param {InteractionOrigin} origin
-	 * @param {"development" | "test" | "production"} runMode
+	 * @param {import("../../../shared/types.js").RunModeKindMember} runMode
 	 * @param {typeof import("../../../logic/index.js")} logicLayer
 	 * @param {[bountyId: string]} args
 	 */

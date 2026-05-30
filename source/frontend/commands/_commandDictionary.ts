@@ -1,9 +1,10 @@
-const { CommandWrapper, BuildError } = require('../classes');
+import { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import { CooldownDictionary, PremiumCommandList } from '../../shared/types';
+import { type CommandWrapper, BuildError } from '../classes';
 
-/** @type {string[]} */
-exports.commandFiles = [
+export const commandFiles = [
 	"about.js",
-	"bounty",
+	"bounty", //TODONOW providing directory name doesn't short cut to index.js in module, right?
 	"commands.js",
 	"config-premium.js",
 	"config-server-thumbnails-premium.js",
@@ -29,13 +30,11 @@ exports.commandFiles = [
 	"tutorial.js",
 	"version.js"
 ];
-/** @type {Record<string, CommandWrapper>} */
-const commandDictionary = {};
-/** @type {import('discord.js').RESTPostAPIChatInputApplicationCommandsJSONBody[]} */
-exports.slashData = [];
+const commandDictionary: Record<string, CommandWrapper> = {};
+export const slashData: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
 for (const file of exports.commandFiles) {
-	/** @type {CommandWrapper} */
+	//TODONOW refactor - require no longer supported
 	const command = require(`./${file}`);
 	if (command.mainId in commandDictionary) {
 		throw new BuildError(`Duplicate command custom id: ${command.mainId}`);
@@ -44,24 +43,23 @@ for (const file of exports.commandFiles) {
 	exports.slashData.push(command.builder.toJSON());
 }
 
-/** @param {string} commandName */
-exports.getCommand = function (commandName) {
+export function getCommand(commandName: string) {
 	return commandDictionary[commandName];
 }
 
-exports.setLogic = function (logicBlob) {
+export function setLogic(logicBlob: typeof import("../../logic")) {
 	for (const commandKey in commandDictionary) {
 		commandDictionary[commandKey].setLogic?.(logicBlob);
 	}
 }
 
-exports.updateCooldownMap = function(map) {
+export function addEntriesToCooldownDictionary(cooldownDictionary: CooldownDictionary) {
 	for (const commandKey in commandDictionary) {
-		map[commandKey] = commandDictionary[commandKey].cooldown;
+		cooldownDictionary[commandKey] = commandDictionary[commandKey].cooldown;
 	}
 }
 
-exports.updatePremiumList = function(list) {
+export function addToPremiumList(list: PremiumCommandList) {
 	for (const commandKey in commandDictionary) {
 		if (commandDictionary[commandKey].premiumCommand) {
 			list.push(commandKey);

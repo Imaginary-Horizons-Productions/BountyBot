@@ -9,7 +9,7 @@ function aggregateSubcommands(mainId, fileList) {
 	const mappings = {
 		/** @type {import("discord.js").BaseApplicationCommandData[]} */
 		slashData: [],
-		/** @type {Record<string, (interaction: CommandInteraction, runMode: "development" | "test" | "production", ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
+		/** @type {Record<string, (interaction: CommandInteraction, runMode: import("../../shared/types.js").RunModeKindMember, ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
 		executeDictionary: {}
 	};
 	for (const fileName of fileList) {
@@ -24,7 +24,7 @@ function aggregateSubcommands(mainId, fileList) {
 /**
  * @param {string} mainId
  * @param {string[]} fileList
- * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js"), args: unknown[]) => Promise<void>>}
+ * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: import("../../shared/types.js").RunModeKindMember, logicLayer: typeof import("../../logic/index.js"), args: unknown[]) => Promise<void>>}
  */
 function aggregateSelectOptionMap(mainId, fileList) {
 	const selectOptionMap = {};

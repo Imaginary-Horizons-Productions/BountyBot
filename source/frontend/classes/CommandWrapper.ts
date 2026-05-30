@@ -1,18 +1,15 @@
-const { PermissionFlagsBits, SlashCommandBuilder, InteractionContextType, ChatInputCommandInteraction } = require("discord.js");
-const { BuildError } = require("./BuildError.js");
-const { InteractionWrapper, InteractionOrigin } = require("./InteractionWrapper.js");
+import { ChatInputCommandInteraction, InteractionContextType, SlashCommandBuilder, type PermissionFlags } from "discord.js";
+import { MemberOf, RunModeKindMember } from "../../shared/types";
+import { BuildError } from "./BuildError.js";
+import { InteractionWrapper, type InteractionOrigin } from "./InteractionWrapper.js";
 
-class CommandWrapper extends InteractionWrapper {
-	/** Additional wrapper properties for command parsing
-	 * @param {string} mainIdInput
-	 * @param {string} descriptionInput
-	 * @param {PermissionFlagsBits | null} defaultMemberPermission
-	 * @param {boolean} isPremiumCommand
-	 * @param {InteractionContextType[]} contextEnums
-	 * @param {number} cooldownInMS
-	 * @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production") => void} executeFunction
-	 */
-	constructor(mainIdInput, descriptionInput, defaultMemberPermission, isPremiumCommand, contextEnums, cooldownInMS, executeFunction) {
+export class CommandWrapper extends InteractionWrapper {
+	declare premiumCommand: boolean;
+	declare autocomplete?: Record<string, { name: string; value: string; }[]>;
+	declare builder: SlashCommandBuilder;
+
+	/** Additional wrapper properties for command parsing */
+	constructor(mainIdInput: string, descriptionInput: string, defaultMemberPermission: MemberOf<PermissionFlags> | null, isPremiumCommand: boolean, contextEnums: InteractionContextType[], cooldownInMS: number, executeFunction: (interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: RunModeKindMember) => void) {
 		super(mainIdInput, cooldownInMS, executeFunction);
 		this.premiumCommand = isPremiumCommand;
 		this.autocomplete = {};
@@ -74,11 +71,11 @@ class CommandWrapper extends InteractionWrapper {
 	}
 };
 
-class SubcommandWrapper {
+export class SubcommandWrapper {
 	/**
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
-	 * @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js")) => Promise<void>} executeFunction
+	 * @param {(interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: RunModeKindMember, logicLayer: typeof import("../../logic/index.js")) => Promise<void>} executeFunction
 	 */
 	constructor(nameInput, descriptionInput, executeFunction) {
 		this.data = {
@@ -94,5 +91,3 @@ class SubcommandWrapper {
 		return this;
 	}
 }
-
-module.exports = { CommandWrapper, SubcommandWrapper };

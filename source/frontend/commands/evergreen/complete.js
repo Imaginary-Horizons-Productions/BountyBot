@@ -5,6 +5,7 @@ const { bountyEmbed, goalCompletionEmbed, selectOptionsFromBounties, sendRewardM
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
+const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
@@ -39,7 +40,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		const validatedHunters = new Map();
 		for (const [memberId, guildMember] of modalSubmission.fields.getSelectedMembers(labelIdBountyHunters)) {
 			const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
-			if (runMode !== "production" || (!guildMember.user.bot && !hunter.isBanned)) {
+			if (runMode === RunModeKind.Development || (!guildMember.user.bot && !hunter.isBanned)) {
 				validatedHunters.set(memberId, hunter);
 			}
 		}

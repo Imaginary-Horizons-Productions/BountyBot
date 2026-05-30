@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"scripts": {
 		"start": "node index.js production",
 		"start:dev": "node scripts/uploadCommandsToTestGuild.js && node index.js",

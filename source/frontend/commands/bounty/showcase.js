@@ -4,11 +4,12 @@ const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
 		const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-		if (runMode === "production" && Date.now() < nextShowcaseInMS) {
+		if (runMode !== RunModeKind.Development && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}

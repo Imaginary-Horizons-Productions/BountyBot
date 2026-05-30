@@ -2,7 +2,7 @@ const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
 const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast } = require("../../database/models");
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, FileUploadBuilder, GuildScheduledEvent } = require("discord.js");
-const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../constants");
+const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../shared/constants.ts");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
 const { descendingByProperty, timeConversion, discordTimestamp, ascendingByProperty } = require("../../shared");
 

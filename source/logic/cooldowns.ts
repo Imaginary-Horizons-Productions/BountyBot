@@ -1,22 +1,17 @@
-const { Sequelize, Op } = require("sequelize");
-const { dateInPast } = require("../shared");
-const { GLOBAL_COMMAND_COOLDOWN } = require("../constants");
+import { Op, Sequelize } from "sequelize";
 
-/** @type {Sequelize} */
-let db;
+import { Snowflake } from "discord.js";
+import { dateInPast } from "../shared";
+import { GLOBAL_COMMAND_COOLDOWN } from "../shared/constants.ts";
 
-function setDB(database) {
+let db: Sequelize;
+
+export function setDB(database: Sequelize) {
 	db = database;
 }
 
-/**
- * Check all cooldown information based on the given user, intraction, and interaction time.
- * @param {string} userId
- * @param {string} interactionName
- * @param {Date} interactionTime
- * @returns {Promise<{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}>}
- */
-async function checkCooldownState(userId, interactionName, interactionTime) {
+/** Check all cooldown information based on the given user, interaction, and interaction time. */
+export async function checkCooldownState(userId: Snowflake, interactionName: string, interactionTime: Date) {
 	const latestCooldown = await db.models.UserInteraction.findOne({ where: { userId }, order: [["cooldownTime", "DESC"]] });
 	const gcdCooldown = !latestCooldown ? new Date(0) : new Date(latestCooldown.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
 	if (gcdCooldown > interactionTime) {
@@ -31,14 +26,8 @@ async function checkCooldownState(userId, interactionName, interactionTime) {
 }
 
 
-/**
- * Check cooldown information for a given command/item based on the given user, intraction, and interaction time.
- * @param {string} userId
- * @param {string} interactionName
- * @param {Date} interactionTime
- * @returns {Promise<{isOnGeneralCooldown: boolean, isOnCommandCooldown: boolean, cooldownTimestamp?: Date, lastCommandName?: string}>}
- */
-async function checkCommandCooldownState(userId, interactionName, interactionTime) {
+/** Check cooldown information for a given command/item based on the given user, interaction, and interaction time. */
+export async function checkCommandCooldownState(userId: Snowflake, interactionName: string, interactionTime: Date) {
 	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName }, order: [["cooldownTime", "DESC"]] });
 	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
 		return {
@@ -57,13 +46,9 @@ async function checkCommandCooldownState(userId, interactionName, interactionTim
 /**
  * Update cooldown information based on known interaction information.
  * Should be run after all relevant cooldown information has been checked independently using checkCooldownState.
- * @param {string} userId
- * @param {string} interactionName
- * @param {Date} interactionTime
- * @param {Date} interactionCooldown
  */
-async function updateCooldowns(userId, interactionName, interactionTime, interactionCooldown) {
-	const cooldownTime = new Date(interactionTime.getTime() + interactionCooldown);
+export async function updateCooldowns(userId: Snowflake, interactionName: string, interactionTime: Date, cooldownInMS: number) {
+	const cooldownTime = new Date(interactionTime.getTime() + cooldownInMS);
 	const userInteraction = await db.models.UserInteraction.findOne({ where: { userId, interactionName } });
 	if (!userInteraction) {
 		return db.models.UserInteraction.create({ userId, interactionName, interactionTime, lastInteractTime: interactionTime, cooldownTime: cooldownTime });
@@ -77,10 +62,8 @@ async function updateCooldowns(userId, interactionName, interactionTime, interac
 	return userInteraction.update(updateValues);
 }
 
-/**
- * Clean cooldown data. Intended to be run periodically.
- */
-function cleanCooldownData() {
+/** Clean cooldown data. Intended to be run periodically. */
+export function cleanCooldownData() {
 	return db.models.UserInteraction.destroy({
 		where: {
 			cooldownTime: {
@@ -88,12 +71,4 @@ function cleanCooldownData() {
 			}
 		}
 	});
-}
-
-module.exports = {
-	setDB,
-	checkCooldownState,
-	checkCommandCooldownState,
-	updateCooldowns,
-	cleanCooldownData
 }

@@ -1,53 +1,59 @@
-const { italic } = require('discord.js');
-const { Model, Sequelize, DataTypes } = require('sequelize');
-const { Hunter } = require('../users/Hunter');
-const { MAX_BOT_NICKNAME_LENGTH } = require('../../../constants');
+import { italic } from "discord.js";
+import { DataTypes, Model, ModelStatic, type Sequelize } from "sequelize";
+import { MAX_BOT_NICKNAME_LENGTH } from "../../../shared/constants.ts";
+import type { Hunter } from "../users/Hunter";
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
-class Company extends Model {
-	static associate(models) {
-		models.Company.Ranks = models.Company.hasMany(models.Rank, {
-			foreignKey: "companyId"
-		});
-		models.Company.Hunters = models.Company.hasMany(models.Hunter, {
-			foreignKey: "companyId"
-		});
-		models.Company.Bounties = models.Company.hasMany(models.Bounty, {
-			foreignKey: "companyId"
-		});
-		models.Company.Completions = models.Company.hasMany(models.Completion, {
-			foreignKey: "companyId"
-		});
-		models.Company.Toasts = models.Company.hasMany(models.Toast, {
-			foreignKey: "companyId"
-		});
-		models.Company.Seasons = models.Company.hasMany(models.Season, {
-			foreignKey: "companyId"
-		})
-		models.Company.Participations = models.Company.hasMany(models.Participation, {
-			foreignKey: "companyId"
-		})
-		models.Company.Goals = models.Company.hasMany(models.Goal, {
-			foreignKey: "companyId"
-		})
+export class Company extends Model {
+	declare id: string;
+	declare announcementPrefix: "@here" | "@everyone" | "@silent" | "";
+	declare maxSimBounties: number;
+	declare backupTimer: number;
+	declare nickname: string | null;
+	declare xpFestivalMultiplier: number;
+	declare gpFestivalMultiplier: number;
+	declare disableReactionToasts: boolean;
+	declare xpCoefficient: number;
+	declare bountyBoardId: string | null;
+	declare bountyBoardOpenTagId: string | null;
+	declare bountyBoardCompletedTagId: string | null;
+	declare evergreenThreadId: string | null;
+	declare scoreboardChannelId: string | null;
+	declare scoreboardMessageId: string | null;
+	declare scoreboardIsSeasonal: boolean | null;
+	declare nextRaffleString: string | null;
+	declare toastThumbnailURL: string;
+	declare openBountyThumbnailURL: string;
+	declare completedBountyThumbnailURL: string;
+	declare deletedBountyThumbnailURL: string;
+	declare scoreboardThumbnailURL: string;
+	declare goalCompletionThumbnailURL: string;
+	declare raffleThumbnailURL: string;
+
+	static associate(models: Record<string, ModelStatic<Model>>) {
+		Company.hasMany(models.Rank, { foreignKey: "companyId" });
+		Company.hasMany(models.Hunter, { foreignKey: "companyId" });
+		Company.hasMany(models.Bounty, { foreignKey: "companyId" });
+		Company.hasMany(models.Completion, { foreignKey: "companyId" });
+		Company.hasMany(models.Toast, { foreignKey: "companyId" });
+		Company.hasMany(models.Season, { foreignKey: "companyId" });
+		Company.hasMany(models.Participation, { foreignKey: "companyId" });
+		Company.hasMany(models.Goal, { foreignKey: "companyId" });
 	}
 
-	/** @param {Map<string, Hunter>} hunterMap */
-	getXP(hunterMap) {
+	static getLevel(xp: number) {
+		return Math.floor(Math.sqrt(xp / 3) + 1);
+	}
+
+	getXP(hunterMap: Map<string, Hunter>) {
 		let xp = 0;
-		for (const [_, hunter] of hunterMap) {
+		for (const hunter of hunterMap.values()) {
 			xp += hunter.getLevel(this.xpCoefficient);
 		}
 		return xp;
 	}
 
-	/** @param {number} xp */
-	static getLevel(xp) {
-		return Math.floor(Math.sqrt(xp / 3) + 1);
-	}
-
-	/** @param {"xp" | "gp"} kind */
-	festivalMultiplierString(kind) {
+	festivalMultiplierString(kind: "xp" | "gp") {
 		switch (kind) {
 			case 'xp':
 				if (this.xpFestivalMultiplier != 1) {
@@ -65,14 +71,13 @@ class Company extends Model {
 	}
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return Company.init({
 		id: {
 			primaryKey: true,
 			type: DataTypes.STRING
 		},
-		announcementPrefix: { // allowed values: "@here", "@everyone", "@silent", ""
+		announcementPrefix: {
 			type: DataTypes.STRING,
 			defaultValue: '@here'
 		},
@@ -96,7 +101,8 @@ function initModel(sequelize) {
 			defaultValue: 1
 		},
 		disableReactionToasts: {
-			type: DataTypes.BOOLEAN
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
 		},
 		xpCoefficient: {
 			type: DataTypes.INTEGER,
@@ -174,5 +180,3 @@ function initModel(sequelize) {
 		freezeTableName: true
 	});
 };
-
-module.exports = { Company, initModel };

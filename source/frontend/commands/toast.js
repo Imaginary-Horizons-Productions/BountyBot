@@ -2,6 +2,7 @@ const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, 
 const { CommandWrapper } = require('../classes');
 const { textsHaveAutoModInfraction, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
+const { RunModeKind } = require('../../shared/types');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -19,7 +20,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, interaction.guild.id);
 				if (hunter.isBanned) {
 					bannedIds.add(guildMember.id);
-				} else if (runMode !== "production" || (!guildMember.user.bot && guildMember.id !== interaction.user.id)) {
+				} else if (runMode === RunModeKind.Development || (!guildMember.user.bot && guildMember.id !== interaction.user.id)) {
 					validatedToasteeIds.add(guildMember.id);
 				}
 			}

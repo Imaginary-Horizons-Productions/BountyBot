@@ -4,6 +4,7 @@ const { SKIP_INTERACTION_HANDLING } = require('../../constants');
 const { textsHaveAutoModInfraction, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
 const { timeConversion } = require('../../shared');
+const { RunModeKind } = require('../../shared/types');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -17,7 +18,7 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			return;
 		}
 
-		if (runMode === "production" && interaction.targetUser.bot) {
+		if (runMode !== RunModeKind.Development && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot raist a toast to a bot.", flags: MessageFlags.Ephemeral });
 			return;
 		}

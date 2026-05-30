@@ -4,12 +4,13 @@ const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { butIgnoreInteractionCollectorErrors, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
+const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SelectOptionWrapper("showcase",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, origin, runMode, logicLayer, [bounty]) => {
 			const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-			if (runMode === "production" && Date.now() < nextShowcaseInMS) {
+			if (runMode !== RunModeKind.Development && Date.now() < nextShowcaseInMS) {
 				interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}

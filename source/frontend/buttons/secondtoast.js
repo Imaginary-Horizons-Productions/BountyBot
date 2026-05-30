@@ -2,6 +2,7 @@ const { MessageFlags } = require('discord.js');
 const { ButtonWrapper } = require('../classes');
 const { goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, toastEmbed } = require('../shared');
 const { Company } = require('../../database/models');
+const { RunModeKind } = require('../../shared/types');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -16,7 +17,7 @@ module.exports = new ButtonWrapper(mainId, 3000,
 			return;
 		}
 
-		if (runMode === "production" && originalToast.senderId === interaction.user.id) {
+		if (runMode !== RunModeKind.Development && originalToast.senderId === interaction.user.id) {
 			interaction.reply({ content: "You cannot second your own toast.", flags: MessageFlags.Ephemeral });
 			return;
 		}

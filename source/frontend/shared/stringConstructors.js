@@ -1,5 +1,5 @@
 const { heading, userMention, bold, italic } = require("discord.js");
-const { commandIds } = require("../../constants");
+const { commandIds } = require("../../shared/constants.ts");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
 const { Hunter } = require("../../database/models");
 

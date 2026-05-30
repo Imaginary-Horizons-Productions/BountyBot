@@ -5,6 +5,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { Company } = require("../../../database/models");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
@@ -42,7 +43,8 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		}
 
 		// disallow completion within 5 minutes of creating bounty
-		if (runMode === "production" && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
+		const isDevMode = runMode === RunModeKind.Development;
+		if (!isDevMode && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
 			modalSubmission.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty record-turn-ins")} so you won't forget instead.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
@@ -52,7 +54,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const memberCollection = await modalSubmission.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
 		const validatedHunters = new Map();
 		for (const [memberId, member] of memberCollection) {
-			if (runMode !== "production" || !member.user.bot) {
+			if (isDevMode || !member.user.bot) {
 				const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
 				if (!hunter.isBanned) {
 					validatedHunters.set(memberId, hunter);
@@ -63,7 +65,7 @@ module.exports = new SubcommandWrapper("complete", "Close one of your open bount
 		const extraTurnIns = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters);
 		if (extraTurnIns !== null) {
 			for (const [memberId, member] of extraTurnIns) {
-				if (runMode !== "production" || !(member.user.bot || validatedHunters.has(memberId))) {
+				if (isDevMode || !(member.user.bot || validatedHunters.has(memberId))) {
 					const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
 					if (!hunter.isBanned) {
 						validatedHunters.set(memberId, hunter);

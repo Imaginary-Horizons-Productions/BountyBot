@@ -1,6 +1,6 @@
 const { Sequelize, Op } = require("sequelize");
 const { dateInPast } = require("../shared");
-const { premium } = require("../constants");
+const { premium } = require("../shared/constants.ts");
 const { Item, Hunter } = require("../database/models");
 
 /** @type {Sequelize} */

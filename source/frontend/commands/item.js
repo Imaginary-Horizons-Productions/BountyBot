@@ -4,6 +4,7 @@ const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('
 const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
 const { ihpAuthorPayload, randomFooterTip, butIgnoreInteractionCollectorErrors } = require('../shared');
 const { timeConversion, discordTimestamp } = require('../../shared');
+const { RunModeKind } = require('../../shared/types.js');
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -13,7 +14,8 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 	async (interaction, origin, runMode) => {
 		const itemName = interaction.options.getString("item-name");
 		const itemCount = await logicLayer.items.countUserCopies(interaction.user.id, itemName);
-		const hasItem = itemCount > 0 || runMode !== "production";
+		const isDevMode = runMode === RunModeKind.Development;
+		const hasItem = itemCount > 0 || isDevMode;
 		let embedColor = Colors.Blurple;
 		if (itemName.includes("Profile Colorizer")) {
 			const [color] = itemName.split("Profile Colorizer");
@@ -25,7 +27,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 					.setAuthor(ihpAuthorPayload)
 					.setTitle(itemName)
 					.setDescription(getItemDescription(itemName))
-					.addFields({ name: "You have", value: runMode !== "production" ? "Debug Mode" : itemCount })
+					.addFields({ name: "You have", value: isDevMode ? "Debug Mode" : itemCount })
 					.setFooter(randomFooterTip())
 			],
 			components: [
@@ -39,12 +41,12 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteration => {
-			if (runMode === "production" && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
+			if (!isDevMode && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
 				collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
-			if (runMode === "production" && await logicLayer.items.countUserCopies(interaction.user.id, itemName) < 1) {
+			if (!isDevMode && await logicLayer.items.countUserCopies(interaction.user.id, itemName) < 1) {
 				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -60,7 +62,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
 
 			return useItem(itemName, collectedInteration, origin).then(shouldSkipDecrement => {
-				if (!shouldSkipDecrement && runMode === "production") {
+				if (!shouldSkipDecrement && !isDevMode) {
 					return logicLayer.items.consume(interaction.user.id, itemName);
 				}
 			});
