@@ -2,7 +2,6 @@ const { Sequelize, Op } = require("sequelize");
 const { GuildMember } = require("discord.js");
 const { Bounty, Hunter, Season, Company } = require("../database/models");
 const { rollItemForHunter } = require("./items");
-const { RunModeKind } = require("../shared/types");
 
 /** @type {Sequelize} */
 let db;
@@ -96,9 +95,9 @@ async function getHunterIdSet(bountyId) {
 /** Filter out the Bounty's poster, bots, and banned Hunters
  * @param {Bounty} bounty
  * @param {GuildMember[]} completerMembers
- * @param {string} runMode
+ * @param {boolean} isDevMode
  */
-async function checkTurnInEligibility(bounty, completerMembers, runMode) {
+async function checkTurnInEligibility(bounty, completerMembers, isDevMode) {
 	/** @type {{ eligibleTurnInIds: Set<string>, newTurnInIds: Set<string>, bannedTurnInIds: Set<string> }} */
 	const results = {
 		eligibleTurnInIds: new Set(),
@@ -111,7 +110,7 @@ async function checkTurnInEligibility(bounty, completerMembers, runMode) {
 	for (const member of completerMembers) {
 		const memberId = member.id;
 		if (results.eligibleTurnInIds.has(memberId)) continue;
-		if (runMode !== RunModeKind.Development && (member.user.bot || memberId === bounty.userId)) continue;
+		if (!isDevMode && (member.user.bot || memberId === bounty.userId)) continue;
 		await db.models.User.findOrCreate({ where: { id: memberId } });
 		const [hunter] = await db.models.Hunter.findOrCreate({ where: { userId: memberId, companyId: bounty.companyId } });
 		if (hunter.isBanned) {

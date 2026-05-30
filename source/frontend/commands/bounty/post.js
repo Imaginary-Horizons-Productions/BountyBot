@@ -7,11 +7,11 @@ const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 
 module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
 		const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
-		const currentHunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-		const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, origin.company.maxSimBounties);
+		const currentHunterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
+		const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, theater.company.maxSimBounties);
 		const slotOptions = [];
 		for (let slotNumber = 1; slotNumber <= bountySlots; slotNumber++) {
 			if (!occupiedSlots.includes(slotNumber)) {
@@ -43,9 +43,9 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 			const [slotNumber] = collectedInteraction.values;
 			// Check user actually has slot
-			await origin.company.reload();
-			await origin.hunter.reload();
-			const reloadedBountySlotCount = Hunter.getBountySlotCount(origin.hunter.getLevel(origin.company.xpCoefficient), origin.company.maxSimBounties);
+			await theater.company.reload();
+			await theater.hunter.reload();
+			const reloadedBountySlotCount = Hunter.getBountySlotCount(theater.hunter.getLevel(theater.company.xpCoefficient), theater.company.maxSimBounties);
 			if (parseInt(slotNumber) > reloadedBountySlotCount) {
 				interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 				return;
@@ -152,16 +152,16 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(modalSubmission.guild.id);
 				await logicLayer.seasons.changeSeasonXP(modalSubmission.user.id, modalSubmission.guildId, season.id, 1);
-				origin.hunter.increment({ xp: 1 }).then(async () => {
+				theater.hunter.increment({ xp: 1 }).then(async () => {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-					if (origin.company.scoreboardIsSeasonal) {
-						refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+					if (theater.company.scoreboardIsSeasonal) {
+						refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 					} else {
-						refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
+						refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
 					}
 				});
 
@@ -179,18 +179,18 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 				const bounty = await logicLayer.bounties.createBounty(rawBounty);
 
 				// post in bounty board forum
-				await origin.hunter.reload();
-				const embeds = [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set(), event)];
-				modalSubmission.reply(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(() => {
+				await theater.hunter.reload();
+				const embeds = [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, new Set(), event)];
+				modalSubmission.reply(addCompanyAnnouncementPrefix(theater.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(() => {
 					if (warnings.length > 0) {
 						modalSubmission.followUp({ content: `The following issues were encountered while posting your bounty (your bounty was still posted):\n${unorderedList(warnings)}`, flags: MessageFlags.Ephemeral });
 					}
-					if (origin.company.bountyBoardId) {
-						modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
+					if (theater.company.bountyBoardId) {
+						modalSubmission.guild.channels.fetch(theater.company.bountyBoardId).then(bountyBoard => {
 							return bountyBoard.threads.create({
 								name: bounty.title,
 								message: { embeds, components: bountyControlPanelSelectRow(bounty.id) },
-								appliedTags: [origin.company.bountyBoardOpenTagId]
+								appliedTags: [theater.company.bountyBoardOpenTagId]
 							})
 						}).then(posting => {
 							bounty.update({ postingId: posting.id });

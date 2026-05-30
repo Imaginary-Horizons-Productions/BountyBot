@@ -2,7 +2,7 @@ const { MessageFlags, bold } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { commandMention, sentenceListEN } = require("../shared");
 
-/** @type {typeof import("../../logic")} */
+/** @type {import("../../shared/types").LogicLayer} */
 let logicLayer;
 
 const itemName = "Loot Box";

@@ -5,7 +5,7 @@ const { updateBotNicknameForFestival } = require('../shared');
 
 const mainId = "config-premium";
 module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
-	(interaction, origin, runMode) => {
+	(interaction, theater, isDevMode) => {
 		const updatePayload = {};
 		let content = "The following server settings have been configured:";
 		const errors = [];
@@ -17,7 +17,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			} else {
 				updatePayload.nickname = nickname;
 				interaction.guild.members.fetchMe().then(bountybotGuildMember => {
-					updateBotNicknameForFestival(bountybotGuildMember, origin.company);
+					updateBotNicknameForFestival(bountybotGuildMember, theater.company);
 				})
 				content += `\n- This sever's nickname for BountyBot has been set to ${nickname}.`;
 			}
@@ -43,7 +43,7 @@ module.exports = new CommandWrapper(mainId, "Configure premium BountyBot setting
 			}
 		}
 
-		origin.company.update(updatePayload);
+		theater.company.update(updatePayload);
 		if (errors.length > 0) {
 			content += `\n\nThe following errors were encountered:\n${unorderedList(errors)}`;
 		}

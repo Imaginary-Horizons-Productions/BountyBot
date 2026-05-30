@@ -1,8 +1,8 @@
 const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { CommandWrapper } = require('../../classes');
+const { CommandFunctionality } = require('../../classes');
 const { aggregateSubcommands } = require('../../shared');
 
-/** @type {typeof import("../../../logic")} */
+/** @type {import('../../../shared/types').LogicLayer} */
 let logicLayer;
 
 const mainId = "bounty";
@@ -18,9 +18,9 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"swap.js",
 	"take-down.js",
 ]);
-module.exports = new CommandWrapper(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
-	async (interaction, origin, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, origin, runMode, logicLayer);
+module.exports = new CommandFunctionality(mainId, "Bounties are user-created objectives for other server members to complete", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
+	async (interaction, theater, isDevMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, theater, isDevMode, logicLayer);
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

@@ -16,13 +16,13 @@ exports.getSelect = function (mainId) {
 	return selectDictionary[mainId];
 }
 
-exports.setLogic = function (logicBlob) {
+exports.linkAllSelectsToLogic = function (logicBlob) {
 	for (const selectKey in selectDictionary) {
 		selectDictionary[selectKey].setLogic?.(logicBlob);
 	}
 }
 
-exports.updateCooldownMap = function(map) {
+exports.addSelectsToCooldownDictionary = function(map) {
 	for (const commandKey in selectDictionary) {
 		map[commandKey] = selectDictionary[commandKey].cooldown;
 	}

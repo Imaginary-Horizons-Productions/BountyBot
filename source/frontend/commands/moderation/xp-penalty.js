@@ -4,13 +4,13 @@ const { syncRankRoles, butIgnoreCantDirectMessageThisUserErrors } = require("../
 const { ensureUserFromSlashOptionHasBountyHunter } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("xp-penalty", "Reduce a bounty hunter's XP",
-	ensureUserFromSlashOptionHasBountyHunter("bounty-hunter", async function executeSubcommand(interaction, origin, runMode, logicLayer, { member, hunter }) {
+	ensureUserFromSlashOptionHasBountyHunter("bounty-hunter", async function executeSubcommand(interaction, theater, isDevMode, logicLayer, { member, hunter }) {
 		const penaltyValue = Math.abs(interaction.options.getInteger("penalty"));
 		hunter.decrement({ xp: penaltyValue });
 		hunter.increment({ penaltyCount: 1, penaltyPointTotal: penaltyValue });
-		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(origin.company.id);
-		await logicLayer.seasons.changeSeasonXP(member.id, origin.company.id, season.id, penaltyValue * -1);
-		const descendingRanks = await logicLayer.ranks.findAllRanks(origin.company.id);
+		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(theater.company.id);
+		await logicLayer.seasons.changeSeasonXP(member.id, theater.company.id, season.id, penaltyValue * -1);
+		const descendingRanks = await logicLayer.ranks.findAllRanks(theater.company.id);
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await interaction.guild.roles.fetch());
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		interaction.reply({ content: `${userMention(member.id)} ${hunter.isBanned ? "(currently banned) " : ""}has been penalized ${penaltyValue} XP.`, flags: MessageFlags.Ephemeral });

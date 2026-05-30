@@ -6,7 +6,7 @@ const { Company } = require("../../../database/models");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
-	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		interaction.reply({
 			content: "Editing an evergreen bounty will not change previous completions.",
 			components: [
@@ -69,19 +69,19 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				selectedBounty.update(updatePayload);
 
 				// update bounty board
-				const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
-				if (origin.company.bountyBoardId) {
+				const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
+				if (theater.company.bountyBoardId) {
 					const hunterIdMap = {};
 					for (const bounty of evergreenBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
-					refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+					const bountyBoard = await modalSubmission.guild.channels.fetch(theater.company.bountyBoardId);
+					refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
 				} else if (!modalSubmission.member.manageable) {
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
 
-				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed(selectedBounty, modalSubmission.guild.members.me, currentCompanyLevel, false, origin.company, new Set())], flags: MessageFlags.Ephemeral });
+				modalSubmission.reply({ content: "Here's the embed for the newly edited evergreen bounty:", embeds: [bountyEmbed(selectedBounty, modalSubmission.guild.members.me, currentCompanyLevel, false, theater.company, new Set())], flags: MessageFlags.Ephemeral });
 			});
 		}).catch(butIgnoreInteractionCollectorErrors);
 	})

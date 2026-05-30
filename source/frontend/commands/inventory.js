@@ -2,12 +2,12 @@ const { PermissionFlagsBits, InteractionContextType, MessageFlags, unorderedList
 const { CommandWrapper } = require('../classes');
 const { commandMention, attachOverflowingContentAsFile } = require('../shared');
 
-/** @type {typeof import("../../logic")} */
+/** @type {import('../../shared/types').LogicLayer} */
 let logicLayer;
 
 const mainId = "inventory";
 module.exports = new CommandWrapper(mainId, "Show your inventory of usable items", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
-	(interaction, origin, runMode) => {
+	(interaction, theater, isDevMode) => {
 		logicLayer.items.getInventory(interaction.user.id).then(inventoryMap => {
 			let content = `Here are the items in your inventory (use them with ${commandMention("item")}):\n`;
 			if (inventoryMap.size > 0) {

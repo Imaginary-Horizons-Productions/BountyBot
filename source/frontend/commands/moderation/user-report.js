@@ -4,7 +4,7 @@ const { userReportEmbed } = require("../../shared");
 const { ensureUserFromSlashOptionHasBountyHunter } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("user-report", "Get the BountyBot moderation stats for a user",
-	ensureUserFromSlashOptionHasBountyHunter("user", async function executeSubcommand(interaction, origin, runMode, logicLayer, { member, hunter }) {
+	ensureUserFromSlashOptionHasBountyHunter("user", async function executeSubcommand(interaction, theater, isDevMode, logicLayer, { member, hunter }) {
 		const dqCount = await logicLayer.seasons.getDQCount(member.id, interaction.guild.id);
 		const lastFiveBounties = await logicLayer.bounties.findHuntersLastFiveBounties(member.id, interaction.guildId);
 		interaction.reply({ embeds: [userReportEmbed(hunter, interaction.guild, member, dqCount, lastFiveBounties)], flags: MessageFlags.Ephemeral });

@@ -1,7 +1,6 @@
-import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord.js";
-
-import { CooldownDictionary, PremiumFlowList } from "../../shared/types";
-import { BuildError, type ContextMenuWrapper } from "../classes";
+import { RESTPostAPIContextMenuApplicationCommandsJSONBody } from "discord.js";
+import { CooldownDictionary, LogicLayer, PremiumFlowList } from "../../shared/types";
+import { BuildError, type ContextMenuFunctionality } from "../classes";
 
 export const contextMenuFiles: string[] = [
 	"BountyBot_Stats.js",
@@ -9,39 +8,42 @@ export const contextMenuFiles: string[] = [
 	"Record_Bounty_Turn-In.js"
 ];
 
-const contextMenuDictionary: Record<string, ContextMenuWrapper> = {};
-export const contextMenuData: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
+const CONTEXT_MENU_FUNCTIONALITIES = new Map<string, ContextMenuFunctionality>();
+export const contextMenuData: RESTPostAPIContextMenuApplicationCommandsJSONBody[] = [];
 
 for (const file of exports.contextMenuFiles) {
-	//TODONOW refactor - require no longer supported
-	const contextMenu = require(`./${file}`);
-	if (contextMenu.mainId in contextMenuDictionary) {
-		throw new BuildError(`Duplicate context menu custom id: ${contextMenu.mainId}`)
+	const contextMenu: ContextMenuFunctionality = (await import(`./${file}`)).default;
+	if (CONTEXT_MENU_FUNCTIONALITIES.has(contextMenu.mainId)) {
+		throw new BuildError(`Duplicate context menu mainId: ${contextMenu.mainId}`)
 	}
-	contextMenuDictionary[contextMenu.mainId] = contextMenu;
-	exports.contextMenuData.push(contextMenu.builder.toJSON());
+	CONTEXT_MENU_FUNCTIONALITIES.set(contextMenu.mainId, contextMenu);
+	contextMenuData.push(contextMenu.builder.toJSON());
 }
 
 export function getContextMenu(mainId: string) {
-	return contextMenuDictionary[mainId];
+	const functionality = CONTEXT_MENU_FUNCTIONALITIES.get(mainId);
+	if (!functionality) {
+		throw new Error(`Missing ContextMenuFunctionality: ${mainId}`);
+	}
+	return functionality;
 }
 
-export function setLogic(logicBlob: typeof import("../../logic")) {
-	for (const contextMenuKey in contextMenuDictionary) {
-		contextMenuDictionary[contextMenuKey].setLogic?.(logicBlob);
+export function linkAllContextMenusToLogic(logicBlob: LogicLayer) {
+	for (const functionality of CONTEXT_MENU_FUNCTIONALITIES.values()) {
+		functionality.linkToLogic?.(logicBlob);
 	}
 }
 
-export function addEntriesToCooldownDictionary(cooldownDictionary: CooldownDictionary) {
-	for (const commandKey in contextMenuDictionary) {
-		cooldownDictionary[commandKey] = contextMenuDictionary[commandKey].cooldown;
+export function addContextMenusToCooldownDictionary(cooldownDictionary: CooldownDictionary) {
+	for (const [mainId, functionality] of CONTEXT_MENU_FUNCTIONALITIES) {
+		cooldownDictionary[mainId] = functionality.cooldown;
 	}
 }
 
-export function addToPremiumList(list: PremiumFlowList) {
-	for (const commandKey in contextMenuDictionary) {
-		if (contextMenuDictionary[commandKey].premiumCommand) {
-			list.push(commandKey);
+export function addContextMenusToPremiumList(list: PremiumFlowList) {
+	for (const [mainId, functionality] of CONTEXT_MENU_FUNCTIONALITIES) {
+		if (functionality.isPremium) {
+			list.push(mainId);
 		}
 	}
 }

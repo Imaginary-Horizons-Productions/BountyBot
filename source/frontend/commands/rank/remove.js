@@ -5,7 +5,7 @@ const { selectOptionsFromRanks, sentenceListEN, disabledSelectRow, syncRankRoles
 const { timeConversion } = require("../../../shared");
 
 module.exports = new SubcommandWrapper("remove", "Remove one or more existing seasonal ranks",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const guildRoles = await interaction.guild.roles.fetch();
 		const rankNames = {};

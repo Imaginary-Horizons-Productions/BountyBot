@@ -1,14 +1,15 @@
-const { InteractionContextType, MessageFlags } = require('discord.js');
-const { UserContextMenuWrapper } = require('../classes');
-const { Hunter } = require('../../database/models');
-const { companyStatsEmbed, hunterProfileEmbed } = require('../shared');
+import { InteractionContextType, MessageFlags } from 'discord.js';
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
+import { Hunter } from '../../database/models';
+import { LogicLayer } from "../../shared/types";
+import { UserContextMenuFunctionality } from '../classes';
+import { companyStatsEmbed, hunterProfileEmbed } from '../shared';
+
+let logicLayer: LogicLayer;
 
 const mainId = "BountyBot Stats";
-module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionContextType.Guild], 3000,
-	async (interaction, origin, runMode) => {
+export default new UserContextMenuFunctionality(mainId, null, false, [InteractionContextType.Guild], 3000,
+	async (interaction, theater, isDevMode) => {
 		const target = interaction.targetMember;
 		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 		if (target.id == interaction.client.user.id) {
@@ -16,7 +17,7 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 			const lastSeason = await logicLayer.seasons.findOneSeason(interaction.guild.id, "previous");
 			const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-			companyStatsEmbed(interaction.guild, origin.company.getXP(hunterMap), participantCount, currentSeason, lastSeason).then(embed => {
+			companyStatsEmbed(interaction.guild, theater.company.getXP(hunterMap), participantCount, currentSeason, lastSeason).then(embed => {
 				interaction.reply({
 					embeds: [embed],
 					flags: MessageFlags.Ephemeral
@@ -30,9 +31,9 @@ module.exports = new UserContextMenuWrapper(mainId, null, false, [InteractionCon
 					return;
 				}
 
-				const currentHunterLevel = hunter.getLevel(origin.company.xpCoefficient);
-				const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, origin.company.xpCoefficient);
-				const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, origin.company.xpCoefficient);
+				const currentHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
+				const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, theater.company.xpCoefficient);
+				const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, theater.company.xpCoefficient);
 				const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);

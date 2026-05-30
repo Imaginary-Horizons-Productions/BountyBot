@@ -2,15 +2,14 @@ const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, 
 const { CommandWrapper } = require('../classes');
 const { textsHaveAutoModInfraction, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 const { Company } = require('../../database/models');
-const { RunModeKind } = require('../../shared/types');
 
-/** @type {typeof import("../../logic")} */
+/** @type {import('../../shared/types').LogicLayer} */
 let logicLayer;
 
 const mainId = "toast";
 module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
-	async (interaction, origin, runMode) => {
+	async (interaction, theater, isDevMode) => {
 		// Find valid toastees
 		const bannedIds = new Set();
 		const validatedToasteeIds = new Set();
@@ -20,7 +19,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, interaction.guild.id);
 				if (hunter.isBanned) {
 					bannedIds.add(guildMember.id);
-				} else if (runMode === RunModeKind.Development || (!guildMember.user.bot && guildMember.id !== interaction.user.id)) {
+				} else if (isDevMode || (!guildMember.user.bot && guildMember.id !== interaction.user.id)) {
 					validatedToasteeIds.add(guildMember.id);
 				}
 			}
@@ -71,24 +70,24 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, origin.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, imageURL);
+		const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, theater.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, imageURL);
 		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 		let companyReceipt = {};
 		if (hunterReceipts.size > 0) {
-			const results = await logicLayer.goals.progressGoal(origin.company, "toasts", hunterMap.get(interaction.user.id), season);
+			const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap.get(interaction.user.id), season);
 			companyReceipt = results.companyReceipt;
 			goalProgress = results.goalProgress;
 
 			hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-			const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+			const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
 			if (previousCompanyLevel < currentCompanyLevel) {
 				companyReceipt.levelUp = currentCompanyLevel;
 			}
 		}
 		companyReceipt.guildName = interaction.guild.name;
 
-		const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, Array.from(validatedToasteeIds), interaction.member, goalProgress, imageURL)];
+		const embeds = [toastEmbed(theater.company.toastThumbnailURL, toastText, Array.from(validatedToasteeIds), interaction.member, goalProgress, imageURL)];
 		if (goalProgress.goalCompleted) {
 			embeds.push(goalCompletionEmbed(goalProgress.contributorIds));
 		}
@@ -108,11 +107,11 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 				syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-				sendRewardMessage(response.resource.message, rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties), "Rewards");
-				if (origin.company.scoreboardIsSeasonal) {
-					refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+				sendRewardMessage(response.resource.message, rewardSummary("toast", companyReceipt, hunterReceipts, theater.company.maxSimBounties), "Rewards");
+				if (theater.company.scoreboardIsSeasonal) {
+					refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
 				} else {
-					refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
+					refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
 				}
 			}
 		});

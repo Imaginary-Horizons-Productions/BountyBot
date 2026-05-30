@@ -8,7 +8,7 @@ const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 
 module.exports = new SelectOptionWrapper("ping",
 	ensureBountyExistsAndInteractorIsPoster(
-		async (interaction, origin, runMode, logicLayer, [bounty]) => {
+		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			if (bounty.userId !== interaction.user.id) {
 				interaction.reply({ content: "Only the bounty's poster can use these commands.", flags: MessageFlags.Ephemeral });
 				return;

@@ -7,7 +7,7 @@ const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
-	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdCustomMessage = "custom-message";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -43,8 +43,8 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 			return;
 		}
 
-		const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id)));
-		const payload = { embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, origin.company, new Set())] };
+		const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
+		const payload = { embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] };
 		const extraText = modalSubmission.fields.getTextInputValue(labelIdCustomMessage);
 		if (extraText) {
 			payload.content = extraText;

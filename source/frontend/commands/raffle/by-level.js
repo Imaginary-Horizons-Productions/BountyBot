@@ -3,17 +3,17 @@ const { SubcommandWrapper } = require("../../classes");
 const { raffleResultEmbed } = require("../../shared");
 
 module.exports = new SubcommandWrapper("by-level", "Select a user at or above a particular level",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const levelThreshold = interaction.options.getInteger("level");
-		const eligibleHunters = await logicLayer.hunters.findHuntersAtOrAboveLevel(origin.company, levelThreshold);
+		const eligibleHunters = await logicLayer.hunters.findHuntersAtOrAboveLevel(theater.company, levelThreshold);
 		const eligibleMembers = (await interaction.guild.members.fetch({ user: eligibleHunters.map(hunter => hunter.userId) })).filter(member => member.manageable);
 		if (eligibleMembers.size < 1) {
 			interaction.reply({ content: `There wouldn't be any eligible bounty hunters for this raffle (at or above level ${levelThreshold}).`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 		const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
-		interaction.reply({ embeds: [raffleResultEmbed(eligibleHunters.find(hunter => hunter.userId === winner.id).profileColor, interaction.guild, origin.company.raffleThumbnailURL, winner, `Level ${levelThreshold} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
-		origin.company.update("nextRaffleString", null);
+		interaction.reply({ embeds: [raffleResultEmbed(eligibleHunters.find(hunter => hunter.userId === winner.id).profileColor, interaction.guild, theater.company.raffleThumbnailURL, winner, `Level ${levelThreshold} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
+		theater.company.update("nextRaffleString", null);
 	}
 ).setOptions(
 	{

@@ -7,7 +7,7 @@ const { timeConversion } = require("../../../shared");
 const { Company } = require("../../../database/models");
 
 module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit ${MAX_EVERGREEN_SLOTS}`,
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		let slotNumber = null;
 		for (let slotCandidate = 1; slotCandidate <= MAX_EVERGREEN_SLOTS; slotCandidate++) {
@@ -87,14 +87,14 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 			existingBounties.push(bounty);
 
 			// post in bounty board forum
-			const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
-			interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, origin.company, new Set())] })).then(async () => {
-				if (origin.company.bountyBoardId) {
+			const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+			interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] })).then(async () => {
+				if (theater.company.bountyBoardId) {
 					const hunterIdMap = {};
 					for (const bounty of existingBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					interaction.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => refreshEvergreenBountiesThread(bountyBoard, existingBounties, origin.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap)).then(thread => {
+					interaction.guild.channels.fetch(theater.company.bountyBoardId).then(bountyBoard => refreshEvergreenBountiesThread(bountyBoard, existingBounties, theater.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap)).then(thread => {
 						bounty.postingId = thread.id;
 						bounty.save()
 					});

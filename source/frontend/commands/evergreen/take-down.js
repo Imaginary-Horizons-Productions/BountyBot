@@ -6,7 +6,7 @@ const { Company } = require("../../../database/models");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of the server's Evergreen Bounties",
-	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		interaction.reply({
 			content: `If you'd like to change the title, description, or image of an evergreen bounty instead, you can use ${commandMention("evergreen edit")}.`,
 			components: [
@@ -22,19 +22,19 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of the server
 			const [bountyId] = collectedInteraction.values;
 			const [bounty] = evergreenBounties.splice(evergreenBounties.findIndex(bounty => bounty.id === bountyId), 1);
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
-			if (origin.company.bountyBoardId) {
-				const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
+			if (theater.company.bountyBoardId) {
+				const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
 				if (evergreenBounties.length > 0) {
-					const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id)));
+					const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
 					const hunterIdMap = {};
 					for (const bounty of evergreenBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
-					refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap);
+					refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap);
 				} else {
-					bountyBoard.threads.fetch(origin.company.evergreenThreadId).then(thread => {
+					bountyBoard.threads.fetch(theater.company.evergreenThreadId).then(thread => {
 						thread.delete(`Last Evergreen Bounty taken down by ${interaction.member}`);
-						origin.company.update({ evergreenThreadId: null });
+						theater.company.update({ evergreenThreadId: null });
 					});
 				}
 			} else if (!collectedInteraction.member.manageable) {

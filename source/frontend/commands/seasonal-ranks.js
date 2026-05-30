@@ -2,12 +2,12 @@ const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, 
 const { CommandWrapper } = require('../classes/index.js');
 const { attachOverflowingContentAsFile } = require('../shared');
 
-/** @type {typeof import("../../logic")} */
+/** @type {import('../../shared/types.js').LogicLayer} */
 let logicLayer;
 
 const mainId = "seasonal-ranks";
 module.exports = new CommandWrapper(mainId, "Look up this server's seasonal ranks", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.Guild], 3000,
-	async (interaction, origin, runMode) => {
+	async (interaction, theater, isDevMode) => {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		if (!ranks || !ranks.length) {
 			interaction.reply({ content: `Could not find any seasonal ranks. Please contact a server admin to make sure this isn't a mistake.`, flags: MessageFlags.Ephemeral });

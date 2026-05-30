@@ -2,7 +2,7 @@ const { Company } = require("../../database/models");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../shared");
 
-/** @type {typeof import("../../logic")} */
+/** @type {import("../../shared/types").LogicLayer} */
 let logicLayer;
 
 class XPBoost extends ItemTemplate {

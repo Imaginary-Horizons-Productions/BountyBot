@@ -1,12 +1,12 @@
 const { SelectWrapper } = require('../classes');
 
-/** @type {typeof import("../../logic")} */
+/** @type {import('../../shared/types').LogicLayer} */
 let logicLayer;
 
 const mainId = "";
 module.exports = new SelectWrapper(mainId, 3000,
 	/** Specs */
-	(interaction, origin, runMode, args) => {
+	(interaction, theater, isDevMode, args) => {
 
 	}
 ).setLogicLinker(logicBlob => {

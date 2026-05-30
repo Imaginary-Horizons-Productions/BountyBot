@@ -4,13 +4,12 @@ const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { butIgnoreInteractionCollectorErrors, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
-const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SelectOptionWrapper("showcase",
 	ensureBountyExistsAndInteractorIsPoster(
-		async (interaction, origin, runMode, logicLayer, [bounty]) => {
-			const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-			if (runMode !== RunModeKind.Development && Date.now() < nextShowcaseInMS) {
+		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
+			const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
+			if (!isDevMode && Date.now() < nextShowcaseInMS) {
 				interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -53,9 +52,9 @@ module.exports = new SelectOptionWrapper("showcase",
 			}
 
 			bounty = await bounty.increment("showcaseCount");
-			await origin.hunter.update({ lastShowcaseTimestamp: new Date() });
-			const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-			const embeds = [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))];
+			await theater.hunter.update({ lastShowcaseTimestamp: new Date() });
+			const currentPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
+			const embeds = [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))];
 
 			channel.send({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds });
 

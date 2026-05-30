@@ -3,12 +3,12 @@ const { SubcommandWrapper } = require("../../classes");
 const { butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("bountybot-ban", "Toggle whether the provided user can interact with bounties or toasts",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const discordUser = interaction.options.getUser("user");
 		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		let hunter;
-		if (discordUser.id === origin.hunter.userId) {
-			hunter = origin.hunter;
+		if (discordUser.id === theater.hunter.userId) {
+			hunter = theater.hunter;
 		} else {
 			hunter = (await logicLayer.hunters.findOrCreateBountyHunter(discordUser.id, interaction.guild.id)).hunter[0];
 		}

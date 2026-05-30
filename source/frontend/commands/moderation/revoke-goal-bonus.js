@@ -3,9 +3,9 @@ const { SubcommandWrapper } = require("../../classes");
 const { butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("revoke-goal-bonus", "Revoke Goal contribution item find bonus",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const revokeOption = interaction.options.get("revokee", true);
-		const hunter = revokeOption.value === origin.hunter.userId ? origin.hunter : await logicLayer.hunters.findOneHunter(revokeOption.value, interaction.guild.id);
+		const hunter = revokeOption.value === theater.hunter.userId ? theater.hunter : await logicLayer.hunters.findOneHunter(revokeOption.value, interaction.guild.id);
 		if (!hunter) {
 			interaction.reply({ content: `${userMention(revokeOption.value)} hasn't interacted with BountyBot yet.`, flags: MessageFlags.Ephemeral });
 			return;

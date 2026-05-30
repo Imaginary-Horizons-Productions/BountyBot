@@ -1,24 +1,24 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, userMention, LabelBuilder } = require('discord.js');
-const { UserContextMenuWrapper } = require('../classes');
-const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { textsHaveAutoModInfraction, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, butIgnoreInteractionCollectorErrors, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
-const { Company } = require('../../database/models');
-const { timeConversion } = require('../../shared');
-const { RunModeKind } = require('../../shared/types');
+import { InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
+import { Company } from '../../database/models';
+import { timeConversion } from '../../shared';
+import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
+import { LogicLayer } from "../../shared/types";
+import { UserContextMenuFunctionality } from '../classes';
+import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared';
+
+let logicLayer: LogicLayer;
 
 const mainId = "Raise a Toast";
-module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
+export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive toast text, then raise the toast to the user */
-	async (interaction, origin, runMode) => {
+	async (interaction, theater, isDevMode) => {
 		if (interaction.targetId === interaction.user.id) {
 			interaction.reply({ content: "You cannot raise a toast to yourself.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		if (runMode !== RunModeKind.Development && interaction.targetUser.bot) {
+		if (!isDevMode && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot raist a toast to a bot.", flags: MessageFlags.Ephemeral });
 			return;
 		}
@@ -53,24 +53,24 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-			const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, origin.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText, null);
+			const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, theater.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText, null);
 			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 			let companyReceipt = {};
 			if (hunterReceipts.size > 0) {
-				const results = await logicLayer.goals.progressGoal(origin.company, "toasts", hunterMap[interaction.user.id], season);
+				const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap[interaction.user.id], season);
 				companyReceipt = results.companyReceipt;
 				goalProgress = results.goalProgress;
 
 				hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-				const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+				const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
 				if (previousCompanyLevel < currentCompanyLevel) {
 					companyReceipt.levelUp = currentCompanyLevel;
 				}
 			}
 			companyReceipt.guildName = interaction.guild.name;
 
-			const embeds = [toastEmbed(origin.company.toastThumbnailURL, toastText, [interaction.targetId], modalSubmission.member, goalProgress)];
+			const embeds = [toastEmbed(theater.company.toastThumbnailURL, toastText, [interaction.targetId], modalSubmission.member, goalProgress)];
 			if (goalProgress.goalCompleted) {
 				embeds.push(goalCompletionEmbed(goalProgress.contributorIds));
 			}
@@ -86,12 +86,12 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts, origin.company.maxSimBounties);
+					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts, theater.company.maxSimBounties);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
-					if (origin.company.scoreboardIsSeasonal) {
-						refreshReferenceChannelScoreboardSeasonal(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
+					if (theater.company.scoreboardIsSeasonal) {
+						refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
 					} else {
-						refreshReferenceChannelScoreboardOverall(origin.company, modalSubmission.guild, hunterMap, goalProgress);
+						refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
 					}
 				}
 			});

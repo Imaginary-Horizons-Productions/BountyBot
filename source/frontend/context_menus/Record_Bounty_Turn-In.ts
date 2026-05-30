@@ -1,34 +1,34 @@
-const { InteractionContextType, PermissionFlagsBits, ModalBuilder, userMention, bold, MessageFlags, LabelBuilder, StringSelectMenuBuilder } = require('discord.js');
-const { UserContextMenuWrapper } = require('../classes');
-const { SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { commandMention, randomCongratulatoryPhrase, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, getBountyBoardThread } = require('../shared');
-const { timeConversion } = require('../../shared');
-const { RunModeKind } = require('../../shared/types');
+import { bold, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention } from 'discord.js';
 
-/** @type {typeof import("../../logic")} */
-let logicLayer;
+import { timeConversion } from '../../shared';
+import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
+import { LogicLayer } from "../../shared/types";
+import { UserContextMenuFunctionality } from '../classes';
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, unarchiveAndUnlockThread } from '../shared';
+
+let logicLayer: LogicLayer;
 
 const mainId = "Record Bounty Turn-In";
-module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
+export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
-	async (interaction, origin, runMode) => {
-		if (interaction.targetId === origin.hunter.userId) {
+	async (interaction, theater, isDevMode) => {
+		if (interaction.targetId === theater.hunter.userId) {
 			interaction.reply({ content: "You cannot credit yourself with completing your own bounty.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		if (runMode !== RunModeKind.Development && interaction.targetUser.bot) {
+		if (!isDevMode && interaction.targetUser.bot) {
 			interaction.reply({ content: "You cannot credit a bot with completing your bounty.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, origin.company.id);
+		const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(interaction.targetId, theater.company.id);
 		if (hunter.isBanned) {
 			interaction.reply({ content: `${userMention(interaction.targetId)} cannot be credited with bounty completion because they are banned from interacting with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		const bounties = await logicLayer.bounties.findOpenBounties(origin.hunter.userId, origin.company.id);
+		const bounties = await logicLayer.bounties.findOpenBounties(theater.hunter.userId, theater.company.id);
 		if (bounties.length < 1) {
 			interaction.reply({ content: "You don't appear to have any open bounties.", flags: MessageFlags.Ephemeral });
 			return;
@@ -56,10 +56,10 @@ module.exports = new UserContextMenuWrapper(mainId, PermissionFlagsBits.SendMess
 			await logicLayer.bounties.bulkCreateCompletions(bountyId, bounty.companyId, [interaction.targetId], null);
 			modalSubmission.reply({ content: `${userMention(interaction.targetId)}'s turn-in of ${bold(bounty.title)} has been recorded! They will recieve the reward XP when you ${commandMention("bounty complete")}.`, flags: MessageFlags.Ephemeral });
 
-			const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 			if (bountyThread) {
 				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, interaction.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, interaction.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 					await unarchiveAndUnlockThread(bountyThread, "bounty turn-in recorded by poster");
 				}
 				if (bountyThread.sendable) {

@@ -1,6 +1,6 @@
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 
-/** @type {typeof import("../../logic")} */
+/** @type {import("../../shared/types").LogicLayer} */
 let logicLayer;
 
 const itemName = "";

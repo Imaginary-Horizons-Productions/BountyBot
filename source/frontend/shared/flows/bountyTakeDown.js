@@ -4,7 +4,7 @@ const { butIgnoreMissingPermissionErrors, butIgnoreErrorIf, isUnknownGuildSchedu
 const { syncRankRoles } = require("../dAPIRequests");
 
 /**
- * @param {typeof import("../../../logic")} logicLayer
+ * @param {import("../../../shared/types").LogicLayer} logicLayer
  * @param {Guild} guild
  * @param {Bounty} bounty
  * @param {Hunter} posterHunter

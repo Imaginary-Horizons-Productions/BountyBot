@@ -4,17 +4,15 @@ const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('
 const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
 const { ihpAuthorPayload, randomFooterTip, butIgnoreInteractionCollectorErrors } = require('../shared');
 const { timeConversion, discordTimestamp } = require('../../shared');
-const { RunModeKind } = require('../../shared/types.js');
 
-/** @type {typeof import("../../logic")} */
+/** @type {import('../../shared/types.js').LogicLayer} */
 let logicLayer;
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
-	async (interaction, origin, runMode) => {
+	async (interaction, theater, isDevMode) => {
 		const itemName = interaction.options.getString("item-name");
 		const itemCount = await logicLayer.items.countUserCopies(interaction.user.id, itemName);
-		const isDevMode = runMode === RunModeKind.Development;
 		const hasItem = itemCount > 0 || isDevMode;
 		let embedColor = Colors.Blurple;
 		if (itemName.includes("Profile Colorizer")) {
@@ -61,7 +59,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			}
 			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
 
-			return useItem(itemName, collectedInteration, origin).then(shouldSkipDecrement => {
+			return useItem(itemName, collectedInteration, theater).then(shouldSkipDecrement => {
 				if (!shouldSkipDecrement && !isDevMode) {
 					return logicLayer.items.consume(interaction.user.id, itemName);
 				}

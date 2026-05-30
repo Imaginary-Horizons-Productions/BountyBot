@@ -5,25 +5,25 @@ const { Company } = require("../../../database/models");
 const { ensureNumberFromSlashOptionIsGreaterThanOne } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("start-gp", "Start a GP multiplier festival",
-	ensureNumberFromSlashOptionIsGreaterThanOne("mulitplier", async function executeSubcommand(interaction, origin, runMode, logicLayer, multiplier) {
-		origin.company.update({ "gpFestivalMultiplier": multiplier });
-		updateBotNicknameForFestival(await interaction.guild.members.fetchMe(), origin.company);
-		interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: `A GP multiplier festival has started. Goal Point Contributions will be multiplied by ${multiplier}.` }));
-		const goalProgress = await logicLayer.goals.findLatestGoalProgress(origin.company.id);
-		if (origin.company.scoreboardIsSeasonal) {
-			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(origin.company.id);
-			refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(origin.company.id), goalProgress);
+	ensureNumberFromSlashOptionIsGreaterThanOne("mulitplier", async function executeSubcommand(interaction, theater, isDevMode, logicLayer, multiplier) {
+		theater.company.update({ "gpFestivalMultiplier": multiplier });
+		updateBotNicknameForFestival(await interaction.guild.members.fetchMe(), theater.company);
+		interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A GP multiplier festival has started. Goal Point Contributions will be multiplied by ${multiplier}.` }));
+		const goalProgress = await logicLayer.goals.findLatestGoalProgress(theater.company.id);
+		if (theater.company.scoreboardIsSeasonal) {
+			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(theater.company.id);
+			refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(theater.company.id), goalProgress);
 		} else {
-			refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(origin.company.id), goalProgress);
+			refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(theater.company.id), goalProgress);
 		}
-		if (origin.company.bountyBoardId) {
-			const bountyBoard = await interaction.guild.channels.fetch(origin.company.bountyBoardId);
-			const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
+		if (theater.company.bountyBoardId) {
+			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
+			const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
 			const hunterIdMap = {};
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id))), interaction.guild.members.me, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	})
 ).setOptions(

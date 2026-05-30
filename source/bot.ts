@@ -1,34 +1,22 @@
-//#region External Imports
 import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, TimestampStyles } from "discord.js";
 import { promises as fsa } from "fs";
 import cron from "node-cron";
 import path from "path";
 import { Sequelize } from "sequelize";
-//#endregion
-
-//#region Internal Types
-import type { MessageComponentWrapper } from './frontend/classes/index.js';
-//#endregion
-
-//#region Internal Imports
 import { Company } from "./database/models/index.ts";
-import { getButton, setLogic as setButtonLogic, updateCooldownMap as updateButtonCooldownMap } from "./frontend/buttons/_buttonDictionary.js";
-import { addEntriesToCooldownDictionary as addCommandsToCooldownDictionary, addToPremiumList as addCommandsToPremiumList, getCommand, setLogic as setCommandLogic, slashData } from "./frontend/commands/_commandDictionary.ts";
-import { addEntriesToCooldownDictionary as addContextMenusToCooldownDictionary, addToPremiumList as addContextMenusToPremiumList, contextMenuData, getContextMenu, setLogic as setContextMenuLogic } from "./frontend/context_menus/_contextMenuDictionary.js";
-import { setLogic as setItemLogic, updateCooldownMap as updateItemCooldownMap } from "./frontend/items/_itemDictionary.js";
-import { getSelect, setLogic as setSelectLogic, updateCooldownMap as updateSelectCooldownMap } from "./frontend/selects/_selectDictionary.js";
+import { addButtonsToCooldownDictionary, getButton, linkAllButtonsToLogic } from "./frontend/buttons/_buttonDictionary.js";
+import type { MessageComponentFunctionality } from './frontend/classes/index.js';
+import { addCommandsToCooldownDictionary, addCommandsToPremiumList, getCommand, linkAllCommandsToLogic, slashData } from "./frontend/commands/_commandDictionary.ts";
+import { addContextMenusToCooldownDictionary, addContextMenusToPremiumList, contextMenuData, getContextMenu, linkAllContextMenusToLogic as setContextMenuLogic } from "./frontend/context_menus/_contextMenuDictionary.js";
+import { addItemsToCooldownDictionary, linkAllItemsToLogic } from "./frontend/items/_itemDictionary.js";
+import { addSelectsToCooldownDictionary, getSelect, linkAllSelectsToLogic } from "./frontend/selects/_selectDictionary.js";
 import { commandMention, consolidateHunterReceipts, goalCompletionEmbed, latestVersionChangesEmbed, randomCongratulatoryPhrase, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, toastEmbed } from "./frontend/shared/index.js";
 import logicBlob from "./logic/index.js";
 import { announcementsChannelId, commandIds, lastPostedVersion, premium, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, testGuildId } from "./shared/constants.ts";
 import { discordTimestamp } from "./shared/index.js";
-import { CooldownDictionary, PremiumFlowList, RunModeKind } from "./shared/types.ts";
-//#endregion
+import { CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
 
-const basename = path.basename(__filename);
-
-const authPath = "../config/auth.json";
-const runMode = process.argv[4] || RunModeKind.Development;
-const isDevMode = runMode === RunModeKind.Development;
+const runMode = process.argv[4] || "development";
 
 const log = console.log;
 
@@ -45,10 +33,10 @@ console.error = function () {
 //#region pre-Client Setup
 const cooldownDictionary: CooldownDictionary = {};
 addCommandsToCooldownDictionary(cooldownDictionary);
-updateButtonCooldownMap(cooldownDictionary);
-updateSelectCooldownMap(cooldownDictionary);
+addButtonsToCooldownDictionary(cooldownDictionary);
+addSelectsToCooldownDictionary(cooldownDictionary);
 addContextMenusToCooldownDictionary(cooldownDictionary);
-updateItemCooldownMap(cooldownDictionary);
+addItemsToCooldownDictionary(cooldownDictionary);
 
 const premiumFlowList: PremiumFlowList = [];
 addCommandsToPremiumList(premiumFlowList);
@@ -72,6 +60,8 @@ const dAPIClient = new Client({
 //#endregion
 
 //#region Database Setup
+const basename = path.basename(__filename);
+const isDevMode = runMode === "development";
 const dbReady = dbConnection.authenticate().then(async () => {
 	return (await fsa.readdir(path.join(__dirname, "database", "models"))).filter(directory => directory.indexOf('.') === -1);
 }).then(directories => {
@@ -101,17 +91,18 @@ const dbReady = dbConnection.authenticate().then(async () => {
 		logicBlob[branch].setDB?.(dbConnection);
 	}
 
-	setCommandLogic(logicBlob);
-	setButtonLogic(logicBlob);
-	setSelectLogic(logicBlob);
+	linkAllCommandsToLogic(logicBlob);
+	linkAllButtonsToLogic(logicBlob);
+	linkAllSelectsToLogic(logicBlob);
 	setContextMenuLogic(logicBlob);
-	setItemLogic(logicBlob);
+	linkAllItemsToLogic(logicBlob);
 
 	return;
 }).catch(console.error);
 //#endregion
 
-dAPIClient.login(require(authPath).token);
+const authPath = "../config/auth.json";
+dAPIClient.login((await import(authPath)).default.token);
 
 //#region Event Handlers
 dAPIClient.on(Events.ClientReady, () => {
@@ -251,9 +242,9 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	if (interaction.isContextMenuCommand()) {
 		getContextMenu(mainId).execute(interaction, origin, isDevMode);
 	} else if (interaction.isCommand()) {
-		getCommand(mainId).execute(interaction, origin, runMode);
+		getCommand(mainId).execute(interaction, origin, isDevMode);
 	} else {
-		let interactionWrapper: MessageComponentWrapper;
+		let interactionWrapper: MessageComponentFunctionality;
 		if (interaction.isButton()) {
 			interactionWrapper = getButton(mainId);
 		} else if (interaction.isAnySelectMenu()) {

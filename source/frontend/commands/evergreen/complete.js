@@ -5,10 +5,9 @@ const { bountyEmbed, goalCompletionEmbed, selectOptionsFromBounties, sendRewardM
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
-const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters",
-	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "bounty-hunters";
 		const maxHunters = 10;
@@ -39,8 +38,8 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		const bounty = await logicLayer.bounties.findBounty(bountyId);
 		const validatedHunters = new Map();
 		for (const [memberId, guildMember] of modalSubmission.fields.getSelectedMembers(labelIdBountyHunters)) {
-			const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, origin.company.id);
-			if (runMode === RunModeKind.Development || (!guildMember.user.bot && !hunter.isBanned)) {
+			const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, theater.company.id);
+			if (isDevMode || (!guildMember.user.bot && !hunter.isBanned)) {
 				validatedHunters.set(memberId, hunter);
 			}
 		}
@@ -50,19 +49,19 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 			return;
 		}
 
-		const season = await logicLayer.seasons.incrementSeasonStat(origin.company.id, "bountiesCompleted");
+		const season = await logicLayer.seasons.incrementSeasonStat(theater.company.id, "bountiesCompleted");
 
-		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(origin.company.id);
+		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
 		const companyReceipt = { guildName: modalSubmission.guild.name };
 		const hunterReceipts = new Map();
 
-		const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+		const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
 		// Evergreen bounties are not eligible for showcase bonuses
 		const bountyBaseValue = Bounty.calculateCompleterReward(previousCompanyLevel, bounty.slotNumber, 0);
-		const bountyValue = Math.floor(bountyBaseValue * origin.company.xpFestivalMultiplier);
-		await logicLayer.bounties.bulkCreateCompletions(bountyId, origin.company.id, [...validatedHunters.keys()], bountyValue);
+		const bountyValue = Math.floor(bountyBaseValue * theater.company.xpFestivalMultiplier);
+		await logicLayer.bounties.bulkCreateCompletions(bountyId, theater.company.id, [...validatedHunters.keys()], bountyValue);
 
-		const xpMultiplierString = origin.company.festivalMultiplierString("xp");
+		const xpMultiplierString = theater.company.festivalMultiplierString("xp");
 		const goalProgress = {
 			totalGP: 0,
 			goalCompleted: false,
@@ -72,16 +71,16 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		const finalContributorIds = new Set(validatedHunters.keys());
 		for (const userId of validatedHunters.keys()) {
 			const hunterReceipt = { xp: bountyBaseValue, xpMultiplier: xpMultiplierString };
-			let hunter = await logicLayer.hunters.findOneHunter(userId, origin.company.id);
-			const previousHunterLevel = hunter.getLevel(origin.company.xpCoefficient);
+			let hunter = await logicLayer.hunters.findOneHunter(userId, theater.company.id);
+			const previousHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
 			hunter = await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
-			const currentHunterLevel = hunter.getLevel(origin.company.xpCoefficient);
+			const currentHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
 			if (currentHunterLevel > previousHunterLevel) {
 				hunterReceipt.levelUp = { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel };
 			}
 			hunterReceipts.set(userId, hunterReceipt);
-			logicLayer.seasons.changeSeasonXP(userId, origin.company.id, season.id, bountyValue);
-			const { goalProgress: { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } } = await logicLayer.goals.progressGoal(origin.company, "bounties", hunter, season);
+			logicLayer.seasons.changeSeasonXP(userId, theater.company.id, season.id, bountyValue);
+			const { goalProgress: { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunter, season);
 			goalProgress.totalGP += gpContributed;
 			goalProgress.goalCompleted ||= goalCompleted;
 			goalProgress.currentGP = currentGP;
@@ -89,41 +88,41 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 			contributorIds.forEach(id => finalContributorIds.add(id));
 		}
 
-		hunterMap = await logicLayer.hunters.getCompanyHunterMap(origin.company.id);
-		const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+		hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
+		const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
 		const announcementPayload = {
-			embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, origin.company, finalContributorIds, null, goalProgress)],
+			embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, theater.company, finalContributorIds, null, goalProgress)],
 			withResponse: true
 		};
 		if (goalProgress.totalGP > 0) {
 			companyReceipt.gp = goalProgress.totalGP;
-			companyReceipt.gpMultiplier = origin.company.festivalMultiplierString("gp");
+			companyReceipt.gpMultiplier = theater.company.festivalMultiplierString("gp");
 		}
 		if (goalProgress.goalCompleted) {
 			announcementPayload.embeds.push(goalCompletionEmbed([...finalContributorIds.keys()]));
 		}
 		const response = await modalSubmission.reply(announcementPayload);
-		const descendingRanks = await logicLayer.ranks.findAllRanks(origin.company.id);
+		const descendingRanks = await logicLayer.ranks.findAllRanks(theater.company.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await modalSubmission.guild.roles.fetch());
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, modalSubmission.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-		sendRewardMessage(response.resource.message, rewardSummary("bounty", companyReceipt, hunterReceipts, origin.company.maxSimBounties), `${bounty.title} Rewards`);
-		if (origin.company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(origin.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
+		sendRewardMessage(response.resource.message, rewardSummary("bounty", companyReceipt, hunterReceipts, theater.company.maxSimBounties), `${bounty.title} Rewards`);
+		if (theater.company.scoreboardIsSeasonal) {
+			refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
 		} else {
-			refreshReferenceChannelScoreboardOverall(origin.company, modalSubmission.guild, hunterMap, goalProgress);
+			refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
 		}
-		if (origin.company.bountyBoardId) {
+		if (theater.company.bountyBoardId) {
 			const hunterIdMap = {};
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			const bountyBoard = await modalSubmission.guild.channels.fetch(origin.company.bountyBoardId);
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, origin.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+			const bountyBoard = await modalSubmission.guild.channels.fetch(theater.company.bountyBoardId);
+			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
 		} else if (!modalSubmission.member.manageable) {
 			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 		}

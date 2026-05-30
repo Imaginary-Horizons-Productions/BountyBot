@@ -21,7 +21,7 @@ const thumbnailUpdateData = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Configure thumbnails for server messages (Premium)", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
-	async (interaction, origin, runMode) => {
-		configCompanyThumbnails("Server Message Thumbnail", thumbnailUpdateData, interaction, origin.company);
+	async (interaction, theater, isDevMode) => {
+		configCompanyThumbnails("Server Message Thumbnail", thumbnailUpdateData, interaction, theater.company);
 	}
 );

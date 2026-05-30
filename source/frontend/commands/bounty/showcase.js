@@ -4,12 +4,11 @@ const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
-const { RunModeKind } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
-	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
-		const nextShowcaseInMS = new Date(origin.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-		if (runMode !== RunModeKind.Development && Date.now() < nextShowcaseInMS) {
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
+		const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
+		if (!isDevMode && Date.now() < nextShowcaseInMS) {
 			interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
@@ -52,10 +51,10 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 		}
 
 		bounty = await bounty.increment("showcaseCount");
-		await origin.hunter.update({ lastShowcaseTimestamp: new Date() });
-		const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-		const embed = bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents));
-		const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+		await theater.hunter.update({ lastShowcaseTimestamp: new Date() });
+		const currentPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
+		const embed = bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents));
+		const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 
 		modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds: [embed] });
 

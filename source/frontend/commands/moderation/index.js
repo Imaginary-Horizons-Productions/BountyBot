@@ -2,7 +2,7 @@ const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { aggregateSubcommands } = require('../../shared');
 
-/** @type {typeof import("../../../logic")} */
+/** @type {import('../../../shared/types').LogicLayer} */
 let logicLayer;
 
 const mainId = "moderation";
@@ -16,8 +16,8 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"xp-penalty.js"
 ]);
 module.exports = new CommandWrapper(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, [InteractionContextType.Guild], 3000,
-	(interaction, origin, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, origin, runMode, logicLayer);
+	(interaction, theater, isDevMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, theater, isDevMode, logicLayer);
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

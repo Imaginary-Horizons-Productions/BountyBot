@@ -1,12 +1,12 @@
-const fs = require("fs");
-const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { BOUNTYBOT_INVITE_URL } = require("../../constants");
+import { Colors, EmbedBuilder, InteractionContextType, MessageFlags } from 'discord.js';
+import fs from "fs";
+import { BOUNTYBOT_INVITE_URL } from '../../shared/constants';
+import { CommandFunctionality } from '../classes';
 
 const mainId = "about";
-module.exports = new CommandWrapper(mainId, "Get BountyBot's description and contributors", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "Get BountyBot's description and contributors", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Get BountyBot's description and contributors */
-	(interaction, origin, runMode) => {
+	(interaction, theater, isDevMode) => {
 		fs.promises.stat(__filename).then(stats => {
 			const avatarURL = interaction.client.user.avatarURL();
 			interaction.reply({
@@ -23,7 +23,7 @@ module.exports = new CommandWrapper(mainId, "Get BountyBot's description and con
 							{ name: "Art", value: "Ryan Rivera ( [Twitter](https://twitter.com/rymmage) )\nAngela Lee ( [Website](https://www.angelasylee.com/) )" },
 							{ name: "Embed Thumbnails", value: "[game-icons.net](https://game-icons.net/)" }
 						)
-						.setFooter({ text: "Click \"About BountyBot\" to add BountyBot to your own server! Click \"Imaginary Horizons Productions\" to go to the BountyBot announcements channel!", iconURL: avatarURL })
+						.setFooter({ text: "Click \"About BountyBot\" to add BountyBot to your own server! Click \"Imaginary Horizons Productions\" to go to the BountyBot announcements channel!", iconURL: avatarURL ?? undefined })
 						.setTimestamp(stats.mtime)
 				],
 				flags: MessageFlags.Ephemeral

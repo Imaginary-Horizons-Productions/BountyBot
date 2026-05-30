@@ -1,6 +1,6 @@
 import { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
-import { CooldownDictionary, PremiumCommandList } from '../../shared/types';
-import { type CommandWrapper, BuildError } from '../classes';
+import { CooldownDictionary, LogicLayer, PremiumFlowList } from '../../shared/types';
+import { type CommandFunctionality, BuildError } from '../classes';
 
 export const commandFiles = [
 	"about.js",
@@ -30,39 +30,42 @@ export const commandFiles = [
 	"tutorial.js",
 	"version.js"
 ];
-const commandDictionary: Record<string, CommandWrapper> = {};
+const COMMAND_FUNCTIONALITIES = new Map<string, CommandFunctionality>();
 export const slashData: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
 for (const file of exports.commandFiles) {
-	//TODONOW refactor - require no longer supported
-	const command = require(`./${file}`);
-	if (command.mainId in commandDictionary) {
-		throw new BuildError(`Duplicate command custom id: ${command.mainId}`);
+	const command: CommandFunctionality = (await import(`./${file}`)).default;
+	if (COMMAND_FUNCTIONALITIES.has(command.mainId)) {
+		throw new BuildError(`Duplicate command mainId: ${command.mainId}`);
 	}
-	commandDictionary[command.mainId] = command;
-	exports.slashData.push(command.builder.toJSON());
+	COMMAND_FUNCTIONALITIES.set(command.mainId, command);
+	slashData.push(command.builder.toJSON());
 }
 
-export function getCommand(commandName: string) {
-	return commandDictionary[commandName];
-}
-
-export function setLogic(logicBlob: typeof import("../../logic")) {
-	for (const commandKey in commandDictionary) {
-		commandDictionary[commandKey].setLogic?.(logicBlob);
+export function getCommand(mainId: string) {
+	const functionality = COMMAND_FUNCTIONALITIES.get(mainId);
+	if (!functionality) {
+		throw new Error(`Missing CommandFunctionality: ${mainId}`);
 	}
+	return functionality;
 }
 
-export function addEntriesToCooldownDictionary(cooldownDictionary: CooldownDictionary) {
-	for (const commandKey in commandDictionary) {
-		cooldownDictionary[commandKey] = commandDictionary[commandKey].cooldown;
+export function linkAllCommandsToLogic(logicBlob: LogicLayer) {
+	for (const functionality of COMMAND_FUNCTIONALITIES.values()) {
+		functionality.linkToLogic?.(logicBlob);
 	}
 }
 
-export function addToPremiumList(list: PremiumCommandList) {
-	for (const commandKey in commandDictionary) {
-		if (commandDictionary[commandKey].premiumCommand) {
-			list.push(commandKey);
+export function addCommandsToCooldownDictionary(cooldownDictionary: CooldownDictionary) {
+	for (const [mainId, functionality] of COMMAND_FUNCTIONALITIES) {
+		cooldownDictionary[mainId] = functionality.cooldown;
+	}
+}
+
+export function addCommandsToPremiumList(list: PremiumFlowList) {
+	for (const [mainId, functionality] of COMMAND_FUNCTIONALITIES) {
+		if (functionality.isPremium) {
+			list.push(mainId);
 		}
 	}
 }
