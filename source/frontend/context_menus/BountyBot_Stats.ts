@@ -1,5 +1,4 @@
 import { InteractionContextType, MessageFlags } from 'discord.js';
-
 import { Hunter } from '../../database/models';
 import { LogicLayer } from "../../shared/types";
 import { UserContextMenuFunctionality } from '../classes';

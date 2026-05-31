@@ -131,11 +131,8 @@ type SubcommandProcedure = (interaction: ChatInputCommandInteraction, theater: I
 export class SubcommandFunctionality {
 	declare procedure: SubcommandProcedure;
 
-	constructor(nameArgument: string, descriptionArgument: string, procedureArgument: SubcommandProcedure) {
-		this.data = {
-			name: nameArgument,
-			description: descriptionArgument,
-		};
+	constructor(name: string, description: string, procedureArgument: SubcommandProcedure) {
+		this.data = { name, description };
 		this.procedure = procedureArgument;
 	}
 
@@ -158,8 +155,8 @@ type ButtonProcedure = (interaction: ButtonInteraction, theater: InteractionThea
 
 export class ButtonFunctionality extends MessageComponentFunctionality {
 	/** IHP wrapper for button responses */
-	constructor(mainIdInput: string, cooldownInMS: number, procedure: ButtonProcedure) {
-		super(mainIdInput, cooldownInMS, procedure);
+	constructor(mainIdArgument: string, cooldownInMS: number, procedure: ButtonProcedure) {
+		super(mainIdArgument, cooldownInMS, procedure);
 	}
 };
 
@@ -167,8 +164,8 @@ type SelectMenuProcedure = (interaction: AnySelectMenuInteraction, theater: Inte
 
 export class SelectFunctionality extends MessageComponentFunctionality {
 	/** IHP wrapper for any select responses */
-	constructor(mainIdInput: string, cooldownInMS: number, procedure: SelectMenuProcedure) {
-		super(mainIdInput, cooldownInMS, procedure);
+	constructor(mainIdArgument: string, cooldownInMS: number, procedure: SelectMenuProcedure) {
+		super(mainIdArgument, cooldownInMS, procedure);
 	}
 };
 
@@ -191,11 +188,11 @@ export class ContextMenuFunctionality extends InteractionFunctionality {
 	declare builder: ContextMenuCommandBuilder;
 
 	/** Wrapper properties for general context menus. Intended to be the basis for the two child types. */
-	constructor(mainIdInput: string, defaultMemberPermission: MemberOf<PermissionFlags> | null, isPremiumFlow: boolean, contextEnums: InteractionContextType[], cooldownInMS: number, procedure: UserContextMenuProcedure | MessageContextMenuProcedure) {
-		super(mainIdInput, cooldownInMS, procedure);
+	constructor(mainIdArgument: string, defaultMemberPermission: MemberOf<PermissionFlags> | null, isPremiumFlow: boolean, contextEnums: InteractionContextType[], cooldownInMS: number, procedure: UserContextMenuProcedure | MessageContextMenuProcedure) {
+		super(mainIdArgument, cooldownInMS, procedure);
 		this.isPremium = isPremiumFlow;
 		this.builder = new ContextMenuCommandBuilder()
-			.setName(mainIdInput)
+			.setName(mainIdArgument)
 			.setContexts(contextEnums);
 		if (defaultMemberPermission) {
 			this.builder.setDefaultMemberPermissions(defaultMemberPermission);

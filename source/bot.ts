@@ -194,7 +194,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	let args;
 	/**
-	 * Slash Command, Context Menu, and Autocomplete interactions do not have a `customId` property,
+	 * Slash Command and Context Menu do not have a `customId` property,
 	 * but also will not need to signal to skip interaction handling
 	 */
 	if (interaction.isCommand() || interaction.isContextMenuCommand()) {

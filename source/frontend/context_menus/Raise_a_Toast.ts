@@ -1,5 +1,4 @@
 import { InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
-
 import { Company } from '../../database/models';
 import { timeConversion } from '../../shared';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
