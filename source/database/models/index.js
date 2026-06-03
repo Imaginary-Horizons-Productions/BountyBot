@@ -12,6 +12,7 @@ const { Toast } = require("./toasts/Toast");
 const { Hunter } = require("./users/Hunter");
 const { Item } = require("./users/Item");
 const { User } = require("./users/User");
+const { UserInteraction } = require("./users/UserInteraction");
 
 module.exports = {
 	Bounty,
@@ -27,5 +28,6 @@ module.exports = {
 	Season,
 	Seconding,
 	Toast,
-	User
+	User,
+	UserInteraction
 };
