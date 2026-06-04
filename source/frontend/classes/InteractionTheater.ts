@@ -1,7 +1,7 @@
-import { Company, Hunter, User } from "../../database/models";
+import type { DatabaseTypes } from "../../database";
 
-export class InteractionTheater {
-	company: Company;
-	user: User;
-	hunter: Hunter;
+export interface InteractionTheater {
+	company: DatabaseTypes.Company;
+	user: DatabaseTypes.User;
+	hunter: DatabaseTypes.Hunter;
 }

@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Hunter, Season, Company } = require("../database/models");
+const { Hunter, Season, Company } = require("../database");
 
 /** @type {Sequelize} */
 let db;

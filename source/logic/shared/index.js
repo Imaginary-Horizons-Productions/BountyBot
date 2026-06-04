@@ -1,4 +1,4 @@
-const { Participation } = require("../../database/models");
+const { Participation } = require("../../database");
 
 /** @param {Map<any, Participation>} participations */
 function calculateXPMean(participations) {

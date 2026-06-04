@@ -1,6 +1,6 @@
-const { SubcommandWrapper } = require("../../classes");
+import { SubcommandFunctionality } from "../../classes";
 
-module.exports = new SubcommandWrapper("", "",
+export default new SubcommandFunctionality("", "",
 	async function executeSubcommand(interaction, origin, isDevMode, logicLayer) {
 
 	}

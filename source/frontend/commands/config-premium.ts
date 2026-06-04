@@ -1,10 +1,10 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { GLOBAL_MAX_BOUNTY_SLOTS, MAX_BOT_NICKNAME_LENGTH } = require('../../constants');
-const { updateBotNicknameForFestival } = require('../shared');
+import { InteractionContextType, MessageFlags, PermissionFlagsBits, unorderedList } from 'discord.js';
+import { GLOBAL_MAX_BOUNTY_SLOTS, MAX_BOT_NICKNAME_LENGTH } from '../../shared/constants';
+import { CommandFunctionality } from '../classes';
+import { updateBotNicknameForFestival } from '../shared';
 
 const mainId = "config-premium";
-module.exports = new CommandWrapper(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
+export default new CommandFunctionality(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
 	(interaction, theater, isDevMode) => {
 		const updatePayload = {};
 		let content = "The following server settings have been configured:";

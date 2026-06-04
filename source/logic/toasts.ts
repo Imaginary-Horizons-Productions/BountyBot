@@ -1,67 +1,52 @@
-const { Guild, userMention } = require("discord.js");
-const { Sequelize, Op } = require("sequelize");
-const { dateInPast } = require("../shared");
-const { Company, Hunter, Toast, Recipient } = require("../database/models");
+import { Guild, Snowflake, userMention } from "discord.js";
+import { Op } from "sequelize";
+import type { Database, DatabaseTypes } from "../database";
+import { Toast } from "../database/models/Toast";
+import { dateInPast } from "../shared";
 
-/** @type {Sequelize} */
-let db;
+let db: Database;
 
-function setDB(database) {
+export function setDB(database: Database) {
 	db = database;
 }
 
 /** *Get the ids of the rewarded Recipients on the sender's last 5 Toasts*
  *
  * Duplicated stale toastee ids are intended as a way of recording accumulating staleness
- * @param {string} senderId
- * @param {string} companyId
  */
-async function findStaleToasteeIds(senderId, companyId) {
-	const lastFiveToasts = await db.models.Toast.findAll({ where: { senderId, companyId }, include: db.models.Toast.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
+async function findStaleToasteeIds(senderId: Snowflake, companyId: Snowflake) {
+	const lastFiveToasts = await db.Toasts.findAll({ where: { senderId, companyId }, include: db.Toasts.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
 	return lastFiveToasts.reduce((list, toast) => {
 		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
 	}, []);
 }
 
-/** *Find a specified Hunter's most seconded Toast*
- * @param {string} senderId
- * @param {string} companyId
- */
-function findMostSecondedToast(senderId, companyId) {
-	return db.models.Toast.findOne({ where: { senderId, companyId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] });
+/** *Find a specified Hunter's most seconded Toast* */
+export function findMostSecondedToast(senderId: Snowflake, companyId: Snowflake) {
+	return db.Toasts.findOne({ where: { senderId, companyId, secondings: { [Op.gt]: 0 } }, order: [["secondings", "DESC"]] });
 }
 
-/** *Checks if the specified seconder has already seconded the specified Toast*
- * @param {string} toastId
- * @param {string} seconderId
- */
-async function wasAlreadySeconded(toastId, seconderId) {
-	return Boolean(await db.models.Seconding.findOne({ where: { toastId, seconderId } }));
+/** *Checks if the specified seconder has already seconded the specified Toast* */
+export async function wasAlreadySeconded(toastId: Snowflake, seconderId: Snowflake) {
+	return Boolean(await db.Secondings.findOne({ where: { toastId, seconderId } }));
 }
 
-/** *Find the specified Toast*
- * @param {string} toastId
- * @returns {Promise<Toast & {Recipients: Recipient[]} | null>}
- */
-function findToastByPK(toastId) {
-	return db.models.Toast.findByPk(toastId, { include: db.models.Toast.Recipients });
+/** *Find the specified Toast* */
+export function findToastByPK(toastId: Snowflake) {
+	return db.Toasts.findByPk(toastId, { include: db.Toasts.Recipients });
 }
 
-/** *Reaction Toasts: finds a toast by the reacted message's id*
- * @param {import("discord.js").Snowflake} messageId
- */
-function findToastByMessageId(messageId) {
+/** *Reaction Toasts: finds a toast by the reacted message's id* */
+export function findToastByMessageId(messageId: Snowflake) {
 	if (messageId === null) {
 		return null;
 	}
-	return db.models.Toast.findOne({ where: { hostMessageId: messageId } });
+	return db.Toasts.findOne({ where: { hostMessageId: messageId } });
 }
 
-/** *Get the Mentions of Bounty Hunters that have seconded a given Toast*
- * @param {string} toastId
- */
-async function findSecondingMentions(toastId) {
-	return (await db.models.Seconding.findAll({ where: { toastId } })).map(seconding => userMention(seconding.seconderId));
+/** *Get the Mentions of Bounty Hunters that have seconded a given Toast* */
+export async function findSecondingMentions(toastId: Snowflake) {
+	return (await db.Secondings.findAll({ where: { toastId } })).map(seconding => userMention(seconding.seconderId));
 }
 
 /**
@@ -74,28 +59,15 @@ async function findSecondingMentions(toastId) {
  * notes:
  * - cubing both sides of the equation avoids the third root operation and prebakes the constant exponentiation
  * - constants set arbitrarily by user experience design
- * @param {number} critRoll
- * @param {number} effectiveToastLevel
  */
-function isToastCrit(critRoll, effectiveToastLevel) {
+function isToastCrit(critRoll: number, effectiveToastLevel: number) {
 	return critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel
 }
 
-/**
- * @param {Guild} guild
- * @param {Company} company
- * @param {string} senderId
- * @param {string[]} toasteeIds
- * @param {Map<string, Hunter>} hunterMap
- * @param {string} seasonId
- * @param {string} toastText
- * @param {string | null} imageURL
- * @param {string | null} hostMessageId
- */
-async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seasonId, toastText, imageURL = null, hostMessageId = null) {
+export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, senderId: Snowflake, toasteeIds: Snowflake[], hunterMap: Map<Snowflake, DatabaseTypes.Hunter>, seasonId: string, toastText: string, imageURL: string | null = null, hostMessageId: Snowflake | null = null) {
 	const hunterReceipts = new Map();
 	// Make database entities
-	const recentToasts = await db.models.Toast.findAll({ where: { companyId: guild.id, senderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.models.Toast.Recipients });
+	const recentToasts = await db.Toasts.findAll({ where: { companyId: guild.id, senderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.Toasts.Recipients });
 	let rewardsAvailable = 10;
 	let critToastsAvailable = 2;
 	for (const toast of recentToasts) {
@@ -118,7 +90,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 
 	const staleToastees = await findStaleToasteeIds(senderId, guild.id);
 
-	const toast = await db.models.Toast.create({ companyId: guild.id, senderId, text: toastText, imageURL, hostMessageId });
+	const toast = await db.Toasts.create({ companyId: guild.id, senderId, text: toastText, imageURL, hostMessageId });
 	const rawRecipients = [];
 	let critValue = 0;
 	const startingSenderLevel = hunterMap.get(senderId).getLevel(company.xpCoefficient);
@@ -140,7 +112,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 			}
 			hunterReceipts.set(id, hunterReceipt);
 
-			const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: id, seasonId }, defaults: { xp: xpAwarded } });
+			const [participation, participationCreated] = await db.Participations.findOrCreate({ where: { companyId: guild.id, userId: id, seasonId }, defaults: { xp: xpAwarded } });
 			if (!participationCreated) {
 				participation.increment({ xp: xpAwarded });
 			}
@@ -170,10 +142,10 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 		}
 		rawRecipients.push(rawToast);
 	}
-	await db.models.Recipient.bulkCreate(rawRecipients);
+	await db.Recipients.bulkCreate(rawRecipients);
 
 	// Update sender
-	const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: guild.id, userId: senderId, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
+	const [participation, participationCreated] = await db.Participations.findOrCreate({ where: { companyId: guild.id, userId: senderId, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (critValue > 0) {
 		const senderReceipt = { xp: critValue, xpMultiplier: xpMultiplierString, title: "Critical Toast!" };
 		let sender = hunterMap.get(senderId);
@@ -195,14 +167,7 @@ async function raiseToast(guild, company, senderId, toasteeIds, hunterMap, seaso
 	return { toastId: toast.id, hunterReceipts };
 }
 
-/**
- * @param {Hunter} seconder
- * @param {Toast} toast
- * @param {Company} company
- * @param {string[]} recipientIds
- * @param {string} seasonId
- */
-async function secondToast(seconder, toast, company, recipientIds, seasonId) {
+export async function secondToast(seconder: DatabaseTypes.Hunter, toast: Toast, company: DatabaseTypes.Company, recipientIds: Snowflake[], seasonId: string) {
 	await seconder.increment("toastsSeconded");
 	await toast.increment("secondings");
 
@@ -214,11 +179,11 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 			continue;
 		}
 		const hunterReceipt = {};
-		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: company.id, userId, seasonId }, defaults: { xp: 1 } });
+		const [participation, participationCreated] = await db.Participations.findOrCreate({ where: { companyId: company.id, userId, seasonId }, defaults: { xp: 1 } });
 		if (!participationCreated) {
 			participation.increment({ xp: 1 });
 		}
-		let hunter = await db.models.Hunter.findOne({ where: { userId, companyId: company.id } });
+		let hunter = await db.Hunters.findOne({ where: { userId, companyId: company.id } });
 		if (hunter) {
 			const previousLevel = hunter.getLevel(company.xpCoefficient);
 			hunter = await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
@@ -232,7 +197,7 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 		}
 	}
 
-	const recentToasts = await db.models.Seconding.findAll({ where: { seconderId: seconder.userId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } } });
+	const recentToasts = await db.Secondings.findAll({ where: { seconderId: seconder.userId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } } });
 	let critSecondsAvailable = 2;
 	for (const seconding of recentToasts) {
 		if (seconding.wasCrit) {
@@ -269,7 +234,7 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 		}
 	}
 
-	await db.models.Seconding.create({ toastId: toast.id, seconderId: seconder.userId, wasCrit: critSeconds > 0 });
+	await db.Secondings.create({ toastId: toast.id, seconderId: seconder.userId, wasCrit: critSeconds > 0 });
 	if (critSeconds > 0) {
 		const hunterReceipt = { title: "Critical Toast!", xp: critSeconds };
 		const previousSenderLevel = seconder.getLevel(company.xpCoefficient);
@@ -279,7 +244,7 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 			hunterReceipt.levelUp = { achievedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
 		}
 		hunterReceipts.set(seconder.userId, hunterReceipt);
-		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: company.id, userId: seconder.userId, seasonId }, defaults: { xp: critSeconds } });
+		const [participation, participationCreated] = await db.Participations.findOrCreate({ where: { companyId: company.id, userId: seconder.userId, seasonId }, defaults: { xp: critSeconds } });
 		if (!participationCreated) {
 			participation.increment({ xp: critSeconds });
 		}
@@ -287,49 +252,24 @@ async function secondToast(seconder, toast, company, recipientIds, seasonId) {
 	return hunterReceipts;
 }
 
-/**
- * @param {string} toastId
- * @param {string} messageId
- */
-function setToastMessageId(toastId, messageId) {
-	return db.models.Toast.update({ toastMessageId: messageId }, { where: { id: toastId } });
+export function setToastMessageId(toastId: string, messageId: Snowflake) {
+	return db.Toasts.update({ toastMessageId: messageId }, { where: { id: toastId } });
 }
 
-/** *Deletes all Toasts, Recipients, and Secondings for a specified Company*
- * @param {string} companyId
- */
-async function deleteCompanyToasts(companyId) {
-	const toasts = await db.models.Toast.findAll({ where: { companyId } });
+/** *Deletes all Toasts, Recipients, and Secondings for a specified Company* */
+export async function deleteCompanyToasts(companyId: Snowflake) {
+	const toasts = await db.Toasts.findAll({ where: { companyId } });
 	for (const toast of toasts) {
-		await db.models.Recipient.destroy({ where: { toastId: toast.id } });
-		await db.models.Seconding.destroy({ where: { toastId: toast.id } });
+		await db.Recipients.destroy({ where: { toastId: toast.id } });
+		await db.Secondings.destroy({ where: { toastId: toast.id } });
 		await toast.destroy();
 	}
 }
 
-/**
- * @param {string} userId
- * @param {string} companyId
- */
-async function deleteHunterToasts(userId, companyId) {
-	for (const toast of await db.models.Toast.findAll({ where: { senderId: userId, companyId } })) {
-		await db.models.Recipient.destroy({ where: { toastId: toast.id } });
-		await db.models.Seconding.destroy({ where: { toastId: toast.id } });
+export async function deleteHunterToasts(userId: Snowflake, companyId: Snowflake) {
+	for (const toast of await db.Toasts.findAll({ where: { senderId: userId, companyId } })) {
+		await db.Recipients.destroy({ where: { toastId: toast.id } });
+		await db.Secondings.destroy({ where: { toastId: toast.id } });
 		await toast.destroy();
 	}
-}
-
-module.exports = {
-	setDB,
-	findToastByMessageId,
-	findSecondingMentions,
-	findMostSecondedToast,
-	wasAlreadySeconded,
-	findToastByPK,
-	findSecondingMentions,
-	raiseToast,
-	secondToast,
-	setToastMessageId,
-	deleteCompanyToasts,
-	deleteHunterToasts
 }

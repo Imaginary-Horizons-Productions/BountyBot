@@ -3,9 +3,8 @@ import { promises as fsa } from "fs";
 import cron from "node-cron";
 import path from "path";
 import { Sequelize } from "sequelize";
-import { Company } from "./database/models/index.ts";
+import { DatabaseTypes } from "./database/index.ts";
 import { addButtonsToCooldownDictionary, getButton, linkAllButtonsToLogic } from "./frontend/buttons/_buttonDictionary.js";
-import type { MessageComponentFunctionality } from './frontend/classes/index.js';
 import { addCommandsToCooldownDictionary, addCommandsToPremiumList, getCommand, linkAllCommandsToLogic, slashData } from "./frontend/commands/_commandDictionary.ts";
 import { addContextMenusToCooldownDictionary, addContextMenusToPremiumList, contextMenuData, getContextMenu, linkAllContextMenusToLogic as setContextMenuLogic } from "./frontend/context_menus/_contextMenuDictionary.js";
 import { addItemsToCooldownDictionary, linkAllItemsToLogic } from "./frontend/items/_itemDictionary.js";
@@ -62,6 +61,7 @@ const dAPIClient = new Client({
 //#region Database Setup
 const basename = path.basename(__filename);
 const isDevMode = runMode === "development";
+//TODONOW adapt to new database shape
 const dbReady = dbConnection.authenticate().then(async () => {
 	return (await fsa.readdir(path.join(__dirname, "database", "models"))).filter(directory => directory.indexOf('.') === -1);
 }).then(directories => {
@@ -192,7 +192,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 
-	let args;
+	let args: string[] = [];
 	/**
 	 * Slash Command and Context Menu do not have a `customId` property,
 	 * but also will not need to signal to skip interaction handling
@@ -207,7 +207,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	await dbReady;
 
-	const origin = await logicBlob.companies.getInteractionOrigin(interaction);
+	const origin = await logicBlob.companies.constructInteractionTheater(interaction);
 
 	//#region Ban Check
 	if (origin.hunter.isBanned && !(interaction.isCommand() && mainId === "moderation")) {
@@ -243,15 +243,10 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		getContextMenu(mainId).execute(interaction, origin, isDevMode);
 	} else if (interaction.isCommand()) {
 		getCommand(mainId).execute(interaction, origin, isDevMode);
-	} else {
-		let interactionWrapper: MessageComponentFunctionality;
-		if (interaction.isButton()) {
-			interactionWrapper = getButton(mainId);
-		} else if (interaction.isAnySelectMenu()) {
-			interactionWrapper = getSelect(mainId);
-		}
-
-		interactionWrapper.execute(interaction, origin, runMode, args);
+	} else if (interaction.isButton()) {
+		getButton(mainId).execute(interaction, origin, isDevMode, ...args);
+	} else if (interaction.isAnySelectMenu()) {
+		getSelect(mainId).execute(interaction, origin, isDevMode, ...args);
 	}
 	//#endregion
 });
@@ -306,7 +301,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		return;
 	}
 
-	const previousCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+	const previousCompanyLevel = DatabaseTypes.Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 	const [season] = await logicBlob.seasons.findOrCreateCurrentSeason(guild.id);
 	const descendingRanks = await logicBlob.ranks.findAllRanks(guild.id);
 	const guildRoles = await guild.roles.fetch();
@@ -327,7 +322,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
-		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
@@ -345,7 +340,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientIds, hunterMap, season.id, toastText, null, hostMessage.id);
 
 		const companyReceipt = { guildName: guild.name };
-		const currentCompanyLevel = Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
@@ -403,11 +398,12 @@ dAPIClient.on(Events.ChannelDelete, async channel => {
 });
 
 dAPIClient.on(Events.MessageDelete, async message => {
+	if (!message.guild) return;
+
 	await dbReady;
 	logicBlob.companies.findCompanyByPK(message.guild.id).then(company => {
-		if (message.id === company.scoreboardMessageId) {
-			company.scoreboardMessageId = null;
-			company.save();
+		if (message.id === company?.scoreboardMessageId) {
+			company.update({ scoreboardMessageId: null });
 		}
 	})
 });
@@ -415,9 +411,8 @@ dAPIClient.on(Events.MessageDelete, async message => {
 dAPIClient.on(Events.ThreadDelete, async thread => {
 	await dbReady;
 	logicBlob.companies.findCompanyByPK(thread.guild.id).then(company => {
-		if (thread.id === company.evergreenThreadId) {
-			company.evergreenThreadId = null;
-			company.save();
+		if (thread.id === company?.evergreenThreadId) {
+			company.update({ evergreenThreadId: null });
 		}
 	})
 })

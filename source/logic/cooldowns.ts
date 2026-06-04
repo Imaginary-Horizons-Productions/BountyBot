@@ -1,18 +1,18 @@
-import { Op, Sequelize } from "sequelize";
-
 import { Snowflake } from "discord.js";
+import { Op } from "sequelize";
+import { Database } from "../database/index.ts";
 import { dateInPast } from "../shared";
 import { GLOBAL_COMMAND_COOLDOWN } from "../shared/constants.ts";
 
-let db: Sequelize;
+let db: Database;
 
-export function setDB(database: Sequelize) {
+export function setDB(database: Database) {
 	db = database;
 }
 
 /** Check all cooldown information based on the given user, interaction, and interaction time. */
 export async function checkCooldownState(userId: Snowflake, interactionName: string, interactionTime: Date) {
-	const latestCooldown = await db.models.UserInteraction.findOne({ where: { userId }, order: [["cooldownTime", "DESC"]] });
+	const latestCooldown = await db.UserInteractions.findOne({ where: { userId }, order: [["cooldownTime", "DESC"]] });
 	const gcdCooldown = !latestCooldown ? new Date(0) : new Date(latestCooldown.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
 	if (gcdCooldown > interactionTime) {
 		return {
@@ -28,7 +28,7 @@ export async function checkCooldownState(userId: Snowflake, interactionName: str
 
 /** Check cooldown information for a given command/item based on the given user, interaction, and interaction time. */
 export async function checkCommandCooldownState(userId: Snowflake, interactionName: string, interactionTime: Date) {
-	const thisInteractions = await db.models.UserInteraction.findOne({ where: { userId, interactionName }, order: [["cooldownTime", "DESC"]] });
+	const thisInteractions = await db.UserInteractions.findOne({ where: { userId, interactionName }, order: [["cooldownTime", "DESC"]] });
 	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
 		return {
 			isOnGeneralCooldown: false,
@@ -49,9 +49,9 @@ export async function checkCommandCooldownState(userId: Snowflake, interactionNa
  */
 export async function updateCooldowns(userId: Snowflake, interactionName: string, interactionTime: Date, cooldownInMS: number) {
 	const cooldownTime = new Date(interactionTime.getTime() + cooldownInMS);
-	const userInteraction = await db.models.UserInteraction.findOne({ where: { userId, interactionName } });
+	const userInteraction = await db.UserInteractions.findOne({ where: { userId, interactionName } });
 	if (!userInteraction) {
-		return db.models.UserInteraction.create({ userId, interactionName, interactionTime, lastInteractTime: interactionTime, cooldownTime: cooldownTime });
+		return db.UserInteractions.create({ userId, interactionName, interactionTime, lastInteractTime: interactionTime, cooldownTime: cooldownTime });
 	}
 
 	const updateValues = { lastInteractTime: interactionTime };
@@ -64,7 +64,7 @@ export async function updateCooldowns(userId: Snowflake, interactionName: string
 
 /** Clean cooldown data. Intended to be run periodically. */
 export function cleanCooldownData() {
-	return db.models.UserInteraction.destroy({
+	return db.UserInteractions.destroy({
 		where: {
 			cooldownTime: {
 				[Op.lt]: dateInPast({ d: 1 })

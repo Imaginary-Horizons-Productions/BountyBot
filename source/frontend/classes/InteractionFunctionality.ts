@@ -142,18 +142,11 @@ export class SubcommandFunctionality {
 	}
 }
 
-export class MessageComponentFunctionality extends InteractionFunctionality {
-	declare execute: ButtonProcedure | SelectMenuProcedure;
-
-	/** IHP parent wrapper for buttons and selects */
-	constructor(mainIdArgument: string, cooldownInMS: number, procedure: ButtonProcedure | SelectMenuProcedure) {
-		super(mainIdArgument, cooldownInMS, procedure);
-	}
-};
-
 type ButtonProcedure = (interaction: ButtonInteraction, theater: InteractionTheater, isDevMode: boolean, ...args: string[]) => void;
 
-export class ButtonFunctionality extends MessageComponentFunctionality {
+export class ButtonFunctionality extends InteractionFunctionality {
+	declare execute: ButtonProcedure;
+
 	/** IHP wrapper for button responses */
 	constructor(mainIdArgument: string, cooldownInMS: number, procedure: ButtonProcedure) {
 		super(mainIdArgument, cooldownInMS, procedure);
@@ -162,7 +155,9 @@ export class ButtonFunctionality extends MessageComponentFunctionality {
 
 type SelectMenuProcedure = (interaction: AnySelectMenuInteraction, theater: InteractionTheater, isDevMode: boolean, ...args: string[]) => void;
 
-export class SelectFunctionality extends MessageComponentFunctionality {
+export class SelectFunctionality extends InteractionFunctionality {
+	declare execute: SelectMenuProcedure;
+
 	/** IHP wrapper for any select responses */
 	constructor(mainIdArgument: string, cooldownInMS: number, procedure: SelectMenuProcedure) {
 		super(mainIdArgument, cooldownInMS, procedure);

@@ -1,28 +1,40 @@
-const { Model, Sequelize, DataTypes } = require('sequelize');
-const { Bounty } = require('../bounties/Bounty');
+import { Snowflake } from "discord.js";
+import { type Sequelize, DataTypes, Model } from "sequelize";
+import { Database } from "..";
+import { Bounty } from './Bounty';
 
 /** This class stores a user's information related to a specific company */
-class Hunter extends Model {
-	static associate(models) {
-		models.Hunter.User = models.Hunter.belongsTo(models.User, {
-			foreignKey: "userId"
-		});
+export class Hunter extends Model {
+	declare userId: Snowflake;
+	declare companyId: Snowflake;
+	declare xp: number;
+	declare lastShowcaseTimestamp: string | null;
+	declare mineFinished: number;
+	declare othersFinished: number;
+	declare toastsRaised: number;
+	declare toastsSeconded: number;
+	declare toastsReceived: number;
+	declare goalsInitiated: number;
+	declare goalContributions: number;
+	declare isBanned: boolean;
+	declare hasBeenBanned: boolean;
+	declare penaltyCount: number;
+	declare penaltyPointTotal: number;
+	declare profileColor: string;
+	declare itemFindBoost: boolean;
+	declare createdAt: string;
+	declare updatedAt: string;
+
+	static associate(models: Database) {
+		models.Hunters.belongsTo(models.Users, { foreignKey: "userId" });
 	}
 
-	/**
-	 * @param {number} level
-	 * @param {number} xpCoefficient
-	 */
-	static xpThreshold(level, xpCoefficient) {
+	static xpThreshold(level: number, xpCoefficient: number) {
 		// xp = xpCoefficient*(level - 1)^2
 		return xpCoefficient * (level - 1) ** 2;
 	}
 
-	/**
-	 * @param {number} level
-	 * @param {number} maxSimBounties
-	 */
-	static getBountySlotCount(level, maxSimBounties) {
+	static getBountySlotCount(level: number, maxSimBounties: number) {
 		let slots = 1 + Math.floor(level / 12) * 2;
 		let remainder = level % 12;
 		if (remainder >= 3) {
@@ -35,13 +47,8 @@ class Hunter extends Model {
 		return Math.min(slots, maxSimBounties);
 	}
 
-	/**
-	 * @param {number} level
-	 * @param {number} maxSlots
-	 * @returns {[kind: "bountySlotUnlocked" | "oddSlotBaseRewardIncrease" | "evenSlotBaseRewardIncrease", value: number][]}
-	 */
-	static getLevelUpRewards(level, maxSlots) {
-		const rewards = [];
+	static getLevelUpRewards(level: number, maxSlots: number) {
+		const rewards: [kind: "bountySlotUnlocked" | "oddSlotBaseRewardIncrease" | "evenSlotBaseRewardIncrease", value: number][] = [];
 		const currentSlots = Hunter.getBountySlotCount(level, maxSlots);
 		if (currentSlots < maxSlots) {
 			if (level == 3 + 12 * Math.floor((currentSlots - 2) / 2) + 7 * ((currentSlots - 2) % 2)) {
@@ -56,14 +63,12 @@ class Hunter extends Model {
 		return rewards;
 	}
 
-	/** @param {number} xpCoefficient */
-	getLevel(xpCoefficient) {
+	getLevel(xpCoefficient: number) {
 		return Math.floor(Math.sqrt(this.xp / xpCoefficient) + 1);
 	}
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return Hunter.init({
 		userId: {
 			primaryKey: true,
@@ -138,5 +143,3 @@ function initModel(sequelize) {
 		freezeTableName: true
 	});
 };
-
-module.exports = { Hunter, initModel };

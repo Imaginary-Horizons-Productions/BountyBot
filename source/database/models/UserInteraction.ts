@@ -1,16 +1,23 @@
-const { Model, DataTypes, Sequelize } = require('sequelize');
+import { Snowflake } from "discord.js";
+import { type Sequelize, DataTypes, Model } from "sequelize";
+import { Database } from "..";
 
 /** This class stores global information for bot users */
-class UserInteraction extends Model {
-	static associate(models) {
-		models.UserInteraction.User = models.UserInteraction.hasOne(models.User, {
-			foreignKey: "id"
-		})
+export class UserInteraction extends Model {
+	declare userId: Snowflake;
+	declare interactionName: string;
+	declare interactionTime: string;
+	declare lastInteractTime: string;
+	declare cooldownTime: string;
+	declare createdAt: string;
+	declare updatedAt: string;
+
+	static associate(models: Database) {
+		models.UserInteractions.hasOne(models.Users, { foreignKey: "id" });
 	}
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return UserInteraction.init({
 		userId: {
 			primaryKey: true,
@@ -41,5 +48,3 @@ function initModel(sequelize) {
 		timestamps: false
 	});
 }
-
-module.exports = { UserInteraction, initModel };

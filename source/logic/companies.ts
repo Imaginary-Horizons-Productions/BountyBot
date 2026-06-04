@@ -1,35 +1,35 @@
 import { Interaction } from "discord.js";
-import { Sequelize } from "sequelize";
-import { InteractionOrigin } from "../frontend/classes";
+import { Database } from "../database";
+import { InteractionTheater } from "../frontend/classes";
 
-let db: Sequelize;
+let db: Database;
 
 /** *Sets the database pointer for the Company logic file* */
-export function setDB(database: Sequelize) {
+export function setDB(database: Database) {
 	db = database;
 }
 
-export async function getInteractionOrigin(interaction: Interaction): Promise<InteractionOrigin> {
+export async function constructInteractionTheater(interaction: Interaction): Promise<InteractionTheater> {
 	return {
-		company: (await db.models.Company.findOrCreate({ where: { id: interaction.guildId } }))[0],
-		user: (await db.models.User.findOrCreate({ where: { id: interaction.user.id } }))[0],
-		hunter: (await db.models.Hunter.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } }))[0]
+		company: (await db.Companies.findOrCreate({ where: { id: interaction.guildId } }))[0],
+		user: (await db.Users.findOrCreate({ where: { id: interaction.user.id } }))[0],
+		hunter: (await db.Hunters.findOrCreate({ where: { userId: interaction.user.id, companyId: interaction.guildId } }))[0]
 	};
 }
 
 /** *Queries for a Company* */
 export function findOrCreateCompany(companyId: string) {
-	return db.models.Company.findOrCreate({ where: { id: companyId } });
+	return db.Companies.findOrCreate({ where: { id: companyId } });
 }
 
 /** *Queries for a Company by primary key* */
 export function findCompanyByPK(companyId: string) {
-	return db.models.Company.findByPk(companyId);
+	return db.Companies.findByPk(companyId);
 }
 
 /** *Reset the specified Company's settings to the defaults* */
 export function resetCompanySettings(id: string) {
-	db.models.Company.update(
+	db.Companies.update(
 		{
 			announcementPrefix: "@here",
 			maxSimBounties: 5,
@@ -51,5 +51,5 @@ export function resetCompanySettings(id: string) {
 
 /** *Deletes the specified Company* */
 export function deleteCompany(companyId: string) {
-	return db.models.Company.destroy({ where: { id: companyId } });
+	return db.Companies.destroy({ where: { id: companyId } });
 }

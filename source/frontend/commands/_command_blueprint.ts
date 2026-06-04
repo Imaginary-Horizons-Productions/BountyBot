@@ -1,13 +1,13 @@
-const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { aggregateSubcommands } = require('../shared');
+import { InteractionContextType, PermissionFlagsBits } from 'discord.js';
+import type { LogicLayer } from "../../shared/types";
+import { CommandFunctionality } from '../classes';
+import { aggregateSubcommands } from '../shared';
 
-/** @type {import('../../shared/types').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "";
 const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = aggregateSubcommands(mainId, []);
-module.exports = new CommandWrapper(mainId, "description", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "description", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Command specifications go here */
 	(interaction, origin, isDevMode) => {
 

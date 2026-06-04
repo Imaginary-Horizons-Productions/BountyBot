@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Participation, Rank, Season } = require("../database/models");
+const { Participation, Rank, Season } = require("../database");
 const { calculateXPMean, calculateXPStandardDeviation } = require("./shared");
 const { descendingByProperty } = require("../shared");
 const { Role, Collection } = require("discord.js");

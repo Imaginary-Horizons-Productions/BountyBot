@@ -1,28 +1,39 @@
-﻿const { GuildScheduledEventManager, GuildScheduledEvent } = require('discord.js');
-const { Model, Sequelize, DataTypes } = require('sequelize');
+﻿import { GuildScheduledEventManager, Snowflake } from "discord.js";
+import { DataTypes, Model, Sequelize } from "sequelize";
+import { Database } from "..";
 
 /** Bounties are user created objectives for other server members to complete */
-class Bounty extends Model {
-	static associate(models) {
-		models.Bounty.Completions = models.Bounty.hasMany(models.Completion, {
-			foreignKey: "bountyId"
-		});
+export class Bounty extends Model {
+	declare id: string;
+	declare userId: Snowflake;
+	declare companyId: Snowflake;
+	declare postingId: Snowflake | null;
+	declare slotNumber: number;
+	declare isEvergreen: boolean;
+	declare title: string;
+	declare thumbnailURL: string | null;
+	declare description: string | null;
+	declare attachmentURL: string | null;
+	declare scheduledEventId: string | null;
+	declare state: "open" | "completed" | "deleted";
+	declare showcaseCount: number;
+	declare completedAt: string;
+	declare editCount: number;
+	declare createdAt: string; //TODONOW are these really strings?
+	declare updatedAt: string;
+
+	static associate(models: Database) {
+		models.Bounties.hasMany(models.Completions, { foreignKey: "bountyId" });
 	}
 
-	/**
-	 * @param {number} posterLevel
-	 * @param {number} slotNumber
-	 * @param {number} showcaseCount
-	 */
-	static calculateCompleterReward(posterLevel, slotNumber, showcaseCount) {
+	static calculateCompleterReward(posterLevel: number, slotNumber: number, showcaseCount: number) {
 		const showcaseMultiplier = 0.25 * showcaseCount + 1;
 		return Math.max(2, Math.floor((6 + 0.5 * posterLevel - 3 * slotNumber + 0.5 * slotNumber % 2) * showcaseMultiplier));
 	}
 
-	/** @param {number} hunterCount */
-	calculatePosterReward(hunterCount) {
+	calculatePosterReward(hunterCount: number) {
 		let posterXP = Math.ceil(hunterCount / 2);
-		for (const property of ["description", "thumbnailURL", "attachmentURL", "scheduledEventId"]) {
+		for (const property of ["description", "thumbnailURL", "attachmentURL", "scheduledEventId"] as (keyof Bounty)[]) {
 			if (this[property] !== null) {
 				posterXP++;
 			}
@@ -30,11 +41,7 @@ class Bounty extends Model {
 		return posterXP;
 	}
 
-	/**
-	 * @param {GuildScheduledEventManager} guildScheduledEventManager
-	 * @returns {GuildScheduledEvent | null}
-	 */
-	getScheduledEvent(guildScheduledEventManager) {
+	getScheduledEvent(guildScheduledEventManager: GuildScheduledEventManager) {
 		if (!this.scheduledEventId) {
 			return null;
 		}
@@ -43,8 +50,7 @@ class Bounty extends Model {
 	}
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return Bounty.init({
 		id: {
 			primaryKey: true,
@@ -86,9 +92,9 @@ function initModel(sequelize) {
 		scheduledEventId: {
 			type: DataTypes.STRING
 		},
-		state: { // Allowed values: "open", "completed", "deleted"
+		state: {
 			type: DataTypes.STRING,
-			defaultValue: "open"
+			defaultValue: "open" //TODONOW create enum
 		},
 		showcaseCount: {
 			type: DataTypes.BIGINT,
@@ -107,5 +113,3 @@ function initModel(sequelize) {
 		freezeTableName: true
 	});
 };
-
-module.exports = { Bounty, initModel };

@@ -1,11 +1,12 @@
-import { italic } from "discord.js";
-import { DataTypes, Model, ModelStatic, type Sequelize } from "sequelize";
-import { MAX_BOT_NICKNAME_LENGTH } from "../../../shared/constants.ts";
-import type { Hunter } from "../users/Hunter";
+import { italic, Snowflake } from "discord.js";
+import { DataTypes, Model, type Sequelize } from "sequelize";
+import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
+import { Database } from "../index.ts";
+import type { Hunter } from "./Hunter.js";
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */
 export class Company extends Model {
-	declare id: string;
+	declare id: Snowflake;
 	declare announcementPrefix: "@here" | "@everyone" | "@silent" | "";
 	declare maxSimBounties: number;
 	declare backupTimer: number;
@@ -29,16 +30,18 @@ export class Company extends Model {
 	declare scoreboardThumbnailURL: string;
 	declare goalCompletionThumbnailURL: string;
 	declare raffleThumbnailURL: string;
+	declare createdAt: string;
+	declare updatedAt: string;
 
-	static associate(models: Record<string, ModelStatic<Model>>) {
-		Company.hasMany(models.Rank, { foreignKey: "companyId" });
-		Company.hasMany(models.Hunter, { foreignKey: "companyId" });
-		Company.hasMany(models.Bounty, { foreignKey: "companyId" });
-		Company.hasMany(models.Completion, { foreignKey: "companyId" });
-		Company.hasMany(models.Toast, { foreignKey: "companyId" });
-		Company.hasMany(models.Season, { foreignKey: "companyId" });
-		Company.hasMany(models.Participation, { foreignKey: "companyId" });
-		Company.hasMany(models.Goal, { foreignKey: "companyId" });
+	static associate(models: Database) {
+		Company.hasMany(models.Ranks, { foreignKey: "companyId" });
+		Company.hasMany(models.Hunters, { foreignKey: "companyId" });
+		Company.hasMany(models.Bounties, { foreignKey: "companyId" });
+		Company.hasMany(models.Completions, { foreignKey: "companyId" });
+		Company.hasMany(models.Toasts, { foreignKey: "companyId" });
+		Company.hasMany(models.Seasons, { foreignKey: "companyId" });
+		Company.hasMany(models.Participations, { foreignKey: "companyId" });
+		Company.hasMany(models.Goals, { foreignKey: "companyId" });
 	}
 
 	static getLevel(xp: number) {
