@@ -326,7 +326,6 @@ module.exports = {
 	findMostSecondedToast,
 	wasAlreadySeconded,
 	findToastByPK,
-	findSecondingMentions,
 	raiseToast,
 	secondToast,
 	setToastMessageId,
