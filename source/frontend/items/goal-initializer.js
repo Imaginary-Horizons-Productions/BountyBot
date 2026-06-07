@@ -2,7 +2,7 @@ const { MessageFlags, bold } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { addCompanyAnnouncementPrefix } = require("../shared");
 
-/** @type {import("../../shared/types").LogicLayer} */
+/** @type {import("../../logic").LogicLayer} */
 let logicLayer;
 
 const itemName = "Goal Initializer";

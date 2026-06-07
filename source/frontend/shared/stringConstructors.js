@@ -1,7 +1,7 @@
 const { heading, userMention, bold, italic } = require("discord.js");
 const { commandIds } = require("../../shared/constants.ts");
 const { MessageLimits } = require("@sapphire/discord.js-utilities");
-const { Hunter } = require("../../database/models");
+const { DatabaseTypes } = require("../../database/index.ts");
 
 /**
  * @file String Constructors - formatted reusable strings
@@ -121,7 +121,7 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 				let evenSlotBaseRewardIncrease = null;
 				const bountySlotsUnlocked = [];
 				for (let level = receipt.levelUp.previousLevel + 1; level <= receipt.levelUp.achievedLevel; level++) {
-					for (const [type, value] of Hunter.getLevelUpRewards(level, companyMaxBountySlots)) {
+					for (const [type, value] of DatabaseTypes.Hunter.getLevelUpRewards(level, companyMaxBountySlots)) {
 						switch (type) {
 							case "oddSlotBaseRewardIncrease":
 								if (oddSlotBaseRewardIncrease === null || value > oddSlotBaseRewardIncrease) {

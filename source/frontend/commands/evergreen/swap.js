@@ -2,9 +2,9 @@ const { StringSelectMenuBuilder, MessageFlags, ModalBuilder, LabelBuilder, TextD
 const { SubcommandWrapper } = require("../../classes");
 const { selectOptionsFromBounties, refreshEvergreenBountiesThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { Bounty, Company } = require("../../../database/models");
 const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergreen bounties",
 	ensureCompanyHasEnoughOpenEvergreenBounties(2, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
@@ -58,9 +58,9 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 		await sourceBounty.update({ slotNumber: destinationSlot });
 		await destinationBounty.update({ slotNumber: sourceSlot });
 
-		const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
 		// Evergreen bounties are not eligible for showcase bonuses
-		modalSubmission.reply(`Some evergreen bounties have been swapped, ${bold(sourceBounty.title)} is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, destinationSlot, 0)} XP and ${bold(destinationBounty.title)} is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, sourceSlot, 0)} XP.`);
+		modalSubmission.reply(`Some evergreen bounties have been swapped, ${bold(sourceBounty.title)} is now worth ${DatabaseTypes.Bounty.calculateCompleterReward(currentCompanyLevel, destinationSlot, 0)} XP and ${bold(destinationBounty.title)} is now worth ${DatabaseTypes.Bounty.calculateCompleterReward(currentCompanyLevel, sourceSlot, 0)} XP.`);
 
 		if (theater.company.bountyBoardId) {
 			const reloadedBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);

@@ -3,8 +3,8 @@ const { SelectOptionWrapper } = require("../../classes");
 const { timeConversion } = require("../../../shared");
 const { commandMention, sentenceListEN, butIgnoreInteractionCollectorErrors, syncRankRoles, consolidateHunterReceipts, rewardSummary, refreshBountyBoardThread, unarchiveAndUnlockThread, goalCompletionEmbed, butIgnoreMissingPermissionErrors, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError, auditReasonBountyComplete, bountyEmbed } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { Company } = require("../../../database/models");
 const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SelectOptionWrapper("complete",
 	ensureBountyExistsAndInteractorIsPoster(
@@ -80,13 +80,13 @@ module.exports = new SelectOptionWrapper("complete",
 			const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");
 
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
-			const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, theater.company);
 			const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunterMap.get(bounty.userId), season);
 			companyReceipt.guildName = modalSubmission.guild.name;
 
 			hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
-			const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			if (previousCompanyLevel < currentCompanyLevel) {
 				companyReceipt.levelUp = currentCompanyLevel;
 			}

@@ -1,7 +1,7 @@
 const { MessageFlags } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 
-/** @type {import("../../shared/types").LogicLayer} */
+/** @type {import("../../logic").LogicLayer} */
 let logicLayer;
 
 class Colorizer extends ItemTemplate {

@@ -1,15 +1,22 @@
-const { Model, Sequelize, DataTypes } = require('sequelize');
+import type { Snowflake } from "discord.js";
+import { DataTypes, Model, type Sequelize } from "sequelize";
+import type { Database } from "..";
 
-class Season extends Model {
-	static associate(models) {
-		models.Season.Participations = models.Season.hasMany(models.Participation, {
-			foreignKey: "seasonId"
-		})
+export class Season extends Model {
+	declare id: string;
+	declare companyId: Snowflake;
+	declare isCurrentSeason: boolean;
+	declare isPreviousSeason: boolean;
+	declare totalXP: Promise<number>;
+	declare bountiesCompleted: number;
+	declare toastsRaised: number;
+
+	static associate(models: Database) {
+		models.Seasons.hasMany(models.Participations, { foreignKey: "seasonId" });
 	}
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return Season.init({
 		id: {
 			primaryKey: true,
@@ -48,5 +55,3 @@ function initModel(sequelize) {
 		freezeTableName: true
 	});
 }
-
-module.exports = { Season, initModel };

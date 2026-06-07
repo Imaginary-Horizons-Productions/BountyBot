@@ -1,5 +1,6 @@
 import { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
-import { CooldownDictionary, LogicLayer, PremiumFlowList } from '../../shared/types';
+import { LogicLayer } from '../../logic';
+import { CooldownDictionary, PremiumFlowList } from '../../shared/types';
 import { type CommandFunctionality, BuildError } from '../classes';
 
 export const commandFiles = [

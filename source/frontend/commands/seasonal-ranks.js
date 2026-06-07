@@ -2,7 +2,7 @@ const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, 
 const { CommandWrapper } = require('../classes/index.js');
 const { attachOverflowingContentAsFile } = require('../shared');
 
-/** @type {import('../../shared/types.js').LogicLayer} */
+/** @type {import('../../logic/index.js').LogicLayer} */
 let logicLayer;
 
 const mainId = "seasonal-ranks";

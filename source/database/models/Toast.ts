@@ -1,6 +1,6 @@
-import { Snowflake } from "discord.js";
-import { DataTypes, Model, Sequelize } from "sequelize";
-import { Database } from "..";
+import type { Snowflake } from "discord.js";
+import { DataTypes, Model, type Sequelize } from "sequelize";
+import type { Database } from "..";
 
 /** This model represents a toast raised for a group of bounty hunters */
 export class Toast extends Model {

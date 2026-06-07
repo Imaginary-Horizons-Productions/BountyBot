@@ -2,8 +2,8 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType }
 const { SubcommandWrapper } = require("../../classes");
 const { commandMention, selectOptionsFromBounties, refreshEvergreenBountiesThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { Company } = require("../../../database/models");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of the server's Evergreen Bounties",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
@@ -25,7 +25,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of the server
 			if (theater.company.bountyBoardId) {
 				const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
 				if (evergreenBounties.length > 0) {
-					const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
+					const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
 					const hunterIdMap = {};
 					for (const bounty of evergreenBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);

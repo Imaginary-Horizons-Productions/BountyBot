@@ -1,8 +1,7 @@
-const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, updateBotNicknameForFestival } = require("../../shared");
-const { Company } = require("../../../database/models");
 const { ensureNumberFromSlashOptionIsGreaterThanOne } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("start-gp", "Start a GP multiplier festival",
 	ensureNumberFromSlashOptionIsGreaterThanOne("mulitplier", async function executeSubcommand(interaction, theater, isDevMode, logicLayer, multiplier) {
@@ -23,7 +22,7 @@ module.exports = new SubcommandWrapper("start-gp", "Start a GP multiplier festiv
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	})
 ).setOptions(

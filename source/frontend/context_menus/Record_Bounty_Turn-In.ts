@@ -1,7 +1,7 @@
 import { bold, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention } from 'discord.js';
+import { LogicLayer } from '../../logic';
 import { timeConversion } from '../../shared';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
-import { LogicLayer } from "../../shared/types";
 import { UserContextMenuFunctionality } from '../classes';
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, unarchiveAndUnlockThread } from '../shared';
 

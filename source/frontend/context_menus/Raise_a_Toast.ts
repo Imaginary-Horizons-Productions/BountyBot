@@ -1,8 +1,8 @@
 import { InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
-import { Company } from '../../database/models';
+import { DatabaseTypes } from '../../database';
+import { LogicLayer } from '../../logic';
 import { timeConversion } from '../../shared';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
-import { LogicLayer } from "../../shared/types";
 import { UserContextMenuFunctionality } from '../classes';
 import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared';
 
@@ -52,7 +52,7 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-			const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, theater.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText, null);
 			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 			let companyReceipt = {};
@@ -62,7 +62,7 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 				goalProgress = results.goalProgress;
 
 				hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-				const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+				const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 				if (previousCompanyLevel < currentCompanyLevel) {
 					companyReceipt.levelUp = currentCompanyLevel;
 				}

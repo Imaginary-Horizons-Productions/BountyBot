@@ -2,7 +2,7 @@ const { InteractionContextType, MessageFlags } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { seasonalScoreboardEmbed, overallScoreboardEmbed } = require('../shared');
 
-/** @type {import('../../shared/types').LogicLayer} */
+/** @type {import('../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "scoreboard";

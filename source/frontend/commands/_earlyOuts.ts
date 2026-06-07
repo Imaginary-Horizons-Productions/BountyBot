@@ -1,10 +1,10 @@
 import { ChatInputCommandInteraction, GuildMember, MessageFlags } from "discord.js";
-import { Bounty, Hunter } from "../../database/models";
-import { LogicLayer } from "../../shared/types";
+import { DatabaseTypes } from "../../database";
+import { LogicLayer } from "../../logic";
 import { InteractionTheater } from "../classes";
 import { commandMention } from "../shared";
 
-export function ensureUserFromSlashOptionHasBountyHunter(optionName: string, next: (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, entities: { member: GuildMember; hunter: Hunter; }) => Promise<void>) {
+export function ensureUserFromSlashOptionHasBountyHunter(optionName: string, next: (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, entities: { member: GuildMember; hunter: DatabaseTypes.Hunter; }) => Promise<void>) {
 	return async (interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => {
 		const member = interaction.options.getMember(optionName);
 		if (member === null) {
@@ -30,7 +30,7 @@ export function ensureNumberFromSlashOptionIsGreaterThanOne(optionName: string, 
 	}
 }
 
-export function ensureCompanyHasEnoughOpenEvergreenBounties(countThreshold: number, next: (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, bounties: Bounty[]) => Promise<void>) {
+export function ensureCompanyHasEnoughOpenEvergreenBounties(countThreshold: number, next: (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, bounties: DatabaseTypes.Bounty[]) => Promise<void>) {
 	return async (interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => {
 		const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
 		if (evergreenBounties.length < countThreshold) {
@@ -44,7 +44,7 @@ export function ensureCompanyHasEnoughOpenEvergreenBounties(countThreshold: numb
 	}
 }
 
-export function ensureHunterHasOpenBounty(next: (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, bounties: Bounty[]) => Promise<void>) {
+export function ensureHunterHasOpenBounty(next: (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, bounties: DatabaseTypes.Bounty[]) => Promise<void>) {
 	return async (interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => {
 		const bounties = await logicLayer.bounties.findOpenBounties(theater.user.id, theater.company.id);
 		if (bounties.length < 1) {

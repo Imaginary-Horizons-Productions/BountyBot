@@ -1,14 +1,14 @@
-const { Sequelize, Op } = require("sequelize");
-const { Participation, Rank, Season } = require("../database");
+const { Op } = require("sequelize");
+const { DatabaseTypes } = require("../database");
 const { calculateXPMean, calculateXPStandardDeviation } = require("./shared");
 const { descendingByProperty } = require("../shared");
 const { Role, Collection } = require("discord.js");
 
-/** @type {Sequelize} */
+/** @type {import("../database").Database} */
 let db;
 
 /** *Sets the database pointer for the Season logic file*
- * @param {Sequelize} database
+ * @param {import("../database").Database} database
  */
 function setDB(database) {
 	db = database;
@@ -56,7 +56,7 @@ function getDQCount(userId, companyId) {
  * @param {string} seasonId
  */
 async function getParticipationMap(seasonId) {
-	/** @type {Map<string, Participation>} */
+	/** @type {Map<string, DatabaseTypes.Participation>} */
 	const participationMap = new Map();
 	const participations = await db.models.Participation.findAll({ where: { seasonId } });
 	for (const participation of participations) {
@@ -104,8 +104,8 @@ async function findParticipationWithTopParticipationStat(companyId, seasonId, pa
 
 /** Calculates the XP required for the specified Hunter to reach the next Rank
  * @param {string} userId
- * @param {Season} season
- * @param {Rank[]} descendingRanks
+ * @param {DatabaseTypes.Season} season
+ * @param {DatabaseTypes.Rank[]} descendingRanks
  */
 async function nextRankXP(userId, season, descendingRanks) {
 	const participationMap = await getParticipationMap(season.id);
@@ -120,8 +120,8 @@ async function nextRankXP(userId, season, descendingRanks) {
 
 
 /** Recalculate placement and rank changes based on changed XP values on Participations and updates the database
- * @param {Map<string, Participation>} participationMap
- * @param {Rank[]} descendingRanks
+ * @param {Map<string, DatabaseTypes.Participation>} participationMap
+ * @param {DatabaseTypes.Rank[]} descendingRanks
  * @param {Collection<import("discord.js").Snowflake, Role>} allGuildRoles
  */
 async function updatePlacementsAndRanks(participationMap, descendingRanks, allGuildRoles) {
@@ -174,7 +174,7 @@ async function updatePlacementsAndRanks(participationMap, descendingRanks, allGu
 }
 
 /** *Generates a map of all of a Season's Participations' placement changes*
- * @param {Map<any, Participation>} participationMap
+ * @param {Map<any, DatabaseTypes.Participation>} participationMap
  */
 async function calculatePlacementChanges(participationMap) {
 	const participationArray = Array.from(participationMap.values()).sort(descendingByProperty("xp"));

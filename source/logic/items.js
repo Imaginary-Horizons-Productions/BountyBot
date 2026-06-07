@@ -1,13 +1,13 @@
-const { Sequelize, Op } = require("sequelize");
+const { Op } = require("sequelize");
 const { dateInPast } = require("../shared");
 const { premium } = require("../shared/constants.ts");
-const { Item, Hunter } = require("../database/index.ts");
+const { DatabaseTypes } = require("../database/index.ts");
 
-/** @type {Sequelize} */
+/** @type {import("../database/index.ts").Database} */
 let db;
 
 /** *Set the database pointer for the Item logic file*
- * @param {Sequelize} database
+ * @param {import("../database/index.ts").Database} database
  */
 function setDB(database) {
 	db = database;
@@ -80,8 +80,8 @@ async function getDropsAvailable(hunterId) {
 
 /** *Grants the User 1 copy of a random Item at a rate of dropRate*
  * @param {number} dropRate a decimal representing the probability
- * @param {Hunter} hunter
- * @returns {Promise<[itemRow: Item | null, wasCreated: boolean]>}
+ * @param {DatabaseTypes.Hunter} hunter
+ * @returns {Promise<[itemRow: DatabaseTypes.Item | null, wasCreated: boolean]>}
  */
 async function rollItemForHunter(dropRate, hunter) {
 	if (hunter.itemFindBoost) {
@@ -102,7 +102,7 @@ async function rollItemForHunter(dropRate, hunter) {
 	}
 	if (!droppedItem) return [null, false];
 
-	return [ await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true ];
+	return [await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true];
 }
 
 /** *Finds the count of the specified Items of User*

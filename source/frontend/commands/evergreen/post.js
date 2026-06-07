@@ -4,7 +4,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING, MAX_EVERGREEN_SLOTS } = require("../../../constants");
 const { textsHaveAutoModInfraction, commandMention, bountyEmbed, addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { timeConversion } = require("../../../shared");
-const { Company } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit ${MAX_EVERGREEN_SLOTS}`,
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
@@ -87,7 +87,7 @@ module.exports = new SubcommandWrapper("post", `Post an evergreen bounty, limit 
 			existingBounties.push(bounty);
 
 			// post in bounty board forum
-			const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 			interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] })).then(async () => {
 				if (theater.company.bountyBoardId) {
 					const hunterIdMap = {};

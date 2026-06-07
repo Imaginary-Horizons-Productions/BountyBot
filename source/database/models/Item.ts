@@ -1,12 +1,18 @@
-const { Model, Sequelize, DataTypes } = require('sequelize');
+import type { Snowflake } from "discord.js";
+import { DataTypes, Model, type Sequelize } from "sequelize";
+import type { Database } from "..";
 
 /** This class stores global information for user items */
-class Item extends Model {
-	static associate(models) { }
+export class Item extends Model {
+	declare id: string;
+	declare userId: Snowflake;
+	declare itemName: string;
+	declare used: boolean;
+
+	static associate(models: Database) { }
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return Item.init({
 		id: {
 			primaryKey: true,
@@ -27,7 +33,7 @@ function initModel(sequelize) {
 		},
 		used: {
 			type: DataTypes.BOOLEAN,
-			default: false
+			defaultValue: false
 		}
 	}, {
 		sequelize,
@@ -35,5 +41,3 @@ function initModel(sequelize) {
 		freezeTableName: true
 	});
 };
-
-module.exports = { Item, initModel };

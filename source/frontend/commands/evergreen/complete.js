@@ -1,10 +1,10 @@
 const { MessageFlags, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { Bounty, Company } = require("../../../database/models");
 const { bountyEmbed, goalCompletionEmbed, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, refreshEvergreenBountiesThread, commandMention, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
@@ -55,9 +55,9 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		const companyReceipt = { guildName: modalSubmission.guild.name };
 		const hunterReceipts = new Map();
 
-		const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		// Evergreen bounties are not eligible for showcase bonuses
-		const bountyBaseValue = Bounty.calculateCompleterReward(previousCompanyLevel, bounty.slotNumber, 0);
+		const bountyBaseValue = DatabaseTypes.Bounty.calculateCompleterReward(previousCompanyLevel, bounty.slotNumber, 0);
 		const bountyValue = Math.floor(bountyBaseValue * theater.company.xpFestivalMultiplier);
 		await logicLayer.bounties.bulkCreateCompletions(bountyId, theater.company.id, [...validatedHunters.keys()], bountyValue);
 
@@ -89,7 +89,7 @@ module.exports = new SubcommandWrapper("complete", "Distribute rewards for turn-
 		}
 
 		hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
-		const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}

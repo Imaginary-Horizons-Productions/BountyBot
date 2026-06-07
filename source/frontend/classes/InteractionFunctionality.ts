@@ -1,6 +1,7 @@
 import { AnySelectMenuInteraction, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, PermissionFlags, PrimaryEntryPointCommandInteraction, SlashCommandBuilder, Snowflake, UserContextMenuCommandInteraction } from "discord.js";
+import { LogicLayer } from "../../logic/index.ts";
 import { MAX_SET_TIMEOUT } from "../../shared/constants.ts";
-import { LogicLayer, MemberOf } from "../../shared/types.ts";
+import { MemberOf } from "../../shared/types.ts";
 import { BuildError } from "./BuildError.js";
 import { InteractionTheater } from "./InteractionTheater.ts";
 

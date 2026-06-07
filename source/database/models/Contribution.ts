@@ -1,16 +1,20 @@
-const { Model, Sequelize, DataTypes } = require('sequelize');
+import type { Snowflake } from "discord.js";
+import { DataTypes, Model, type Sequelize } from "sequelize";
+import type { Database } from "..";
 
 /** A bounty hunter's Contribution to a company Goal */
-class Contribution extends Model {
-	static associate(models) {
-		models.Contribution.User = models.Contribution.belongsTo(models.User, {
-			foreignKey: "userId"
-		})
+export class Contribution extends Model {
+	declare id: string;
+	declare goalId: string;
+	declare userId: Snowflake;
+	declare value: number;
+
+	static associate(models: Database) {
+		models.Contributions.belongsTo(models.Users, { foreignKey: "userId" });
 	}
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return Contribution.init({
 		id: {
 			primaryKey: true,
@@ -35,5 +39,3 @@ function initModel(sequelize) {
 		freezeTableName: true
 	});
 }
-
-module.exports = { Contribution, initModel };

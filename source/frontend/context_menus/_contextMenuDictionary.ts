@@ -1,5 +1,6 @@
 import { RESTPostAPIContextMenuApplicationCommandsJSONBody } from "discord.js";
-import { CooldownDictionary, LogicLayer, PremiumFlowList } from "../../shared/types";
+import { LogicLayer } from "../../logic";
+import { CooldownDictionary, PremiumFlowList } from "../../shared/types";
 import { BuildError, type ContextMenuFunctionality } from "../classes";
 
 export const contextMenuFiles: string[] = [

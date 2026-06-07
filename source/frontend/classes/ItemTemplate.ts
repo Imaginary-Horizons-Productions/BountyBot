@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction } from "discord.js";
-import { LogicLayer } from "../../shared/types";
+import { LogicLayer } from "../../logic";
 import { InteractionTheater } from "./InteractionTheater";
 
 export class ItemTemplateSet {

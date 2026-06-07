@@ -1,9 +1,9 @@
 const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList, underline, italic } = require('discord.js');
 const { CommandWrapper } = require('../classes');
-const { Hunter } = require('../../database/models');
 const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, hunterProfileEmbed } = require('../shared');
+const { DatabaseTypes } = require('../../database');
 
-/** @type {import('../../shared/types').LogicLayer} */
+/** @type {import('../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "stats";
@@ -34,8 +34,8 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 					}
 
 					const currentHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
-					const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, theater.company.xpCoefficient);
-					const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, theater.company.xpCoefficient);
+					const currentLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentHunterLevel, theater.company.xpCoefficient);
+					const nextLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentHunterLevel + 1, theater.company.xpCoefficient);
 					const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
 					const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
@@ -55,9 +55,9 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 		} else {
 			// Self
 			const currentHunterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
-			const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, theater.company.xpCoefficient);
-			const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, theater.company.xpCoefficient);
-			const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, theater.company.maxSimBounties);
+			const currentLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentHunterLevel, theater.company.xpCoefficient);
+			const nextLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentHunterLevel + 1, theater.company.xpCoefficient);
+			const bountySlots = DatabaseTypes.Hunter.getBountySlotCount(currentHunterLevel, theater.company.maxSimBounties);
 			const participations = await logicLayer.seasons.findHunterParticipations(theater.hunter.userId, theater.hunter.companyId);
 			const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 			const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
@@ -103,7 +103,7 @@ module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yoursel
 							{ name: "Bounty Stats", value: `Bounties Hunted: ${theater.hunter.othersFinished} bount${theater.hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${theater.hunter.mineFinished} bount${theater.hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
 							{ name: "Toast Stats", value: `Toasts Raised: ${theater.hunter.toastsRaised} toast${theater.hunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${theater.hunter.toastsSeconded} toast${theater.hunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${theater.hunter.toastsReceived} toast${theater.hunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
 							{
-								name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(Hunter.getLevelUpRewards(level, theater.company.maxSimBounties).map(([kind, value]) => {
+								name: "Upcoming Level-Up Rewards", value: [currentHunterLevel + 1, currentHunterLevel + 2, currentHunterLevel + 3].map(level => `Level ${level}\n${unorderedList(DatabaseTypes.Hunter.getLevelUpRewards(level, theater.company.maxSimBounties).map(([kind, value]) => {
 									switch (kind) {
 										case "bountySlotUnlocked":
 											return `You will unlock Bounty Slot #${value}.`;

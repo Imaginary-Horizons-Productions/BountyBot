@@ -1,24 +1,24 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder, FileUploadBuilder, PermissionFlagsBits } = require("discord.js");
 const { EmbedLimits } = require("@sapphire/discord.js-utilities");
 const { SubcommandWrapper } = require("../../classes");
-const { Bounty, Hunter } = require("../../../database/models");
 const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, isMissingPermissionError } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
 		const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);
 		const currentHunterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
-		const bountySlots = Hunter.getBountySlotCount(currentHunterLevel, theater.company.maxSimBounties);
+		const bountySlots = DatabaseTypes.Hunter.getBountySlotCount(currentHunterLevel, theater.company.maxSimBounties);
 		const slotOptions = [];
 		for (let slotNumber = 1; slotNumber <= bountySlots; slotNumber++) {
 			if (!occupiedSlots.includes(slotNumber)) {
 				slotOptions.push({
 					emoji: emojiFromNumber(slotNumber),
 					label: `Slot ${slotNumber}`,
-					description: `Reward: ${Bounty.calculateCompleterReward(currentHunterLevel, slotNumber, 0)} XP`,
+					description: `Reward: ${DatabaseTypes.Bounty.calculateCompleterReward(currentHunterLevel, slotNumber, 0)} XP`,
 					value: slotNumber.toString()
 				})
 			}
@@ -45,7 +45,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 			// Check user actually has slot
 			await theater.company.reload();
 			await theater.hunter.reload();
-			const reloadedBountySlotCount = Hunter.getBountySlotCount(theater.hunter.getLevel(theater.company.xpCoefficient), theater.company.maxSimBounties);
+			const reloadedBountySlotCount = DatabaseTypes.Hunter.getBountySlotCount(theater.hunter.getLevel(theater.company.xpCoefficient), theater.company.maxSimBounties);
 			if (parseInt(slotNumber) > reloadedBountySlotCount) {
 				interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 				return;

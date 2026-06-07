@@ -1,9 +1,9 @@
 const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
 const { CommandWrapper } = require('../classes');
 const { textsHaveAutoModInfraction, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
-const { Company } = require('../../database/models');
+const { DatabaseTypes } = require('../../database');
 
-/** @type {import('../../shared/types').LogicLayer} */
+/** @type {import('../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "toast";
@@ -70,7 +70,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
-		const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, theater.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, imageURL);
 		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 		let companyReceipt = {};
@@ -80,7 +80,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			goalProgress = results.goalProgress;
 
 			hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-			const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			if (previousCompanyLevel < currentCompanyLevel) {
 				companyReceipt.levelUp = currentCompanyLevel;
 			}

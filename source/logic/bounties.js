@@ -1,14 +1,14 @@
-const { Sequelize, Op } = require("sequelize");
+const { Op } = require("sequelize");
 const { GuildMember } = require("discord.js");
-const { Bounty, Hunter, Season, Company } = require("../database");
+const { DatabaseTypes } = require("../database");
 const { rollItemForHunter } = require("./items");
 
-/** @type {Sequelize} */
+/** @type {import("../database").Database} */
 let db;
 
 /**
  * Set the database pointer for this logic file.
- * @param {Sequelize} database
+ * @param {import("../database").Database} database
  */
 function setDB(database) {
 	db = database;
@@ -62,7 +62,7 @@ function findOpenBounties(userId, companyId) {
 /**
  * @param {string} userId
  * @param {string} companyId
- * @returns {Promise<Map<number, Bounty>>} a Map of the hunter's bounties with slotNumber as key
+ * @returns {Promise<Map<number, DatabaseTypes.Bounty>>} a Map of the hunter's bounties with slotNumber as key
  */
 async function mapOpenBountiesBySlotNumber(userId, companyId) {
 	const bountyMap = new Map();
@@ -93,7 +93,7 @@ async function getHunterIdSet(bountyId) {
 }
 
 /** Filter out the Bounty's poster, bots, and banned Hunters
- * @param {Bounty} bounty
+ * @param {DatabaseTypes.Bounty} bounty
  * @param {GuildMember[]} completerMembers
  * @param {boolean} isDevMode
  */
@@ -137,17 +137,17 @@ function findHuntersLastFiveBounties(userId, companyId) {
 }
 
 /**
- * @param {Bounty} bounty
- * @param {Hunter} poster
- * @param {Map<string, Hunter>} validatedHunters
- * @param {Season} season
- * @param {Company} company
+ * @param {DatabaseTypes.Bounty} bounty
+ * @param {DatabaseTypes.Hunter} poster
+ * @param {Map<string, DatabaseTypes.Hunter>} validatedHunters
+ * @param {DatabaseTypes.Season} season
+ * @param {DatabaseTypes.Company} company
  */
 async function completeBounty(bounty, poster, validatedHunters, season, company) {
 	const hunterReceipts = new Map();
 	bounty.update({ state: "completed", completedAt: new Date() });
 
-	const bountyBaseValue = Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
+	const bountyBaseValue = DatabaseTypes.Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
 	const bountyValue = Math.floor(bountyBaseValue * company.xpFestivalMultiplier);
 	db.models.Completion.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	const xpMultiplierString = company.festivalMultiplierString("xp");

@@ -1,7 +1,7 @@
-import { italic, Snowflake } from "discord.js";
+import { italic, type Snowflake } from "discord.js";
 import { DataTypes, Model, type Sequelize } from "sequelize";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
-import { Database } from "../index.ts";
+import type { Database } from "../index.ts";
 import type { Hunter } from "./Hunter.js";
 
 /** A Company of bounty hunters contains a Discord Guild's information and settings */

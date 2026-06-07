@@ -1,6 +1,14 @@
 export { Bounty } from "./Bounty.ts";
 export { Company } from "./Company.ts";
+export { Completion } from "./Completion.ts";
+export { Contribution } from "./Contribution.ts";
+export { Goal } from "./Goal.ts";
 export { Hunter } from "./Hunter.ts";
+export { Item } from "./Item.ts";
+export { Participation } from "./Participation.ts";
+export { Rank } from "./Rank.ts";
+export { Recipient } from "./Recipient.ts";
+export { Season } from "./Season.ts";
 export { Seconding } from "./Seconding.ts";
 export { Toast } from "./Toast.ts";
 export { User } from "./User.ts";

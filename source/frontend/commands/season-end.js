@@ -2,7 +2,7 @@ const { PermissionFlagsBits, InteractionContextType, unorderedList } = require('
 const { CommandWrapper } = require('../classes');
 const { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 
-/** @type {import('../../shared/types').LogicLayer} */
+/** @type {import('../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "season-end";

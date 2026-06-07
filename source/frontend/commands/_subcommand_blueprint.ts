@@ -1,7 +1,7 @@
 import { SubcommandFunctionality } from "../../classes";
 
 export default new SubcommandFunctionality("", "",
-	async function executeSubcommand(interaction, origin, isDevMode, logicLayer) {
+	async function subcommandProcedure(interaction, origin, isDevMode, logicLayer) {
 
 	}
 ).setOptions(

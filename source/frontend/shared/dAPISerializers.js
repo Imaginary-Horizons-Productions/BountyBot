@@ -1,10 +1,10 @@
 const fs = require("fs");
 const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
-const { Bounty, Rank, Company, Participation, Hunter, Season, Completion, Toast } = require("../../database/models");
 const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, FileUploadBuilder, GuildScheduledEvent } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../shared/constants.ts");
 const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
 const { descendingByProperty, timeConversion, discordTimestamp, ascendingByProperty } = require("../../shared");
+const { DatabaseTypes } = require("../../database/index.ts");
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
@@ -38,7 +38,7 @@ function attachOverflowingContentAsFile(content, messageOptions, filename) {
 }
 
 /** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {import('discord.js').MessageCreateOptions} messageOptions
  */
 function addCompanyAnnouncementPrefix(company, messageOptions) {
@@ -152,7 +152,7 @@ function bountyScheduledEventPayload(title, posterName, slotNumber, description,
 	return payload;
 }
 
-/** @param {Bounty[]} bounties */
+/** @param {DatabaseTypes.Bounty[]} bounties */
 function selectOptionsFromBounties(bounties) {
 	return bounties.map(bounty => {
 		const optionPayload = {
@@ -168,7 +168,7 @@ function selectOptionsFromBounties(bounties) {
 }
 
 /**
- * @param {Map<number, Bounty>} bountyMap
+ * @param {Map<number, DatabaseTypes.Bounty>} bountyMap
  * @param {number} posterLevel
  */
 function selectOptionsFromBountiesWithBaseRewardAsDescription(bountyMap, posterLevel) {
@@ -176,13 +176,13 @@ function selectOptionsFromBountiesWithBaseRewardAsDescription(bountyMap, posterL
 	return Array.from(bountyMap.entries()).sort(ascendingByProperty(0)).map(([slotNumber, bounty]) => ({
 		emoji: emojiFromNumber(slotNumber),
 		label: bounty.title,
-		description: truncateTextToLength(`Base Reward: ${Bounty.calculateCompleterReward(posterLevel, slotNumber, 0)} XP`, SelectMenuLimits.MaximumLengthOfDescriptionOfOption),
+		description: truncateTextToLength(`Base Reward: ${DatabaseTypes.Bounty.calculateCompleterReward(posterLevel, slotNumber, 0)} XP`, SelectMenuLimits.MaximumLengthOfDescriptionOfOption),
 		value: bounty.id
 	})).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
 
 /**
- * @param {Rank[]} ranks
+ * @param {DatabaseTypes.Rank[]} ranks
  * @param {Collection<string, Role>} allGuildRoles
  */
 function selectOptionsFromRanks(ranks, allGuildRoles) {
@@ -200,7 +200,7 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 }
 
 /**
- * @param {Bounty} bounty
+ * @param {DatabaseTypes.Bounty} bounty
  * @param {GuildScheduledEvent | null} bountyScheduledEvent
  * @param {boolean} isEvergreen
  * @param {string} key for constructing the ModalBuilder's customId uniquely
@@ -292,13 +292,13 @@ async function latestVersionChangesEmbed() {
  * @param {Guild} guild
  * @param {number} companyXP
  * @param {number} participantCount
- * @param {Season} currentSeason
- * @param {Season} lastSeason
+ * @param {DatabaseTypes.Season} currentSeason
+ * @param {DatabaseTypes.Season} lastSeason
  */
 async function companyStatsEmbed(guild, companyXP, participantCount, currentSeason, lastSeason) {
-	const currentCompanyLevel = Company.getLevel(companyXP);
-	const currentLevelThreshold = Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
-	const nextLevelThreshold = Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
+	const currentCompanyLevel = DatabaseTypes.Company.getLevel(companyXP);
+	const currentLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
+	const nextLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
 	const currentSeasonXP = await currentSeason.totalXP;
 	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
 
@@ -321,10 +321,10 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
 }
 
 /** A seasonal scoreboard orders a company's hunters by their seasonal xp
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {Guild} guild
- * @param {Map<string, Participation>} participationMap
- * @param {Rank[]} ranks
+ * @param {Map<string, DatabaseTypes.Participation>} participationMap
+ * @param {DatabaseTypes.Rank[]} ranks
  * @param {{ currentGP: number; requiredGP: number; }} goalProgress
  */
 async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
@@ -387,9 +387,9 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 }
 
 /** An overall scoreboard orders a company's hunters by total xp
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {Guild} guild
- * @param {Map<string, Hunter>} hunterMap
+ * @param {Map<string, DatabaseTypes.Hunter>} hunterMap
  * @param {{ currentGP: number; requiredGP: number; }} goalProgress
  */
 async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
@@ -450,15 +450,15 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 }
 
 /**
- * @param {Hunter} targetHunter
+ * @param {DatabaseTypes.Hunter} targetHunter
  * @param {GuildMember} targetGuildMember
  * @param {number} currentLevel
  * @param {number} currentLevelThreshold
  * @param {number} nextLevelThreshold
- * @param {Participation | undefined} currentParticipation
+ * @param {DatabaseTypes.Participation | undefined} currentParticipation
  * @param {string | null} rankName
- * @param {Participation[]} previousParticipations
- * @param {Toast} mostSecondedToast
+ * @param {DatabaseTypes.Participation[]} previousParticipations
+ * @param {DatabaseTypes.Toast} mostSecondedToast
  */
 function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, currentLevelThreshold, nextLevelThreshold, currentParticipation, rankName, previousParticipations, mostSecondedToast) {
 	let description = `${fillableTextBar(targetHunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}`;
@@ -487,11 +487,11 @@ function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, curre
 }
 
 /** Generate an embed for the given bounty
- * @param {Bounty} bounty
+ * @param {DatabaseTypes.Bounty} bounty
  * @param {GuildMember} posterGuildMember
  * @param {number} posterLevel
  * @param {boolean} shouldOmitRewardsField
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {Set<string>} hunterIdSet
  * @param {GuildScheduledEvent | null} event
  * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; } | undefined} goalProgress
@@ -512,7 +512,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
-		fields.push({ name: "Reward", value: `${Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString("xp")}`, inline: true });
+		fields.push({ name: "Reward", value: `${DatabaseTypes.Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString("xp")}`, inline: true });
 	}
 
 	if (bounty.isEvergreen) {
@@ -612,11 +612,11 @@ function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificat
 }
 
 /**
- * @param {Hunter} hunter
+ * @param {DatabaseTypes.Hunter} hunter
  * @param {Guild} guild
  * @param {GuildMember} member
  * @param {number} dqCount
- * @param {(Bounty & {Completions: Completion[]})[]} lastFiveBounties
+ * @param {(DatabaseTypes.Bounty & {Completions: DatabaseTypes.Completion[]})[]} lastFiveBounties
  */
 function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 	const embed = new EmbedBuilder().setColor(member.displayColor)

@@ -1,7 +1,7 @@
 const { SubcommandWrapper } = require("../../classes");
 const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, updateBotNicknameForFestival } = require("../../shared");
-const { Company } = require("../../../database/models");
 const { ensureNumberFromSlashOptionIsGreaterThanOne } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("start-xp", "Start an XP multiplier festival",
 	ensureNumberFromSlashOptionIsGreaterThanOne("multiplier", async function executeSubcommand(interaction, theater, isDevMode, logicLayer, multiplier) {
@@ -22,7 +22,7 @@ module.exports = new SubcommandWrapper("start-xp", "Start an XP multiplier festi
 			for (const bounty of existingBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, existingBounties, theater.company, Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, existingBounties, theater.company, DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	})
 ).setOptions(

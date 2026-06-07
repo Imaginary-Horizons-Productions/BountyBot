@@ -1,9 +1,9 @@
 const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember } = require("discord.js");
-const { Bounty, Company, Rank, Participation } = require("../../database/models");
 const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
 const { ascendingByProperty } = require("../../shared");
 const { butIgnoreUnknownChannelErrors, isUnknownMessageError } = require("./dAPIResponses");
 const { MAX_BOT_NICKNAME_LENGTH } = require("../../shared/constants.ts");
+const { DatabaseTypes } = require("../../database/index.ts");
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -16,7 +16,7 @@ const { MAX_BOT_NICKNAME_LENGTH } = require("../../shared/constants.ts");
 /**
  * @param {GuildTextThreadManager} threadManager
  * @param {EmbedBuilder[]} embeds
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  */
 function makeEvergreenBountiesThread(threadManager, embeds, company) {
 	return threadManager.create({
@@ -33,8 +33,8 @@ function makeEvergreenBountiesThread(threadManager, embeds, company) {
 
 /**
  * @param {ForumChannel} bountyBoardChannel
- * @param {Bounty[]} evergreenBounties
- * @param {Company} company
+ * @param {DatabaseTypes.Bounty[]} evergreenBounties
+ * @param {DatabaseTypes.Company} company
  * @param {number} companyLevel
  * @param {GuildMember} bountyBotGuildMember
  * @param {Record<string, Set<string>>} hunterIdMap
@@ -111,10 +111,10 @@ async function getBountyBoardThread(guild, bountyBoardId, postingId) {
 }
 
 /** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {Guild} guild
- * @param {Map<string, Participation>} participationMap
- * @param {Rank[]} descendingRanks
+ * @param {Map<string, DatabaseTypes.Participation>} participationMap
+ * @param {DatabaseTypes.Rank[]} descendingRanks
  * @param {{ requiredGP: number; currentGP: number; }} goalProgress
  */
 async function refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress) {
@@ -136,7 +136,7 @@ async function refreshReferenceChannelScoreboardSeasonal(company, guild, partici
 }
 
 /** Update the Overall Scoreboard embed in a server's scoreboard reference channel
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {Guild} guild
  * @param {Map<string, Hunter>} hunterMap
  * @param {{ requiredGP: number; currentGP: number; }} goalProgress
@@ -182,7 +182,7 @@ function sendRewardMessage(embedMessage, content, threadTitle) {
 
 /** Requests dAPI change the roles on guild members based on the provided `seasonResults`
  * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterRecipts
- * @param {Rank[]} descendingRanks
+ * @param {DatabaseTypes.Rank[]} descendingRanks
  * @param {GuildMemberManager} guildMemberManager
  */
 async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager) {
@@ -212,7 +212,7 @@ async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager)
 
 /**
  * @param {GuildMember} bountyBotGuildMember
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  */
 async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
 	const tagComponents = [];

@@ -1,6 +1,6 @@
-﻿import { GuildScheduledEventManager, Snowflake } from "discord.js";
-import { DataTypes, Model, Sequelize } from "sequelize";
-import { Database } from "..";
+﻿import type { GuildScheduledEventManager, Snowflake } from "discord.js";
+import { DataTypes, Model, type Sequelize } from "sequelize";
+import type { Database } from "..";
 
 /** Bounties are user created objectives for other server members to complete */
 export class Bounty extends Model {

@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require("sequelize");
-const { Hunter, Season, Company } = require("../database");
+const { DatabaseTypes } = require("../database");
 
 /** @type {Sequelize} */
 let db;
@@ -56,10 +56,10 @@ const GOAL_POINT_MAP = {
 };
 
 /**
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {"bounties" | "toasts" | "secondings"} progressType
- * @param {Hunter} hunter
- * @param {Season} season
+ * @param {DatabaseTypes.Hunter} hunter
+ * @param {DatabaseTypes.Season} season
  */
 async function progressGoal(company, progressType, hunter, season) {
 	const contributorIds = [];

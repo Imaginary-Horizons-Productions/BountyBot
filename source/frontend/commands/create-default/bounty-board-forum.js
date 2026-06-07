@@ -1,7 +1,7 @@
 const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { makeEvergreenBountiesThread, bountyEmbed, bountyControlPanelSelectRow, isMissingPermissionError } = require("../../shared");
-const { Company } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
@@ -68,7 +68,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 
 			// make Evergreen Bounty list
 			if (evergreenBounties.length > 0) {
-				const companyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+				const companyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 				Promise.all(evergreenBounties.map(async bounty => bountyEmbed(bounty, interaction.guild.members.me, companyLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
 					makeEvergreenBountiesThread(bountyBoard.threads, embeds, theater.company);
 				})

@@ -2,7 +2,7 @@ const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandFunctionality } = require('../../classes');
 const { aggregateSubcommands } = require('../../shared');
 
-/** @type {import('../../../shared/types').LogicLayer} */
+/** @type {import('../../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "bounty";

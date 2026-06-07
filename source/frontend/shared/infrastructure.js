@@ -9,7 +9,7 @@ function aggregateSubcommands(mainId, fileList) {
 	const mappings = {
 		/** @type {import("discord.js").BaseApplicationCommandData[]} */
 		slashData: [],
-		/** @type {Record<string, (interaction: CommandInteraction, isDevMode: boolean, ...args: [import("../../shared/types.js").LogicLayer, unknown]) => Promise<void>>} */
+		/** @type {Record<string, (interaction: CommandInteraction, isDevMode: boolean, ...args: [import("../../logic/index.js").LogicLayer, unknown]) => Promise<void>>} */
 		executeDictionary: {}
 	};
 	for (const fileName of fileList) {
@@ -24,7 +24,7 @@ function aggregateSubcommands(mainId, fileList) {
 /**
  * @param {string} mainId
  * @param {string[]} fileList
- * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: import("../../shared/types.js").LogicLayer, args: unknown[]) => Promise<void>>}
+ * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: import("../../logic/index.js").LogicLayer, args: unknown[]) => Promise<void>>}
  */
 function aggregateSelectOptionMap(mainId, fileList) {
 	const selectOptionMap = {};

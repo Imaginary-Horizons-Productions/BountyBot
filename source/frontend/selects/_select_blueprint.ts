@@ -1,4 +1,4 @@
-import { LogicLayer } from "../../shared/types";
+import { LogicLayer } from "../../logic";
 import { SelectFunctionality } from "../classes";
 
 let logicLayer: LogicLayer;

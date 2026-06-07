@@ -1,19 +1,25 @@
-const { Model, Sequelize, DataTypes } = require('sequelize');
+import type { Snowflake } from 'discord.js';
+import { DataTypes, Model, type Sequelize } from 'sequelize';
+import type { Database } from '..';
 
 /** This class stores receipts of toast transactions */
-class Recipient extends Model {
-	static associate(models) {
-		models.Recipient.Toast = models.Recipient.belongsTo(models.Toast, {
+export class Recipient extends Model {
+	declare toastId: string;
+	declare recipientId: Snowflake;
+	declare isRewarded: boolean;
+	declare wasCrit: boolean;
+
+	static associate(models: Database) {
+		models.Recipients.belongsTo(models.Toasts, {
 			foreignKey: "toastId"
 		});
-		models.Recipient.User = models.Recipient.belongsTo(models.User, {
+		models.Recipients.belongsTo(models.Users, {
 			foreignKey: "recipientId"
 		});
 	}
 }
 
-/** @param {Sequelize} sequelize */
-function initModel(sequelize) {
+export function initModel(sequelize: Sequelize) {
 	return Recipient.init({
 		toastId: {
 			primaryKey: true,
@@ -37,5 +43,3 @@ function initModel(sequelize) {
 		freezeTableName: true
 	});
 }
-
-module.exports = { Recipient, initModel };

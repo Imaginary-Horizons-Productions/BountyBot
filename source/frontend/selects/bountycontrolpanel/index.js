@@ -1,7 +1,7 @@
 const { SelectWrapper } = require('../../classes');
 const { aggregateSelectOptionMap } = require('../../shared');
 
-/** @type {import('../../../shared/types').LogicLayer} */
+/** @type {import('../../../logic').LogicLayer} */
 let logicLayer;
 
 const optionMap = aggregateSelectOptionMap("bountycontrolpanel", [

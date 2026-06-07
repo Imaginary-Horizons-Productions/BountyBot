@@ -3,7 +3,7 @@ const { ItemTemplateSet, ItemTemplate, InteractionOrigin } = require("../classes
 
 /** @type {Record<string, ItemTemplate>} */
 const ITEMS = {};
-/** @type {((logicBlob: import("../../shared/types").LogicLayer) => void)[]} */
+/** @type {((logicBlob: import("../../logic").LogicLayer) => void)[]} */
 const ITEM_LOGIC_SETTERS = [];
 /** @type {string[]} */
 const ITEM_NAMES = [];

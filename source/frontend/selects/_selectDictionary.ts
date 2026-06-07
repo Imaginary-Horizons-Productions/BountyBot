@@ -1,4 +1,5 @@
-import { CooldownDictionary, LogicLayer } from "../../shared/types";
+import { LogicLayer } from "../../logic";
+import { CooldownDictionary } from "../../shared/types";
 import { BuildError, SelectFunctionality } from "../classes";
 
 const SELECT_FUNCTIONALITIES = new Map<string, SelectFunctionality>();

@@ -1,6 +1,6 @@
-import { Snowflake } from "discord.js";
+import type { Snowflake } from "discord.js";
 import { type Sequelize, DataTypes, Model } from "sequelize";
-import { Database } from "..";
+import type { Database } from "..";
 
 /** This class stores global information for bot users */
 export class UserInteraction extends Model {

@@ -1,6 +1,6 @@
 import { MessageFlags } from 'discord.js';
-import { Company } from '../../database/models';
-import { LogicLayer } from '../../shared/types';
+import { DatabaseTypes } from '../../database';
+import { LogicLayer } from '../../logic';
 import { ButtonFunctionality } from '../classes';
 import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sendRewardMessage, syncRankRoles, toastEmbed } from '../shared';
 
@@ -27,7 +27,7 @@ export default new ButtonFunctionality(mainId, 3000,
 		}
 
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-		const previousCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 
 		const recipientIds = originalToast.Recipients.map(receipt => receipt.recipientId);
 
@@ -36,7 +36,7 @@ export default new ButtonFunctionality(mainId, 3000,
 		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "secondings", theater.hunter, season);
 		companyReceipt.guildName = interaction.guild.name;
 
-		const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}

@@ -2,9 +2,9 @@ const { MessageFlags, userMention, channelMention, bold, ModalBuilder, LabelBuil
 const { timeConversion } = require("../../../shared");
 const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError, getBountyBoardThread, refreshBountyBoardThread, auditReasonBountyComplete } = require("../../shared");
 const { SubcommandFunctionality } = require("../../classes");
-const { Company } = require("../../../database/models");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandFunctionality("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
@@ -82,12 +82,12 @@ module.exports = new SubcommandFunctionality("complete", "Close one of your open
 
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
 
-		const previousCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, theater.hunter, validatedHunters, season, theater.company);
 		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", theater.hunter, season);
 		companyReceipt.guildName = modalSubmission.guild.name;
 		hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
-		const currentCompanyLevel = Company.getLevel(theater.company.getXP(hunterMap));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}

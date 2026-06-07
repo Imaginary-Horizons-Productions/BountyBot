@@ -2,9 +2,9 @@ const { StringSelectMenuBuilder, MessageFlags, PermissionFlagsBits, ModalBuilder
 const { SubcommandWrapper } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, bountyEmbed, butIgnoreInteractionCollectorErrors } = require("../../shared");
-const { Company } = require("../../../database/models");
 const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
@@ -43,7 +43,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 			return;
 		}
 
-		const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
 		const payload = { embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] };
 		const extraText = modalSubmission.fields.getTextInputValue(labelIdCustomMessage);
 		if (extraText) {

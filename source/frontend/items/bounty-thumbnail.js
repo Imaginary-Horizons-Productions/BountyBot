@@ -4,7 +4,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread, commandMention } = require("../shared");
 const { timeConversion } = require("../../shared");
 
-/** @type {import("../../shared/types").LogicLayer} */
+/** @type {import("../../logic").LogicLayer} */
 let logicLayer;
 
 const itemName = "Bounty Thumbnail";

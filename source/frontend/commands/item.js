@@ -5,7 +5,7 @@ const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
 const { ihpAuthorPayload, randomFooterTip, butIgnoreInteractionCollectorErrors } = require('../shared');
 const { timeConversion, discordTimestamp } = require('../../shared');
 
-/** @type {import('../../shared/types.js').LogicLayer} */
+/** @type {import('../../logic/index.js').LogicLayer} */
 let logicLayer;
 
 const mainId = "item";

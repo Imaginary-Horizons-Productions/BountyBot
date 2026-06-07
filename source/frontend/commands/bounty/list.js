@@ -1,7 +1,7 @@
 const { MessageFlags, heading, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { bountyEmbed } = require("../../shared");
-const { Company } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("list", "List all of a hunter's open bounties (default: your own)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
@@ -21,7 +21,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 
 		const replyPayload = { flags: MessageFlags.Ephemeral };
 		if (isEvergreen) {
-			const companyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+			const companyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 			replyPayload.content = heading(`Evergreen Bounties on ${interaction.guild.name}`, 2);
 			replyPayload.embeds = await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, interaction.guild.members.me, companyLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id))));
 		} else {

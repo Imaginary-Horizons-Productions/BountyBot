@@ -1,7 +1,6 @@
 import { Guild, Snowflake, userMention } from "discord.js";
 import { Op } from "sequelize";
 import type { Database, DatabaseTypes } from "../database";
-import { Toast } from "../database/models/Toast";
 import { dateInPast } from "../shared";
 
 let db: Database;
@@ -167,7 +166,7 @@ export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, s
 	return { toastId: toast.id, hunterReceipts };
 }
 
-export async function secondToast(seconder: DatabaseTypes.Hunter, toast: Toast, company: DatabaseTypes.Company, recipientIds: Snowflake[], seasonId: string) {
+export async function secondToast(seconder: DatabaseTypes.Hunter, toast: DatabaseTypes.Toast, company: DatabaseTypes.Company, recipientIds: Snowflake[], seasonId: string) {
 	await seconder.increment("toastsSeconded");
 	await toast.increment("secondings");
 

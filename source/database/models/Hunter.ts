@@ -1,6 +1,6 @@
-import { Snowflake } from "discord.js";
+import type { Snowflake } from "discord.js";
 import { type Sequelize, DataTypes, Model } from "sequelize";
-import { Database } from "..";
+import type { Database } from "..";
 import { Bounty } from './Bounty';
 
 /** This class stores a user's information related to a specific company */

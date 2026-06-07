@@ -1,6 +1,6 @@
 import { InteractionContextType, MessageFlags } from 'discord.js';
-import { Hunter } from '../../database/models';
-import { LogicLayer } from "../../shared/types";
+import { DatabaseTypes } from '../../database';
+import type { LogicLayer } from '../../logic';
 import { UserContextMenuFunctionality } from '../classes';
 import { companyStatsEmbed, hunterProfileEmbed } from '../shared';
 
@@ -31,8 +31,8 @@ export default new UserContextMenuFunctionality(mainId, null, false, [Interactio
 				}
 
 				const currentHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
-				const currentLevelThreshold = Hunter.xpThreshold(currentHunterLevel, theater.company.xpCoefficient);
-				const nextLevelThreshold = Hunter.xpThreshold(currentHunterLevel + 1, theater.company.xpCoefficient);
+				const currentLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentHunterLevel, theater.company.xpCoefficient);
+				const nextLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentHunterLevel + 1, theater.company.xpCoefficient);
 				const participations = await logicLayer.seasons.findHunterParticipations(hunter.userId, hunter.companyId);
 				const currentParticipation = participations.find(participation => participation.seasonId === currentSeason.id);
 				const previousParticipations = currentParticipation === null ? participations : participations.slice(1);

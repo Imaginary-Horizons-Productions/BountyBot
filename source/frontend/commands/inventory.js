@@ -2,7 +2,7 @@ const { PermissionFlagsBits, InteractionContextType, MessageFlags, unorderedList
 const { CommandWrapper } = require('../classes');
 const { commandMention, attachOverflowingContentAsFile } = require('../shared');
 
-/** @type {import('../../shared/types').LogicLayer} */
+/** @type {import('../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "inventory";

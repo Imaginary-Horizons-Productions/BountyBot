@@ -1,11 +1,11 @@
-const { Sequelize, Op } = require("sequelize");
-const { Hunter, User, Company } = require("../database");
+const { Op } = require("sequelize");
+const { DatabaseTypes } = require("../database");
 
-/** @type {Sequelize} */
+/** @type {import("../database").Database} */
 let db;
 
 /** *Sets the database pointer for the Hunter logic file*
- * @param {Sequelize} database
+ * @param {import("../database").Database} database
  */
 function setDB(database) {
 	db = database;
@@ -16,7 +16,7 @@ function setDB(database) {
  * Requires that the Company housing the Hunter exists
  * @param {string} userId
  * @param {string} companyId
- * @returns {Promise<{ user: [User, boolean], hunter: [Hunter, boolean] }>}
+ * @returns {Promise<{ user: [DatabaseTypes.User, boolean], hunter: [DatabaseTypes.Hunter, boolean] }>}
  */
 async function findOrCreateBountyHunter(userId, companyId) {
 	return {
@@ -30,7 +30,7 @@ async function findOrCreateBountyHunter(userId, companyId) {
  * If the Hunter might not exist yet, use `findOrCreateBountyHunter` instead
  * @param {string} userId
  * @param {string} companyId
- * @returns {Promise<Hunter | null>}
+ * @returns {Promise<DatabaseTypes.Hunter | null>}
  */
 function findOneHunter(userId, companyId) {
 	return db.models.Hunter.findOne({ where: { userId, companyId } });
@@ -40,7 +40,7 @@ function findOneHunter(userId, companyId) {
  * @param {string} companyId
  */
 async function getCompanyHunterMap(companyId) {
-	/** @type {Map<string, Hunter} */
+	/** @type {Map<string, DatabaseTypes.Hunter} */
 	const hunterMap = new Map();
 	const hunters = await db.models.Hunter.findAll({ where: { companyId } });
 	for (const hunter of hunters) {
@@ -75,7 +75,7 @@ function findCompanyHuntersByDescendingXP(companyId) {
 }
 
 /** *Find all Hunters in the specified Company at or above the level threshold*
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  * @param {number} levelThreshold
  */
 async function findHuntersAtOrAboveLevel(company, levelThreshold) {

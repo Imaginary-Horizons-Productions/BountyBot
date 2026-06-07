@@ -1,4 +1,4 @@
-const { Company } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 const { SubcommandWrapper } = require("../../classes");
 const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, updateBotNicknameForFestival } = require("../../shared");
 
@@ -21,7 +21,7 @@ module.exports = new SubcommandWrapper("close-gp", "End the festival, returning 
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
+			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	}
 );

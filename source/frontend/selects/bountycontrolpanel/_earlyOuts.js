@@ -1,14 +1,14 @@
 const { MessageFlags, ChatInputCommandInteraction } = require("discord.js");
-const { Bounty } = require("../../../database/models");
 const { InteractionTheater } = require("../../classes");
+const { DatabaseTypes } = require("../../../database/index.js");
 
-/** @param {(interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: import("../../../shared/types.js").LogicLayer, args: [bounty: Bounty]) => Promise<void>} next */
+/** @param {(interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: import("../../../logic/index.js").LogicLayer, args: [bounty: DatabaseTypes.Bounty]) => Promise<void>} next */
 function ensureBountyExistsAndInteractorIsPoster(next) {
 	/**
 	 * @param {ChatInputCommandInteraction} interaction
 	 * @param {InteractionTheater} theater
 	 * @param {boolean} isDevMode
-	 * @param {import("../../../shared/types.js").LogicLayer} logicLayer
+	 * @param {import("../../../logic/index.js").LogicLayer} logicLayer
 	 * @param {[bountyId: string]} args
 	 */
 	return async (interaction, theater, isDevMode, logicLayer, [bountyId]) => {

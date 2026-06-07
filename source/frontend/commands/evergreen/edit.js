@@ -2,8 +2,8 @@ const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, 
 const { SubcommandWrapper } = require("../../classes");
 const { textsHaveAutoModInfraction, selectOptionsFromBounties, bountyEmbed, refreshEvergreenBountiesThread, editBountyModalAndSubmissionOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { Company } = require("../../../database/models");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
@@ -69,7 +69,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				selectedBounty.update(updatePayload);
 
 				// update bounty board
-				const currentCompanyLevel = Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
+				const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
 				if (theater.company.bountyBoardId) {
 					const hunterIdMap = {};
 					for (const bounty of evergreenBounties) {
