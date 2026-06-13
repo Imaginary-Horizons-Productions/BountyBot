@@ -1,16 +1,15 @@
 import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, TimestampStyles } from "discord.js";
 import { promises as fsa } from "fs";
 import cron from "node-cron";
-import path from "path";
 import { Sequelize } from "sequelize";
-import { DatabaseTypes } from "./database/index.ts";
+import { DatabaseTypes, initDB } from "./database/index.ts";
 import { addButtonsToCooldownDictionary, getButton, linkAllButtonsToLogic } from "./frontend/buttons/_buttonDictionary.js";
 import { addCommandsToCooldownDictionary, addCommandsToPremiumList, getCommand, linkAllCommandsToLogic, slashData } from "./frontend/commands/_commandDictionary.ts";
 import { addContextMenusToCooldownDictionary, addContextMenusToPremiumList, contextMenuData, getContextMenu, linkAllContextMenusToLogic as setContextMenuLogic } from "./frontend/context_menus/_contextMenuDictionary.js";
 import { addItemsToCooldownDictionary, linkAllItemsToLogic } from "./frontend/items/_itemDictionary.js";
 import { addSelectsToCooldownDictionary, getSelect, linkAllSelectsToLogic } from "./frontend/selects/_selectDictionary.js";
 import { commandMention, consolidateHunterReceipts, goalCompletionEmbed, latestVersionChangesEmbed, randomCongratulatoryPhrase, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, toastEmbed } from "./frontend/shared/index.js";
-import logicBlob from "./logic/index.js";
+import { LOGIC_LAYER as logicBlob } from "./logic/index.js";
 import { announcementsChannelId, commandIds, lastPostedVersion, premium, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, testGuildId } from "./shared/constants.ts";
 import { discordTimestamp } from "./shared/index.js";
 import { CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
@@ -42,10 +41,30 @@ addCommandsToPremiumList(premiumFlowList);
 addContextMenusToPremiumList(premiumFlowList);
 //#endregion
 
-//#region Shard Instances
+//#region Database Setup
+const isDevMode = runMode === "development";
 const dbConnection = new Sequelize(require(__dirname + '/../config/config.json')[runMode]);
-const models = {};
+const db = await dbConnection.authenticate().then(() => {
+	return initDB(dbConnection);
+})
+for (const model of Object.values(db)) {
+	model.associate(db)
+}
 
+if (isDevMode) dbConnection.sync();
+
+for (const branch of Object.values(logicBlob)) { // Set the database for the logic files that store it
+	branch.setDB?.(db);
+}
+
+linkAllCommandsToLogic(logicBlob);
+linkAllButtonsToLogic(logicBlob);
+linkAllSelectsToLogic(logicBlob);
+setContextMenuLogic(logicBlob);
+linkAllItemsToLogic(logicBlob);
+//#endregion
+
+const authPath = "../config/auth.json";
 const dAPIClient = new Client({
 	presence: {
 		activities: [{
@@ -56,58 +75,17 @@ const dAPIClient = new Client({
 	partials: [Partials.GuildMember, Partials.Message, Partials.Reaction],
 	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.GuildMessageReactions]
 });
-//#endregion
-
-//#region Database Setup
-const basename = path.basename(__filename);
-const isDevMode = runMode === "development";
-//TODONOW adapt to new database shape
-const dbReady = dbConnection.authenticate().then(async () => {
-	return (await fsa.readdir(path.join(__dirname, "database", "models"))).filter(directory => directory.indexOf('.') === -1);
-}).then(directories => {
-	return Promise.all(directories.map(async directory => {
-		const files = (await fsa.readdir(path.join(__dirname, "database", "models", directory))).filter(file =>
-			file.indexOf('.') !== 0 &&
-			file !== basename &&
-			file.slice(-3) === '.js' &&
-			file.indexOf('.test.js') === -1
-		);
-
-		return files.map(file => {
-			const model = require(path.join(__dirname, "database", "models", directory, file)).initModel(dbConnection);
-			models[model.name] = model;
-		});
-	}));
-}).then(() => {
-	Object.keys(models).map(modelName => {
-		if (models[modelName].associate) {
-			models[modelName].associate(models);
-		}
-	});
-
-	if (isDevMode) dbConnection.sync();
-
-	for (const branch in logicBlob) { // Set the database for the logic files that store it
-		logicBlob[branch].setDB?.(dbConnection);
-	}
-
-	linkAllCommandsToLogic(logicBlob);
-	linkAllButtonsToLogic(logicBlob);
-	linkAllSelectsToLogic(logicBlob);
-	setContextMenuLogic(logicBlob);
-	linkAllItemsToLogic(logicBlob);
-
-	return;
-}).catch(console.error);
-//#endregion
-
-const authPath = "../config/auth.json";
 dAPIClient.login((await import(authPath)).default.token);
 
 //#region Event Handlers
 dAPIClient.on(Events.ClientReady, () => {
 	if (!dAPIClient.user) {
 		console.error(`${Events.ClientReady} receieved with falsey Client.user`);
+		return;
+	}
+
+	if (!dAPIClient.application) {
+		console.error(`${Events.ClientReady} receieved with falsey Client.application`);
 		return;
 	}
 	console.log(`Connected as ${dAPIClient.user.tag}`);
@@ -135,8 +113,14 @@ dAPIClient.on(Events.ClientReady, () => {
 		// Post Changelog
 		if (announcementsChannelId) {
 			fsa.readFile('./ChangeLog.md', { encoding: 'utf8' }).then(data => {
-				let [currentFull, currentMajor, currentMinor, currentPatch] = data.match(/(\d+)\.(\d+)\.(\d+)/);
-				let [_lastFull, lastMajor, lastMinor, lastPatch] = lastPostedVersion.match(/(\d+)\.(\d+)\.(\d+)/);
+				const current = data.match(/(\d+)\.(\d+)\.(\d+)/);
+				const previous = lastPostedVersion.match(/(\d+)\.(\d+)\.(\d+)/);
+
+				if (!current || !previous) {
+					return;
+				}
+				const [currentFull, currentMajor, currentMinor, currentPatch] = current;
+				const [_lastFull, lastMajor, lastMinor, lastPatch] = previous;
 
 				if (parseInt(currentMajor) <= parseInt(lastMajor) && parseInt(currentMinor) <= parseInt(lastMinor) && parseInt(currentPatch) <= parseInt(lastPatch)) {
 					return;
@@ -205,8 +189,6 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		[mainId, ...args] = interaction.customId.split(SAFE_DELIMITER);
 	}
 
-	await dbReady;
-
 	const origin = await logicBlob.companies.constructInteractionTheater(interaction);
 
 	//#region Ban Check
@@ -252,7 +234,6 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 });
 
 dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
-	await dbReady;
 	if (reaction.emoji.name !== "🥂") {
 		return;
 	}
@@ -378,7 +359,6 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 })
 
 dAPIClient.on(Events.ChannelDelete, async channel => {
-	await dbReady;
 	logicBlob.companies.findCompanyByPK(channel.guild.id).then(company => {
 		if (company) {
 			let shouldSaveCompany = false;
@@ -400,7 +380,6 @@ dAPIClient.on(Events.ChannelDelete, async channel => {
 dAPIClient.on(Events.MessageDelete, async message => {
 	if (!message.guild) return;
 
-	await dbReady;
 	logicBlob.companies.findCompanyByPK(message.guild.id).then(company => {
 		if (message.id === company?.scoreboardMessageId) {
 			company.update({ scoreboardMessageId: null });
@@ -409,7 +388,6 @@ dAPIClient.on(Events.MessageDelete, async message => {
 });
 
 dAPIClient.on(Events.ThreadDelete, async thread => {
-	await dbReady;
 	logicBlob.companies.findCompanyByPK(thread.guild.id).then(company => {
 		if (thread.id === company?.evergreenThreadId) {
 			company.update({ evergreenThreadId: null });
@@ -418,13 +396,14 @@ dAPIClient.on(Events.ThreadDelete, async thread => {
 })
 
 dAPIClient.on(Events.GuildMemberRemove, async guildMember => {
-	await dbReady;
 	const postingIds = await logicBlob.bounties.deleteHunterBountiesAndCompletionsFromCompany(guildMember.id, guildMember.guild.id);
 	const company = await logicBlob.companies.findCompanyByPK(guildMember.guild.id);
-	if (company.bountyBoardId) {
+	if (company?.bountyBoardId) {
 		const bountyBoard = await guildMember.guild.channels.fetch(company.bountyBoardId);
-		for (const postingId of postingIds) {
-			(await bountyBoard.threads.fetch(postingId)).delete("Poster removed from server");
+		if (bountyBoard?.isThreadOnly()) {
+			for (const postingId of postingIds) {
+				(await bountyBoard.threads.fetch(postingId))?.delete("Poster removed from server");
+			}
 		}
 	}
 	await logicBlob.toasts.deleteHunterToasts(guildMember.id, guildMember.guild.id);
@@ -433,7 +412,6 @@ dAPIClient.on(Events.GuildMemberRemove, async guildMember => {
 })
 
 dAPIClient.on(Events.GuildDelete, async guild => {
-	await dbReady;
 	logicBlob.toasts.deleteCompanyToasts(guild.id);
 	logicBlob.bounties.deleteCompanyBounties(guild.id);
 	logicBlob.seasons.deleteCompanySeasons(guild.id);
@@ -445,12 +423,10 @@ dAPIClient.on(Events.GuildDelete, async guild => {
 });
 
 cron.schedule('0 0 */1 * *', async runTime => { // Runs daily currently
-	await dbReady;
 	logicBlob.cooldowns.cleanCooldownData();
 });
 
 cron.schedule("0 0 1 * *", async runTime => { // Sweep used items at noon on day 1 of each month
-	await dbReady;
 	logicBlob.items.sweepUsed();
 })
 //#endregion

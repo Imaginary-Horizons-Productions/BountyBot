@@ -1,23 +1,19 @@
-const { Op } = require("sequelize");
-const { dateInPast } = require("../shared");
-const { premium } = require("../shared/constants.ts");
-const { DatabaseTypes } = require("../database/index.ts");
+import { Snowflake } from "discord.js";
+import { Op } from "sequelize";
+import { Database, DatabaseTypes } from "../database";
+import { dateInPast } from "../shared";
+import { premium } from "../shared/constants.ts";
 
-/** @type {import("../database/index.ts").Database} */
-let db;
+let db: Database;
 
-/** *Set the database pointer for the Item logic file*
- * @param {import("../database/index.ts").Database} database
- */
-function setDB(database) {
+/** *Set the database pointer for the Item logic file* */
+export function setDB(database: Database) {
 	db = database;
 }
 
-/** @param {string} userId */
-async function getInventory(userId) {
-	/** @type {Map<string, number>} */
-	const inventoryMap = new Map();
-	for (const item of await db.models.Item.findAll({ where: { userId, used: false } })) {
+export async function getInventory(userId: Snowflake) {
+	const inventoryMap = new Map<string, number>();
+	for (const item of await db.Items.findAll({ where: { userId, used: false } })) {
 		if (inventoryMap.has(item.itemName)) {
 			inventoryMap.set(item.itemName, inventoryMap.get(item.itemName) + 1);
 		} else {
@@ -29,7 +25,8 @@ async function getInventory(userId) {
 
 
 /** pool picker range: 0-120
- * @type {Record<number, string[]>} key as theshold to get to pool defined by string array
+ *
+ * key as theshold to get to pool defined by string array
  */
 const DROP_TABLE = {
 	70: [
@@ -71,19 +68,17 @@ const DROP_TABLE = {
 	]
 };
 
-/** @param {string} hunterId */
-async function getDropsAvailable(hunterId) {
+export async function getDropsAvailable(hunterId: Snowflake) {
 	const itemCutoff = premium.gift.concat(premium.paid).includes(hunterId) ? 4 : 2;
-	const itemsDropped = await db.models.Item.count({ where: { userId: hunterId, createdAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
+	const itemsDropped = await db.Items.count({ where: { userId: hunterId, createdAt: { [Op.gt]: dateInPast({ 'd': 1 }) } } });
 	return itemCutoff - itemsDropped;
 }
 
 /** *Grants the User 1 copy of a random Item at a rate of dropRate*
- * @param {number} dropRate a decimal representing the probability
- * @param {DatabaseTypes.Hunter} hunter
- * @returns {Promise<[itemRow: DatabaseTypes.Item | null, wasCreated: boolean]>}
+ *
+ * dropRate is a decimal representing the probability
  */
-async function rollItemForHunter(dropRate, hunter) {
+export async function rollItemForHunter(dropRate: number, hunter: DatabaseTypes.Hunter) {
 	if (hunter.itemFindBoost) {
 		dropRate *= 2;
 		hunter.update("itemFindBoost", false);
@@ -102,38 +97,24 @@ async function rollItemForHunter(dropRate, hunter) {
 	}
 	if (!droppedItem) return [null, false];
 
-	return [await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true];
+	return [await db.Items.create({ userId: hunter.userId, itemName: droppedItem }), true];
 }
 
-/** *Finds the count of the specified Items of User*
- * @param {string} userId
- * @param {string} itemName
- */
-function countUserCopies(userId, itemName) {
-	return db.models.Item.count({ where: { userId, itemName, used: false } });
+/** *Finds the count of the specified Items of User* */
+export function countUserCopies(userId: Snowflake, itemName: string) {
+	return db.Items.count({ where: { userId, itemName, used: false } });
 }
 
 /** *Sets the oldest of the specified Items of User to used*
+ *
  * Assumes item is extent
- * @param {string} userId
- * @param {string} itemName
  */
-async function consume(userId, itemName) {
-	const dbRow = await db.models.Item.findOne({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]] });
+export async function consume(userId: Snowflake, itemName: string) {
+	const dbRow = await db.Items.findOne({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]] });
 	return dbRow.update("used", true);
 }
 
 /** Destroy used items to reduce table size and obfuscate id generation */
-function sweepUsed() {
-	return db.models.Item.destroy({ where: { used: true } });
-}
-
-module.exports = {
-	setDB,
-	getInventory,
-	getDropsAvailable,
-	rollItemForHunter,
-	countUserCopies,
-	consume,
-	sweepUsed
+export function sweepUsed() {
+	return db.Items.destroy({ where: { used: true } });
 }

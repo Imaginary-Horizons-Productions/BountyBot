@@ -1,17 +1,11 @@
-const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
-const { butIgnoreMissingPermissionErrors, butIgnoreCantDirectMessageThisUserErrors } = require("./dAPIResponses");
-const { YEAR_IN_MS } = require("../../shared/constants.ts");
+import { AutoModerationActionType, GuildMember, TextChannel } from "discord.js";
+import { YEAR_IN_MS } from "../../shared/constants.ts";
+import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses";
 
 /** @file Validations - Checks for issues with user input data */
 
-/** Simulate auto mod actions for texts input to BountyBot
- * @param {TextChannel} channel
- * @param {GuildMember} member
- * @param {string[]} texts
- * @param {string} context
- * @returns whether or not any of the texts included something the auto mod blocks as a message
- */
-async function textsHaveAutoModInfraction(channel, member, texts, context) {
+/** Simulate auto mod actions for texts input to BountyBot */
+export async function textsHaveAutoModInfraction(channel: TextChannel, member: GuildMember, texts: string[], context: string) {
 	let autoModRules;
 	try {
 		autoModRules = await channel.guild.autoModerationRules.fetch();
@@ -61,11 +55,8 @@ async function textsHaveAutoModInfraction(channel, member, texts, context) {
 	return shouldBlockMessage;
 }
 
-/**
- * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
- * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
- */
-function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
+/** timestamp in Unix timestamp form (seconds since Jan 1 1970) */
+export function validateScheduledEventTimestamps(startTimestamp?: number, endTimestamp?: number) {
 	const errors = [];
 	const nowTimestamp = Date.now() / 1000;
 
@@ -90,8 +81,3 @@ function validateScheduledEventTimestamps(startTimestamp, endTimestamp) {
 	}
 	return errors;
 }
-
-module.exports = {
-	textsHaveAutoModInfraction,
-	validateScheduledEventTimestamps
-};
