@@ -16,11 +16,6 @@ export class Participation extends Model {
 	declare toastsRaised: number;
 	declare goalContributions: number;
 	declare dqCount: number;
-
-	static associate(models: Database) {
-		models.Participations.belongsTo(models.Users, { foreignKey: "userId" });
-		models.Participations.belongsTo(models.Companies, { foreignKey: "companyId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -82,4 +77,9 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "Participation",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	models.Participations.belongsTo(models.Users, { foreignKey: "userId" });
+	models.Participations.belongsTo(models.Companies, { foreignKey: "companyId" });
 }

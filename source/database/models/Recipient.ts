@@ -8,15 +8,6 @@ export class Recipient extends Model {
 	declare recipientId: Snowflake;
 	declare isRewarded: boolean;
 	declare wasCrit: boolean;
-
-	static associate(models: Database) {
-		models.Recipients.belongsTo(models.Toasts, {
-			foreignKey: "toastId"
-		});
-		models.Recipients.belongsTo(models.Users, {
-			foreignKey: "recipientId"
-		});
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -42,4 +33,9 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "Recipient",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	models.Recipients.belongsTo(models.Toasts, { foreignKey: "toastId" });
+	models.Recipients.belongsTo(models.Users, { foreignKey: "recipientId" });
 }

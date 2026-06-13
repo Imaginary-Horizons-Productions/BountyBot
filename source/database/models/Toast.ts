@@ -14,15 +14,6 @@ export class Toast extends Model {
 	declare secondings: number;
 	declare createdAt: string;
 	declare updatedAt: string;
-
-	static associate(models: Database) {
-		//TODONOW confirm this still works for setting up associations
-		//TODONOW adapt usage in other layers
-		models.Toasts.belongsTo(models.Companies, { foreignKey: "companyId" });
-		models.Toasts.belongsTo(models.Users, { foreignKey: "senderId" });
-		models.Toasts.hasMany(models.Recipients, { foreignKey: "toastId" });
-		models.Toasts.hasMany(models.Secondings, { foreignKey: "toastId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -62,4 +53,13 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "Toast",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	//TODONOW confirm this still works for setting up associations
+	//TODONOW adapt usage in other layers
+	models.Toasts.belongsTo(models.Companies, { foreignKey: "companyId" });
+	models.Toasts.belongsTo(models.Users, { foreignKey: "senderId" });
+	models.Toasts.hasMany(models.Recipients, { foreignKey: "toastId" });
+	models.Toasts.hasMany(models.Secondings, { foreignKey: "toastId" });
 }

@@ -8,10 +8,6 @@ export class Contribution extends Model {
 	declare goalId: string;
 	declare userId: Snowflake;
 	declare value: number;
-
-	static associate(models: Database) {
-		models.Contributions.belongsTo(models.Users, { foreignKey: "userId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -38,4 +34,8 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "Contribution",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	models.Contributions.belongsTo(models.Users, { foreignKey: "userId" });
 }

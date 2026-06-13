@@ -1,5 +1,6 @@
 import { AutoModerationActionType, GuildMember, TextChannel } from "discord.js";
 import { YEAR_IN_MS } from "../../shared/constants.ts";
+import { discordTimestamp } from "../../shared/index.ts";
 import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses";
 
 /** @file Validations - Checks for issues with user input data */
@@ -19,7 +20,7 @@ export async function textsHaveAutoModInfraction(channel: TextChannel, member: G
 		if (rule.exemptChannels.has(channel.id)) {
 			continue;
 		}
-		if (rule.exemptRoles.hasAny(member.roles.cache.keys())) {
+		if (rule.exemptRoles.hasAny(...member.roles.cache.keys())) {
 			continue;
 		}
 
@@ -62,21 +63,17 @@ export function validateScheduledEventTimestamps(startTimestamp?: number, endTim
 
 	if (!startTimestamp) {
 		errors.push(`Start Timestamp must be an integer. Received: ${startTimestamp}`);
-	}
-
-	if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+	} else if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
 		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to ${discordTimestamp(startTimestamp)}`);
 	}
 
 	if (!endTimestamp) {
 		errors.push(`End Timestamp must be an integer. Received: ${endTimestamp}`);
-	}
-
-	if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
+	} else if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
 		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to ${discordTimestamp(endTimestamp)}`);
 	}
 
-	if (startTimestamp > endTimestamp) {
+	if (startTimestamp && endTimestamp && startTimestamp > endTimestamp) {
 		errors.push(`End Timestamp (${discordTimestamp(endTimestamp)}) was before Start Timestamp (${discordTimestamp(startTimestamp)}).`);
 	}
 	return errors;

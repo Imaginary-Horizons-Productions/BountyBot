@@ -9,12 +9,6 @@ export class Completion extends Model {
 	declare userId: Snowflake | null;
 	declare companyId: Snowflake | null;
 	declare xpAwarded: number | null;
-
-	static associate(models: Database) {
-		models.Completions.belongsTo(models.Bounties, { foreignKey: "bountyId" });
-		models.Completions.belongsTo(models.Users, { foreignKey: "userId" });
-		models.Completions.belongsTo(models.Companies, { foreignKey: "companyId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -42,3 +36,9 @@ export function initModel(sequelize: Sequelize) {
 		freezeTableName: true
 	});
 };
+
+export function associate(models: Database) {
+	models.Completions.belongsTo(models.Bounties, { foreignKey: "bountyId" });
+	models.Completions.belongsTo(models.Users, { foreignKey: "userId" });
+	models.Completions.belongsTo(models.Companies, { foreignKey: "companyId" });
+}

@@ -9,11 +9,6 @@ export class Seconding extends Model {
 	declare wasCrit: boolean;
 	declare createdAt: string;
 	declare updatedAt: string;
-
-	static associate(models: Database) {
-		models.Secondings.belongsTo(models.Toasts, { foreignKey: "toastId" });
-		models.Secondings.belongsTo(models.Users, { foreignKey: "seconderId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -35,4 +30,9 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "Seconding",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	models.Secondings.belongsTo(models.Toasts, { foreignKey: "toastId" });
+	models.Secondings.belongsTo(models.Users, { foreignKey: "seconderId" });
 }

@@ -8,17 +8,6 @@ export class User extends Model {
 	declare isPremium: boolean;
 	declare createdAt: string;
 	declare updatedAt: string;
-
-	static associate(models: Database) {
-		User.hasMany(models.Items, { foreignKey: "userId" });
-		User.hasMany(models.Completions, { foreignKey: "userId" });
-		User.hasMany(models.Toasts, { foreignKey: "senderId" });
-		User.hasMany(models.Recipients, { foreignKey: "recipientId" });
-		User.hasMany(models.Secondings, { foreignKey: "seconderId" });
-		User.hasMany(models.Participations, { foreignKey: "userId" });
-		User.hasMany(models.Contributions, { foreignKey: "userId" });
-		User.hasMany(models.UserInteractions, { foreignKey: "userId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -36,4 +25,15 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "User",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	User.hasMany(models.Items, { foreignKey: "userId" });
+	User.hasMany(models.Completions, { foreignKey: "userId" });
+	User.hasMany(models.Toasts, { foreignKey: "senderId" });
+	User.hasMany(models.Recipients, { foreignKey: "recipientId" });
+	User.hasMany(models.Secondings, { foreignKey: "seconderId" });
+	User.hasMany(models.Participations, { foreignKey: "userId" });
+	User.hasMany(models.Contributions, { foreignKey: "userId" });
+	User.hasMany(models.UserInteractions, { foreignKey: "userId" });
 }

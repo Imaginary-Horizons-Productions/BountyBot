@@ -11,10 +11,6 @@ export class UserInteraction extends Model {
 	declare cooldownTime: string;
 	declare createdAt: string;
 	declare updatedAt: string;
-
-	static associate(models: Database) {
-		models.UserInteractions.hasOne(models.Users, { foreignKey: "id" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -47,4 +43,8 @@ export function initModel(sequelize: Sequelize) {
 		freezeTableName: true,
 		timestamps: false
 	});
+}
+
+export function associate(models: Database) {
+	models.UserInteractions.hasOne(models.Users, { foreignKey: "id" });
 }

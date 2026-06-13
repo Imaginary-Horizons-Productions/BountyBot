@@ -33,17 +33,6 @@ export class Company extends Model {
 	declare createdAt: string;
 	declare updatedAt: string;
 
-	static associate(models: Database) {
-		Company.hasMany(models.Ranks, { foreignKey: "companyId" });
-		Company.hasMany(models.Hunters, { foreignKey: "companyId" });
-		Company.hasMany(models.Bounties, { foreignKey: "companyId" });
-		Company.hasMany(models.Completions, { foreignKey: "companyId" });
-		Company.hasMany(models.Toasts, { foreignKey: "companyId" });
-		Company.hasMany(models.Seasons, { foreignKey: "companyId" });
-		Company.hasMany(models.Participations, { foreignKey: "companyId" });
-		Company.hasMany(models.Goals, { foreignKey: "companyId" });
-	}
-
 	static getLevel(xp: number) {
 		return Math.floor(Math.sqrt(xp / 3) + 1);
 	}
@@ -183,3 +172,14 @@ export function initModel(sequelize: Sequelize) {
 		freezeTableName: true
 	});
 };
+
+export function associate(models: Database) {
+	Company.hasMany(models.Ranks, { foreignKey: "companyId" });
+	Company.hasMany(models.Hunters, { foreignKey: "companyId" });
+	Company.hasMany(models.Bounties, { foreignKey: "companyId" });
+	Company.hasMany(models.Completions, { foreignKey: "companyId" });
+	Company.hasMany(models.Toasts, { foreignKey: "companyId" });
+	Company.hasMany(models.Seasons, { foreignKey: "companyId" });
+	Company.hasMany(models.Participations, { foreignKey: "companyId" });
+	Company.hasMany(models.Goals, { foreignKey: "companyId" });
+}

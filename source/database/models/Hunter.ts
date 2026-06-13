@@ -25,10 +25,6 @@ export class Hunter extends Model {
 	declare createdAt: string;
 	declare updatedAt: string;
 
-	static associate(models: Database) {
-		models.Hunters.belongsTo(models.Users, { foreignKey: "userId" });
-	}
-
 	static xpThreshold(level: number, xpCoefficient: number) {
 		// xp = xpCoefficient*(level - 1)^2
 		return xpCoefficient * (level - 1) ** 2;
@@ -143,3 +139,7 @@ export function initModel(sequelize: Sequelize) {
 		freezeTableName: true
 	});
 };
+
+export function associate(models: Database) {
+	models.Hunters.belongsTo(models.Users, { foreignKey: "userId" });
+}

@@ -9,8 +9,6 @@ export class Rank extends Model {
 	declare roleId: Snowflake | null;
 	declare rankmoji: string;
 
-	static associate(models: Database) { }
-
 	getName(guildRoles: Collection<Snowflake, Role>, index: number) {
 		if (this.roleId) {
 			const role = guildRoles.get(this.roleId);
@@ -52,3 +50,5 @@ export function initModel(sequelize: Sequelize) {
 		freezeTableName: true
 	});
 };
+
+export function associate(models: Database) { }

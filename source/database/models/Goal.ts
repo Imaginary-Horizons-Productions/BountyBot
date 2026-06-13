@@ -9,10 +9,6 @@ export class Goal extends Model {
 	declare state: "ongoing" | "expired" | "completed";
 	declare type: "bounties" | "toasts" | "secondings";
 	declare requiredGP: number;
-
-	static associate(models: Database) {
-		models.Goals.hasMany(models.Contributions, { foreignKey: "goalId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -43,4 +39,8 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "Goal",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	models.Goals.hasMany(models.Contributions, { foreignKey: "goalId" });
 }

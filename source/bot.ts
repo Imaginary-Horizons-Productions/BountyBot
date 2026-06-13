@@ -47,9 +47,6 @@ const dbConnection = new Sequelize(require(__dirname + '/../config/config.json')
 const db = await dbConnection.authenticate().then(() => {
 	return initDB(dbConnection);
 })
-for (const model of Object.values(db)) {
-	model.associate(db)
-}
 
 if (isDevMode) dbConnection.sync();
 

@@ -10,10 +10,6 @@ export class Season extends Model {
 	declare totalXP: Promise<number>;
 	declare bountiesCompleted: number;
 	declare toastsRaised: number;
-
-	static associate(models: Database) {
-		models.Seasons.hasMany(models.Participations, { foreignKey: "seasonId" });
-	}
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -54,4 +50,8 @@ export function initModel(sequelize: Sequelize) {
 		modelName: "Season",
 		freezeTableName: true
 	});
+}
+
+export function associate(models: Database) {
+	models.Seasons.hasMany(models.Participations, { foreignKey: "seasonId" });
 }

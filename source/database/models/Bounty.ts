@@ -1,6 +1,6 @@
 ﻿import type { GuildScheduledEventManager, Snowflake } from "discord.js";
 import { DataTypes, Model, type Sequelize } from "sequelize";
-import type { Database } from "..";
+import { Database } from "..";
 
 /** Bounties are user created objectives for other server members to complete */
 export class Bounty extends Model {
@@ -21,10 +21,6 @@ export class Bounty extends Model {
 	declare editCount: number;
 	declare createdAt: string; //TODONOW are these really strings?
 	declare updatedAt: string;
-
-	static associate(models: Database) {
-		models.Bounties.hasMany(models.Completions, { foreignKey: "bountyId" });
-	}
 
 	static calculateCompleterReward(posterLevel: number, slotNumber: number, showcaseCount: number) {
 		const showcaseMultiplier = 0.25 * showcaseCount + 1;
@@ -113,3 +109,7 @@ export function initModel(sequelize: Sequelize) {
 		freezeTableName: true
 	});
 };
+
+export function associate(models: Database) {
+	models.Bounties.hasMany(models.Completions, { foreignKey: "bountyId" });
+}

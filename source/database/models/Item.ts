@@ -1,6 +1,6 @@
 import type { Snowflake } from "discord.js";
 import { DataTypes, Model, type Sequelize } from "sequelize";
-import type { Database } from "..";
+import { Database } from "..";
 
 /** This class stores global information for user items */
 export class Item extends Model {
@@ -8,8 +8,6 @@ export class Item extends Model {
 	declare userId: Snowflake;
 	declare itemName: string;
 	declare used: boolean;
-
-	static associate(models: Database) { }
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -41,3 +39,5 @@ export function initModel(sequelize: Sequelize) {
 		freezeTableName: true
 	});
 };
+
+export function associate(models: Database) { }
