@@ -27,7 +27,7 @@ function initModel(sequelize) {
 		},
 		used: {
 			type: DataTypes.BOOLEAN,
-			default: false
+			defaultValue: false
 		}
 	}, {
 		sequelize,

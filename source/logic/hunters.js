@@ -40,7 +40,7 @@ function findOneHunter(userId, companyId) {
  * @param {string} companyId
  */
 async function getCompanyHunterMap(companyId) {
-	/** @type {Map<string, Hunter} */
+	/** @type {Map<string, Hunter>} */
 	const hunterMap = new Map();
 	const hunters = await db.models.Hunter.findAll({ where: { companyId } });
 	for (const hunter of hunters) {

@@ -1,6 +1,7 @@
 const { AutoModerationActionType, GuildMember, TextChannel } = require("discord.js");
 const { butIgnoreMissingPermissionErrors, butIgnoreCantDirectMessageThisUserErrors } = require("./dAPIResponses");
 const { YEAR_IN_MS } = require("../../constants");
+const { discordTimestamp } = require("../../shared");
 
 /** @file Validations - Checks for issues with user input data */
 

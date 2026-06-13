@@ -1,4 +1,3 @@
-const { MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, updateBotNicknameForFestival } = require("../../shared");
 const { Company } = require("../../../database/models");
