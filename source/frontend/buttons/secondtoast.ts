@@ -26,10 +26,10 @@ export default new ButtonFunctionality(mainId, 3000,
 			return;
 		}
 
-		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
+		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 
-		const recipientIds = originalToast.Recipients.map(receipt => receipt.recipientId);
+		const recipientIds = (await originalToast.getRecipients()).map(receipt => receipt.recipientId);
 
 		const hunterReceipts = await logicLayer.toasts.secondToast(theater.hunter, originalToast, theater.company, recipientIds, season.id);
 
@@ -54,7 +54,7 @@ export default new ButtonFunctionality(mainId, 3000,
 			refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
 		}
 
-		if (goalProgress.goalCompleted) {
+		if (goalProgress.goalCompleted && interaction.channel?.isSendable()) {
 			interaction.channel.send({
 				embeds: [goalCompletionEmbed(goalProgress.contributorIds)]
 			});

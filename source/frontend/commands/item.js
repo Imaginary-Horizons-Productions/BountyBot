@@ -52,9 +52,9 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			const now = new Date();
 
 			const cooldownName = `item-${itemName}`;
-			const { isOnCommandCooldown, cooldownTimestamp } = await logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
-			if (isOnCommandCooldown) {
-				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+			const { isOnCD, endOfCD } = await logicLayer.cooldowns.checkSpecificCooldownForUser(collectedInteration.user.id, cooldownName, now);
+			if (isOnCD) {
+				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(endOfCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));

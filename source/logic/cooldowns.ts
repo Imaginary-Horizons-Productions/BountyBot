@@ -1,6 +1,6 @@
 import { Snowflake } from "discord.js";
 import { Op } from "sequelize";
-import { Database } from "../database/index.ts";
+import { Database, DatabaseTypes } from "../database/index.ts";
 import { dateInPast } from "../shared";
 import { GLOBAL_COMMAND_COOLDOWN } from "../shared/constants.ts";
 
@@ -10,37 +10,30 @@ export function setDB(database: Database) {
 	db = database;
 }
 
-/** Check all cooldown information based on the given user, interaction, and interaction time. */
-export async function checkCooldownState(userId: Snowflake, interactionName: string, interactionTime: Date) {
-	const latestCooldown = await db.UserInteractions.findOne({ where: { userId }, order: [["cooldownTime", "DESC"]] });
-	const gcdCooldown = !latestCooldown ? new Date(0) : new Date(latestCooldown.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
-	if (gcdCooldown > interactionTime) {
+export async function checkGlobalCooldonwForUser(userId: Snowflake, now: Date) {
+	const latestUserInteraction = await db.UserInteractions.findOne({ where: { userId }, order: [["cooldownTime", "DESC"]] });
+	if (latestUserInteraction) {
+		const endOfCD = new Date(latestUserInteraction.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
 		return {
-			isOnGeneralCooldown: true,
-			isOnCommandCooldown: false,
-			cooldownTimestamp: gcdCooldown,
-			lastCommandName: latestCooldown.interactionName
+			endOfCD,
+			isOnCD: endOfCD <= now,
+			lastCommandName: latestUserInteraction.interactionName
 		};
+	} else {
+		return { endOfCD: null, isOnCD: false, lastCommandName: null } as const;
 	}
-	return checkCommandCooldownState(userId, interactionName, interactionTime);
 }
 
-
-/** Check cooldown information for a given command/item based on the given user, interaction, and interaction time. */
-export async function checkCommandCooldownState(userId: Snowflake, interactionName: string, interactionTime: Date) {
-	const thisInteractions = await db.UserInteractions.findOne({ where: { userId, interactionName }, order: [["cooldownTime", "DESC"]] });
-	if (thisInteractions && thisInteractions.cooldownTime && thisInteractions.cooldownTime > interactionTime) {
+export async function checkSpecificCooldownForUser(userId: Snowflake, interactionName: string, now: Date) {
+	const latestSpecificUserInteraction = await db.UserInteractions.findOne({ where: { userId, interactionName }, order: [["cooldownTime", "DESC"]] });
+	if (latestSpecificUserInteraction) {
 		return {
-			isOnGeneralCooldown: false,
-			isOnCommandCooldown: true,
-			cooldownTimestamp: thisInteractions.cooldownTime,
-			lastCommandName: interactionName
-		};
+			endOfCD: latestSpecificUserInteraction.cooldownTime,
+			isOnCD: latestSpecificUserInteraction.cooldownTime <= now
+		}
+	} else {
+		return { endOfCD: null, isOnCD: false } as const;
 	}
-	return {
-		isOnGeneralCooldown: false,
-		isOnCommandCooldown: false
-	};
 }
 
 /**
@@ -54,7 +47,7 @@ export async function updateCooldowns(userId: Snowflake, interactionName: string
 		return db.UserInteractions.create({ userId, interactionName, interactionTime, lastInteractTime: interactionTime, cooldownTime: cooldownTime });
 	}
 
-	const updateValues = { lastInteractTime: interactionTime };
+	const updateValues: Partial<DatabaseTypes.UserInteraction> = { lastInteractTime: interactionTime };
 	if (userInteraction.cooldownTime <= interactionTime) {
 		// Only update the cooldown if it is currently off cooldown
 		updateValues.cooldownTime = cooldownTime;

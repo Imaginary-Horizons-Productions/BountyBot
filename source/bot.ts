@@ -156,7 +156,8 @@ dAPIClient.on(Events.ClientReady, () => {
 });
 
 dAPIClient.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.guild) return; // DM interactions not supported
+	//TODONOW (or later?) write uncached guild fallback logic (more necessary in sharding?)
+	if (!interaction.inCachedGuild()) return;
 
 	let mainId;
 	if (interaction.isAutocomplete()) { // Autocomplete interactions have the least generalizable handling
@@ -204,14 +205,14 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	// #region General Cooldown Management
 	const commandTime = new Date();
-	//TODONOW improve return type reporting of `cooldownTimestamp` and `lastCommandName`
-	const { isOnGeneralCooldown, isOnCommandCooldown, cooldownTimestamp, lastCommandName } = await logicBlob.cooldowns.checkCooldownState(interaction.user.id, mainId, commandTime);
-	if (isOnGeneralCooldown) {
-		interaction.reply({ content: `Please wait, you are on BountyBot cooldown from using \`${lastCommandName}\` recently. Try again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
+	const { endOfCD: endOfGlobalCD, isOnCD: isOnGlobalCD, lastCommandName } = await logicBlob.cooldowns.checkGlobalCooldonwForUser(interaction.user.id, commandTime);
+	if (isOnGlobalCD) {
+		interaction.reply({ content: `Please wait, your BountyBot global cooldown expires in ${discordTimestamp(Math.floor(endOfGlobalCD.getTime() / 1000), TimestampStyles.RelativeTime)}${lastCommandName ? ` (last used command: ${lastCommandName})` : ""}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
-	if (isOnCommandCooldown) {
-		interaction.reply({ content: `Please wait, \`/${mainId}\` is on cooldown. It can be used again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
+	const { endOfCD: endOfIndividualCD, isOnCD: isOnIndividualCD } = await logicBlob.cooldowns.checkSpecificCooldownForUser(interaction.user.id, mainId, commandTime);
+	if (isOnIndividualCD) {
+		interaction.reply({ content: `Please wait, your BountyBot \`/${mainId}\` cooldown expires in ${discordTimestamp(Math.floor(endOfIndividualCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	await logicBlob.cooldowns.updateCooldowns(interaction.user.id, mainId, commandTime, cooldownDictionary[mainId]);

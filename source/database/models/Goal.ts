@@ -1,13 +1,14 @@
 import type { Snowflake } from "discord.js";
 import { DataTypes, Model, type Sequelize } from "sequelize";
 import type { Database } from "..";
+import { GoalProgressKind } from "../../shared/types";
 
 /** A Goal for which all bounty hunters in a company contribute to */
 export class Goal extends Model {
 	declare id: string;
 	declare companyId: Snowflake;
 	declare state: "ongoing" | "expired" | "completed";
-	declare type: "bounties" | "toasts" | "secondings";
+	declare type: GoalProgressKind;
 	declare requiredGP: number;
 }
 

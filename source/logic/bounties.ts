@@ -1,6 +1,7 @@
 import { GuildMember, Snowflake } from "discord.js";
 import { Op } from "sequelize";
 import { Database, DatabaseTypes } from "../database";
+import { HunterReceipt } from "../shared/types";
 import { rollItemForHunter } from "./items";
 
 let db: Database;
@@ -16,7 +17,7 @@ export function createBounty(rawBounty: { userId: string, companyId: string, slo
 /** *Create Completions for multiple Hunters for the same Bounty* */
 export function bulkCreateCompletions(bountyId: string, companyId: Snowflake, userIds: Snowflake[], xpAwarded?: number) {
 	const rawCompletions = userIds.map(id => {
-		const rawCompletion = {
+		const rawCompletion: Partial<DatabaseTypes.Completion> = {
 			bountyId,
 			userId: id,
 			companyId
@@ -66,14 +67,15 @@ export async function getHunterIdSet(bountyId: string) {
 
 /** Filter out the Bounty's poster, bots, and banned Hunters */
 export async function checkTurnInEligibility(bounty: DatabaseTypes.Bounty, completerMembers: GuildMember[], isDevMode: boolean) {
-	/** @type {{ eligibleTurnInIds: Set<string>, newTurnInIds: Set<string>, bannedTurnInIds: Set<string> }} */
 	const results = {
-		eligibleTurnInIds: new Set(),
-		newTurnInIds: new Set(),
-		bannedTurnInIds: new Set()
+		eligibleTurnInIds: new Set<Snowflake>(),
+		newTurnInIds: new Set<Snowflake>(),
+		bannedTurnInIds: new Set<Snowflake>()
 	};
 	for (const completion of await db.Completions.findAll({ where: { bountyId: bounty.id } })) {
-		results.eligibleTurnInIds.add(completion.userId);
+		if (completion.userId) {
+			results.eligibleTurnInIds.add(completion.userId);
+		}
 	}
 	for (const member of completerMembers) {
 		const memberId = member.id;
@@ -97,7 +99,7 @@ export function findCompanyBountiesByCreationDate(companyId: Snowflake) {
 
 /** *Finds a Hunter's last five bounties for the purpose of making a moderation user report* */
 export function findHuntersLastFiveBounties(userId: Snowflake, companyId: Snowflake) {
-	return db.Bounties.findAll({ where: { userId, companyId, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: db.models.Bounty.Completions });
+	return db.Bounties.findAll({ where: { userId, companyId, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: db.Completions });
 }
 
 export async function completeBounty(bounty: DatabaseTypes.Bounty, poster: DatabaseTypes.Hunter, validatedHunters: Map<string, DatabaseTypes.Hunter>, season: DatabaseTypes.Season, company: DatabaseTypes.Company) {
@@ -109,7 +111,7 @@ export async function completeBounty(bounty: DatabaseTypes.Bounty, poster: Datab
 	db.Completions.update({ xpAwarded: bountyValue }, { where: { bountyId: bounty.id } });
 	const xpMultiplierString = company.festivalMultiplierString("xp");
 	for (const [hunterId, hunter] of validatedHunters) {
-		const hunterReceipt = {};
+		const hunterReceipt: HunterReceipt = {};
 		const previousHunterLevel = hunter.getLevel(company.xpCoefficient);
 		const updatedHunter = await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
 		hunterReceipt.xp = bountyBaseValue;
@@ -118,8 +120,8 @@ export async function completeBounty(bounty: DatabaseTypes.Bounty, poster: Datab
 		if (currentHunterLevel > previousHunterLevel) {
 			hunterReceipt.levelUp = { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel };
 		}
-		const [itemRow, wasCreated] = await rollItemForHunter(1 / 8, hunter);
-		if (wasCreated) {
+		const itemRow = await rollItemForHunter(1 / 8, hunter);
+		if (itemRow) {
 			hunterReceipt.item = itemRow.itemName;
 		}
 		const [participation, participationCreated] = await db.Participations.findOrCreate({ where: { companyId: bounty.companyId, userId: hunterId, seasonId: season.id }, defaults: { xp: bountyValue } });
@@ -129,7 +131,7 @@ export async function completeBounty(bounty: DatabaseTypes.Bounty, poster: Datab
 		hunterReceipts.set(hunterId, hunterReceipt);
 	}
 
-	const posterReceipt = { title: "Bounty Poster" };
+	const posterReceipt: HunterReceipt = { title: "Bounty Poster" };
 	const posterXP = bounty.calculatePosterReward(validatedHunters.size);
 	const previousPosterLevel = poster.getLevel(company.xpCoefficient);
 	poster = await poster.increment({ mineFinished: 1, xp: posterXP * company.xpFestivalMultiplier }).then(poster => poster.reload());
@@ -139,8 +141,8 @@ export async function completeBounty(bounty: DatabaseTypes.Bounty, poster: Datab
 	if (currentPosterLevel > previousPosterLevel) {
 		posterReceipt.levelUp = { achievedLevel: currentPosterLevel, previousLevel: previousPosterLevel };
 	}
-	const [itemRow, wasCreated] = await rollItemForHunter(1 / 4, poster);
-	if (wasCreated) {
+	const itemRow = await rollItemForHunter(1 / 4, poster);
+	if (itemRow) {
 		posterReceipt.item = itemRow.itemName;
 	}
 	hunterReceipts.set(poster.userId, posterReceipt);

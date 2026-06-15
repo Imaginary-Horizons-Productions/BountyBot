@@ -14,8 +14,9 @@ export function setDB(database: Database) {
 export async function getInventory(userId: Snowflake) {
 	const inventoryMap = new Map<string, number>();
 	for (const item of await db.Items.findAll({ where: { userId, used: false } })) {
-		if (inventoryMap.has(item.itemName)) {
-			inventoryMap.set(item.itemName, inventoryMap.get(item.itemName) + 1);
+		const itemCount = inventoryMap.get(item.itemName);
+		if (itemCount !== undefined) {
+			inventoryMap.set(item.itemName, itemCount + 1);
 		} else {
 			inventoryMap.set(item.itemName, 1);
 		}
@@ -86,7 +87,7 @@ export async function rollItemForHunter(dropRate: number, hunter: DatabaseTypes.
 
 	let droppedItem;
 	if (Math.random() < dropRate) {
-		const poolThresholds = Object.keys(DROP_TABLE).map(unparsed => parseFloat(unparsed)).sort((a, b) => b - a);
+		const poolThresholds = Object.keys(DROP_TABLE).map(unparsed => parseFloat(unparsed)).sort((a, b) => b - a) as (keyof typeof DROP_TABLE)[];
 		const poolRandomNumber = Math.random() * 120;
 		for (const threshold of poolThresholds) {
 			if (poolRandomNumber > threshold) {
@@ -95,9 +96,7 @@ export async function rollItemForHunter(dropRate: number, hunter: DatabaseTypes.
 			}
 		}
 	}
-	if (!droppedItem) return [null, false];
-
-	return [await db.Items.create({ userId: hunter.userId, itemName: droppedItem }), true];
+	return droppedItem ? await db.Items.create({ userId: hunter.userId, itemName: droppedItem }) : null;
 }
 
 /** *Finds the count of the specified Items of User* */
@@ -111,6 +110,9 @@ export function countUserCopies(userId: Snowflake, itemName: string) {
  */
 export async function consume(userId: Snowflake, itemName: string) {
 	const dbRow = await db.Items.findOne({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]] });
+	if (!dbRow) {
+		throw new Error(`Attempted to consume non-existant item ${itemName} for user with id ${userId}`);
+	}
 	return dbRow.update("used", true);
 }
 

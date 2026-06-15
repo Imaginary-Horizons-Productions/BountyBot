@@ -52,7 +52,7 @@ export function initDB(connection: Sequelize) {
 		User,
 		UserInteraction
 	]) {
-		table.associate(db)
+		table.associate(db);
 	}
 	return db;
 }

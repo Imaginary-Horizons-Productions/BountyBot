@@ -1,6 +1,7 @@
 import { Collection, Role, Snowflake } from "discord.js";
 import { Op } from "sequelize";
 import { Database, DatabaseTypes } from "../database";
+import { Participation } from "../database/models/Participation";
 import { descendingByProperty } from "../shared";
 import { calculateXPMean, calculateXPStandardDeviation } from "./shared";
 
@@ -64,7 +65,7 @@ export function findFirstPlaceParticipation(companyId: Snowflake, seasonId: stri
 }
 
 /** *Finds the Participation of the specified Season's Hunter with the most of the specified Participation property* */
-export async function findParticipationWithTopParticipationStat(companyId: Snowflake, seasonId: string, participationProperty: string) {
+export async function findParticipationWithTopParticipationStat(companyId: Snowflake, seasonId: string, participationProperty: keyof Participation) {
 	const participation = await db.Participations.findOne({ where: { companyId, seasonId }, order: [[participationProperty, "DESC"]] });
 	if (participation === null || participation[participationProperty] === 0) {
 		return null;
@@ -80,22 +81,35 @@ export async function nextRankXP(userId: Snowflake, season: DatabaseTypes.Season
 		return 0;
 	}
 	const mean = calculateXPMean(participationMap);
+	if (mean === null) {
+		return 0;
+	}
 	const xpStandardDeviation = calculateXPStandardDeviation(participationMap, mean);
+	if (xpStandardDeviation === null) {
+		return 0;
+	}
 	return Math.ceil(xpStandardDeviation * descendingRanks[participation.rankIndex - 1].threshold + mean - participation.xp);
 }
 
 
 /** Recalculate placement and rank changes based on changed XP values on Participations and updates the database */
 export async function updatePlacementsAndRanks(participationMap: Map<string, DatabaseTypes.Participation>, descendingRanks: DatabaseTypes.Rank[], allGuildRoles: Collection<Snowflake, Role>) {
+	const seasonalHunterReceipts = new Map();
 	if (participationMap.size < 1) {
-		return new Map();
+		return seasonalHunterReceipts;
 	}
 	const placementChanges = await calculatePlacementChanges(participationMap);
 	const mean = calculateXPMean(participationMap);
+	if (mean === null) {
+		return seasonalHunterReceipts;
+	}
 	const standardDeviation = calculateXPStandardDeviation(participationMap, mean);
+	if (standardDeviation === null) {
+		return seasonalHunterReceipts;
+	}
 
 	// Calculate Rank Changes
-	const rankChanges = {};
+	const rankChanges: Record<string, { index: number | null; isRankUp: boolean; }> = {};
 	if (descendingRanks.length > 0) {
 		for (const [id, participation] of participationMap) {
 			const standardDeviationsFromMean = (participation.xp - mean) / standardDeviation;
@@ -111,10 +125,9 @@ export async function updatePlacementsAndRanks(participationMap: Map<string, Dat
 		}
 	}
 
-	const seasonalHunterReceipts = new Map();
 	for (const id of new Set(Object.keys(placementChanges).concat(Object.keys(rankChanges)))) {
-		const updatePayload = {};
-		const rawReceipt = {};
+		const updatePayload: Partial<{ placement: number; rankIndex: number | null; }> = {};
+		const rawReceipt: Partial<{ topPlacement: boolean; rankUp: { name: string; newRankIndex: number | null; }; }> = {};
 		if (id in placementChanges) {
 			updatePayload.placement = placementChanges[id];
 			if (placementChanges[id] === 1) {
@@ -124,12 +137,16 @@ export async function updatePlacementsAndRanks(participationMap: Map<string, Dat
 		if (id in rankChanges) {
 			const { index, isRankUp } = rankChanges[id];
 			updatePayload.rankIndex = index;
-			if (isRankUp) {
+			if (isRankUp && index !== null) {
 				const rank = descendingRanks[index];
 				rawReceipt.rankUp = { name: rank.getName(allGuildRoles, index), newRankIndex: index };
 			}
 		}
-		await participationMap.get(id).update(updatePayload);
+		const participation = participationMap.get(id);
+		if (!participation) {
+			throw new Error(`Failed to find participation with id ${id} in updatePlacementsAndRanks`);
+		}
+		await participation.update(updatePayload);
 		seasonalHunterReceipts.set(id, rawReceipt);
 	}
 	return seasonalHunterReceipts;
@@ -137,10 +154,11 @@ export async function updatePlacementsAndRanks(participationMap: Map<string, Dat
 
 /** *Generates a map of all of a Season's Participations' placement changes* */
 export async function calculatePlacementChanges(participationMap: Map<any, DatabaseTypes.Participation>) {
+	// @ts-expect-error type guard for key in descendingByProperty required?
 	const participationArray = Array.from(participationMap.values()).sort(descendingByProperty("xp"));
 	let recentPlacement = participationMap.size;
 	let previousScore = 0;
-	const placementChanges = {};
+	const placementChanges: Record<string, number> = {};
 	// subtract 1 to adjust for array indexes starting from 0
 	for (let i = recentPlacement - 1; i >= 0; i -= 1) {
 		const participation = participationArray[i];

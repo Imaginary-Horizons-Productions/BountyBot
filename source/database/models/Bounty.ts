@@ -1,6 +1,7 @@
 ﻿import type { GuildScheduledEventManager, Snowflake } from "discord.js";
-import { DataTypes, Model, type Sequelize } from "sequelize";
+import { DataTypes, HasManyGetAssociationsMixin, Model, type Sequelize } from "sequelize";
 import { Database } from "..";
+import { Completion } from "./Completion";
 
 /** Bounties are user created objectives for other server members to complete */
 export class Bounty extends Model {
@@ -21,6 +22,8 @@ export class Bounty extends Model {
 	declare editCount: number;
 	declare createdAt: string; //TODONOW are these really strings?
 	declare updatedAt: string;
+
+	declare getCompletions: HasManyGetAssociationsMixin<Completion>;
 
 	static calculateCompleterReward(posterLevel: number, slotNumber: number, showcaseCount: number) {
 		const showcaseMultiplier = 0.25 * showcaseCount + 1;

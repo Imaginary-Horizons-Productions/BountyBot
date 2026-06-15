@@ -1,6 +1,7 @@
 import type { Snowflake } from "discord.js";
-import { DataTypes, Model, type Sequelize } from "sequelize";
+import { DataTypes, HasManyGetAssociationsMixin, Model, type Sequelize } from "sequelize";
 import type { Database } from "..";
+import { Recipient } from "./Recipient";
 
 /** This model represents a toast raised for a group of bounty hunters */
 export class Toast extends Model {
@@ -14,6 +15,8 @@ export class Toast extends Model {
 	declare secondings: number;
 	declare createdAt: string;
 	declare updatedAt: string;
+
+	declare getRecipients: HasManyGetAssociationsMixin<Recipient>;
 }
 
 export function initModel(sequelize: Sequelize) {
@@ -56,8 +59,6 @@ export function initModel(sequelize: Sequelize) {
 }
 
 export function associate(models: Database) {
-	//TODONOW confirm this still works for setting up associations
-	//TODONOW adapt usage in other layers
 	models.Toasts.belongsTo(models.Companies, { foreignKey: "companyId" });
 	models.Toasts.belongsTo(models.Users, { foreignKey: "senderId" });
 	models.Toasts.hasMany(models.Recipients, { foreignKey: "toastId" });

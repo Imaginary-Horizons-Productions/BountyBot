@@ -1,7 +1,8 @@
-const { heading, userMention, bold, italic } = require("discord.js");
-const { commandIds } = require("../../shared/constants.ts");
-const { MessageLimits } = require("@sapphire/discord.js-utilities");
-const { DatabaseTypes } = require("../../database/index.ts");
+import { MessageLimits } from "@sapphire/discord.js-utilities";
+import { bold, heading, italic, userMention } from "discord.js";
+import { DatabaseTypes } from "../../database/index.ts";
+import { commandIds } from "../../shared/constants.ts";
+import { CompanyReciept, HunterReceiptMap } from "../../shared/types";
 
 /**
  * @file String Constructors - formatted reusable strings
@@ -11,9 +12,10 @@ const { DatabaseTypes } = require("../../database/index.ts");
  */
 
 /** generates a command mention, which users can click to shortcut them to using the command
- * @param {string} fullCommand for subcommands append a whitespace and the subcommandName
+ *
+ * for subcommands append a whitespace and the subcommandName
  */
-function commandMention(fullCommand) {
+export function commandMention(fullCommand: string) {
 	const [mainCommand] = fullCommand.split(" ");
 	if (!(mainCommand in commandIds)) {
 		return `\`/${fullCommand}\``;
@@ -30,16 +32,12 @@ const CONGRATULATORY_PHRASES = [
 	"Awesome"
 ];
 
-function randomCongratulatoryPhrase() {
+export function randomCongratulatoryPhrase() {
 	return CONGRATULATORY_PHRASES[Math.floor(CONGRATULATORY_PHRASES.length * Math.random())];
 }
 
-/** Create a text-only ratio bar that fills left to right
- * @param {number} numerator
- * @param {number} denominator
- * @param {number} barLength
- */
-function fillableTextBar(numerator, denominator, barLength) {
+/** Create a text-only ratio bar that fills left to right */
+export function fillableTextBar(numerator: number, denominator: number, barLength: number) {
 	const filledBlocks = Math.floor(barLength * numerator / denominator);
 	let bar = "";
 	for (let i = 0; i < barLength; i++) {
@@ -53,23 +51,19 @@ function fillableTextBar(numerator, denominator, barLength) {
 }
 
 const NUMBER_EMOJI = { 0: '0️⃣', 1: '1️⃣', 2: '2️⃣', 3: '3️⃣', 4: '4️⃣', 5: '5️⃣', 6: '6️⃣', 7: '7️⃣', 8: '8️⃣', 9: '9️⃣', 10: '🔟' };
-/**
- * @param {number} number
- * @returns {string}
- */
-function emojiFromNumber(number) {
-	if (number in NUMBER_EMOJI) {
-		return NUMBER_EMOJI[number];
+function hasNumberEmoji(candidate: number): candidate is keyof typeof NUMBER_EMOJI {
+	return candidate in NUMBER_EMOJI;
+}
+export function emojiFromNumber(integer: number) {
+	if (hasNumberEmoji(integer)) {
+		return NUMBER_EMOJI[integer];
 	} else {
 		return '#️⃣';
 	}
 }
 
-/** Formats string array into Oxford English list syntax
- *  @param {string[]} texts
- *  @param {boolean} isMutuallyExclusive
- */
-function sentenceListEN(texts, isMutuallyExclusive) {
+/** Formats string array into Oxford English list syntax */
+function sentenceListEN(texts: string[], isMutuallyExclusive: boolean) {
 	if (texts.length > 2) {
 		const textsSansLast = texts.slice(0, texts.length - 1);
 		if (isMutuallyExclusive) {
@@ -90,32 +84,26 @@ function sentenceListEN(texts, isMutuallyExclusive) {
 	}
 }
 
-/**
- * @param {"bounty" | "toast" | "seconding" | "item"} actionType
- * @param {{ guildName: string; levelUp?: number; gp?: number; gpMultiplier?: string; }} companyReceipt
- * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterReceipts
- * @param {number} companyMaxBountySlots
- */
-function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBountySlots) {
+export function rewardSummary(actionType: "bounty" | "toast" | "seconding" | "item", companyReceipt: CompanyReciept, hunterReceipts: HunterReceiptMap, companyMaxBountySlots: number) {
 	if (Object.keys(companyReceipt).length + hunterReceipts.size === 1) { // `guildName` is a guaranteed key in `companyReciept`
 		return "";
 	}
 
 	let summary = heading("Rewards", 2);
-	if ("levelUp" in companyReceipt) {
+	if (companyReceipt.levelUp !== undefined) {
 		summary += `\n- ${companyReceipt.guildName} is now Level ${companyReceipt.levelUp}! Evergreen bounties now award more XP!`;
 	}
-	if ("gp" in companyReceipt) {
+	if (companyReceipt.gp !== undefined) {
 		summary += `\n- This ${actionType} contributed ${companyReceipt.gp} GP${companyReceipt.gpMultiplier ?? ""} to the Server Goal!`;
 	}
 
 	for (const [id, receipt] of hunterReceipts) {
-		summary += `\n### ${userMention(id)}`;
-		if ("title" in receipt) {
+		summary += `\n${heading(userMention(id), 3)}`;
+		if (receipt.title !== undefined) {
 			summary += ` - ${receipt.title}`
 		}
-		if ("xp" in receipt) {
-			if ("levelUp" in receipt) {
+		if (receipt.xp !== undefined) {
+			if (receipt.levelUp !== undefined) {
 				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""} and reached ${bold(`Level ${receipt.levelUp.achievedLevel}`)}!`;
 				let oddSlotBaseRewardIncrease = null;
 				let evenSlotBaseRewardIncrease = null;
@@ -143,7 +131,7 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 					if (bountySlotsUnlocked.length === 1) {
 						summary += `\n   - You have unlocked ${bold(`Bounty Slot #${bountySlotsUnlocked[0]}`)}.`;
 					} else {
-						summary += `\n   - You have unlocked ${sentenceListEN(bountySlotsUnlocked.map(slotNumber => bold(`Bounty Slot #${slotNumber}`)))}.`;
+						summary += `\n   - You have unlocked ${sentenceListEN(bountySlotsUnlocked.map(slotNumber => bold(`Bounty Slot #${slotNumber}`)), false)}.`;
 					}
 				}
 				if (oddSlotBaseRewardIncrease) {
@@ -156,13 +144,13 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""}!`;
 			}
 		}
-		if ("topPlacement" in receipt) {
+		if (receipt.topPlacement !== undefined) {
 			summary += `\n- ${italic("Claimed the lead on Seasonal XP!")}`;
 		}
-		if ("rankUp" in receipt) {
+		if (receipt.rankUp !== undefined) {
 			summary += `\n- Ranked up to ${bold(receipt.rankUp.name)}`;
 		}
-		if ("item" in receipt) {
+		if (receipt.item !== undefined) {
 			summary += `\n- Found a ${bold(receipt.item)}`;
 		}
 	}
@@ -172,13 +160,4 @@ function rewardSummary(actionType, companyReceipt, hunterReceipts, companyMaxBou
 	} else {
 		return summary;
 	}
-}
-
-module.exports = {
-	commandMention,
-	randomCongratulatoryPhrase,
-	fillableTextBar,
-	emojiFromNumber,
-	sentenceListEN,
-	rewardSummary
 }

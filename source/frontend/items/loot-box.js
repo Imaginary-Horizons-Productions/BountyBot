@@ -11,7 +11,7 @@ module.exports = new ItemTemplateSet(
 		async (interaction, origin) => {
 			const rolledItems = [];
 			for (let i = 0; i < 2; i++) {
-				const [itemRow] = await logicLayer.items.rollItemForHunter(1, origin.hunter);
+				const itemRow = await logicLayer.items.rollItemForHunter(1, origin.hunter);
 				if (itemRow) {
 					rolledItems.push(`a ${bold(itemRow.itemName)}`);
 				}

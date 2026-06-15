@@ -6,11 +6,11 @@ import type { Database } from "..";
 export class UserInteraction extends Model {
 	declare userId: Snowflake;
 	declare interactionName: string;
-	declare interactionTime: string;
-	declare lastInteractTime: string;
-	declare cooldownTime: string;
-	declare createdAt: string;
-	declare updatedAt: string;
+	declare interactionTime: Date;
+	declare lastInteractTime: Date;
+	declare cooldownTime: Date;
+	declare createdAt: Date;
+	declare updatedAt: Date;
 }
 
 export function initModel(sequelize: Sequelize) {

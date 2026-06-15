@@ -143,7 +143,7 @@ export class SubcommandFunctionality {
 	}
 }
 
-type ButtonProcedure = (interaction: ButtonInteraction, theater: InteractionTheater, isDevMode: boolean, ...args: string[]) => void;
+type ButtonProcedure = (interaction: ButtonInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, ...args: string[]) => void;
 
 export class ButtonFunctionality extends InteractionFunctionality {
 	declare execute: ButtonProcedure;

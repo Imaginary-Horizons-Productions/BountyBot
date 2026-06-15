@@ -2,6 +2,7 @@ import { Guild, Snowflake, userMention } from "discord.js";
 import { Op } from "sequelize";
 import type { Database, DatabaseTypes } from "../database";
 import { dateInPast } from "../shared";
+import { HunterReceipt, HunterReceiptMap } from "../shared/types";
 
 let db: Database;
 
@@ -14,10 +15,16 @@ export function setDB(database: Database) {
  * Duplicated stale toastee ids are intended as a way of recording accumulating staleness
  */
 async function findStaleToasteeIds(senderId: Snowflake, companyId: Snowflake) {
-	const lastFiveToasts = await db.Toasts.findAll({ where: { senderId, companyId }, include: db.Toasts.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
-	return lastFiveToasts.reduce((list, toast) => {
-		return list.concat(toast.Recipients.filter(reciept => reciept.isRewarded).map(reciept => reciept.recipientId));
-	}, []);
+	const lastFiveToasts = await db.Toasts.findAll({ where: { senderId, companyId }, include: db.Recipients, order: [["createdAt", "DESC"]], limit: 5 });
+	const staleToasteeIds: string[] = [];
+	for (const toast of lastFiveToasts) {
+		for (const recipient of await toast.getRecipients()) {
+			if (recipient.isRewarded) {
+				staleToasteeIds.push(recipient.recipientId);
+			}
+		}
+	}
+	return staleToasteeIds;
 }
 
 /** *Find a specified Hunter's most seconded Toast* */
@@ -32,7 +39,7 @@ export async function wasAlreadySeconded(toastId: Snowflake, seconderId: Snowfla
 
 /** *Find the specified Toast* */
 export function findToastByPK(toastId: Snowflake) {
-	return db.Toasts.findByPk(toastId, { include: db.Toasts.Recipients });
+	return db.Toasts.findByPk(toastId, { include: db.Recipients });
 }
 
 /** *Reaction Toasts: finds a toast by the reacted message's id* */
@@ -64,13 +71,13 @@ function isToastCrit(critRoll: number, effectiveToastLevel: number) {
 }
 
 export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, senderId: Snowflake, toasteeIds: Snowflake[], hunterMap: Map<Snowflake, DatabaseTypes.Hunter>, seasonId: string, toastText: string, imageURL: string | null = null, hostMessageId: Snowflake | null = null) {
-	const hunterReceipts = new Map();
+	const hunterReceipts: HunterReceiptMap = new Map();
 	// Make database entities
-	const recentToasts = await db.Toasts.findAll({ where: { companyId: guild.id, senderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.Toasts.Recipients });
+	const recentToasts = await db.Toasts.findAll({ where: { companyId: guild.id, senderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.Recipients });
 	let rewardsAvailable = 10;
 	let critToastsAvailable = 2;
 	for (const toast of recentToasts) {
-		for (const reciept of toast.Recipients) {
+		for (const reciept of await toast.getRecipients()) {
 			if (reciept.isRewarded) {
 				rewardsAvailable--;
 			}
@@ -80,28 +87,35 @@ export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, s
 		}
 	}
 	const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > dateInPast({ d: 1 }));
-	const hunterIdsToastedInLastDay = toastsInLastDay.reduce((idSet, toast) => {
-		toast.Recipients.forEach(reciept => {
-			idSet.add(reciept.recipientId);
-		})
-		return idSet;
-	}, new Set());
+	const hunterIdsToastedInLastDay = new Set<Snowflake>();
+	for (const toast of toastsInLastDay) {
+		for (const recipient of await toast.getRecipients()) {
+			hunterIdsToastedInLastDay.add(recipient.recipientId);
+		}
+	}
 
 	const staleToastees = await findStaleToasteeIds(senderId, guild.id);
 
 	const toast = await db.Toasts.create({ companyId: guild.id, senderId, text: toastText, imageURL, hostMessageId });
 	const rawRecipients = [];
 	let critValue = 0;
-	const startingSenderLevel = hunterMap.get(senderId).getLevel(company.xpCoefficient);
+	const sender = hunterMap.get(senderId);
+	if (!sender) {
+		throw new Error(`Could not find hunter with senderId ${senderId} in provided map in raiesToast`);
+	}
+	const startingSenderLevel = sender.getLevel(company.xpCoefficient);
 	const xpMultiplierString = company.festivalMultiplierString("xp");
 	for (const id of toasteeIds) {
 		const rawToast = { toastId: toast.id, recipientId: id, isRewarded: !hunterIdsToastedInLastDay.has(id) && rewardsAvailable > 0, wasCrit: false };
 		if (rawToast.isRewarded) {
-			const hunterReceipt = {};
+			const hunterReceipt: HunterReceipt = {};
 			hunterReceipt.xp = 1;
 			hunterReceipt.xpMultiplier = xpMultiplierString;
 
 			let hunter = hunterMap.get(id);
+			if (!hunter) {
+				throw new Error(`Could not find hunter with id ${id} in provided map in raiesToast`);
+			}
 			const previousLevel = hunter.getLevel(company.xpCoefficient);
 			const xpAwarded = Math.floor(company.xpFestivalMultiplier);
 			hunter = await hunter.increment({ toastsReceived: 1, xp: xpAwarded });
@@ -146,10 +160,13 @@ export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, s
 	// Update sender
 	const [participation, participationCreated] = await db.Participations.findOrCreate({ where: { companyId: guild.id, userId: senderId, seasonId }, defaults: { xp: critValue, toastsRaised: 1 } });
 	if (critValue > 0) {
-		const senderReceipt = { xp: critValue, xpMultiplier: xpMultiplierString, title: "Critical Toast!" };
+		const senderReceipt: HunterReceipt = { xp: critValue, xpMultiplier: xpMultiplierString, title: "Critical Toast!" };
 		let sender = hunterMap.get(senderId);
+		if (!sender) {
+			throw new Error(`Could not find hunter with id ${senderId} in provided map in raiesToast`);
+		}
 		const previousSenderLevel = sender.getLevel(company.xpCoefficient);
-		sender = await hunterMap.get(senderId).increment({ toastsRaised: 1, xp: critValue });
+		sender = await sender.increment({ toastsRaised: 1, xp: critValue });
 		const currentSenderLevel = sender.getLevel(company.xpCoefficient);
 		if (currentSenderLevel > previousSenderLevel) {
 			senderReceipt.levelUp = { achievedLevel: currentSenderLevel, previousLevel: previousSenderLevel };
@@ -159,7 +176,11 @@ export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, s
 			participation.increment({ xp: critValue, toastsRaised: 1 });
 		}
 	} else {
-		hunterMap.get(senderId).increment("toastsRaised");
+		let sender = hunterMap.get(senderId);
+		if (!sender) {
+			throw new Error(`Could not find hunter with id ${senderId} in provided map in raiesToast`);
+		}
+		sender.increment("toastsRaised");
 		participation.increment("toastsRaised");
 	}
 
@@ -170,14 +191,14 @@ export async function secondToast(seconder: DatabaseTypes.Hunter, toast: Databas
 	await seconder.increment("toastsSeconded");
 	await toast.increment("secondings");
 
-	const hunterReceipts = new Map();
+	const hunterReceipts: HunterReceiptMap = new Map();
 
 	const xpMultiplierString = company.festivalMultiplierString("xp");
 	for (const userId of recipientIds) {
 		if (userId === seconder.userId) {
 			continue;
 		}
-		const hunterReceipt = {};
+		const hunterReceipt: Partial<HunterReceipt> = {};
 		const [participation, participationCreated] = await db.Participations.findOrCreate({ where: { companyId: company.id, userId, seasonId }, defaults: { xp: 1 } });
 		if (!participationCreated) {
 			participation.increment({ xp: 1 });
@@ -186,6 +207,9 @@ export async function secondToast(seconder: DatabaseTypes.Hunter, toast: Databas
 		if (hunter) {
 			const previousLevel = hunter.getLevel(company.xpCoefficient);
 			hunter = await hunter.increment({ toastsReceived: 1, xp: 1 }).then(hunter => hunter.reload());
+			if (!hunter) {
+				throw new Error(`Failed to reload hunter during secondToast`);
+			}
 			hunterReceipt.xp = 1;
 			hunterReceipt.xpMultiplier = xpMultiplierString;
 			const currentLevel = hunter.getLevel(company.xpCoefficient);
@@ -235,7 +259,7 @@ export async function secondToast(seconder: DatabaseTypes.Hunter, toast: Databas
 
 	await db.Secondings.create({ toastId: toast.id, seconderId: seconder.userId, wasCrit: critSeconds > 0 });
 	if (critSeconds > 0) {
-		const hunterReceipt = { title: "Critical Toast!", xp: critSeconds };
+		const hunterReceipt: HunterReceipt = { title: "Critical Toast!", xp: critSeconds };
 		const previousSenderLevel = seconder.getLevel(company.xpCoefficient);
 		await seconder.increment({ xp: critSeconds }).then(seconder => seconder.reload());
 		const currentSenderLevel = seconder.getLevel(company.xpCoefficient);

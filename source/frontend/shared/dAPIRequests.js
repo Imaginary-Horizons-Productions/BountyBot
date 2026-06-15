@@ -112,7 +112,7 @@ async function getBountyBoardThread(guild, bountyBoardId, postingId) {
 
 /** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
  * @param {DatabaseTypes.Company} company
- * @param {Guild} guild
+ * @param {Guild<"cached">} guild
  * @param {Map<string, DatabaseTypes.Participation>} participationMap
  * @param {DatabaseTypes.Rank[]} descendingRanks
  * @param {{ requiredGP: number; currentGP: number; }} goalProgress
@@ -137,7 +137,7 @@ async function refreshReferenceChannelScoreboardSeasonal(company, guild, partici
 
 /** Update the Overall Scoreboard embed in a server's scoreboard reference channel
  * @param {DatabaseTypes.Company} company
- * @param {Guild} guild
+ * @param {Guild<"cached">} guild
  * @param {Map<string, Hunter>} hunterMap
  * @param {{ requiredGP: number; currentGP: number; }} goalProgress
  */
@@ -183,7 +183,7 @@ function sendRewardMessage(embedMessage, content, threadTitle) {
 /** Requests dAPI change the roles on guild members based on the provided `seasonResults`
  * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterRecipts
  * @param {DatabaseTypes.Rank[]} descendingRanks
- * @param {GuildMemberManager} guildMemberManager
+ * @param {GuildMemberManager<"cached">} guildMemberManager
  */
 async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager) {
 	if (descendingRanks.length < 1) {

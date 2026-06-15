@@ -618,7 +618,7 @@ function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificat
  * @param {number} dqCount
  * @param {(DatabaseTypes.Bounty & {Completions: DatabaseTypes.Completion[]})[]} lastFiveBounties
  */
-function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
+async function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 	const embed = new EmbedBuilder().setColor(member.displayColor)
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`Moderation Stats: ${member.user.tag}`)
@@ -639,7 +639,7 @@ function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
 		if (bounty.description !== null) {
 			bountyHistory += ` ${bounty.description}`;
 		}
-		bountyHistory += `${sentenceListEN(bounty.Completions.map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
+		bountyHistory += `${sentenceListEN((await bounty.getCompletions()).map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
 	}
 
 	if (bountyHistory === "") {

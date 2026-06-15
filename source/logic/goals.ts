@@ -1,6 +1,7 @@
 import { Snowflake } from "discord.js";
 import { Op } from "sequelize";
 import { Database, DatabaseTypes } from "../database";
+import { CompanyReciept, GoalProgressKind } from "../shared/types";
 
 let db: Database;
 
@@ -38,21 +39,20 @@ export async function findLatestGoalProgress(companyId: Snowflake) {
 }
 
 const GOAL_POINT_MAP = {
-	"bounties": 10,
-	"toasts": 1,
-	"secondings": 2
-};
+	[GoalProgressKind.Bounty]: 10,
+	[GoalProgressKind.Toast]: 1,
+	[GoalProgressKind.Seconding]: 2
+} as const;
 
-//TODONOW create enum for progressType
-export async function progressGoal(company: DatabaseTypes.Company, progressType: "bounties" | "toasts" | "secondings", hunter: DatabaseTypes.Hunter, season: DatabaseTypes.Season) {
-	const contributorIds = [];
-	const companyReceipt = {};
+export async function progressGoal(company: DatabaseTypes.Company, progressKind: GoalProgressKind, hunter: DatabaseTypes.Hunter, season: DatabaseTypes.Season) {
+	let contributorIds: Snowflake[] = [];
+	const companyReceipt: CompanyReciept = {};
 	let gpDisplay = 0, gpEarned = 0, goalCompleted = false, currentGP = 0, requiredGP = 0;
 	const goal = await db.Goals.findOne({ where: { companyId: company.id, state: "ongoing" }, order: [["createdAt", "DESC"]] });
 	if (goal) {
 		requiredGP = goal.requiredGP;
-		gpDisplay = GOAL_POINT_MAP[progressType];
-		if (goal.type === progressType) {
+		gpDisplay = GOAL_POINT_MAP[progressKind];
+		if (goal.type === progressKind) {
 			gpDisplay *= 2;
 		}
 		gpEarned = gpDisplay;
@@ -70,7 +70,7 @@ export async function progressGoal(company: DatabaseTypes.Company, progressType:
 		goalCompleted = goal.requiredGP <= currentGP;
 		if (goalCompleted) {
 			contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
-			db.models.Hunter.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: contributorIds } } });
+			db.Hunters.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: contributorIds } } });
 			goal.update({ state: "completed" });
 		} else {
 			contributorIds.push(hunter.userId);
