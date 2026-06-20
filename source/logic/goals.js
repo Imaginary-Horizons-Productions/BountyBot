@@ -62,7 +62,7 @@ const GOAL_POINT_MAP = {
  * @param {Season} season
  */
 async function progressGoal(company, progressType, hunter, season) {
-	const contributorIds = [];
+	let contributorIds = [];
 	const companyReceipt = {};
 	let gpDisplay = 0, gpEarned = 0, goalCompleted = false, currentGP = 0, requiredGP = 0;
 	const goal = await db.models.Goal.findOne({ where: { companyId: company.id, state: "ongoing" }, order: [["createdAt", "DESC"]] });
