@@ -500,7 +500,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(posterGuildMember.displayColor)
 		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
-		.setTitle(bounty.state == "complete" ? `Bounty Complete! ${bounty.title}` : bounty.title)
+		.setTitle(bounty.state == "completed" ? `Bounty Complete! ${bounty.title}` : bounty.title)
 		.setTimestamp();
 	if (bounty.description) {
 		embed.setDescription(bounty.description);
