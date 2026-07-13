@@ -129,12 +129,12 @@ function bountyControlPanelSelectRow(bountyId) {
  * @param {string} title
  * @param {string} posterName
  * @param {number} slotNumber
+ * @param {number} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number} endTimestamp Unix timestamp (seconds since Jan 1 1970)
  * @param {string?} description
  * @param {string?} imageURL
- * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
- * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
  */
-function bountyScheduledEventPayload(title, posterName, slotNumber, description, imageURL, startTimestamp, endTimestamp) {
+function bountyScheduledEventPayload(title, posterName, slotNumber, startTimestamp, endTimestamp, description, imageURL) {
 	const payload = {
 		name: `Bounty: ${title}`,
 		scheduledStartTime: startTimestamp * 1000,
