@@ -1,6 +1,6 @@
 const { MessageFlags, PermissionFlagsBits } = require("discord.js");
 const { SelectOptionWrapper } = require("../../classes");
-const { validateScheduledEventTimestamps, bountyScheduledEventPayload, refreshBountyBoardThread, unarchiveAndUnlockThread, commandMention, editBountyModalAndSubmissionOptions, textsHaveAutoModInfraction, bountyEmbed } = require("../../shared");
+const { validateScheduledEventTimestamps, bountyScheduledEventPayload, refreshBountyBoardThread, unarchiveAndUnlockThread, editBountyModalAndSubmissionOptions, textsHaveAutoModInfraction, bountyEmbed } = require("../../shared");
 const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 
 module.exports = new SelectOptionWrapper("edit",
