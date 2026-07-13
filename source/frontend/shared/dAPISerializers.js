@@ -521,7 +521,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 		embed.setAuthor({ name: `${posterGuildMember.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: posterGuildMember.user.displayAvatarURL() });
 	}
 	if (hunterIdSet.size > 0) {
-		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
+		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values()).map(id => userMention(id)));
 		const turnInFieldName = !bounty.isEvergreen && bounty.state === "open" ? "Pending Turn-Ins:" : "Turned-In By:";
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: turnInFieldName, value: completersFieldText });
