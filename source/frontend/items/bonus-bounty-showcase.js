@@ -4,7 +4,7 @@ const { timeConversion } = require("../../shared");
 const { commandMention, selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
-/** @type {typeof import("../../logic")} */
+/** @type {import("../../logic").LogicLayer} */
 let logicLayer;
 
 const itemName = "Bonus Bounty Showcase";

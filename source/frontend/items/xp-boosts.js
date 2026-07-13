@@ -1,8 +1,8 @@
-const { Company } = require("../../database/models");
+const { DatabaseTypes } = require("../../database");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require("../shared");
 
-/** @type {typeof import("../../logic")} */
+/** @type {import("../../logic").LogicLayer} */
 let logicLayer;
 
 class XPBoost extends ItemTemplate {
@@ -19,7 +19,7 @@ class XPBoost extends ItemTemplate {
 				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 				await logicLayer.seasons.changeSeasonXP(interaction.user.id, interaction.guildId, season.id, value);
 				const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
-				const previousCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+				const previousCompanyLevel = DatabaseTypes.Company.getLevel(origin.company.getXP(hunterMap));
 				const previousHunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
 				const updatedHunter = await origin.hunter.increment({ xp: value }).then(hunter => hunter.reload());
 				const currentHunterLevel = updatedHunter.getLevel(origin.company.xpCoefficient);
@@ -27,7 +27,7 @@ class XPBoost extends ItemTemplate {
 					hunterReceipts.set(interaction.user.id, { ...hunterReceipts.get(interaction.user.id), levelUp: { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel } })
 				}
 				hunterMap.set(interaction.user.id, updatedHunter);
-				const currentCompanyLevel = Company.getLevel(origin.company.getXP(hunterMap));
+				const currentCompanyLevel = DatabaseTypes.Company.getLevel(origin.company.getXP(hunterMap));
 				if (previousCompanyLevel < currentCompanyLevel) {
 					companyReceipt.levelUp = currentCompanyLevel;
 				}

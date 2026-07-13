@@ -1,10 +1,10 @@
 const { MessageFlags, heading, userMention } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { bountyEmbed } = require("../../shared");
-const { Company } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("list", "List all of a hunter's open bounties (default: your own)",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? interaction.user.id;
 		const isEvergreen = listUserId === interaction.client.user.id;
 		const existingBounties = await logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id);
@@ -21,19 +21,19 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 
 		const replyPayload = { flags: MessageFlags.Ephemeral };
 		if (isEvergreen) {
-			const companyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
+			const companyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 			replyPayload.content = heading(`Evergreen Bounties on ${interaction.guild.name}`, 2);
-			replyPayload.embeds = await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, interaction.guild.members.me, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id))));
+			replyPayload.embeds = await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, interaction.guild.members.me, companyLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id))));
 		} else {
 			replyPayload.content = heading(`${userMention(listUserId)}'s Bounties`, 2);
-			if (listUserId === origin.hunter.userId) {
-				const hunterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				replyPayload.embeds = await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, interaction.member, hunterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))));
+			if (listUserId === theater.hunter.userId) {
+				const hunterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
+				replyPayload.embeds = await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, interaction.member, hunterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))));
 			} else {
 				const hunter = await logicLayer.hunters.findOneHunter(listUserId, interaction.guild.id);
-				const hunterLevel = hunter.getLevel(origin.company.xpCoefficient);
+				const hunterLevel = hunter.getLevel(theater.company.xpCoefficient);
 				const guildMember = await interaction.guild.members.fetch(listUserId);
-				replyPayload.embeds = await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, guildMember, hunterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))));
+				replyPayload.embeds = await Promise.all(existingBounties.map(async bounty => bountyEmbed(bounty, guildMember, hunterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))));
 			}
 		}
 		interaction.reply(replyPayload);

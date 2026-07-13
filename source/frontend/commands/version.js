@@ -5,7 +5,7 @@ const { latestVersionChangesEmbed } = require('../shared');
 const mainId = "version";
 module.exports = new CommandWrapper(mainId, "Get the most recent changes or the full change log", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Send the user the most recent set of patch notes or full change log */
-	(interaction, origin, runMode) => {
+	(interaction, theater, isDevMode) => {
 		if (interaction.options.getString("notes-length") === "last-version") {
 			latestVersionChangesEmbed(interaction.client.user.displayAvatarURL()).then(embed => {
 				interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });

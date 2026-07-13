@@ -2,7 +2,7 @@ const { MessageFlags, bold } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { commandMention, sentenceListEN } = require("../shared");
 
-/** @type {typeof import("../../logic")} */
+/** @type {import("../../logic").LogicLayer} */
 let logicLayer;
 
 const itemName = "Loot Box";
@@ -11,7 +11,7 @@ module.exports = new ItemTemplateSet(
 		async (interaction, origin) => {
 			const rolledItems = [];
 			for (let i = 0; i < 2; i++) {
-				const [itemRow] = await logicLayer.items.rollItemForHunter(1, origin.hunter);
+				const itemRow = await logicLayer.items.rollItemForHunter(1, origin.hunter);
 				if (itemRow) {
 					rolledItems.push(`a ${bold(itemRow.itemName)}`);
 				}

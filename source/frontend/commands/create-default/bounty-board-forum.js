@@ -1,10 +1,10 @@
 const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, MessageFlags } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
 const { makeEvergreenBountiesThread, bountyEmbed, bountyControlPanelSelectRow, isMissingPermissionError } = require("../../shared");
-const { Company } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const customChannelName = interaction.options.getString("channel-name");
 
 		let bountyBoard;
@@ -40,14 +40,14 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 			}
 		}
 
-		origin.company.bountyBoardId = bountyBoard.id;
+		theater.company.bountyBoardId = bountyBoard.id;
 		const [{ id: openTagId }, { id: completedTagId }] = bountyBoard.availableTags;
-		origin.company.bountyBoardOpenTagId = openTagId;
-		origin.company.bountyBoardCompletedTagId = completedTagId;
+		theater.company.bountyBoardOpenTagId = openTagId;
+		theater.company.bountyBoardCompletedTagId = completedTagId;
 
 		const evergreenBounties = [];
 		logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(async bounties => {
-			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(origin.company.id);
+			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
 			for (const bounty of bounties) {
 				if (bounty.isEvergreen) {
 					evergreenBounties.unshift(bounty);
@@ -57,7 +57,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 				bountyBoard.threads.create({
 					name: bounty.title,
 					message: {
-						embeds: [bountyEmbed(bounty, bounty.userId === interaction.member.id ? interaction.member : await interaction.guild.members.fetch(bounty.userId), hunterMap.get(bounty.userId).getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))],
+						embeds: [bountyEmbed(bounty, bounty.userId === interaction.member.id ? interaction.member : await interaction.guild.members.fetch(bounty.userId), hunterMap.get(bounty.userId).getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))],
 						components: bountyControlPanelSelectRow(bounty.id)
 					},
 					appliedTags: [openTagId]
@@ -68,14 +68,14 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 
 			// make Evergreen Bounty list
 			if (evergreenBounties.length > 0) {
-				const companyLevel = Company.getLevel(origin.company.getXP(hunterMap));
-				Promise.all(evergreenBounties.map(async bounty => bountyEmbed(bounty, interaction.guild.members.me, companyLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
-					makeEvergreenBountiesThread(bountyBoard.threads, embeds, origin.company);
+				const companyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
+				Promise.all(evergreenBounties.map(async bounty => bountyEmbed(bounty, interaction.guild.members.me, companyLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id)))).then(embeds => {
+					makeEvergreenBountiesThread(bountyBoard.threads, embeds, theater.company);
 				})
 			}
 		});
 
-		origin.company.save();
+		theater.company.save();
 		interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(

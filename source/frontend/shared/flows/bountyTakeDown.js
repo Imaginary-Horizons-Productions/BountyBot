@@ -1,13 +1,13 @@
 const { Guild } = require("discord.js");
-const { Bounty, Hunter } = require("../../../database/models");
 const { butIgnoreMissingPermissionErrors, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError } = require("../dAPIResponses");
 const { syncRankRoles } = require("../dAPIRequests");
+const { DatabaseTypes } = require("../../../database");
 
 /**
- * @param {typeof import("../../../logic")} logicLayer
+ * @param {import("../../../logic").LogicLayer} logicLayer
  * @param {Guild} guild
- * @param {Bounty} bounty
- * @param {Hunter} posterHunter
+ * @param {DatabaseTypes.Bounty} bounty
+ * @param {DatabaseTypes.Hunter} posterHunter
  * @param {import("discord.js").ForumThreadChannel | null} bountyThread
  */
 async function bountyTakeDown(logicLayer, guild, bounty, posterHunter, bountyThread) {

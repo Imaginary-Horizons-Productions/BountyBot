@@ -7,7 +7,7 @@ const { timeConversion } = require("../../../shared");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
-	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdMessage = "message";
 		const labelIdExcludedBountyHunters = "bounty-hunters";
@@ -48,7 +48,7 @@ module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reac
 			return;
 		}
 
-		const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+		const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 		bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, bountyThread);
 	})
 );

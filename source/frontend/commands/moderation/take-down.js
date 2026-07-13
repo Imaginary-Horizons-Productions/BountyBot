@@ -4,7 +4,7 @@ const { SAFE_DELIMITER, SKIP_INTERACTION_HANDLING } = require("../../../constant
 const { selectOptionsFromBounties, syncRankRoles, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 
 module.exports = new SubcommandWrapper("take-down", "Take down another user's bounty",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const poster = interaction.options.getUser("poster");
 		const openBounties = await logicLayer.bounties.findOpenBounties(poster.id, interaction.guild.id);
 		if (openBounties.length < 1) {
@@ -29,7 +29,7 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 			openBounties.find(bounty => bounty.id === bountyId).reload().then(async bounty => {
 				logicLayer.bounties.deleteBountyCompletions(bountyId);
 				bounty.update({ state: "deleted" });
-				const bountyThread = await getBountyBoardThread(interaction.guild, origin.company.bountyBoardId, bounty.postingId);
+				const bountyThread = await getBountyBoardThread(interaction.guild, theater.company.bountyBoardId, bounty.postingId);
 				if (bountyThread) {
 					bountyThread.delete(`bounty taken down by moderator (id: ${interaction.user.id})`);
 				}
@@ -38,8 +38,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down another user's bo
 				}
 
 				let poster;
-				if (posterId === origin.hunter.userId) {
-					poster = origin.hunter;
+				if (posterId === theater.hunter.userId) {
+					poster = theater.hunter;
 				} else {
 					poster = (await logicLayer.hunters.findOrCreateBountyHunter(posterId, interaction.guild.id)).hunter[0];
 				}

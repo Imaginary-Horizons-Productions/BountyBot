@@ -3,7 +3,7 @@ const { CommandWrapper } = require('../classes');
 
 const mainId = "config-server";
 module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
-	(interaction, origin, runMode) => {
+	(interaction, theater, isDevMode) => {
 		const updatePayload = {};
 		let content = "The following server settings have been configured:";
 
@@ -19,7 +19,7 @@ module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for th
 			content += `\n- Reaction Toasts were set to ${disableReactionToasts ? "dis" : ""}allowed`;
 		}
 
-		origin.company.update(updatePayload);
+		theater.company.update(updatePayload);
 		interaction.reply({ content, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(

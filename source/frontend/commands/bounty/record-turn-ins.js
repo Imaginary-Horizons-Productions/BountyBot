@@ -6,7 +6,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
-	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "bounty-hunters";
 		const maxHunters = 10;
@@ -39,7 +39,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 			return;
 		}
 
-		const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), runMode);
+		const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), isDevMode);
 		const sentences = [];
 		if (bannedTurnInIds.size > 0) {
 			sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${sentenceListEN(Array.from(bannedTurnInIds.values().map(id => userMention(id))))}`);
@@ -51,10 +51,10 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 			const newTurnInList = sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
 			sentences.unshift(`Turn-ins of ${bold(bounty.title)} have been recorded for the following hunters: ${newTurnInList}`);
 
-			const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 			if (bountyThread) {
 				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 					await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins recorded by poster");
 				}
 				if (bountyThread.sendable) {

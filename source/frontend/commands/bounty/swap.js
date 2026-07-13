@@ -1,21 +1,21 @@
 const { StringSelectMenuBuilder, MessageFlags, bold, ModalBuilder, LabelBuilder, TextDisplayBuilder, PermissionFlagsBits } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { Bounty, Hunter } = require("../../../database/models");
 const { emojiFromNumber, addCompanyAnnouncementPrefix, butIgnoreInteractionCollectorErrors, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, getBountyBoardThread, unarchiveAndUnlockThread, bountyEmbed } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
-		const startingPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-		const bountySlotCount = Hunter.getBountySlotCount(startingPosterLevel, origin.company.maxSimBounties);
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
+		const startingPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
+		const bountySlotCount = DatabaseTypes.Hunter.getBountySlotCount(startingPosterLevel, theater.company.maxSimBounties);
 		if (bountySlotCount < 2) {
 			interaction.reply({ content: "You currently only have 1 bounty slot in this server.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		const openBounties = await logicLayer.bounties.mapOpenBountiesBySlotNumber(origin.user.id, origin.company.id);
+		const openBounties = await logicLayer.bounties.mapOpenBountiesBySlotNumber(theater.user.id, theater.company.id);
 		if (openBounties.size < 1) {
 			interaction.reply({ content: "You don't seem to have any open bounties at the moment.", flags: MessageFlags.Ephemeral });
 			return;
@@ -25,7 +25,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 		for (let i = 0; i < bountySlotCount; i++) {
 			const slotNumber = i + 1;
 			const matchingBounty = openBounties.get(slotNumber);
-			const option = { emoji: emojiFromNumber(slotNumber), label: `Slot ${slotNumber} (Base Reward: ${Bounty.calculateCompleterReward(startingPosterLevel, slotNumber, 0)} XP)`, value: slotNumber.toString() };
+			const option = { emoji: emojiFromNumber(slotNumber), label: `Slot ${slotNumber} (Base Reward: ${DatabaseTypes.Bounty.calculateCompleterReward(startingPosterLevel, slotNumber, 0)} XP)`, value: slotNumber.toString() };
 			if (matchingBounty) {
 				option.description = truncateTextToLength(`Swap With: ${matchingBounty.title}`, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
 			}
@@ -70,25 +70,25 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 			return;
 		}
 
-		await origin.company.reload();
-		const currentPosterLevel = (await origin.hunter.reload()).getLevel(origin.company.xpCoefficient);
-		if (destinationSlot > Hunter.getBountySlotCount(currentPosterLevel, origin.company.maxSimBounties)) {
+		await theater.company.reload();
+		const currentPosterLevel = (await theater.hunter.reload()).getLevel(theater.company.xpCoefficient);
+		if (destinationSlot > DatabaseTypes.Hunter.getBountySlotCount(currentPosterLevel, theater.company.maxSimBounties)) {
 			modalSubmission.reply({ content: "You no longer have the bounty slot you are trying to swap into.", flags: MessageFlags.Ephemeral });
 			return;
 		}
 
 		const sourceSlot = sourceBounty.slotNumber;
-		let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: origin.user.id, companyId: origin.company.id, state: "open" });
-		const destinationRewardValue = Bounty.calculateCompleterReward(currentPosterLevel, destinationSlot, sourceBounty.showcaseCount);
+		let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: theater.user.id, companyId: theater.company.id, state: "open" });
+		const destinationRewardValue = DatabaseTypes.Bounty.calculateCompleterReward(currentPosterLevel, destinationSlot, sourceBounty.showcaseCount);
 		const auditLogReason = destinationBounty ?
 			`bounty poster swapped slots of bounties ${sourceSlot} and ${destinationSlot}` :
 			`bounty swapped from slot ${sourceSlot} to ${destinationSlot} by poster`;
 
 		sourceBounty = await sourceBounty.update({ slotNumber: destinationSlot });
-		const sourceBountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, sourceBounty.postingId);
+		const sourceBountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, sourceBounty.postingId);
 		if (sourceBountyThread) {
 			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				(await sourceBountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(sourceBounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(sourceBounty.id), await sourceBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+				(await sourceBountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(sourceBounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(sourceBounty.id), await sourceBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(sourceBountyThread, auditLogReason);
 			}
 			if (sourceBountyThread.sendable) {
@@ -98,18 +98,18 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 
 		if (destinationBounty) {
 			destinationBounty = await destinationBounty.update({ slotNumber: sourceSlot });
-			const destinationBountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, destinationBounty.postingId);
+			const destinationBountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, destinationBounty.postingId);
 			if (destinationBountyThread) {
 				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					(await destinationBountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(destinationBounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(destinationBounty.id), await destinationBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					(await destinationBountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(destinationBounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(destinationBounty.id), await destinationBounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 					await unarchiveAndUnlockThread(destinationBountyThread, auditLogReason);
 				}
 				if (destinationBountyThread.sendable) {
-					destinationBountyThread.send({ content: `This bounty's slot was switched from ${destinationSlot} to ${sourceSlot}. It is now worth ${Bounty.calculateCompleterReward(currentPosterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`, flags: MessageFlags.SuppressNotifications });
+					destinationBountyThread.send({ content: `This bounty's slot was switched from ${destinationSlot} to ${sourceSlot}. It is now worth ${DatabaseTypes.Bounty.calculateCompleterReward(currentPosterLevel, sourceSlot, destinationBounty.showcaseCount)} XP.`, flags: MessageFlags.SuppressNotifications });
 				}
 			}
 		}
 
-		modalSubmission.reply(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member}'s bounty, ${bold(sourceBounty.title)} is now worth ${destinationRewardValue} XP.` }));
+		modalSubmission.reply(addCompanyAnnouncementPrefix(theater.company, { content: `${modalSubmission.member}'s bounty, ${bold(sourceBounty.title)} is now worth ${destinationRewardValue} XP.` }));
 	}
 );

@@ -2,7 +2,7 @@ const { userMention, MessageFlags } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { goalCompletionEmbed } = require("../shared");
 
-/** @type {typeof import("../../logic")} */
+/** @type {import("../../logic").LogicLayer} */
 let logicLayer;
 
 const itemName = "Progress-in-a-Can";

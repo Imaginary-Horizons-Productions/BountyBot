@@ -3,7 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { syncRankRoles, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("season-disqualify", "Toggle disqualification from ranking for a bounty hunter in the current season",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const member = interaction.options.getMember("bounty-hunter");
 		await logicLayer.companies.findOrCreateCompany(interaction.guild.id);
 		const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);

@@ -5,7 +5,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
-	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, openBounties) {
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, openBounties) {
 		interaction.reply({
 			content: "You can select one of your open bounties to edit below.\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
 			components: [
@@ -87,12 +87,12 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 				}
 				await bounty.update(updatePayload);
 
-				const embed = bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), event);
+				const embed = bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bountyId), event);
 				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [embed], components: [] });
 
 				// update bounty board
 				const auditLogReason = "bounty edited by poster";
-				const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+				const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 				if (bountyThread) {
 					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
 						refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed }, auditLogReason);

@@ -2,19 +2,19 @@ const { PermissionFlagsBits, InteractionContextType, unorderedList } = require('
 const { CommandWrapper } = require('../classes');
 const { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
 
-/** @type {typeof import("../../logic")} */
+/** @type {import('../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "season-end";
 module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
-	async (interaction, origin, runMode) => {
+	async (interaction, theater, isDevMode) => {
 		const guild = interaction.guild;
 		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 		const lastSeason = await logicLayer.seasons.findOneSeason(guild.id, "previous");
 		const participantCount = await logicLayer.seasons.getParticipantCount(currentSeason.id);
-		companyStatsEmbed(guild, origin.company.getXP(hunterMap), participantCount, currentSeason, lastSeason).then(async embed => {
+		companyStatsEmbed(guild, theater.company.getXP(hunterMap), participantCount, currentSeason, lastSeason).then(async embed => {
 			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
 				seasonBeforeEndingSeason.isPreviousSeason = false;
@@ -56,16 +56,16 @@ module.exports = new CommandWrapper(mainId, "Start a new season for this server,
 				})
 			}
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-			if (origin.company.scoreboardIsSeasonal) {
-				refreshReferenceChannelScoreboardSeasonal(origin.company, interaction.guild, new Map(), ranks, goalProgress);
+			if (theater.company.scoreboardIsSeasonal) {
+				refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, new Map(), ranks, goalProgress);
 			} else {
-				refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
+				refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
 			}
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
 				announcementText += `\n## Shoutouts\n${unorderedList(shoutouts)}`;
 			}
-			interaction.reply(addCompanyAnnouncementPrefix(origin.company, { content: announcementText, embeds: [embed] }));
+			interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: announcementText, embeds: [embed] }));
 		})
 	}
 ).setLogicLinker(logicBlob => {

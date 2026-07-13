@@ -3,7 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { seasonalScoreboardEmbed, overallScoreboardEmbed, isMissingPermissionError } = require("../../shared");
 
 module.exports = new SubcommandWrapper("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		let scoreboard;
 		try {
 			scoreboard = await interaction.guild.channels.create({
@@ -37,15 +37,15 @@ module.exports = new SubcommandWrapper("scoreboard-reference", "Create a referen
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (isSeasonal) {
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guild.id);
-			embeds.push(await seasonalScoreboardEmbed(origin.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
+			embeds.push(await seasonalScoreboardEmbed(theater.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(interaction.guild.id), goalProgress));
 		} else {
-			embeds.push(await overallScoreboardEmbed(origin.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
+			embeds.push(await overallScoreboardEmbed(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 		}
 		scoreboard.send({ embeds }).then(message => {
-			origin.company.scoreboardChannelId = scoreboard.id;
-			origin.company.scoreboardMessageId = message.id;
-			origin.company.scoreboardIsSeasonal = isSeasonal;
-			origin.company.save();
+			theater.company.scoreboardChannelId = scoreboard.id;
+			theater.company.scoreboardMessageId = message.id;
+			theater.company.scoreboardIsSeasonal = isSeasonal;
+			theater.company.save();
 		});
 		interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, flags: MessageFlags.Ephemeral });
 	}

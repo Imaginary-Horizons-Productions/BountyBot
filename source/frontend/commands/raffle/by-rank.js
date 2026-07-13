@@ -4,7 +4,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromRanks, raffleResultEmbed, butIgnoreCantDirectMessageThisUserErrors } = require("../../shared");
 
 module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a particular rank",
-	async function executeSubcommand(interaction, origin, runMode, logicLayer) {
+	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		if (ranks.length < 1) {
 			interaction.reply({ content: "This server doesn't have any ranks configured.", flags: MessageFlags.Ephemeral });
@@ -39,8 +39,8 @@ module.exports = new SubcommandWrapper("by-rank", "Select a user at or above a p
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
 			collectedInteraction.editReply({ components: [] });
-			collectedInteraction.channel.send({ embeds: [raffleResultEmbed(hunterMap.get(winner.id).profileColor, collectedInteraction.guild, origin.company.raffleThumbnailURL, winner, `Rank: ${rank.getMention(rankIndex)} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
-			origin.company.update("nextRaffleString", null);
+			collectedInteraction.channel.send({ embeds: [raffleResultEmbed(hunterMap.get(winner.id).profileColor, collectedInteraction.guild, theater.company.raffleThumbnailURL, winner, `Rank: ${rank.getMention(rankIndex)} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
+			theater.company.update("nextRaffleString", null);
 		}).catch(error => {
 			if (error.code === DiscordjsErrorCodes.InteractionCollectorError) {
 				return;

@@ -2,7 +2,7 @@ const { PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { CommandWrapper } = require('../../classes');
 const { aggregateSubcommands } = require('../../shared');
 
-/** @type {typeof import("../../../logic")} */
+/** @type {import('../../../logic').LogicLayer} */
 let logicLayer;
 
 const mainId = "reset";
@@ -11,8 +11,8 @@ const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDict
 	"server-settings.js"
 ]);
 module.exports = new CommandWrapper(mainId, "Reset all bounty hunter stats, bounties, or server configs", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
-	(interaction, origin, runMode) => {
-		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, origin, runMode, logicLayer);
+	(interaction, theater, isDevMode) => {
+		subcommandExecuteDictionary[interaction.options.getSubcommand()](interaction, theater, isDevMode, logicLayer);
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

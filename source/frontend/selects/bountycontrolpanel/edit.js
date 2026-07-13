@@ -5,7 +5,7 @@ const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 
 module.exports = new SelectOptionWrapper("edit",
 	ensureBountyExistsAndInteractorIsPoster(
-		async (interaction, origin, runMode, logicLayer, [bounty]) => {
+		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);
 			interaction.showModal(modal).then(() => interaction.awaitModalSubmit(submissionOptions)).then(async modalSubmission => {
 				await bounty.reload();
@@ -69,7 +69,7 @@ module.exports = new SelectOptionWrapper("edit",
 				// update bounty board
 				const auditLogReason = "bounty edited by poster";
 				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed: bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), event) }, auditLogReason);
+					refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed: bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), event) }, auditLogReason);
 					await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
 				}
 				if (modalSubmission.channel.sendable) {

@@ -7,7 +7,7 @@ const { bountyTakeDown } = require("../../shared/flows/bountyTakeDown");
 
 module.exports = new SelectOptionWrapper("takedown",
 	ensureBountyExistsAndInteractorIsPoster(
-		async (interaction, origin, runMode, logicLayer, [bounty]) => {
+		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			interaction.reply({
 				content: `Really take down this bounty?`,
 				components: [
@@ -22,7 +22,7 @@ module.exports = new SelectOptionWrapper("takedown",
 				withResponse: true
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
 				await collectedInteraction.update({ content: "Your bounty has been taken down.", components: [] });
-				bountyTakeDown(logicLayer, collectedInteraction.guild, bounty, origin.hunter, collectedInteraction.channel);
+				bountyTakeDown(logicLayer, collectedInteraction.guild, bounty, theater.hunter, collectedInteraction.channel);
 			}).catch(butIgnoreInteractionCollectorErrors);
 		}
 	)

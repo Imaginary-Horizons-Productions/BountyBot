@@ -7,7 +7,7 @@ const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 
 module.exports = new SelectOptionWrapper("recordturnin",
 	ensureBountyExistsAndInteractorIsPoster(
-		async (interaction, origin, runMode, logicLayer, [bounty]) => {
+		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			const labelIdBountyHunters = "bounty-hunters";
 			const maxHunters = 10;
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -34,7 +34,7 @@ module.exports = new SelectOptionWrapper("recordturnin",
 				return;
 			}
 
-			const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), runMode);
+			const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), isDevMode);
 			if (newTurnInIds.size < 1) {
 				modalSubmission.reply({ content: `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedTurnInIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`, flags: MessageFlags.Ephemeral });
 				return;
@@ -43,7 +43,7 @@ module.exports = new SelectOptionWrapper("recordturnin",
 			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
 
 			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins recorded by poster");
 			}
 			if (modalSubmission.channel.sendable) {

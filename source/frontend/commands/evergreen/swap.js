@@ -2,12 +2,12 @@ const { StringSelectMenuBuilder, MessageFlags, ModalBuilder, LabelBuilder, TextD
 const { SubcommandWrapper } = require("../../classes");
 const { selectOptionsFromBounties, refreshEvergreenBountiesThread, butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { Bounty, Company } = require("../../../database/models");
 const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
+const { DatabaseTypes } = require("../../../database");
 
 module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergreen bounties",
-	ensureCompanyHasEnoughOpenEvergreenBounties(2, async function executeSubcommand(interaction, origin, runMode, logicLayer, evergreenBounties) {
+	ensureCompanyHasEnoughOpenEvergreenBounties(2, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		const labelIdSourceBountyId = "first-bounty-id";
 		const labelIdDestinationBountyId = "second-bounty-id";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -58,18 +58,18 @@ module.exports = new SubcommandWrapper("swap", "Swap the rewards of two evergree
 		await sourceBounty.update({ slotNumber: destinationSlot });
 		await destinationBounty.update({ slotNumber: sourceSlot });
 
-		const currentCompanyLevel = Company.getLevel(origin.company.getXP(await logicLayer.hunters.getCompanyHunterMap(origin.company.id)));
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
 		// Evergreen bounties are not eligible for showcase bonuses
-		modalSubmission.reply(`Some evergreen bounties have been swapped, ${bold(sourceBounty.title)} is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, destinationSlot, 0)} XP and ${bold(destinationBounty.title)} is now worth ${Bounty.calculateCompleterReward(currentCompanyLevel, sourceSlot, 0)} XP.`);
+		modalSubmission.reply(`Some evergreen bounties have been swapped, ${bold(sourceBounty.title)} is now worth ${DatabaseTypes.Bounty.calculateCompleterReward(currentCompanyLevel, destinationSlot, 0)} XP and ${bold(destinationBounty.title)} is now worth ${DatabaseTypes.Bounty.calculateCompleterReward(currentCompanyLevel, sourceSlot, 0)} XP.`);
 
-		if (origin.company.bountyBoardId) {
-			const reloadedBounties = await logicLayer.bounties.findEvergreenBounties(origin.company.id);
+		if (theater.company.bountyBoardId) {
+			const reloadedBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
 			const hunterIdMap = {};
 			for (const bounty of reloadedBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
-			modalSubmission.guild.channels.fetch(origin.company.bountyBoardId).then(bountyBoard => {
-				refreshEvergreenBountiesThread(bountyBoard, reloadedBounties, origin.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+			modalSubmission.guild.channels.fetch(theater.company.bountyBoardId).then(bountyBoard => {
+				refreshEvergreenBountiesThread(bountyBoard, reloadedBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
 			})
 		} else if (!modalSubmission.member.manageable) {
 			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });

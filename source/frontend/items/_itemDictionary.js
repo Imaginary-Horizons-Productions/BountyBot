@@ -3,7 +3,7 @@ const { ItemTemplateSet, ItemTemplate, InteractionOrigin } = require("../classes
 
 /** @type {Record<string, ItemTemplate>} */
 const ITEMS = {};
-/** @type {((logicBlob: typeof import("../logic")) => void)[]} */
+/** @type {((logicBlob: import("../../logic").LogicLayer) => void)[]} */
 const ITEM_LOGIC_SETTERS = [];
 /** @type {string[]} */
 const ITEM_NAMES = [];
@@ -52,13 +52,13 @@ exports.useItem = function (itemName, interaction, origin) {
 	return ITEMS[itemName].effect(interaction, origin);
 }
 
-exports.setLogic = function (logicBlob) {
+exports.linkAllItemsToLogic = function (logicBlob) {
 	for (const setter of ITEM_LOGIC_SETTERS) {
 		setter(logicBlob);
 	}
 }
 
-exports.updateCooldownMap = function(map) {
+exports.addItemsToCooldownDictionary = function(map) {
 	if (!map.items) {
 		map.items = {};
 	}

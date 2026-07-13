@@ -5,15 +5,15 @@ const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
 const { ihpAuthorPayload, randomFooterTip, butIgnoreInteractionCollectorErrors } = require('../shared');
 const { timeConversion, discordTimestamp } = require('../../shared');
 
-/** @type {typeof import("../../logic")} */
+/** @type {import('../../logic/index.js').LogicLayer} */
 let logicLayer;
 
 const mainId = "item";
 module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
-	async (interaction, origin, runMode) => {
+	async (interaction, theater, isDevMode) => {
 		const itemName = interaction.options.getString("item-name");
 		const itemCount = await logicLayer.items.countUserCopies(interaction.user.id, itemName);
-		const hasItem = itemCount > 0 || runMode !== "production";
+		const hasItem = itemCount > 0 || isDevMode;
 		let embedColor = Colors.Blurple;
 		if (itemName.includes("Profile Colorizer")) {
 			const [color] = itemName.split("Profile Colorizer");
@@ -25,7 +25,7 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 					.setAuthor(ihpAuthorPayload)
 					.setTitle(itemName)
 					.setDescription(getItemDescription(itemName))
-					.addFields({ name: "You have", value: runMode !== "production" ? "Debug Mode" : itemCount })
+					.addFields({ name: "You have", value: isDevMode ? "Debug Mode" : itemCount })
 					.setFooter(randomFooterTip())
 			],
 			components: [
@@ -39,12 +39,12 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteration => {
-			if (runMode === "production" && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
+			if (!isDevMode && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
 				collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
-			if (runMode === "production" && await logicLayer.items.countUserCopies(interaction.user.id, itemName) < 1) {
+			if (!isDevMode && await logicLayer.items.countUserCopies(interaction.user.id, itemName) < 1) {
 				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -52,15 +52,15 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			const now = new Date();
 
 			const cooldownName = `item-${itemName}`;
-			const { isOnCommandCooldown, cooldownTimestamp } = await logicLayer.cooldowns.checkCommandCooldownState(collectedInteration.user.id, cooldownName, now);
-			if (isOnCommandCooldown) {
-				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(cooldownTimestamp.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+			const { isOnCD, endOfCD } = await logicLayer.cooldowns.checkSpecificCooldownForUser(collectedInteration.user.id, cooldownName, now);
+			if (isOnCD) {
+				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(endOfCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
 
-			return useItem(itemName, collectedInteration, origin).then(shouldSkipDecrement => {
-				if (!shouldSkipDecrement && runMode === "production") {
+			return useItem(itemName, collectedInteration, theater).then(shouldSkipDecrement => {
+				if (!shouldSkipDecrement && !isDevMode) {
 					return logicLayer.items.consume(interaction.user.id, itemName);
 				}
 			});

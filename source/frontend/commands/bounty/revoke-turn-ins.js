@@ -6,7 +6,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins of up to 5 bounty hunters on one of your bounties",
-	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "bounty-hunters";
 		const maxHunters = 10;
@@ -44,10 +44,10 @@ module.exports = new SubcommandWrapper("revoke-turn-ins", "Revoke the turn-ins o
 		const mentionList = sentenceListEN(removedIds.map(id => userMention(id)));
 		modalSubmission.reply({ content: `These bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${mentionList}`, flags: MessageFlags.Ephemeral });
 
-		const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
+		const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 		if (bountyThread) {
 			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+				(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins revoked by poster");
 			}
 			if (bountyThread.sendable) {

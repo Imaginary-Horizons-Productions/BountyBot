@@ -7,7 +7,7 @@ const { butIgnoreInteractionCollectorErrors, bountyEmbed, unarchiveAndUnlockThre
 
 module.exports = new SelectOptionWrapper("revoketurnin",
 	ensureBountyExistsAndInteractorIsPoster(
-		async (interaction, origin, runMode, logicLayer, [bounty]) => {
+		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			const labelIdBountyHunters = "bounty-hunters";
 			const maxHunters = 10;
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
@@ -38,7 +38,7 @@ module.exports = new SelectOptionWrapper("revoketurnin",
 			await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, removedIds);
 
 			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, origin.hunter.getLevel(origin.company.xpCoefficient), false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins revoked by poster");
 			}
 			if (modalSubmission.channel.sendable) {

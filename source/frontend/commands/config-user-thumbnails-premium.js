@@ -26,7 +26,7 @@ const thumbnailUpdateData = [
 	}
 ];
 module.exports = new CommandWrapper(mainId, "Configure thumbnails shown for Toasts and Bounties (Premium)", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
-	async (interaction, origin, runMode) => {
-		configCompanyThumbnails("Bounty and Toast Message Thumbnail", thumbnailUpdateData, interaction, origin.company);
+	async (interaction, theater, isDevMode) => {
+		configCompanyThumbnails("Bounty and Toast Message Thumbnail", thumbnailUpdateData, interaction, theater.company);
 	}
 );

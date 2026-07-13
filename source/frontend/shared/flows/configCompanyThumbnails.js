@@ -1,13 +1,13 @@
 const { ModalBuilder, LabelBuilder, FileUploadBuilder, ContainerBuilder, Colors, TextDisplayBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, heading, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
-const { Company } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 
 /**
  * @param {string} thumbnailSetKind
  * @param {{ label: string; description: string; payloadProperty: string; }[]} thumbnailUpdateData
  * @param {ChatInputCommandInteraction} interaction
- * @param {Company} company
+ * @param {DatabaseTypes.Company} company
  */
 async function configCompanyThumbnails(thumbnailSetKind, thumbnailUpdateData, interaction, company) {
 	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`).setTitle(`Configure ${thumbnailSetKind}s`);

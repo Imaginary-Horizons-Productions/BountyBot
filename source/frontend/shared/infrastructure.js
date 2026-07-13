@@ -1,5 +1,5 @@
 const { CommandInteraction, ChatInputCommandInteraction } = require("discord.js");
-const { SubcommandWrapper, SelectOptionWrapper, BuildError, InteractionOrigin } = require("../classes");
+const { SubcommandFunctionality, SelectOptionFunctionality, BuildError, InteractionTheater } = require("../classes");
 
 /**
  * @param {string} mainId
@@ -9,14 +9,14 @@ function aggregateSubcommands(mainId, fileList) {
 	const mappings = {
 		/** @type {import("discord.js").BaseApplicationCommandData[]} */
 		slashData: [],
-		/** @type {Record<string, (interaction: CommandInteraction, runMode: "development" | "test" | "production", ...args: [typeof import("../../logic"), unknown]) => Promise<void>>} */
+		/** @type {Record<string, (interaction: CommandInteraction, isDevMode: boolean, ...args: [import("../../logic/index.js").LogicLayer, unknown]) => Promise<void>>} */
 		executeDictionary: {}
 	};
 	for (const fileName of fileList) {
-		/** @type {SubcommandWrapper} */
+		/** @type {SubcommandFunctionality} */
 		const subcommand = require(`../commands/${mainId}/${fileName}`);
 		mappings.slashData.push(subcommand.data);
-		mappings.executeDictionary[subcommand.data.name] = subcommand.executeSubcommand;
+		mappings.executeDictionary[subcommand.data.name] = subcommand.procedure;
 	};
 	return mappings;
 };
@@ -24,12 +24,12 @@ function aggregateSubcommands(mainId, fileList) {
 /**
  * @param {string} mainId
  * @param {string[]} fileList
- * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionOrigin, runMode: "development" | "test" | "production", logicLayer: typeof import("../../logic/index.js"), args: unknown[]) => Promise<void>>}
+ * @returns {Record<string, (interaction: ChatInputCommandInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: import("../../logic/index.js").LogicLayer, args: unknown[]) => Promise<void>>}
  */
 function aggregateSelectOptionMap(mainId, fileList) {
 	const selectOptionMap = {};
 	for (const fileName of fileList) {
-		/** @type {SelectOptionWrapper} */
+		/** @type {SelectOptionFunctionality} */
 		const option = require(`../selects/${mainId}/${fileName}`);
 		if (option.name in selectOptionMap) {
 			throw new BuildError(`duplicate select option name: ${option.name}`);

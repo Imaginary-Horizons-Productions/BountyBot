@@ -6,7 +6,7 @@ const { bountyTakeDown } = require("../../shared/flows/bountyTakeDown");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 
 module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
-	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, origin, runMode, logicLayer, bounties) {
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty instead, you can use ${commandMention("bounty edit")}.`,
 			components: [
@@ -22,8 +22,8 @@ module.exports = new SubcommandWrapper("take-down", "Take down one of your bount
 			const [bountyId] = collectedInteraction.values;
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
 
-			const bountyThread = await getBountyBoardThread(collectedInteraction.guild, origin.company.bountyBoardId, bounty.postingId);
-			bountyTakeDown(logicLayer, collectedInteraction.guild, bounty, origin.hunter, bountyThread);
+			const bountyThread = await getBountyBoardThread(collectedInteraction.guild, theater.company.bountyBoardId, bounty.postingId);
+			bountyTakeDown(logicLayer, collectedInteraction.guild, bounty, theater.hunter, bountyThread);
 			collectedInteraction.reply({ content: "Your bounty has been taken down.", flags: MessageFlags.Ephemeral });
 		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
 			// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply

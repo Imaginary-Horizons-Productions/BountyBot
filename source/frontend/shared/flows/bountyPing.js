@@ -1,10 +1,10 @@
 const { MessageFlags, userMention, ModalSubmitInteraction, ThreadChannel } = require("discord.js");
-const { Bounty } = require("../../../database/models");
+const { DatabaseTypes } = require("../../../database");
 
 /**
  * @param {ModalSubmitInteraction} modalSubmission
  * @param {{ message: string; excludedBountyHunters: string; }} labelIds
- * @param {Bounty} bounty
+ * @param {DatabaseTypes.Bounty} bounty
  * @param {ThreadChannel | null} bountyThread
  */
 async function bountyPing(modalSubmission, labelIds, bounty, bountyThread) {

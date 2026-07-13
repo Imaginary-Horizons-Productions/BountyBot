@@ -1,0 +1,163 @@
+import { MessageLimits } from "@sapphire/discord.js-utilities";
+import { bold, heading, italic, userMention } from "discord.js";
+import { DatabaseTypes } from "../../database/index.ts";
+import { commandIds } from "../../shared/constants.ts";
+import { CompanyReciept, HunterReceiptMap } from "../../shared/types";
+
+/**
+ * @file String Constructors - formatted reusable strings
+ *
+ * Naming Convention:
+ * - nouns
+ */
+
+/** generates a command mention, which users can click to shortcut them to using the command
+ *
+ * for subcommands append a whitespace and the subcommandName
+ */
+export function commandMention(fullCommand: string) {
+	const [mainCommand] = fullCommand.split(" ");
+	if (!(mainCommand in commandIds)) {
+		return `\`/${fullCommand}\``;
+	}
+
+	return `</${fullCommand}:${commandIds[mainCommand]}>`;
+}
+
+const CONGRATULATORY_PHRASES = [
+	"Congratulations",
+	"Well done",
+	"You've done it",
+	"Nice",
+	"Awesome"
+];
+
+export function randomCongratulatoryPhrase() {
+	return CONGRATULATORY_PHRASES[Math.floor(CONGRATULATORY_PHRASES.length * Math.random())];
+}
+
+/** Create a text-only ratio bar that fills left to right */
+export function fillableTextBar(numerator: number, denominator: number, barLength: number) {
+	const filledBlocks = Math.floor(barLength * numerator / denominator);
+	let bar = "";
+	for (let i = 0; i < barLength; i++) {
+		if (filledBlocks > i) {
+			bar += "▰";
+		} else {
+			bar += "▱";
+		}
+	}
+	return bar;
+}
+
+const NUMBER_EMOJI = { 0: '0️⃣', 1: '1️⃣', 2: '2️⃣', 3: '3️⃣', 4: '4️⃣', 5: '5️⃣', 6: '6️⃣', 7: '7️⃣', 8: '8️⃣', 9: '9️⃣', 10: '🔟' };
+function hasNumberEmoji(candidate: number): candidate is keyof typeof NUMBER_EMOJI {
+	return candidate in NUMBER_EMOJI;
+}
+export function emojiFromNumber(integer: number) {
+	if (hasNumberEmoji(integer)) {
+		return NUMBER_EMOJI[integer];
+	} else {
+		return '#️⃣';
+	}
+}
+
+/** Formats string array into Oxford English list syntax */
+function sentenceListEN(texts: string[], isMutuallyExclusive: boolean) {
+	if (texts.length > 2) {
+		const textsSansLast = texts.slice(0, texts.length - 1);
+		if (isMutuallyExclusive) {
+			return `${textsSansLast.join(", ")}, or ${texts[texts.length - 1]}`;
+		} else {
+			return `${textsSansLast.join(", ")}, and ${texts[texts.length - 1]}`;
+		}
+	} else if (texts.length === 2) {
+		if (isMutuallyExclusive) {
+			return texts.join(" or ");
+		} else {
+			return texts.join(" and ");
+		}
+	} else if (texts.length === 1) {
+		return texts[0];
+	} else {
+		return "";
+	}
+}
+
+export function rewardSummary(actionType: "bounty" | "toast" | "seconding" | "item", companyReceipt: CompanyReciept, hunterReceipts: HunterReceiptMap, companyMaxBountySlots: number) {
+	if (Object.keys(companyReceipt).length + hunterReceipts.size === 1) { // `guildName` is a guaranteed key in `companyReciept`
+		return "";
+	}
+
+	let summary = heading("Rewards", 2);
+	if (companyReceipt.levelUp !== undefined) {
+		summary += `\n- ${companyReceipt.guildName} is now Level ${companyReceipt.levelUp}! Evergreen bounties now award more XP!`;
+	}
+	if (companyReceipt.gp !== undefined) {
+		summary += `\n- This ${actionType} contributed ${companyReceipt.gp} GP${companyReceipt.gpMultiplier ?? ""} to the Server Goal!`;
+	}
+
+	for (const [id, receipt] of hunterReceipts) {
+		summary += `\n${heading(userMention(id), 3)}`;
+		if (receipt.title !== undefined) {
+			summary += ` - ${receipt.title}`
+		}
+		if (receipt.xp !== undefined) {
+			if (receipt.levelUp !== undefined) {
+				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""} and reached ${bold(`Level ${receipt.levelUp.achievedLevel}`)}!`;
+				let oddSlotBaseRewardIncrease = null;
+				let evenSlotBaseRewardIncrease = null;
+				const bountySlotsUnlocked = [];
+				for (let level = receipt.levelUp.previousLevel + 1; level <= receipt.levelUp.achievedLevel; level++) {
+					for (const [type, value] of DatabaseTypes.Hunter.getLevelUpRewards(level, companyMaxBountySlots)) {
+						switch (type) {
+							case "oddSlotBaseRewardIncrease":
+								if (oddSlotBaseRewardIncrease === null || value > oddSlotBaseRewardIncrease) {
+									oddSlotBaseRewardIncrease = value;
+								}
+								break;
+							case "evenSlotBaseRewardIncrease":
+								if (evenSlotBaseRewardIncrease === null || value > evenSlotBaseRewardIncrease) {
+									evenSlotBaseRewardIncrease = value;
+								}
+								break;
+							case "bountySlotUnlocked":
+								bountySlotsUnlocked.push(value);
+								break;
+						}
+					}
+				}
+				if (bountySlotsUnlocked.length > 0) {
+					if (bountySlotsUnlocked.length === 1) {
+						summary += `\n   - You have unlocked ${bold(`Bounty Slot #${bountySlotsUnlocked[0]}`)}.`;
+					} else {
+						summary += `\n   - You have unlocked ${sentenceListEN(bountySlotsUnlocked.map(slotNumber => bold(`Bounty Slot #${slotNumber}`)), false)}.`;
+					}
+				}
+				if (oddSlotBaseRewardIncrease) {
+					summary += `\n   - The base reward of your odd-numbered bounty slots has increased (max: ${oddSlotBaseRewardIncrease} Reward XP in Slot #1)!`;
+				}
+				if (evenSlotBaseRewardIncrease) {
+					summary += `\n   - The base reward of your even-numbered bounty slots has increased (max: ${evenSlotBaseRewardIncrease} Reward XP in Slot #2)!`;
+				}
+			} else {
+				summary += `\n- Gained ${receipt.xp} XP${receipt.xpMultiplier ?? ""}!`;
+			}
+		}
+		if (receipt.topPlacement !== undefined) {
+			summary += `\n- ${italic("Claimed the lead on Seasonal XP!")}`;
+		}
+		if (receipt.rankUp !== undefined) {
+			summary += `\n- Ranked up to ${bold(receipt.rankUp.name)}`;
+		}
+		if (receipt.item !== undefined) {
+			summary += `\n- Found a ${bold(receipt.item)}`;
+		}
+	}
+
+	if (summary.length > MessageLimits.MaximumLength) {
+		return `${heading("Message overflow!", 2)}\nMany people (?) probably gained many things (?). Use ${commandMention("stats")} to look things up.`;
+	} else {
+		return summary;
+	}
+}
