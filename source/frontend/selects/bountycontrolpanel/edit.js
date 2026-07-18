@@ -1,6 +1,6 @@
 const { MessageFlags, PermissionFlagsBits } = require("discord.js");
 const { SelectOptionWrapper } = require("../../classes");
-const { validateScheduledEventTimestamps, bountyScheduledEventPayload, refreshBountyBoardThread, unarchiveAndUnlockThread, commandMention, editBountyModalAndSubmissionOptions, textsHaveAutoModInfraction, bountyEmbed } = require("../../shared");
+const { validateScheduledEventTimestamps, bountyScheduledEventPayload, refreshBountyBoardThread, unarchiveAndUnlockThread, editBountyModalAndSubmissionOptions, textsHaveAutoModInfraction, bountyEmbed } = require("../../shared");
 const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 
 module.exports = new SelectOptionWrapper("edit",
@@ -53,7 +53,7 @@ module.exports = new SelectOptionWrapper("edit",
 
 				let event = null;
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, description, updatePayload.attachmentURL, startTimestamp, endTimestamp);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, startTimestamp, endTimestamp, description, updatePayload.attachmentURL);
 					if (bounty.scheduledEventId) {
 						event = await modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 					} else {

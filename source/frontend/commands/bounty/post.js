@@ -167,7 +167,7 @@ module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
 
 				let event = null;
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, rawBounty.slotNumber, description, rawBounty.attachmentURL, startTimestamp, endTimestamp);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, rawBounty.slotNumber, startTimestamp, endTimestamp, description, rawBounty.attachmentURL);
 					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.CreateEvents)) {
 						event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 						rawBounty.scheduledEventId = event.id;

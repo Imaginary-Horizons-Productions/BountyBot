@@ -7,7 +7,7 @@ module.exports = new CommandWrapper(mainId, "Get the most recent changes or the 
 	/** Send the user the most recent set of patch notes or full change log */
 	(interaction, origin, runMode) => {
 		if (interaction.options.getString("notes-length") === "last-version") {
-			latestVersionChangesEmbed(interaction.client.user.displayAvatarURL()).then(embed => {
+			latestVersionChangesEmbed().then(embed => {
 				interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 			}).catch(console.error);
 		} else {
