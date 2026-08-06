@@ -129,12 +129,12 @@ function bountyControlPanelSelectRow(bountyId) {
  * @param {string} title
  * @param {string} posterName
  * @param {number} slotNumber
+ * @param {number} startTimestamp Unix timestamp (seconds since Jan 1 1970)
+ * @param {number} endTimestamp Unix timestamp (seconds since Jan 1 1970)
  * @param {string?} description
  * @param {string?} imageURL
- * @param {number?} startTimestamp Unix timestamp (seconds since Jan 1 1970)
- * @param {number?} endTimestamp Unix timestamp (seconds since Jan 1 1970)
  */
-function bountyScheduledEventPayload(title, posterName, slotNumber, description, imageURL, startTimestamp, endTimestamp) {
+function bountyScheduledEventPayload(title, posterName, slotNumber, startTimestamp, endTimestamp, description, imageURL) {
 	const payload = {
 		name: `Bounty: ${title}`,
 		scheduledStartTime: startTimestamp * 1000,
@@ -500,7 +500,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(posterGuildMember.displayColor)
 		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
-		.setTitle(bounty.state == "complete" ? `Bounty Complete! ${bounty.title}` : bounty.title)
+		.setTitle(bounty.state == "completed" ? `Bounty Complete! ${bounty.title}` : bounty.title)
 		.setTimestamp();
 	if (bounty.description) {
 		embed.setDescription(bounty.description);
@@ -521,7 +521,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 		embed.setAuthor({ name: `${posterGuildMember.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: posterGuildMember.user.displayAvatarURL() });
 	}
 	if (hunterIdSet.size > 0) {
-		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values().map(id => userMention(id))));
+		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values()).map(id => userMention(id)));
 		const turnInFieldName = !bounty.isEvergreen && bounty.state === "open" ? "Pending Turn-Ins:" : "Turned-In By:";
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: turnInFieldName, value: completersFieldText });
