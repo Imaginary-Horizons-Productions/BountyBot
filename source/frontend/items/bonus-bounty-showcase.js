@@ -42,9 +42,8 @@ module.exports = new ItemTemplateSet(
 					return 0;
 				}
 
-				const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
-				const bounty = await openBounties.find(bounty => bounty.id === bountyId).reload();
-				if (bounty.state !== "open") {
+				const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
+				if (!bounty || bounty.state !== "open") {
 					modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
@@ -52,7 +51,7 @@ module.exports = new ItemTemplateSet(
 				bounty.increment("showcaseCount");
 				await bounty.reload();
 				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				const embed = bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents));
+				const embed = bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents));
 				const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
 
 				modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds: [embed] });

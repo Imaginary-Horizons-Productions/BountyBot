@@ -36,8 +36,8 @@ module.exports = new ItemTemplateSet(
 			interaction.showModal(modal);
 
 			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
-				const bounty = await openBounties.find(bounty => bounty.id === modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]).reload();
-				if (bounty?.state !== "open") {
+				const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
+				if (!bounty || bounty.state !== "open") {
 					modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
