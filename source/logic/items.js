@@ -81,7 +81,7 @@ async function getDropsAvailable(hunterId) {
 /** *If `dropRate` (decimal probability) succeeds, grants `hunter` 1 copy of a random Item*
  * @param {number} dropRate
  * @param {Hunter} hunter
- * @returns {Promise<[itemRow: Item | null, wasCreated: boolean]>}
+ * @returns {Promise<Item | null>}
  */
 async function rollItemForHunter(dropRate, hunter) {
 	if (hunter.itemFindBoost) {
@@ -101,16 +101,16 @@ async function rollItemForHunter(dropRate, hunter) {
 			}
 		}
 	}
-	if (!droppedItem) return [null, false];
+	if (!droppedItem) return null;
 
-	return [await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true];
+	return db.models.Item.create({ userId: hunter.userId, itemName: droppedItem });
 }
 
 /** *Grants the User 1 copy of a random Item without consuming itemFindBoost*
  * @param {Hunter} hunter
- * @returns {Promise<[itemRow: Item, wasCreated: boolean]>}
+ * @returns {Promise<Item>}
  */
-async function createRandomItem(hunter) {
+function createRandomItem(hunter) {
 	const poolRandomNumber = Math.random() * 120;
 	let pool = [];
 	for (const [threshold, poolCandidate] of Object.entries(DROP_TABLE)) {
@@ -119,7 +119,7 @@ async function createRandomItem(hunter) {
 			break;
 		}
 	}
-	return [await db.Items.create({ userId: hunter.userId, itemName: pool[Math.floor(Math.random() * pool.length)] }), true];
+	return db.Items.create({ userId: hunter.userId, itemName: pool[Math.floor(Math.random() * pool.length)] });
 }
 
 /** *Finds the count of the specified Items of User*
