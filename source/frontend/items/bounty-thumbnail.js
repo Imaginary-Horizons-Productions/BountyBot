@@ -16,30 +16,33 @@ module.exports = new ItemTemplateSet(
 				interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: MessageFlags.Ephemeral });
 				return 0;
 			}
+
+			const labelIdBountyId = "bounty-id";
+			const lableIdImage = "image";
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Add Bounty Thumbnail")
 				.addLabelComponents(
 					new LabelBuilder().setLabel("Bounty")
 						.setStringSelectMenuComponent(
-							new StringSelectMenuBuilder().setCustomId("bounty-id")
+							new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
 								.setPlaceholder("Select a bounty...")
 								.setOptions(selectOptionsFromBounties(openBounties))
 						),
 					new LabelBuilder().setLabel("Image")
 						.setFileUploadComponent(
-							new FileUploadBuilder().setCustomId("image")
+							new FileUploadBuilder().setCustomId(lableIdImage)
 						)
 				);
 			interaction.showModal(modal);
 
 			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
-				const bounty = await openBounties.find(bounty => bounty.id === modalSubmission.fields.getStringSelectValues("bounty-id")[0]).reload();
+				const bounty = await openBounties.find(bounty => bounty.id === modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]).reload();
 				if (bounty?.state !== "open") {
 					modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
 
-				const imageFileCollection = modalSubmission.fields.getUploadedFiles("image", true);
+				const imageFileCollection = modalSubmission.fields.getUploadedFiles(lableIdImage, true);
 				const firstAttachment = imageFileCollection.first();
 				if (!firstAttachment) {
 					modalSubmission.reply({ content: "There was an error handling the submitted image.", flags: MessageFlags.Ephemeral });

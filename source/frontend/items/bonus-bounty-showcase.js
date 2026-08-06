@@ -1,8 +1,9 @@
-const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
+const { StringSelectMenuBuilder, MessageFlags, PermissionFlagsBits, LabelBuilder } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { timeConversion } = require("../../shared");
-const { commandMention, selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, getBountyBoardThread, isInteractionCollectorError } = require("../shared");
+const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, getBountyBoardThread, isInteractionCollectorError } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
+const { ModalBuilder } = require("discord.js");
 
 /** @type {typeof import("../../logic")} */
 let logicLayer;
@@ -17,51 +18,52 @@ module.exports = new ItemTemplateSet(
 				return 0;
 			}
 
-			return interaction.reply({
-				content: `Showcasing a bounty will repost its embed in this channel and increases the XP awarded to completers. This item has a separate cooldown from ${commandMention("bounty showcase")}.`,
-				components: [
-					new ActionRowBuilder().addComponents(
-						new StringSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
-							.setPlaceholder("Select a bounty...")
-							.setOptions(selectOptionsFromBounties(openBounties))
-					)
-				],
-				flags: MessageFlags.Ephemeral,
-				withResponse: true
-			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-				if (!collectedInteraction.channel.members.has(collectedInteraction.client.user.id)) {
-					collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
+			const labelIdBountyId = "bounty-id";
+			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+				.setTitle("Showcase Your Bounty")
+				.addLabelComponents(
+					new LabelBuilder().setLabel("Bounty")
+						.setDescription("Up a bounty's XP Reward and repost it in this channel. (Separate cooldown from `/bounty showcase`.)")
+						.setStringSelectMenuComponent(
+							new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
+								.setPlaceholder("Select a bounty...")
+								.setOptions(selectOptionsFromBounties(openBounties))
+						)
+				);
+			interaction.showModal(modal);
+			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+				if (!modalSubmission.channel.members.has(modalSubmission.client.user.id)) {
+					modalSubmission.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
 
-				if (!collectedInteraction.channel.permissionsFor(collectedInteraction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
-					collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
+				if (!modalSubmission.channel.permissionsFor(modalSubmission.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
+					modalSubmission.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
 
-				const bounty = await openBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
+				const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
+				const bounty = await openBounties.find(bounty => bounty.id === bountyId).reload();
 				if (bounty.state !== "open") {
-					collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
 
 				bounty.increment("showcaseCount");
 				await bounty.reload();
 				const currentPosterLevel = origin.hunter.getLevel(origin.company.xpCoefficient);
-				const embed = bountyEmbed(bounty, collectedInteraction.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(collectedInteraction.values[0]), await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents));
-				const bountyThread = await getBountyBoardThread(collectedInteraction.guild, origin.company.bountyBoardId, bounty.postingId);
+				const embed = bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, origin.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents));
+				const bountyThread = await getBountyBoardThread(modalSubmission.guild, origin.company.bountyBoardId, bounty.postingId);
 
-				// Send new message channel to avoid unloadable message reference in UI
-				collectedInteraction.channel.send({ content: `${collectedInteraction.member} increased the reward on their bounty!`, embeds: [embed] });
-				collectedInteraction.update({ components: [] });
+				modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds: [embed] });
 
 				if (bountyThread) {
-					if (collectedInteraction.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
 						(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
 						await unarchiveAndUnlockThread(bountyThread, "Bonus Bounty Showcase item used");
 					}
 					if (bountyThread.sendable) {
-						bountyThread.send({ content: `${collectedInteraction.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
+						bountyThread.send({ content: `${modalSubmission.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
 					}
 				}
 				return 1;
@@ -70,12 +72,6 @@ module.exports = new ItemTemplateSet(
 					console.error(error);
 				}
 				return 0;
-			}).finally(() => {
-				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
-				if (interaction.channel) {
-					interaction.deleteReply();
-				}
-				return 1;
 			})
 		}
 	)
