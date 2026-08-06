@@ -106,7 +106,7 @@ async function rollItemForHunter(dropRate, hunter) {
 	return [await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true];
 }
 
-/** *Grants the User 1 copy of a random Item at a rate of dropRate*
+/** *Grants the User 1 copy of a random Item without consuming itemFindBoost*
  * @param {Hunter} hunter
  * @returns {Promise<[itemRow: Item, wasCreated: boolean]>}
  */
