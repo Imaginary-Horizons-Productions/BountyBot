@@ -1,7 +1,7 @@
 const { StringSelectMenuBuilder, ModalBuilder, MessageFlags, LabelBuilder, FileUploadBuilder, channelMention, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
-const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread, commandMention } = require("../shared");
+const { selectOptionsFromBounties, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread, commandMention, isInteractionCollectorError } = require("../shared");
 const { timeConversion } = require("../../shared");
 
 /** @type {typeof import("../../logic")} */
@@ -14,7 +14,7 @@ module.exports = new ItemTemplateSet(
 			const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 			if (openBounties.length < 1) {
 				interaction.reply({ content: "You don't have any open bounties on this server to add a thumbnail to.", flags: MessageFlags.Ephemeral });
-				return true;
+				return 0;
 			}
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Add Bounty Thumbnail")
@@ -36,14 +36,14 @@ module.exports = new ItemTemplateSet(
 				const bounty = await openBounties.find(bounty => bounty.id === modalSubmission.fields.getStringSelectValues("bounty-id")[0]).reload();
 				if (bounty?.state !== "open") {
 					modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
-					return;
+					return 0;
 				}
 
 				const imageFileCollection = modalSubmission.fields.getUploadedFiles("image", true);
 				const firstAttachment = imageFileCollection.first();
 				if (!firstAttachment) {
 					modalSubmission.reply({ content: "There was an error handling the submitted image.", flags: MessageFlags.Ephemeral });
-					return;
+					return 0;
 				}
 
 				await bounty.update({ thumbnailURL: firstAttachment.url });
@@ -59,7 +59,13 @@ module.exports = new ItemTemplateSet(
 						bountyThread.send({ content: `This bounty's poster used ${commandMention("item")} to add a thumbnail to this bounty.`, flags: MessageFlags.SuppressNotifications });
 					}
 				}
-			}).catch(butIgnoreInteractionCollectorErrors);
+				return 1;
+			}).catch(error => {
+				if (!isInteractionCollectorError(error)) {
+					console.error(error);
+				}
+				return 0;
+			});
 		}
 	)
 ).setLogicLinker(logicBlob => {

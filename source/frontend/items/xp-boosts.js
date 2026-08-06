@@ -43,6 +43,7 @@ class XPBoost extends ItemTemplate {
 				} else {
 					refreshReferenceChannelScoreboardOverall(origin.company, interaction.guild, hunterMap, goalProgress);
 				}
+				return 1;
 			}
 		)
 	}

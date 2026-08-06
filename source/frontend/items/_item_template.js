@@ -9,6 +9,7 @@ module.exports = new ItemTemplateSet(
 		/** specs */
 		async (interaction, origin) => {
 
+			return 1;
 		})
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;

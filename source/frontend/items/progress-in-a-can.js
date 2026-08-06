@@ -12,7 +12,7 @@ module.exports = new ItemTemplateSet(
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 			if (!goal) {
 				interaction.reply({ content: "There isn't currently a Server Goal running.", flags: MessageFlags.Ephemeral });
-				return true;
+				return 0;
 			}
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 			const { goalProgress } = await logicLayer.goals.progressGoal(origin.company, goal.type, origin.hunter, season);
@@ -21,6 +21,7 @@ module.exports = new ItemTemplateSet(
 				resultPayload.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 			}
 			interaction.channel.send(resultPayload);
+			return 1;
 		}
 	)
 ).setLogicLinker(logicBlob => {

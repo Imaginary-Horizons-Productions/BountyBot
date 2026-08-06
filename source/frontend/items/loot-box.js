@@ -17,6 +17,7 @@ module.exports = new ItemTemplateSet(
 				}
 			}
 			interaction.reply({ content: `Inside the Loot Box was ${sentenceListEN(rolledItems)}! Use one with ${commandMention("item")}?`, flags: MessageFlags.Ephemeral });
+			return 1;
 		}
 	)
 ).setLogicLinker(logicBlob => {

@@ -1,7 +1,7 @@
 const { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ComponentType, PermissionFlagsBits } = require("discord.js");
 const { ItemTemplate, ItemTemplateSet } = require("../classes");
 const { timeConversion } = require("../../shared");
-const { commandMention, selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../shared");
+const { commandMention, selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, getBountyBoardThread, isInteractionCollectorError } = require("../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../constants");
 
 /** @type {typeof import("../../logic")} */
@@ -14,10 +14,10 @@ module.exports = new ItemTemplateSet(
 			const openBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guild.id);
 			if (openBounties.length < 1) {
 				interaction.reply({ content: "You don't have any open bounties on this server to showcase.", flags: MessageFlags.Ephemeral });
-				return true;
+				return 0;
 			}
 
-			interaction.reply({
+			return interaction.reply({
 				content: `Showcasing a bounty will repost its embed in this channel and increases the XP awarded to completers. This item has a separate cooldown from ${commandMention("bounty showcase")}.`,
 				components: [
 					new ActionRowBuilder().addComponents(
@@ -31,18 +31,18 @@ module.exports = new ItemTemplateSet(
 			}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
 				if (!collectedInteraction.channel.members.has(collectedInteraction.client.user.id)) {
 					collectedInteraction.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
-					return;
+					return 0;
 				}
 
 				if (!collectedInteraction.channel.permissionsFor(collectedInteraction.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
 					collectedInteraction.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
-					return;
+					return 0;
 				}
 
 				const bounty = await openBounties.find(bounty => bounty.id === collectedInteraction.values[0]).reload();
 				if (bounty.state !== "open") {
 					collectedInteraction.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
-					return;
+					return 0;
 				}
 
 				bounty.increment("showcaseCount");
@@ -64,11 +64,18 @@ module.exports = new ItemTemplateSet(
 						bountyThread.send({ content: `${collectedInteraction.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
 					}
 				}
-			}).catch(butIgnoreInteractionCollectorErrors).finally(() => {
+				return 1;
+			}).catch(error => {
+				if (!isInteractionCollectorError(error)) {
+					console.error(error);
+				}
+				return 0;
+			}).finally(() => {
 				// If the hosting channel was deleted before cleaning up `interaction`'s reply, don't crash by attempting to clean up the reply
 				if (interaction.channel) {
 					interaction.deleteReply();
 				}
+				return 1;
 			})
 		}
 	)

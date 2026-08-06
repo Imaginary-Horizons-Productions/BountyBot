@@ -13,6 +13,7 @@ class Colorizer extends ItemTemplate {
 			async (interaction, origin) => {
 				await logicLayer.hunters.setHunterProfileColor(interaction.user.id, interaction.guild.id, color.replace(/ /g, ""));
 				interaction.reply({ content: `Your profile color has been set to ${color === "Default" ? "black" : color} in this server.`, flags: MessageFlags.Ephemeral });
+				return 1;
 			}
 		);
 	}
