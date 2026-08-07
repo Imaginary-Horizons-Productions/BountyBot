@@ -12,6 +12,22 @@ export type HunterReceipt = Partial<{ title: "Critical Toast!" | "Bounty Poster"
 
 export type HunterReceiptMap = Map<Snowflake, HunterReceipt>;
 
+export const BountyState = {
+	Open: "open",
+	Completed: "completed",
+	Deleted: "deleted"
+} as const;
+
+export type BountyState = MemberOf<typeof BountyState>;
+
+export const GoalState = {
+	Ongoing: "ongoing",
+	Expired: "expired",
+	Completed: "completed"
+} as const;
+
+export type GoalState = MemberOf<typeof GoalState>;
+
 export const GoalProgressKind = {
 	Bounty: "bounties",
 	Toast: "toasts",

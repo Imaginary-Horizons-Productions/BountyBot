@@ -1,7 +1,7 @@
 import { Snowflake } from "discord.js";
 import { Op } from "sequelize";
 import { Database, DatabaseTypes } from "../database";
-import { CompanyReciept, GoalProgressKind } from "../shared/types";
+import { CompanyReciept, GoalProgressKind, GoalState } from "../shared/types";
 
 let db: Database;
 
@@ -12,7 +12,7 @@ export function setDB(database: Database) {
 
 /** *Finds the most recent ongoing Goal for the specified Company* */
 export function findCurrentServerGoal(companyId: Snowflake) {
-	return db.Goals.findOne({ where: { companyId, state: "ongoing" }, order: [["createdAt", "DESC"]] });
+	return db.Goals.findOne({ where: { companyId, state: GoalState.Ongoing }, order: [["createdAt", "DESC"]] });
 }
 
 /** *Create a Goal for the specified Company* */
@@ -48,7 +48,7 @@ export async function progressGoal(company: DatabaseTypes.Company, progressKind:
 	let contributorIds: Snowflake[] = [];
 	const companyReceipt: CompanyReciept = {};
 	let gpDisplay = 0, gpEarned = 0, goalCompleted = false, currentGP = 0, requiredGP = 0;
-	const goal = await db.Goals.findOne({ where: { companyId: company.id, state: "ongoing" }, order: [["createdAt", "DESC"]] });
+	const goal = await db.Goals.findOne({ where: { companyId: company.id, state: GoalState.Ongoing }, order: [["createdAt", "DESC"]] });
 	if (goal) {
 		requiredGP = goal.requiredGP;
 		gpDisplay = GOAL_POINT_MAP[progressKind];
@@ -71,7 +71,7 @@ export async function progressGoal(company: DatabaseTypes.Company, progressKind:
 		if (goalCompleted) {
 			contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
 			db.Hunters.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: contributorIds } } });
-			goal.update({ state: "completed" });
+			goal.update({ state: GoalState.Completed });
 		} else {
 			contributorIds.push(hunter.userId);
 		}

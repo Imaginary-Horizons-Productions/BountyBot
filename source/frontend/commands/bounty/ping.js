@@ -5,6 +5,7 @@ const { bountyPing } = require("../../shared/flows/bountyPing");
 const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 const { timeConversion } = require("../../../shared");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
@@ -43,7 +44,7 @@ module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reac
 		}
 
 		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
-		if (!bounty || bounty.state !== "open") {
+		if (!bounty || bounty.state !== BountyState.Open) {
 			modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
 			return;
 		}

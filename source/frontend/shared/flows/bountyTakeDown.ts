@@ -1,16 +1,10 @@
-const { Guild } = require("discord.js");
-const { butIgnoreMissingPermissionErrors, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError } = require("../dAPIResponses");
-const { syncRankRoles } = require("../dAPIRequests");
-const { DatabaseTypes } = require("../../../database");
+import type { ForumThreadChannel, Guild } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { LogicLayer } from "../../../logic";
+import { syncRankRoles } from "../dAPIRequests";
+import { butIgnoreErrorIf, butIgnoreMissingPermissionErrors, isMissingPermissionError, isUnknownGuildScheduledEventError } from "../dAPIResponses";
 
-/**
- * @param {import("../../../logic").LogicLayer} logicLayer
- * @param {Guild} guild
- * @param {DatabaseTypes.Bounty} bounty
- * @param {DatabaseTypes.Hunter} posterHunter
- * @param {import("discord.js").ForumThreadChannel | null} bountyThread
- */
-async function bountyTakeDown(logicLayer, guild, bounty, posterHunter, bountyThread) {
+export async function bountyTakeDown(logicLayer: LogicLayer, guild: Guild, bounty: DatabaseTypes.Bounty, posterHunter: DatabaseTypes.Hunter, bountyThread: ForumThreadChannel | null) {
 	await logicLayer.bounties.deleteBountyCompletions(bounty.id);
 	if (bountyThread) {
 		bountyThread.delete("Bounty taken down by poster").catch(butIgnoreMissingPermissionErrors);
@@ -27,7 +21,3 @@ async function bountyTakeDown(logicLayer, guild, bounty, posterHunter, bountyThr
 	const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(await logicLayer.seasons.getParticipationMap(season.id), descendingRanks, await guild.roles.fetch());
 	return syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
 }
-
-module.exports = {
-	bountyTakeDown
-};

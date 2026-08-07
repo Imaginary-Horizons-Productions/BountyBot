@@ -5,6 +5,7 @@ const { SubcommandFunctionality } = require("../../classes");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
 const { DatabaseTypes } = require("../../../database");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandFunctionality("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
@@ -36,7 +37,7 @@ module.exports = new SubcommandFunctionality("complete", "Close one of your open
 		}
 
 		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
-		if (bounty?.state !== "open") {
+		if (bounty?.state !== BountyState.Open) {
 			modalSubmission.reply({ content: "Your selected bounty no longer appears to be open.", flags: MessageFlags.Ephemeral });
 			return;
 		}

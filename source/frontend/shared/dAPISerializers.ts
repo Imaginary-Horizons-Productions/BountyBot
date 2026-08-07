@@ -1,21 +1,18 @@
-const fs = require("fs");
-const { SelectMenuLimits, MessageLimits, EmbedLimits, ModalLimits } = require("@sapphire/discord.js-utilities");
-const { Role, Collection, AttachmentBuilder, ActionRowBuilder, UserSelectMenuBuilder, userMention, EmbedBuilder, Guild, StringSelectMenuBuilder, underline, italic, Colors, MessageFlags, GuildMember, ButtonBuilder, ButtonStyle, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ModalBuilder, LabelBuilder, TextInputBuilder, TextInputStyle, bold, FileUploadBuilder, GuildScheduledEvent } = require("discord.js");
-const { SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL, SAFE_DELIMITER, COMPANY_XP_COEFFICIENT } = require("../../shared/constants.ts");
-const { emojiFromNumber, sentenceListEN, fillableTextBar, randomCongratulatoryPhrase } = require("./stringConstructors");
-const { descendingByProperty, timeConversion, discordTimestamp, ascendingByProperty } = require("../../shared");
-const { DatabaseTypes } = require("../../database/index.ts");
+import { EmbedLimits, MessageLimits, ModalLimits, SelectMenuLimits } from "@sapphire/discord.js-utilities";
+import { ActionRowBuilder, AttachmentBuilder, BaseMessageOptionsWithPoll, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, EmbedFooterData, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventCreateOptions, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageCreateOptions, MessageFlags, ModalBuilder, Role, SelectMenuComponentOptionData, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
+import * as fs from "fs";
+import { DatabaseTypes } from "../../database/index.ts";
+import { ascendingByProperty, descendingByProperty, discordTimestamp, timeConversion } from "../../shared";
+import { COMPANY_XP_COEFFICIENT, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } from "../../shared/constants.ts";
+import { BountyState } from "../../shared/types.ts";
+import { emojiFromNumber, fillableTextBar, randomCongratulatoryPhrase, sentenceListEN } from "./stringConstructors";
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 
 //#region Serialization Utilities - modifies a given entity
 // Naming Convention: describe modifications, don't match other conventions
 
-/**
- * @param {string} text
- * @param {number} length
- */
-function truncateTextToLength(text, length) {
+export function truncateTextToLength(text: string, length: number) {
 	if (text.length > length) {
 		return `${text.slice(0, length - 1)}…`;
 	} else {
@@ -23,12 +20,8 @@ function truncateTextToLength(text, length) {
 	}
 }
 
-/** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't
- * @param {string} content
- * @param {import("discord.js").BaseMessageOptionsWithPoll} messageOptions
- * @param {string} filename
- */
-function attachOverflowingContentAsFile(content, messageOptions, filename) {
+/** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't */
+export function attachOverflowingContentAsFile(content: string, messageOptions: BaseMessageOptionsWithPoll, filename: string) {
 	if (content.length < MessageLimits.MaximumLength) {
 		messageOptions.content = content;
 	} else {
@@ -37,11 +30,8 @@ function attachOverflowingContentAsFile(content, messageOptions, filename) {
 	return messageOptions;
 }
 
-/** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent")
- * @param {DatabaseTypes.Company} company
- * @param {import('discord.js').MessageCreateOptions} messageOptions
- */
-function addCompanyAnnouncementPrefix(company, messageOptions) {
+/** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent") */
+export function addCompanyAnnouncementPrefix(company: DatabaseTypes.Company, messageOptions: MessageCreateOptions) {
 	if (company.announcementPrefix == "@silent") {
 		if ("flags" in messageOptions) {
 			messageOptions.flags |= MessageFlags.SuppressNotifications;
@@ -58,8 +48,7 @@ function addCompanyAnnouncementPrefix(company, messageOptions) {
 //#region Serializers - returns whole entities
 // Naming Convention: `${outputType}From${inputType}`
 
-/** @type {import("discord.js").EmbedFooterData[]} */
-const discordTips = [
+const discordTips: EmbedFooterData[] = [
 	"Message starting with @silent don't send notifications; good for when everyone's asleep.",
 	"Surround your message with || to mark it a spoiler (not shown until reader clicks on it).",
 	"Surround a part of your messag with ~~ to add strikethrough styling.",
@@ -67,8 +56,7 @@ const discordTips = [
 	"Some slash commands can be used in DMs, others can't.",
 	"Server subscriptions cost more on mobile because the mobile app stores take a cut."
 ].map(text => ({ text, iconURL: discordIconURL }));
-/** @type {import("discord.js").EmbedFooterData[]} */
-const bountyBotTips = [
+const bountyBotTips: EmbedFooterData[] = [
 	"You can showcase one of your bounties once a week to increase its rewards.",
 	"Send bug reports or feature requests with the \"/feedback\".",
 	"Bounties can't be completed until 5 minutes after they've been posted. Don't make them too easy!",
@@ -91,12 +79,11 @@ const bountyBotTips = [
 const tipPool = bountyBotTips.concat(bountyBotTips, discordTips);
 
 /** twice as likely to roll an application specific tip as a discord tip */
-function randomFooterTip() {
+export function randomFooterTip() {
 	return tipPool[Math.floor(Math.random() * tipPool.length)];
 }
 
-/** @param {string} placeholderText */
-function disabledSelectRow(placeholderText) {
+export function disabledSelectRow(placeholderText: string) {
 	return new ActionRowBuilder().addComponents(
 		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
@@ -104,8 +91,7 @@ function disabledSelectRow(placeholderText) {
 	)
 }
 
-/** @param {string} bountyId */
-function bountyControlPanelSelectRow(bountyId) {
+export function bountyControlPanelSelectRow(bountyId: string) {
 	return [
 		new ActionRowBuilder().addComponents(
 			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
@@ -125,17 +111,8 @@ function bountyControlPanelSelectRow(bountyId) {
 	]
 }
 
-/**
- * @param {string} title
- * @param {string} posterName
- * @param {number} slotNumber
- * @param {number} startTimestamp Unix timestamp (seconds since Jan 1 1970)
- * @param {number} endTimestamp Unix timestamp (seconds since Jan 1 1970)
- * @param {string?} description
- * @param {string?} imageURL
- */
-function bountyScheduledEventPayload(title, posterName, slotNumber, startTimestamp, endTimestamp, description, imageURL) {
-	const payload = {
+export function bountyScheduledEventPayload(title: string, posterName: string, slotNumber: number, startTimestamp: number, endTimestamp: number, description?: string, imageURL?: string) {
+	const payload: GuildScheduledEventCreateOptions = {
 		name: `Bounty: ${title}`,
 		scheduledStartTime: startTimestamp * 1000,
 		scheduledEndTime: endTimestamp * 1000,
@@ -152,10 +129,9 @@ function bountyScheduledEventPayload(title, posterName, slotNumber, startTimesta
 	return payload;
 }
 
-/** @param {DatabaseTypes.Bounty[]} bounties */
-function selectOptionsFromBounties(bounties) {
+export function selectOptionsFromBounties(bounties: DatabaseTypes.Bounty[]) {
 	return bounties.map(bounty => {
-		const optionPayload = {
+		const optionPayload: SelectMenuComponentOptionData = {
 			emoji: emojiFromNumber(bounty.slotNumber),
 			label: bounty.title,
 			value: bounty.id
@@ -167,11 +143,7 @@ function selectOptionsFromBounties(bounties) {
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
 
-/**
- * @param {Map<number, DatabaseTypes.Bounty>} bountyMap
- * @param {number} posterLevel
- */
-function selectOptionsFromBountiesWithBaseRewardAsDescription(bountyMap, posterLevel) {
+export function selectOptionsFromBountiesWithBaseRewardAsDescription(bountyMap: Map<number, DatabaseTypes.Bounty>, posterLevel: number) {
 	// Since the bounty entries are tuples of [slotNumber, bounty], sorting by "property 0" sorts by slotNumber
 	return Array.from(bountyMap.entries()).sort(ascendingByProperty(0)).map(([slotNumber, bounty]) => ({
 		emoji: emojiFromNumber(slotNumber),
@@ -181,13 +153,9 @@ function selectOptionsFromBountiesWithBaseRewardAsDescription(bountyMap, posterL
 	})).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
 
-/**
- * @param {DatabaseTypes.Rank[]} ranks
- * @param {Collection<string, Role>} allGuildRoles
- */
-function selectOptionsFromRanks(ranks, allGuildRoles) {
+export function selectOptionsFromRanks(ranks: DatabaseTypes.Rank[], allGuildRoles: Collection<string, Role>) {
 	return ranks.map((rank, index) => {
-		const option = {
+		const option: SelectMenuComponentOptionData = {
 			label: rank.getName(allGuildRoles, index),
 			description: `Variance Threshold: ${rank.threshold}`,
 			value: rank.threshold.toString()
@@ -199,13 +167,8 @@ function selectOptionsFromRanks(ranks, allGuildRoles) {
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
 
-/**
- * @param {DatabaseTypes.Bounty} bounty
- * @param {GuildScheduledEvent | null} bountyScheduledEvent
- * @param {boolean} isEvergreen
- * @param {string} key for constructing the ModalBuilder's customId uniquely
- */
-function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEvergreen, key) {
+/** key for constructing the ModalBuilder's customId uniquely */
+export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty, bountyScheduledEvent: GuildScheduledEvent | null, isEvergreen: boolean, key: string) {
 	const inputIds = {
 		title: "title",
 		description: "description",
@@ -267,7 +230,7 @@ function editBountyModalAndSubmissionOptions(bounty, bountyScheduledEvent, isEve
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */
-async function latestVersionChangesEmbed() {
+export async function latestVersionChangesEmbed() {
 	const changelogPath = "./ChangeLog.md";
 	const data = await fs.promises.readFile(changelogPath, { encoding: 'utf8' });
 	const stats = await fs.promises.stat(changelogPath);
@@ -287,15 +250,7 @@ async function latestVersionChangesEmbed() {
 		.setFooter(randomFooterTip())
 		.setTimestamp(stats.mtime);
 }
-
-/**
- * @param {Guild} guild
- * @param {number} companyXP
- * @param {number} participantCount
- * @param {DatabaseTypes.Season} currentSeason
- * @param {DatabaseTypes.Season} lastSeason
- */
-async function companyStatsEmbed(guild, companyXP, participantCount, currentSeason, lastSeason) {
+export async function companyStatsEmbed(guild: Guild, companyXP: number, participantCount: number, currentSeason: DatabaseTypes.Season, lastSeason: DatabaseTypes.Season) {
 	const currentCompanyLevel = DatabaseTypes.Company.getLevel(companyXP);
 	const currentLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
 	const nextLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
@@ -320,14 +275,8 @@ async function companyStatsEmbed(guild, companyXP, participantCount, currentSeas
 		.setTimestamp()
 }
 
-/** A seasonal scoreboard orders a company's hunters by their seasonal xp
- * @param {DatabaseTypes.Company} company
- * @param {Guild} guild
- * @param {Map<string, DatabaseTypes.Participation>} participationMap
- * @param {DatabaseTypes.Rank[]} ranks
- * @param {{ currentGP: number; requiredGP: number; }} goalProgress
- */
-async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, goalProgress) {
+/** A seasonal scoreboard orders a company's hunters by their seasonal xp */
+export async function seasonalScoreboardEmbed(company: DatabaseTypes.Company, guild: Guild, participationMap: Map<string, DatabaseTypes.Participation>, ranks: DatabaseTypes.Rank[], goalProgress: { currentGP: number; requiredGP: number; }) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(participationMap.keys()) });
 	const rankmojiArray = ranks.map(rank => rank.rankmoji);
 
@@ -386,13 +335,8 @@ async function seasonalScoreboardEmbed(company, guild, participationMap, ranks, 
 	return embed;
 }
 
-/** An overall scoreboard orders a company's hunters by total xp
- * @param {DatabaseTypes.Company} company
- * @param {Guild} guild
- * @param {Map<string, DatabaseTypes.Hunter>} hunterMap
- * @param {{ currentGP: number; requiredGP: number; }} goalProgress
- */
-async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
+/** An overall scoreboard orders a company's hunters by total xp */
+export async function overallScoreboardEmbed(company: DatabaseTypes.Company, guild: Guild, hunterMap: Map<string, DatabaseTypes.Hunter>, goalProgress: { currentGP: number; requiredGP: number; }) {
 	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
 
 	const scorelines = [];
@@ -449,18 +393,7 @@ async function overallScoreboardEmbed(company, guild, hunterMap, goalProgress) {
 	return embed;
 }
 
-/**
- * @param {DatabaseTypes.Hunter} targetHunter
- * @param {GuildMember} targetGuildMember
- * @param {number} currentLevel
- * @param {number} currentLevelThreshold
- * @param {number} nextLevelThreshold
- * @param {DatabaseTypes.Participation | undefined} currentParticipation
- * @param {string | null} rankName
- * @param {DatabaseTypes.Participation[]} previousParticipations
- * @param {DatabaseTypes.Toast} mostSecondedToast
- */
-function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, currentLevelThreshold, nextLevelThreshold, currentParticipation, rankName, previousParticipations, mostSecondedToast) {
+export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGuildMember: GuildMember, currentLevel: number, currentLevelThreshold: number, nextLevelThreshold: number, currentParticipation: DatabaseTypes.Participation | undefined, rankName: string | null, previousParticipations: DatabaseTypes.Participation[], mostSecondedToast: DatabaseTypes.Toast) {
 	let description = `${fillableTextBar(targetHunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}`;
 	if (currentParticipation) {
 		description += `\nThey have earned ${italic(`${currentParticipation.xp} XP`)} this season`;
@@ -486,21 +419,12 @@ function hunterProfileEmbed(targetHunter, targetGuildMember, currentLevel, curre
 		.setTimestamp()
 }
 
-/** Generate an embed for the given bounty
- * @param {DatabaseTypes.Bounty} bounty
- * @param {GuildMember} posterGuildMember
- * @param {number} posterLevel
- * @param {boolean} shouldOmitRewardsField
- * @param {DatabaseTypes.Company} company
- * @param {Set<string>} hunterIdSet
- * @param {GuildScheduledEvent | null} event
- * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; } | undefined} goalProgress
- */
-function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsField, company, hunterIdSet, event, goalProgress) {
+/** Generate an embed for the given bounty */
+export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: GuildMember, posterLevel: number, shouldOmitRewardsField: boolean, company: DatabaseTypes.Company, hunterIdSet: Set<string>, event: GuildScheduledEvent | null, goalProgress?: { goalCompleted: boolean; currentGP: number; requiredGP: number; }) {
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(posterGuildMember.displayColor)
 		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
-		.setTitle(bounty.state == "completed" ? `Bounty Complete! ${bounty.title}` : bounty.title)
+		.setTitle(bounty.state === BountyState.Completed ? `Bounty Complete! ${bounty.title}` : bounty.title)
 		.setTimestamp();
 	if (bounty.description) {
 		embed.setDescription(bounty.description);
@@ -522,7 +446,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 	}
 	if (hunterIdSet.size > 0) {
 		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values()).map(id => userMention(id)));
-		const turnInFieldName = !bounty.isEvergreen && bounty.state === "open" ? "Pending Turn-Ins:" : "Turned-In By:";
+		const turnInFieldName = !bounty.isEvergreen && bounty.state === BountyState.Open ? "Pending Turn-Ins:" : "Turned-In By:";
 		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
 			fields.push({ name: turnInFieldName, value: completersFieldText });
 		} else {
@@ -531,7 +455,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 	}
 	if (goalProgress?.goalCompleted) {
 		fields.push({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
-	} else if (goalProgress?.requiredGP > 0) {
+	} else if (goalProgress && goalProgress.requiredGP > 0) {
 		fields.push({ name: "Server Goal", value: `${fillableTextBar(goalProgress.currentGP, goalProgress.requiredGP, 15)} ${goalProgress.currentGP}/${goalProgress.requiredGP} GP` });
 	}
 
@@ -541,16 +465,7 @@ function bountyEmbed(bounty, posterGuildMember, posterLevel, shouldOmitRewardsFi
 	return embed;
 }
 
-/**
- * @param {string} thumbnailURL
- * @param {string} toastText
- * @param {string[]} recipientIds
- * @param {GuildMember} senderMember
- * @param {{ goalCompleted: boolean; currentGP: number; requiredGP: number; }} goalProgress
- * @param {string | null} imageURL
- * @param {string[] | undefined} seconderMentions
- */
-function toastEmbed(thumbnailURL, toastText, recipientIds, senderMember, goalProgress, imageURL, seconderMentions) {
+export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL: string | null, seconderMentions: string[] | undefined) {
 	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
@@ -570,8 +485,7 @@ function toastEmbed(thumbnailURL, toastText, recipientIds, senderMember, goalPro
 	return embed;
 }
 
-/** @param {string} toastId */
-function secondingButtonRow(toastId) {
+export function secondingButtonRow(toastId: string) {
 	return new ActionRowBuilder().addComponents(
 		new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
 			.setLabel("Hear, hear!")
@@ -580,8 +494,7 @@ function secondingButtonRow(toastId) {
 	)
 }
 
-/** @param {string[]} contributorIds */
-function goalCompletionEmbed(contributorIds) {
+export function goalCompletionEmbed(contributorIds: string[]) {
 	return new EmbedBuilder().setColor("e5b271")
 		.setTitle("Server Goal Completed")
 		.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
@@ -589,14 +502,7 @@ function goalCompletionEmbed(contributorIds) {
 		.addFields({ name: "Contributors", value: sentenceListEN(contributorIds.map(id => userMention(id))) })
 }
 
-/**
- * @param {keyof Colors} profileColor
- * @param {Guild} guild
- * @param {string} thumbnailURL
- * @param {GuildMember} winner
- * @param {string} qualificationText
- */
-function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificationText) {
+export function raffleResultEmbed(profileColor: keyof typeof Colors, guild: Guild, thumbnailURL: string, winner: GuildMember, qualificationText: string) {
 	const embed = new EmbedBuilder().setColor(Colors[profileColor])
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle("Raffle Results")
@@ -611,14 +517,7 @@ function raffleResultEmbed(profileColor, guild, thumbnailURL, winner, qualificat
 	return embed;
 }
 
-/**
- * @param {DatabaseTypes.Hunter} hunter
- * @param {Guild} guild
- * @param {GuildMember} member
- * @param {number} dqCount
- * @param {(DatabaseTypes.Bounty & {Completions: DatabaseTypes.Completion[]})[]} lastFiveBounties
- */
-async function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties) {
+export async function userReportEmbed(hunter: DatabaseTypes.Hunter, guild: Guild, member: GuildMember, dqCount: number, lastFiveBounties: (DatabaseTypes.Bounty & { Completions: DatabaseTypes.Completion[] })[]) {
 	const embed = new EmbedBuilder().setColor(member.displayColor)
 		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
 		.setTitle(`Moderation Stats: ${member.user.tag}`)
@@ -649,28 +548,4 @@ async function userReportEmbed(hunter, guild, member, dqCount, lastFiveBounties)
 }
 //#endregion
 
-module.exports = {
-	truncateTextToLength,
-	attachOverflowingContentAsFile,
-	addCompanyAnnouncementPrefix,
-	ihpAuthorPayload: { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" },
-	randomFooterTip,
-	disabledSelectRow,
-	bountyControlPanelSelectRow,
-	bountyScheduledEventPayload,
-	selectOptionsFromBounties,
-	selectOptionsFromBountiesWithBaseRewardAsDescription,
-	selectOptionsFromRanks,
-	editBountyModalAndSubmissionOptions,
-	latestVersionChangesEmbed,
-	companyStatsEmbed,
-	seasonalScoreboardEmbed,
-	overallScoreboardEmbed,
-	hunterProfileEmbed,
-	bountyEmbed,
-	toastEmbed,
-	secondingButtonRow,
-	goalCompletionEmbed,
-	raffleResultEmbed,
-	userReportEmbed
-}
+export const ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };

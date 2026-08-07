@@ -1,10 +1,10 @@
-const { SelectWrapper } = require('../../classes');
-const { aggregateSelectOptionMap } = require('../../shared');
+import { LogicLayer } from "../../../logic";
+import { SelectFunctionality } from '../../classes';
+import { aggregateSelectOptionMap } from '../../shared';
 
-/** @type {import('../../../logic').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
-const optionMap = aggregateSelectOptionMap("bountycontrolpanel", [
+const optionMap = await aggregateSelectOptionMap("bountycontrolpanel", [
 	"complete.js",
 	"edit.js",
 	"nochange.js",
@@ -17,7 +17,7 @@ const optionMap = aggregateSelectOptionMap("bountycontrolpanel", [
 ]);
 
 const mainId = "bountycontrolpanel";
-module.exports = new SelectWrapper(mainId, 3000,
+export default new SelectFunctionality(mainId, 3000,
 	/** This select menu accompanies individual bounty threads, providing an interface for the bounty's poster to interact with the bounty */
 	async (interaction, theater, isDevMode, args) => {
 		optionMap[interaction.values[0]]?.(interaction, theater, isDevMode, logicLayer, args);

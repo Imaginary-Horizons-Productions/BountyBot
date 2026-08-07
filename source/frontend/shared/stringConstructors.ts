@@ -63,7 +63,7 @@ export function emojiFromNumber(integer: number) {
 }
 
 /** Formats string array into Oxford English list syntax */
-function sentenceListEN(texts: string[], isMutuallyExclusive: boolean) {
+export function sentenceListEN(texts: string[], isMutuallyExclusive?: boolean) {
 	if (texts.length > 2) {
 		const textsSansLast = texts.slice(0, texts.length - 1);
 		if (isMutuallyExclusive) {

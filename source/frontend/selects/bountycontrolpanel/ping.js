@@ -5,6 +5,7 @@ const { timeConversion } = require("../../../shared");
 const { butIgnoreInteractionCollectorErrors } = require("../../shared");
 const { bountyPing } = require("../../shared/flows/bountyPing");
 const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SelectOptionWrapper("ping",
 	ensureBountyExistsAndInteractorIsPoster(
@@ -41,7 +42,7 @@ module.exports = new SelectOptionWrapper("ping",
 			}
 
 			bounty = await logicLayer.bounties.findBounty(bounty.id);
-			if (!bounty || bounty.state !== "open") {
+			if (!bounty || bounty.state !== BountyState.Open) {
 				modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
 				return;
 			}

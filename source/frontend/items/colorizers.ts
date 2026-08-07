@@ -1,18 +1,18 @@
-const { MessageFlags } = require("discord.js");
-const { ItemTemplate, ItemTemplateSet } = require("../classes");
+import { MessageFlags } from "discord.js";
+import { LogicLayer } from "../../logic";
+import { ItemTemplate, ItemTemplateSet } from "../classes";
 
-/** @type {import("../../logic").LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 class Colorizer extends ItemTemplate {
-	/** @param {string} color */
-	constructor(color) {
+	constructor(color: string) {
 		const itemName = `${color} Profile Colorizer`;
 		super(itemName, `Changes the color of your stats profile embed to ${color.toLowerCase()}`, 3000,
 			/** Sets the user's Hunter profile to the specfied color in the used guild */
-			async (interaction, origin) => {
+			async (interaction, theater) => {
 				await logicLayer.hunters.setHunterProfileColor(interaction.user.id, interaction.guild.id, color.replace(/ /g, ""));
 				interaction.reply({ content: `Your profile color has been set to ${color === "Default" ? "black" : color} in this server.`, flags: MessageFlags.Ephemeral });
+				return 1;
 			}
 		);
 	}
@@ -51,7 +51,7 @@ const colors = [
 	'Yellow'
 ];
 
-module.exports = new ItemTemplateSet(...colors.map(color => new Colorizer(color)))
+export default new ItemTemplateSet(...colors.map(color => new Colorizer(color)))
 	.setLogicLinker((logicBlob) => {
 		logicLayer = logicBlob;
 	});

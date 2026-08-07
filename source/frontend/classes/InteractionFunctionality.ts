@@ -165,8 +165,13 @@ export class SelectFunctionality extends InteractionFunctionality {
 	}
 };
 
+type SelectOptionProcedure = (interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, args: unknown[]) => Promise<void>;
+
 export class SelectOptionFunctionality {
-	constructor(nameArgument: string, procedure: (interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, args: unknown[]) => Promise<void>) {
+	declare name: string;
+	declare execute: SelectOptionProcedure
+
+	constructor(nameArgument: string, procedure: SelectOptionProcedure) {
 		if (!nameArgument) {
 			throw new BuildError("missing select option name");
 		}

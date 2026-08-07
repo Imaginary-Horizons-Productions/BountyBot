@@ -4,6 +4,7 @@ const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { butIgnoreInteractionCollectorErrors, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SelectOptionWrapper("showcase",
 	ensureBountyExistsAndInteractorIsPoster(
@@ -46,7 +47,7 @@ module.exports = new SelectOptionWrapper("showcase",
 			}
 
 			await bounty.reload();
-			if (bounty.state !== "open") {
+			if (bounty.state !== BountyState.Open) {
 				modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 				return;
 			}

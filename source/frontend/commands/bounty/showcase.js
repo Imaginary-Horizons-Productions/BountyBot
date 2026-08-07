@@ -4,6 +4,7 @@ const { timeConversion, discordTimestamp } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
@@ -45,7 +46,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for one of yo
 		*/
 		const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
 		let bounty = await logicLayer.bounties.findBounty(bountyId);
-		if (bounty.state !== "open") {
+		if (bounty.state !== BountyState.Open) {
 			modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 			return;
 		}

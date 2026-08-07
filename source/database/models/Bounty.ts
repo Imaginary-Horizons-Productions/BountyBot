@@ -1,6 +1,7 @@
 ﻿import type { GuildScheduledEventManager, Snowflake } from "discord.js";
 import { DataTypes, HasManyGetAssociationsMixin, Model, type Sequelize } from "sequelize";
 import { Database } from "..";
+import { BountyState } from "../../shared/types";
 import { Completion } from "./Completion";
 
 /** Bounties are user created objectives for other server members to complete */
@@ -16,7 +17,7 @@ export class Bounty extends Model {
 	declare description: string | null;
 	declare attachmentURL: string | null;
 	declare scheduledEventId: string | null;
-	declare state: "open" | "completed" | "deleted";
+	declare state: BountyState;
 	declare showcaseCount: number;
 	declare completedAt: string;
 	declare editCount: number;
@@ -93,7 +94,7 @@ export function initModel(sequelize: Sequelize) {
 		},
 		state: {
 			type: DataTypes.STRING,
-			defaultValue: "open" //TODONOW create enum
+			defaultValue: BountyState.Open
 		},
 		showcaseCount: {
 			type: DataTypes.BIGINT,

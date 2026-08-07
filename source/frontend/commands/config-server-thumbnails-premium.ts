@@ -1,6 +1,6 @@
-const { PermissionFlagsBits, InteractionContextType } = require("discord.js");
-const { CommandWrapper } = require("../classes");
-const { configCompanyThumbnails } = require("../shared/flows/configCompanyThumbnails");
+import { InteractionContextType, PermissionFlagsBits } from "discord.js";
+import { CommandFunctionality } from "../classes";
+import { configCompanyThumbnails } from "../shared/flows/configCompanyThumbnails";
 
 const mainId = "config-server-thumbnails-premium";
 const thumbnailUpdateData = [
@@ -20,7 +20,7 @@ const thumbnailUpdateData = [
 		payloadProperty: "raffleThumbnailURL"
 	}
 ];
-module.exports = new CommandWrapper(mainId, "Configure thumbnails for server messages (Premium)", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
+export default new CommandFunctionality(mainId, "Configure thumbnails for server messages (Premium)", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
 	async (interaction, theater, isDevMode) => {
 		configCompanyThumbnails("Server Message Thumbnail", thumbnailUpdateData, interaction, theater.company);
 	}

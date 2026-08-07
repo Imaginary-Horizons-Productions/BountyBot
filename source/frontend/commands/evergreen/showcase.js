@@ -5,6 +5,7 @@ const { selectOptionsFromBounties, bountyEmbed, butIgnoreInteractionCollectorErr
 const { timeConversion } = require("../../../shared");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 const { DatabaseTypes } = require("../../../database");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
@@ -38,7 +39,7 @@ module.exports = new SubcommandWrapper("showcase", "Show the embed for an evergr
 		}
 
 		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
-		if (bounty?.state !== "open") {
+		if (bounty?.state !== BountyState.Open) {
 			modalSubmission.reply({ content: "The bounty you selected appears to have been taken-down before the showcase could resolve.", flags: MessageFlags.Ephemeral });
 			return;
 		}

@@ -4,6 +4,7 @@ const { textsHaveAutoModInfraction, selectOptionsFromBounties, bountyEmbed, refr
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
 const { DatabaseTypes } = require("../../../database");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("edit", "Change the name, description, or image of an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
@@ -22,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 			const [bountyId] = collectedInteraction.values;
 			// Verify bounty exists
 			const selectedBounty = evergreenBounties.find(bounty => bounty.id === bountyId);
-			if (selectedBounty?.state !== "open") {
+			if (selectedBounty?.state !== BountyState.Open) {
 				interaction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
 				return;
 			}

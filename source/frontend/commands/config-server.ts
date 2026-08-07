@@ -1,10 +1,11 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags } = require('discord.js');
-const { CommandWrapper } = require('../classes');
+import { InteractionContextType, MessageFlags, PermissionFlagsBits } from 'discord.js';
+import { DatabaseTypes } from '../../database';
+import { CommandFunctionality } from '../classes';
 
 const mainId = "config-server";
-module.exports = new CommandWrapper(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
+export default new CommandFunctionality(mainId, "Configure BountyBot settings for this server", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	(interaction, theater, isDevMode) => {
-		const updatePayload = {};
+		const updatePayload: Partial<DatabaseTypes.Company> = {};
 		let content = "The following server settings have been configured:";
 
 		const prefix = interaction.options.getString("notification");

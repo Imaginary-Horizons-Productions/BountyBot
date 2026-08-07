@@ -4,6 +4,7 @@ const { sentenceListEN, randomCongratulatoryPhrase, selectOptionsFromBounties, b
 const { timeConversion } = require("../../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
@@ -34,7 +35,7 @@ module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of on
 		}
 
 		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
-		if (!bounty || bounty.state !== "open") {
+		if (!bounty || bounty.state !== BountyState.Open) {
 			modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
 			return;
 		}

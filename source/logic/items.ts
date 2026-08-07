@@ -75,28 +75,37 @@ export async function getDropsAvailable(hunterId: Snowflake) {
 	return itemCutoff - itemsDropped;
 }
 
-/** *Grants the User 1 copy of a random Item at a rate of dropRate*
- *
- * dropRate is a decimal representing the probability
- */
+/** *If `dropRate` (decimal probability) succeeds, grants `hunter` 1 copy of a random Item* */
 export async function rollItemForHunter(dropRate: number, hunter: DatabaseTypes.Hunter) {
 	if (hunter.itemFindBoost) {
 		dropRate *= 2;
 		hunter.update("itemFindBoost", false);
 	}
 
-	let droppedItem;
 	if (Math.random() < dropRate) {
 		const poolThresholds = Object.keys(DROP_TABLE).map(unparsed => parseFloat(unparsed)).sort((a, b) => b - a) as (keyof typeof DROP_TABLE)[];
 		const poolRandomNumber = Math.random() * 120;
 		for (const threshold of poolThresholds) {
 			if (poolRandomNumber > threshold) {
 				const pool = DROP_TABLE[threshold];
-				droppedItem = pool[Math.floor(Math.random() * pool.length)];
+				return db.Items.create({ userId: hunter.userId, itemName: pool[Math.floor(Math.random() * pool.length)] })
 			}
 		}
 	}
-	return droppedItem ? await db.Items.create({ userId: hunter.userId, itemName: droppedItem }) : null;
+	return null;
+}
+
+/** *Grants the User 1 copy of a random Item without consuming itemFindBoost * */
+export function createRandomItem(hunter: DatabaseTypes.Hunter) {
+	const poolRandomNumber = Math.random() * 120;
+	let pool: string[] = [];
+	for (const [threshold, poolCandidate] of Object.entries(DROP_TABLE)) {
+		if (poolRandomNumber > parseFloat(threshold)) {
+			pool = poolCandidate;
+			break;
+		}
+	}
+	return db.Items.create({ userId: hunter.userId, itemName: pool[Math.floor(Math.random() * pool.length)] });
 }
 
 /** *Finds the count of the specified Items of User* */
@@ -104,16 +113,16 @@ export function countUserCopies(userId: Snowflake, itemName: string) {
 	return db.Items.count({ where: { userId, itemName, used: false } });
 }
 
-/** *Sets the oldest of the specified Items of User to used*
+/** *Sets the oldest `count` of the specified Items of User to used*
  *
- * Assumes item is extent
- */
-export async function consume(userId: Snowflake, itemName: string) {
-	const dbRow = await db.Items.findOne({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]] });
-	if (!dbRow) {
-		throw new Error(`Attempted to consume non-existant item ${itemName} for user with id ${userId}`);
+ * count validation for sufficient existing item count is assumed to already have been done
+*/
+export async function consume(userId: Snowflake, itemName: string, count: number) {
+	const rows = await db.Items.findAll({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]], limit: count });
+	for (const row of rows) {
+		await row.update("used", true);
 	}
-	return dbRow.update("used", true);
+	return rows;
 }
 
 /** Destroy used items to reduce table size and obfuscate id generation */

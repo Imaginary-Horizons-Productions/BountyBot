@@ -2,6 +2,7 @@ import { bold, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder,
 import { LogicLayer } from '../../logic';
 import { timeConversion } from '../../shared';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
+import { BountyState } from '../../shared/types';
 import { UserContextMenuFunctionality } from '../classes';
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, unarchiveAndUnlockThread } from '../shared';
 
@@ -48,7 +49,7 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
 			const [bountyId] = modalSubmission.fields.getStringSelectValues(labelIdBountyId);
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
-			if (bounty?.state !== "open") {
+			if (bounty?.state !== BountyState.Open) {
 				modalSubmission.reply({ content: "The bounty you selected no longer appears to be open.", flags: MessageFlags.Ephemeral });
 				return;
 			}

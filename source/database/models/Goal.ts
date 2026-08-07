@@ -1,13 +1,13 @@
 import type { Snowflake } from "discord.js";
 import { DataTypes, Model, type Sequelize } from "sequelize";
 import type { Database } from "..";
-import { GoalProgressKind } from "../../shared/types";
+import { GoalProgressKind, GoalState } from "../../shared/types";
 
 /** A Goal for which all bounty hunters in a company contribute to */
 export class Goal extends Model {
 	declare id: string;
 	declare companyId: Snowflake;
-	declare state: "ongoing" | "expired" | "completed";
+	declare state: GoalState;
 	declare type: GoalProgressKind;
 	declare requiredGP: number;
 }
@@ -25,7 +25,7 @@ export function initModel(sequelize: Sequelize) {
 		},
 		state: {
 			type: DataTypes.STRING,
-			defaultValue: "ongoing"
+			defaultValue: GoalState.Ongoing
 		},
 		type: {
 			type: DataTypes.STRING,

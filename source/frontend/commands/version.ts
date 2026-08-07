@@ -1,9 +1,9 @@
-const { AttachmentBuilder, InteractionContextType, MessageFlags } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { latestVersionChangesEmbed } = require('../shared');
+import { AttachmentBuilder, InteractionContextType, MessageFlags } from 'discord.js';
+import { CommandFunctionality } from '../classes';
+import { latestVersionChangesEmbed } from '../shared';
 
 const mainId = "version";
-module.exports = new CommandWrapper(mainId, "Get the most recent changes or the full change log", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "Get the most recent changes or the full change log", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Send the user the most recent set of patch notes or full change log */
 	(interaction, theater, isDevMode) => {
 		if (interaction.options.getString("notes-length") === "last-version") {

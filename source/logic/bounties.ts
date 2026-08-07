@@ -1,7 +1,7 @@
 import { GuildMember, Snowflake } from "discord.js";
 import { Op } from "sequelize";
 import { Database, DatabaseTypes } from "../database";
-import { HunterReceipt } from "../shared/types";
+import { BountyState, HunterReceipt } from "../shared/types";
 import { rollItemForHunter } from "./items";
 
 let db: Database;
@@ -34,24 +34,24 @@ export function findBounty(bountyInfo: { slotNumber: number, userId: string, com
 	if (typeof bountyInfo === 'string') {
 		return db.Bounties.findByPk(bountyInfo);
 	} else {
-		return db.Bounties.findOne({ where: { ...bountyInfo, state: "open" } });
+		return db.Bounties.findOne({ where: { ...bountyInfo, state: BountyState.Open } });
 	}
 }
 
 export function findOpenBounties(userId: Snowflake, companyId: Snowflake) {
-	return db.Bounties.findAll({ where: { userId, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
+	return db.Bounties.findAll({ where: { userId, companyId, state: BountyState.Open }, order: [["slotNumber", "ASC"]] });
 }
 
 export async function mapOpenBountiesBySlotNumber(userId: Snowflake, companyId: Snowflake) {
 	const bountyMap = new Map<number, DatabaseTypes.Bounty>();
-	for (const bounty of await db.Bounties.findAll({ where: { userId, companyId, state: "open" } })) {
+	for (const bounty of await db.Bounties.findAll({ where: { userId, companyId, state: BountyState.Open } })) {
 		bountyMap.set(bounty.slotNumber, bounty);
 	}
 	return bountyMap;
 }
 
 export function findEvergreenBounties(companyId: Snowflake) {
-	return db.Bounties.findAll({ where: { isEvergreen: true, companyId, state: "open" }, order: [["slotNumber", "ASC"]] });
+	return db.Bounties.findAll({ where: { isEvergreen: true, companyId, state: BountyState.Open }, order: [["slotNumber", "ASC"]] });
 }
 
 /** *Find all Completions associated with the specified Bounty* */
@@ -94,17 +94,17 @@ export async function checkTurnInEligibility(bounty: DatabaseTypes.Bounty, compl
 }
 
 export function findCompanyBountiesByCreationDate(companyId: Snowflake) {
-	return db.Bounties.findAll({ where: { companyId, state: "open" }, order: [["createdAt", "DESC"]] });
+	return db.Bounties.findAll({ where: { companyId, state: BountyState.Open }, order: [["createdAt", "DESC"]] });
 }
 
 /** *Finds a Hunter's last five bounties for the purpose of making a moderation user report* */
 export function findHuntersLastFiveBounties(userId: Snowflake, companyId: Snowflake) {
-	return db.Bounties.findAll({ where: { userId, companyId, state: "completed" }, order: [["completedAt", "DESC"]], limit: 5, include: db.Completions });
+	return db.Bounties.findAll({ where: { userId, companyId, state: BountyState.Completed }, order: [["completedAt", "DESC"]], limit: 5, include: db.Completions });
 }
 
 export async function completeBounty(bounty: DatabaseTypes.Bounty, poster: DatabaseTypes.Hunter, validatedHunters: Map<string, DatabaseTypes.Hunter>, season: DatabaseTypes.Season, company: DatabaseTypes.Company) {
 	const hunterReceipts = new Map();
-	bounty.update({ state: "completed", completedAt: new Date() });
+	bounty.update({ state: BountyState.Completed, completedAt: new Date() });
 
 	const bountyBaseValue = DatabaseTypes.Bounty.calculateCompleterReward(poster.getLevel(company.xpCoefficient), bounty.slotNumber, bounty.showcaseCount);
 	const bountyValue = Math.floor(bountyBaseValue * company.xpFestivalMultiplier);

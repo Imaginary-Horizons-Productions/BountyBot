@@ -59,9 +59,9 @@ module.exports = new CommandWrapper(mainId, "Get details on a selected item and 
 			}
 			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
 
-			return useItem(itemName, collectedInteration, theater).then(shouldSkipDecrement => {
-				if (!shouldSkipDecrement && !isDevMode) {
-					return logicLayer.items.consume(interaction.user.id, itemName);
+			useItem(itemName, collectedInteration, theater).then(usedCount => {
+				if (usedCount > 0 && !isDevMode) {
+					logicLayer.items.consume(interaction.user.id, itemName, usedCount);
 				}
 			});
 		}).catch(butIgnoreInteractionCollectorErrors).finally(() => {

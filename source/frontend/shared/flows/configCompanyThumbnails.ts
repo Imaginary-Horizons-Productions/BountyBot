@@ -1,15 +1,9 @@
-const { ModalBuilder, LabelBuilder, FileUploadBuilder, ContainerBuilder, Colors, TextDisplayBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, heading, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { timeConversion } = require("../../../shared");
-const { DatabaseTypes } = require("../../../database");
+import { ChatInputCommandInteraction, Colors, ContainerBuilder, FileUploadBuilder, heading, LabelBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, MessageFlags, ModalBuilder, TextDisplayBuilder } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
 
-/**
- * @param {string} thumbnailSetKind
- * @param {{ label: string; description: string; payloadProperty: string; }[]} thumbnailUpdateData
- * @param {ChatInputCommandInteraction} interaction
- * @param {DatabaseTypes.Company} company
- */
-async function configCompanyThumbnails(thumbnailSetKind, thumbnailUpdateData, interaction, company) {
+export async function configCompanyThumbnails(thumbnailSetKind: string, thumbnailUpdateData: { label: string; description: string; payloadProperty: keyof DatabaseTypes.Company; }[], interaction: ChatInputCommandInteraction, company: DatabaseTypes.Company) {
 	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`).setTitle(`Configure ${thumbnailSetKind}s`);
 	for (const { label, description, payloadProperty } of thumbnailUpdateData) {
 		modal.addLabelComponents(
@@ -23,7 +17,7 @@ async function configCompanyThumbnails(thumbnailSetKind, thumbnailUpdateData, in
 
 	interaction.showModal(modal);
 	const modalInteraction = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") });
-	const updatePayload = {};
+	const updatePayload: Partial<DatabaseTypes.Company> = {};
 
 	const container = new ContainerBuilder().setAccentColor(Colors.Blurple)
 		.addTextDisplayComponents(new TextDisplayBuilder().setContent(heading(`${thumbnailSetKind} Changes`)))
@@ -59,7 +53,3 @@ async function configCompanyThumbnails(thumbnailSetKind, thumbnailUpdateData, in
 	company.update(updatePayload);
 	modalInteraction.reply({ components: [container], flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
 }
-
-module.exports = {
-	configCompanyThumbnails
-};

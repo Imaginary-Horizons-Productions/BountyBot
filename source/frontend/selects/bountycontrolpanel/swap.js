@@ -6,6 +6,7 @@ const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { DatabaseTypes } = require("../../../database");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SelectOptionWrapper("swap",
 	ensureBountyExistsAndInteractorIsPoster(
@@ -62,7 +63,7 @@ module.exports = new SelectOptionWrapper("swap",
 			 * - "same slot"; slot filtered out of options before input
 			 */
 			await bounty.reload();
-			if (bounty.state !== "open") {
+			if (bounty.state !== BountyState.Open) {
 				modalSubmission.reply({ content: "This bounty appears to already have been completed.", flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -77,7 +78,7 @@ module.exports = new SelectOptionWrapper("swap",
 			}
 
 			const sourceSlot = bounty.slotNumber;
-			let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: theater.user.id, companyId: theater.company.id, state: "open" });
+			let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: theater.user.id, companyId: theater.company.id, state: BountyState.Open });
 			const destinationRewardValue = DatabaseTypes.Bounty.calculateCompleterReward(currentPosterLevel, destinationSlot, bounty.showcaseCount);
 			const auditLogReason = destinationBounty ?
 				`bounty poster swapped slots of bounties ${sourceSlot} and ${destinationSlot}` :

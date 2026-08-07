@@ -12,7 +12,7 @@ import { commandMention, consolidateHunterReceipts, goalCompletionEmbed, latestV
 import { LOGIC_LAYER as logicBlob } from "./logic/index.js";
 import { announcementsChannelId, commandIds, lastPostedVersion, premium, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, testGuildId } from "./shared/constants.ts";
 import { discordTimestamp } from "./shared/index.js";
-import { CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
+import { CompanyReciept, CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
 
 const runMode = process.argv[4] || "development";
 
@@ -257,7 +257,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	}
 
 	// Reject in companies that have disabled reaction toasts
-	const company = await logicBlob.companies.findCompanyByPK(guild.id);
+	const [company] = await logicBlob.companies.findOrCreateCompany(guild.id);
 	if (company.disableReactionToasts) {
 		return;
 	}
@@ -318,7 +318,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		const toastText = `${randomCongratulatoryPhrase()}! Reaction Toast: ${hostMessage.url}`;
 		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientIds, hunterMap, season.id, toastText, null, hostMessage.id);
 
-		const companyReceipt = { guildName: guild.name };
+		const companyReceipt: CompanyReciept = { guildName: guild.name };
 		const currentCompanyLevel = DatabaseTypes.Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;

@@ -1,8 +1,11 @@
-import { ChatInputCommandInteraction } from "discord.js";
+import { StringSelectMenuInteraction } from "discord.js";
 import { LogicLayer } from "../../logic";
 import { InteractionTheater } from "./InteractionTheater";
 
 export class ItemTemplateSet {
+	declare items: ItemTemplate[];
+	declare setLogic: (logicBlob: LogicLayer) => void;
+
 	constructor(...itemTemplates: ItemTemplate[]) {
 		this.items = itemTemplates;
 	}
@@ -13,8 +16,15 @@ export class ItemTemplateSet {
 	}
 }
 
+type ItemProcedure = (interaction: StringSelectMenuInteraction<"cached">, theater: InteractionTheater) => Promise<number>;
+
 export class ItemTemplate {
-	constructor(nameArgument: string, descriptionArgument: string, cooldownInMS: number, procedure: (interaction: ChatInputCommandInteraction, theater: InteractionTheater) => Promise<boolean>) {
+	declare name: string;
+	declare description: string;
+	declare cooldown: number;
+	declare effect: ItemProcedure;
+
+	constructor(nameArgument: string, descriptionArgument: string, cooldownInMS: number, procedure: ItemProcedure) {
 		this.name = nameArgument;
 		this.description = descriptionArgument;
 		this.cooldown = cooldownInMS;

@@ -1,11 +1,11 @@
-const fs = require("fs");
-const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { ihpAuthorPayload, randomFooterTip, commandMention } = require("../shared");
-const { BOUNTYBOT_INVITE_URL } = require("../../constants");
+import { Colors, EmbedBuilder, InteractionContextType, MessageFlags } from 'discord.js';
+import * as fs from "fs";
+import { BOUNTYBOT_INVITE_URL } from '../../shared/constants';
+import { CommandFunctionality } from '../classes';
+import { commandMention, ihpAuthorPayload, randomFooterTip } from "../shared";
 
 const mainId = "tutorial";
-module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBot", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "Get tips for starting with BountyBot", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Send the user a embed with tips to start using BountyBot */
 	(interaction, theater, isDevMode) => {
 		fs.promises.stat(__filename).then(stats => {
@@ -34,7 +34,7 @@ module.exports = new CommandWrapper(mainId, "Get tips for starting with BountyBo
 							{ name: commandMention("raffle announce-upcoming"), value: "You can have BountyBot randomly select a user by seasonal rank or by level. Bounty hunters will likely appreciate if you announce the timing or eligibility for upcoming raffles ahead of time." },
 							{ name: commandMention("config-server"), value: "You can set the notification type for BountyBot announcement messages (eg \"Should bounty posts start with @everyone, @here, etc?\")." },
 							{ name: commandMention("config-premium"), value: `Premium members can change the XP coefficient for bounty hunter level-ups or the max number of slots a bounty hunter can have. Use ${commandMention("premium")} for more information.` },
-							{ name: "Premium Thumbnail Configuration", value: `Premium members can also change icons and thumbnails for certain commands (with ${commandMention("config-server-thumbnails-premium")}) and user inputs (with ${commandMention("config-user-thumbnails-premium")}). Use ${commandMention("premium")} for more information.`}
+							{ name: "Premium Thumbnail Configuration", value: `Premium members can also change icons and thumbnails for certain commands (with ${commandMention("config-server-thumbnails-premium")}) and user inputs (with ${commandMention("config-user-thumbnails-premium")}). Use ${commandMention("premium")} for more information.` }
 						)
 					break;
 			}

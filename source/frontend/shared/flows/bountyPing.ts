@@ -1,14 +1,9 @@
-const { MessageFlags, userMention, ModalSubmitInteraction, ThreadChannel } = require("discord.js");
-const { DatabaseTypes } = require("../../../database");
+import { MessageFlags, ModalSubmitInteraction, ThreadChannel, userMention } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { BountyState } from "../../../shared/types";
 
-/**
- * @param {ModalSubmitInteraction} modalSubmission
- * @param {{ message: string; excludedBountyHunters: string; }} labelIds
- * @param {DatabaseTypes.Bounty} bounty
- * @param {ThreadChannel | null} bountyThread
- */
-async function bountyPing(modalSubmission, labelIds, bounty, bountyThread) {
-	if (!bounty || bounty.state !== "open") {
+export async function bountyPing(modalSubmission: ModalSubmitInteraction, labelIds: { message: string; excludedBountyHunters: string; }, bounty: DatabaseTypes.Bounty, bountyThread: ThreadChannel | null) {
+	if (!bounty || bounty.state !== BountyState.Open) {
 		modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
 		return;
 	}
@@ -47,7 +42,3 @@ async function bountyPing(modalSubmission, labelIds, bounty, bountyThread) {
 		modalSubmission.reply({ content: `${Array.from(interestedHunterIds.values()).map(id => userMention(id))} ${modalSubmission.fields.getTextInputValue(labelIds.message)}` });
 	}
 }
-
-module.exports = {
-	bountyPing
-};

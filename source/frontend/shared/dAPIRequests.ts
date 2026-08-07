@@ -1,9 +1,10 @@
-const { GuildTextThreadManager, EmbedBuilder, Guild, MessageFlags, Message, GuildMemberManager, ForumChannel, ThreadChannel, GuildMember } = require("discord.js");
-const { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } = require("./dAPISerializers");
-const { ascendingByProperty } = require("../../shared");
-const { butIgnoreUnknownChannelErrors, isUnknownMessageError } = require("./dAPIResponses");
-const { MAX_BOT_NICKNAME_LENGTH } = require("../../shared/constants.ts");
-const { DatabaseTypes } = require("../../database/index.ts");
+import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, GuildTextThreadManager, Message, MessageEditOptions, MessageFlags, PublicThreadChannel, Snowflake, ThreadChannel } from "discord.js";
+import { DatabaseTypes } from "../../database/index.ts";
+import { ascendingByProperty } from "../../shared";
+import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
+import { HunterReceiptMap } from "../../shared/types.ts";
+import { butIgnoreUnknownChannelErrors, isUnknownMessageError } from "./dAPIResponses";
+import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./dAPISerializers";
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions
@@ -13,33 +14,19 @@ const { DatabaseTypes } = require("../../database/index.ts");
  * - describe entity in BountyBot context (eg "EvergreenBountyBoard" instead of "ForumChannel")
  */
 
-/**
- * @param {GuildTextThreadManager} threadManager
- * @param {EmbedBuilder[]} embeds
- * @param {DatabaseTypes.Company} company
- */
-function makeEvergreenBountiesThread(threadManager, embeds, company) {
-	return threadManager.create({
+export async function makeEvergreenBountiesThread(threadManager: GuildTextThreadManager<PublicThreadChannel>, embeds: EmbedBuilder[], company: DatabaseTypes.Company) {
+	const thread = await threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds },
 		appliedTags: [company.bountyBoardOpenTagId]
-	}).then(thread => {
-		company.evergreenThreadId = thread.id;
-		company.save();
-		thread.pin();
-		return thread;
-	})
+	});
+	company.evergreenThreadId = thread.id;
+	company.save();
+	thread.pin();
+	return thread;
 }
 
-/**
- * @param {ForumChannel} bountyBoardChannel
- * @param {DatabaseTypes.Bounty[]} evergreenBounties
- * @param {DatabaseTypes.Company} company
- * @param {number} companyLevel
- * @param {GuildMember} bountyBotGuildMember
- * @param {Record<string, Set<string>>} hunterIdMap
- */
-async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBounties, company, companyLevel, bountyBotGuildMember, hunterIdMap) {
+export async function refreshEvergreenBountiesThread(bountyBoardChannel: ForumChannel, evergreenBounties: DatabaseTypes.Bounty[], company: DatabaseTypes.Company, companyLevel: number, bountyBotGuildMember: GuildMember, hunterIdMap: Record<string, Set<string>>) {
 	if (evergreenBounties.length < 1) {
 		return;
 	}
@@ -56,11 +43,7 @@ async function refreshEvergreenBountiesThread(bountyBoardChannel, evergreenBount
 	}
 }
 
-/**
- * @param {ThreadChannel} thread
- * @param {string} auditLogReason
- */
-async function unarchiveAndUnlockThread(thread, auditLogReason) {
+export async function unarchiveAndUnlockThread(thread: ThreadChannel, auditLogReason: string) {
 	if (thread.archived) {
 		await thread.setArchived(false, auditLogReason);
 	}
@@ -69,37 +52,34 @@ async function unarchiveAndUnlockThread(thread, auditLogReason) {
 	}
 }
 
-const auditReasonBountyComplete = "bounty marked completed by poster";
+export const auditReasonBountyComplete = "bounty marked completed by poster";
 
 /** Updates the embeds in a forum thread's title and starter message
- * @param {Message} starterMessage
- * @param {{ title: string; embed: EmbedBuilder; }} changes
- * @param {string} auditLogReason the reason to group all changes under in the server's audit log
+ *
+ * auditLogReason the reason to group all changes under in the server's audit log
  */
-async function refreshBountyBoardThread(starterMessage, { title, embed }, auditLogReason) {
+export async function refreshBountyBoardThread(starterMessage: Message, { title, embed }: { title: string; embed: EmbedBuilder; }, auditLogReason: string) {
+	if (starterMessage.channel.isDMBased()) {
+		return;
+	}
 	if (title !== starterMessage.channel.name) {
 		starterMessage.channel.edit({ name: title, reason: auditLogReason });
 	}
 
-	const starterMessageEditPayload = { embeds: [embed] };
+	const starterMessageEditPayload: MessageEditOptions = { embeds: [embed] };
 	if (auditLogReason === auditReasonBountyComplete) {
 		starterMessageEditPayload.components = [];
 	}
 	starterMessage.edit(starterMessageEditPayload);
 }
 
-/** Fetches a bounty's thread from the bounty board forum
- * @param {Guild} guild
- * @param {string} bountyBoardId
- * @param {string} postingId
- * @returns {Promise<ThreadChannel | null>}
- */
-async function getBountyBoardThread(guild, bountyBoardId, postingId) {
+/** Fetches a bounty's thread from the bounty board forum */
+export async function getBountyBoardThread(guild: Guild, bountyBoardId: Snowflake, postingId: Snowflake) {
 	if (!bountyBoardId || !postingId) {
 		return null;
 	}
 	const bountyBoard = await guild.channels.fetch(bountyBoardId).catch(butIgnoreUnknownChannelErrors);
-	if (!bountyBoard) {
+	if (!bountyBoard || !bountyBoard.isThreadOnly()) { //TODONOW consider cleaning up db
 		return null;
 	}
 	return bountyBoard.threads.fetch(postingId).catch(error => {
@@ -110,20 +90,14 @@ async function getBountyBoardThread(guild, bountyBoardId, postingId) {
 	});
 }
 
-/** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel
- * @param {DatabaseTypes.Company} company
- * @param {Guild<"cached">} guild
- * @param {Map<string, DatabaseTypes.Participation>} participationMap
- * @param {DatabaseTypes.Rank[]} descendingRanks
- * @param {{ requiredGP: number; currentGP: number; }} goalProgress
- */
-async function refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress) {
+/** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel */
+export async function refreshReferenceChannelScoreboardSeasonal(company: DatabaseTypes.Company, guild: Guild, participationMap: Map<string, DatabaseTypes.Participation>, descendingRanks: DatabaseTypes.Rank[], goalProgress: { requiredGP: number; currentGP: number; }) {
 	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
 		return;
 	}
 
 	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
-	if (!scoreboard) {
+	if (!scoreboard || !scoreboard.isSendable()) { //TODONOW consider cleaning up db
 		return;
 	}
 	const embeds = [await seasonalScoreboardEmbed(company, guild, participationMap, descendingRanks, goalProgress)];
@@ -135,19 +109,14 @@ async function refreshReferenceChannelScoreboardSeasonal(company, guild, partici
 	}
 }
 
-/** Update the Overall Scoreboard embed in a server's scoreboard reference channel
- * @param {DatabaseTypes.Company} company
- * @param {Guild<"cached">} guild
- * @param {Map<string, Hunter>} hunterMap
- * @param {{ requiredGP: number; currentGP: number; }} goalProgress
- */
-async function refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress) {
+/** Update the Overall Scoreboard embed in a server's scoreboard reference channel */
+export async function refreshReferenceChannelScoreboardOverall(company: DatabaseTypes.Company, guild: Guild, hunterMap: Map<string, DatabaseTypes.Hunter>, goalProgress: { requiredGP: number; currentGP: number; }) {
 	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
 		return;
 	}
 
 	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
-	if (!scoreboard) {
+	if (!scoreboard || !scoreboard.isSendable()) { //TODONOW consider cleaning up db
 		return;
 	}
 	const embeds = [await overallScoreboardEmbed(company, guild, hunterMap, goalProgress)];
@@ -159,12 +128,7 @@ async function refreshReferenceChannelScoreboardOverall(company, guild, hunterMa
 	}
 }
 
-/**
- * @param {Message} embedMessage
- * @param {string} content
- * @param {string} threadTitle
- */
-function sendRewardMessage(embedMessage, content, threadTitle) {
+export function sendRewardMessage(embedMessage: Message, content: string, threadTitle: string) {
 	const rewardsPayload = { content, flags: MessageFlags.SuppressNotifications };
 	if (embedMessage.channel.isThread()) {
 		// If already in thread, send message
@@ -180,19 +144,15 @@ function sendRewardMessage(embedMessage, content, threadTitle) {
 	}
 }
 
-/** Requests dAPI change the roles on guild members based on the provided `seasonResults`
- * @param {Map<string, Partial<{ title: "Critical Toast!" | "Bounty Poster"; rankUp: { name: string; newRankIndex: number; }; topPlacement: boolean; xp: number; xpMultiplier: string; levelUp: { achievedLevel: number; previousLevel: number; }; item: string; }>>} hunterRecipts
- * @param {DatabaseTypes.Rank[]} descendingRanks
- * @param {GuildMemberManager<"cached">} guildMemberManager
- */
-async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager) {
+/** Requests dAPI change the roles on guild members based on the provided `seasonResults` */
+export async function syncRankRoles(hunterRecipts: HunterReceiptMap, descendingRanks: DatabaseTypes.Rank[], guildMemberManager: GuildMemberManager) {
 	if (descendingRanks.length < 1) {
 		return;
 	}
 
 	const rankChangeIds = [];
 	for (const [id, receipt] of hunterRecipts) {
-		if ("rankUp" in receipt && descendingRanks[receipt.rankUp.newRankIndex].roleId) {
+		if (receipt.rankUp && descendingRanks[receipt.rankUp.newRankIndex].roleId) {
 			rankChangeIds.push(id);
 		}
 	}
@@ -210,11 +170,7 @@ async function syncRankRoles(hunterRecipts, descendingRanks, guildMemberManager)
 	}
 }
 
-/**
- * @param {GuildMember} bountyBotGuildMember
- * @param {DatabaseTypes.Company} company
- */
-async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
+export async function updateBotNicknameForFestival(bountyBotGuildMember: GuildMember, company: DatabaseTypes.Company) {
 	const tagComponents = [];
 	if (company.xpFestivalMultiplier > 1) {
 		tagComponents.push(["XP", company.xpFestivalMultiplier]);
@@ -234,17 +190,3 @@ async function updateBotNicknameForFestival(bountyBotGuildMember, company) {
 		bountyBotGuildMember.setNickname(company.nickname);
 	}
 }
-
-module.exports = {
-	refreshEvergreenBountiesThread,
-	makeEvergreenBountiesThread,
-	unarchiveAndUnlockThread,
-	auditReasonBountyComplete,
-	refreshBountyBoardThread,
-	getBountyBoardThread,
-	refreshReferenceChannelScoreboardSeasonal,
-	refreshReferenceChannelScoreboardOverall,
-	sendRewardMessage,
-	syncRankRoles,
-	updateBotNicknameForFestival
-};

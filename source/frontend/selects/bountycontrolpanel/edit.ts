@@ -1,9 +1,9 @@
-const { MessageFlags, PermissionFlagsBits } = require("discord.js");
-const { SelectOptionWrapper } = require("../../classes");
-const { validateScheduledEventTimestamps, bountyScheduledEventPayload, refreshBountyBoardThread, unarchiveAndUnlockThread, editBountyModalAndSubmissionOptions, textsHaveAutoModInfraction, bountyEmbed } = require("../../shared");
-const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
+import { MessageFlags, PermissionFlagsBits } from "discord.js";
+import { SelectOptionFunctionality } from "../../classes";
+import { bountyEmbed, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, refreshBountyBoardThread, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared";
+import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts";
 
-module.exports = new SelectOptionWrapper("edit",
+export default new SelectOptionFunctionality("edit",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);

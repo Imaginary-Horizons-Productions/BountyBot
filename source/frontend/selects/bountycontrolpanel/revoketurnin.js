@@ -4,6 +4,7 @@ const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { butIgnoreInteractionCollectorErrors, bountyEmbed, unarchiveAndUnlockThread, sentenceListEN } = require("../../shared");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SelectOptionWrapper("revoketurnin",
 	ensureBountyExistsAndInteractorIsPoster(
@@ -29,7 +30,7 @@ module.exports = new SelectOptionWrapper("revoketurnin",
 
 			// Unnecessary Validations: "bounty existence", "posting thread existence"; if a bounty thread (or the bounty, which cascades the delete to the thread) is deleted while its modal is open, the modal does not submit
 			await bounty.reload();
-			if (bounty.state !== "open") {
+			if (bounty.state !== BountyState.Open) {
 				modalSubmission.reply({ content: "This bounty no longer appears to be open.", flags: MessageFlags.Ephemeral });
 				return;
 			}

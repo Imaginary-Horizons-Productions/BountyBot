@@ -3,6 +3,7 @@ const { SubcommandWrapper } = require("../../classes");
 const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, refreshBountyBoardThread } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, openBounties) {
@@ -21,7 +22,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 			const [bountyId] = collectedInteraction.values;
 			// Verify bounty exists
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
-			if (bounty?.state !== "open") {
+			if (bounty?.state !== BountyState.Open) {
 				interaction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
 				return;
 			}

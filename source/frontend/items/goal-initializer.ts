@@ -1,18 +1,18 @@
-const { MessageFlags, bold } = require("discord.js");
-const { ItemTemplate, ItemTemplateSet } = require("../classes");
-const { addCompanyAnnouncementPrefix } = require("../shared");
+import { MessageFlags, bold } from "discord.js";
+import { LogicLayer } from "../../logic";
+import { ItemTemplate, ItemTemplateSet } from "../classes";
+import { addCompanyAnnouncementPrefix } from "../shared";
 
-/** @type {import("../../logic").LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const itemName = "Goal Initializer";
-module.exports = new ItemTemplateSet(
+export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Begin a Server Goal if there isn't already one running", 3000,
-		async (interaction, origin) => {
+		async (interaction, theater) => {
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guildId);
 			if (!!goal) {
 				interaction.reply({ content: "This server already has a Server Goal running.", flags: MessageFlags.Ephemeral });
-				return true;
+				return 0;
 			}
 
 			const eligibleTypes = ["bounties", "toasts", "secondings"];
@@ -21,7 +21,8 @@ module.exports = new ItemTemplateSet(
 			const activeHunters = previousSeason ? await logicLayer.seasons.getParticipantCount(previousSeason.id) : 0;
 			const requiredGP = Math.max(activeHunters * 20, 60);
 			await logicLayer.goals.createGoal(interaction.guildId, goalType, requiredGP);
-			interaction.channel.send(addCompanyAnnouncementPrefix(origin.company, { content: `${interaction.member} has started a Server Goal! Completing bounties, raising toasts, and seconding toasts on this server contributes Goal Points (GP) toward completing the goal.\n\nThis time, ${bold(`${goalType} are worth double GP`)}!` }));
+			interaction.channel.send(addCompanyAnnouncementPrefix(theater.company, { content: `${interaction.member} has started a Server Goal! Completing bounties, raising toasts, and seconding toasts on this server contributes Goal Points (GP) toward completing the goal.\n\nThis time, ${bold(`${goalType} are worth double GP`)}!` }));
+			return 1;
 		}
 	)
 ).setLogicLinker(logicBlob => {

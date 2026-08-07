@@ -5,6 +5,7 @@ const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { timeConversion } = require("../../../shared");
 const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
 const { DatabaseTypes } = require("../../../database");
+const { BountyState } = require("../../../shared/types");
 
 module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
@@ -59,7 +60,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 		}
 
 		let sourceBounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
-		if (sourceBounty?.state !== "open") {
+		if (sourceBounty?.state !== BountyState.Open) {
 			modalSubmission.reply({ content: "The selected bounty appears to already have been completed.", flags: MessageFlags.Ephemeral });
 			return;
 		}
@@ -78,7 +79,7 @@ module.exports = new SubcommandWrapper("swap", "Move one of your bounties to ano
 		}
 
 		const sourceSlot = sourceBounty.slotNumber;
-		let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: theater.user.id, companyId: theater.company.id, state: "open" });
+		let destinationBounty = await logicLayer.bounties.findBounty({ slotNumber: destinationSlot, userId: theater.user.id, companyId: theater.company.id, state: BountyState.Open });
 		const destinationRewardValue = DatabaseTypes.Bounty.calculateCompleterReward(currentPosterLevel, destinationSlot, sourceBounty.showcaseCount);
 		const auditLogReason = destinationBounty ?
 			`bounty poster swapped slots of bounties ${sourceSlot} and ${destinationSlot}` :

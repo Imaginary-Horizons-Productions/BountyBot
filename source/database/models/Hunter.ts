@@ -1,4 +1,4 @@
-import type { Snowflake } from "discord.js";
+import type { Colors, Snowflake } from "discord.js";
 import { type Sequelize, DataTypes, Model } from "sequelize";
 import type { Database } from "..";
 import { Bounty } from './Bounty';
@@ -20,7 +20,7 @@ export class Hunter extends Model {
 	declare hasBeenBanned: boolean;
 	declare penaltyCount: number;
 	declare penaltyPointTotal: number;
-	declare profileColor: string;
+	declare profileColor: keyof typeof Colors;
 	declare itemFindBoost: boolean;
 	declare createdAt: string;
 	declare updatedAt: string;
