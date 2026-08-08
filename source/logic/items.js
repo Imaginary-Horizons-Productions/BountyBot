@@ -78,10 +78,10 @@ async function getDropsAvailable(hunterId) {
 	return itemCutoff - itemsDropped;
 }
 
-/** *Grants the User 1 copy of a random Item at a rate of dropRate*
- * @param {number} dropRate a decimal representing the probability
+/** *If `dropRate` (decimal probability) succeeds, grants `hunter` 1 copy of a random Item*
+ * @param {number} dropRate
  * @param {Hunter} hunter
- * @returns {Promise<[itemRow: Item | null, wasCreated: boolean]>}
+ * @returns {Promise<Item | null>}
  */
 async function rollItemForHunter(dropRate, hunter) {
 	if (hunter.itemFindBoost) {
@@ -97,12 +97,29 @@ async function rollItemForHunter(dropRate, hunter) {
 			if (poolRandomNumber > threshold) {
 				const pool = DROP_TABLE[threshold];
 				droppedItem = pool[Math.floor(Math.random() * pool.length)];
+				break;
 			}
 		}
 	}
-	if (!droppedItem) return [null, false];
+	if (!droppedItem) return null;
 
-	return [await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true];
+	return db.models.Item.create({ userId: hunter.userId, itemName: droppedItem });
+}
+
+/** *Grants the User 1 copy of a random Item without consuming itemFindBoost*
+ * @param {Hunter} hunter
+ * @returns {Promise<Item>}
+ */
+function createRandomItem(hunter) {
+	const poolRandomNumber = Math.random() * 120;
+	let pool = [];
+	for (const [threshold, poolCandidate] of Object.entries(DROP_TABLE)) {
+		if (poolRandomNumber > parseFloat(threshold)) {
+			pool = poolCandidate;
+			break;
+		}
+	}
+	return db.Items.create({ userId: hunter.userId, itemName: pool[Math.floor(Math.random() * pool.length)] });
 }
 
 /** *Finds the count of the specified Items of User*
@@ -136,6 +153,7 @@ module.exports = {
 	getInventory,
 	getDropsAvailable,
 	rollItemForHunter,
+	createRandomItem,
 	countUserCopies,
 	consume,
 	sweepUsed

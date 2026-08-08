@@ -161,8 +161,8 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 		if (currentHunterLevel > previousHunterLevel) {
 			hunterReceipt.levelUp = { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel };
 		}
-		const [itemRow, wasCreated] = await rollItemForHunter(1 / 8, hunter);
-		if (wasCreated) {
+		const itemRow = await rollItemForHunter(1 / 8, hunter);
+		if (itemRow) {
 			hunterReceipt.item = itemRow.itemName;
 		}
 		const [participation, participationCreated] = await db.models.Participation.findOrCreate({ where: { companyId: bounty.companyId, userId: hunterId, seasonId: season.id }, defaults: { xp: bountyValue } });
@@ -182,8 +182,8 @@ async function completeBounty(bounty, poster, validatedHunters, season, company)
 	if (currentPosterLevel > previousPosterLevel) {
 		posterReceipt.levelUp = { achievedLevel: currentPosterLevel, previousLevel: previousPosterLevel };
 	}
-	const [itemRow, wasCreated] = await rollItemForHunter(1 / 4, poster);
-	if (wasCreated) {
+	const itemRow = await rollItemForHunter(1 / 4, poster);
+	if (itemRow) {
 		posterReceipt.item = itemRow.itemName;
 	}
 	hunterReceipts.set(poster.userId, posterReceipt);
