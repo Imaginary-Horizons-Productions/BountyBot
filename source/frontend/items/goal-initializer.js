@@ -12,7 +12,7 @@ module.exports = new ItemTemplateSet(
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guildId);
 			if (!!goal) {
 				interaction.reply({ content: "This server already has a Server Goal running.", flags: MessageFlags.Ephemeral });
-				return true;
+				return 0;
 			}
 
 			const eligibleTypes = ["bounties", "toasts", "secondings"];
@@ -22,6 +22,7 @@ module.exports = new ItemTemplateSet(
 			const requiredGP = Math.max(activeHunters * 20, 60);
 			await logicLayer.goals.createGoal(interaction.guildId, goalType, requiredGP);
 			interaction.channel.send(addCompanyAnnouncementPrefix(origin.company, { content: `${interaction.member} has started a Server Goal! Completing bounties, raising toasts, and seconding toasts on this server contributes Goal Points (GP) toward completing the goal.\n\nThis time, ${bold(`${goalType} are worth double GP`)}!` }));
+			return 1;
 		}
 	)
 ).setLogicLinker(logicBlob => {

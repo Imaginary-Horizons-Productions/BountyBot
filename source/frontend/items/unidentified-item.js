@@ -11,6 +11,7 @@ module.exports = new ItemTemplateSet(
 		async (interaction, origin) => {
 			const [itemRow] = await logicLayer.items.rollItemForHunter(1, origin.hunter);
 			interaction.reply({ content: `The unidentified item was a ${bold(itemRow.itemName)}! Use it with ${commandMention("item")}?`, flags: MessageFlags.Ephemeral });
+			return 1;
 		}
 	)
 ).setLogicLinker(logicBlob => {

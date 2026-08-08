@@ -102,7 +102,7 @@ async function rollItemForHunter(dropRate, hunter) {
 	}
 	if (!droppedItem) return [null, false];
 
-	return [ await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true ];
+	return [await db.models.Item.create({ userId: hunter.userId, itemName: droppedItem }), true];
 }
 
 /** *Finds the count of the specified Items of User*
@@ -113,14 +113,17 @@ function countUserCopies(userId, itemName) {
 	return db.models.Item.count({ where: { userId, itemName, used: false } });
 }
 
-/** *Sets the oldest of the specified Items of User to used*
- * Assumes item is extent
+/** *Sets the oldest `count` of the specified Items of User to used*
  * @param {string} userId
  * @param {string} itemName
+ * @param {number} count validation for sufficient existing item count is assumed to already have been done
  */
-async function consume(userId, itemName) {
-	const dbRow = await db.models.Item.findOne({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]] });
-	return dbRow.update("used", true);
+async function consume(userId, itemName, count) {
+	const rows = await db.models.Item.findAll({ where: { userId, itemName, used: false }, order: [["createdAt", "ASC"]], limit: count });
+	for (const row of rows) {
+		await row.update("used", true);
+	}
+	return rows;
 }
 
 /** Destroy used items to reduce table size and obfuscate id generation */
