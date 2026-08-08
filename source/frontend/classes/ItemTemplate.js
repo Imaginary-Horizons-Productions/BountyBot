@@ -19,7 +19,7 @@ class ItemTemplate {
 	 * @param {string} nameInput
 	 * @param {string} descriptionInput
 	 * @param {number} cooldownInMS
-	 * @param {(interaction: CommandInteraction, origin: InteractionOrigin) => Promise<boolean>} effectFunction
+	 * @param {(interaction: CommandInteraction, origin: InteractionOrigin) => Promise<number>} effectFunction
 	 */
 	constructor(nameInput, descriptionInput, cooldownInMS, effectFunction) {
 		this.name = nameInput;
