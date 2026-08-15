@@ -6,6 +6,9 @@
 - The following actions now sends record keeping messages to bounty board threads: showcasing a bounty, adding a thumbnail
 - Fixed several crashes related to missed fetches on the bounty board
 - Fixed Critical Secondings adding the Seconder to the Toast's list of recipients
+- Fixed a bug where only the lowest rarity tier was being rolled on for items
+- Fixed Undentified Items and Loot Boxes consuming Item Find Boosts
+- Fixed some items being consumed despite not compeleting due to running into an error mid-usage
 ## BountyBot Version 2.11.1ib:
 - Completing or taking down bounties now cancel the bounty's event if it hasn't been closed already
 - Fixed a crash when attempting to make an event for a bounty while missing permission
