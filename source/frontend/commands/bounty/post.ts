@@ -1,12 +1,12 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, ComponentType, unorderedList, LabelBuilder, FileUploadBuilder, PermissionFlagsBits } = require("discord.js");
-const { EmbedLimits } = require("@sapphire/discord.js-utilities");
-const { SubcommandWrapper } = require("../../classes");
-const { emojiFromNumber, textsHaveAutoModInfraction, commandMention, bountyEmbed, bountyControlPanelSelectRow, addCompanyAnnouncementPrefix, syncRankRoles, validateScheduledEventTimestamps, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, isMissingPermissionError } = require("../../shared");
-const { timeConversion } = require("../../../shared");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { DatabaseTypes } = require("../../../database");
+import { EmbedLimits } from "@sapphire/discord.js-utilities";
+import { ActionRowBuilder, ComponentType, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, unorderedList } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { SubcommandFunctionality } from "../../classes";
+import { addCompanyAnnouncementPrefix, bountyControlPanelSelectRow, bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, emojiFromNumber, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, syncRankRoles, textsHaveAutoModInfraction, validateScheduledEventTimestamps } from "../../shared";
 
-module.exports = new SubcommandWrapper("post", "Post your own bounty (+1 XP)",
+export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
 		const occupiedSlots = existingBounties.map(bounty => bounty.slotNumber);

@@ -1,12 +1,12 @@
-const { InteractionContextType, MessageFlags } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { seasonalScoreboardEmbed, overallScoreboardEmbed } = require('../shared');
+import { InteractionContextType, MessageFlags } from 'discord.js';
+import type { LogicLayer } from '../../logic';
+import { CommandFunctionality } from '../classes';
+import { overallScoreboardEmbed, seasonalScoreboardEmbed } from '../shared';
 
-/** @type {import('../../logic').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "scoreboard";
-module.exports = new CommandWrapper(mainId, "View the XP scoreboard", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "View the XP scoreboard", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** View the XP scoreboard */
 	async (interaction, theater, isDevMode) => {
 		const embeds = [];

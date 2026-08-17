@@ -1,13 +1,13 @@
-const { MessageFlags, userMention, channelMention, bold, ModalBuilder, LabelBuilder, UserSelectMenuBuilder, StringSelectMenuBuilder, PermissionFlagsBits, strikethrough } = require("discord.js");
-const { timeConversion } = require("../../../shared");
-const { commandMention, bountyEmbed, goalCompletionEmbed, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties, butIgnoreErrorIf, isUnknownGuildScheduledEventError, isMissingPermissionError, getBountyBoardThread, refreshBountyBoardThread, auditReasonBountyComplete } = require("../../shared");
-const { SubcommandFunctionality } = require("../../classes");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
-const { DatabaseTypes } = require("../../../database");
-const { BountyState } = require("../../../shared/types");
+import { bold, channelMention, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, strikethrough, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { BountyState } from "../../../shared/types";
+import { SubcommandFunctionality } from "../../classes";
+import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, getBountyBoardThread, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread } from "../../shared";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts";
 
-module.exports = new SubcommandFunctionality("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
+export default new SubcommandFunctionality("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "hunters";

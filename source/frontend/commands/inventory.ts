@@ -1,12 +1,12 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, unorderedList } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { commandMention, attachOverflowingContentAsFile } = require('../shared');
+import { InteractionContextType, MessageFlags, PermissionFlagsBits, unorderedList } from 'discord.js';
+import type { LogicLayer } from '../../logic';
+import { CommandFunctionality } from '../classes';
+import { attachOverflowingContentAsFile, commandMention } from '../shared';
 
-/** @type {import('../../logic').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "inventory";
-module.exports = new CommandWrapper(mainId, "Show your inventory of usable items", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "Show your inventory of usable items", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	(interaction, theater, isDevMode) => {
 		logicLayer.items.getInventory(interaction.user.id).then(inventoryMap => {
 			let content = `Here are the items in your inventory (use them with ${commandMention("item")}):\n`;

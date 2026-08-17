@@ -1,5 +1,5 @@
 import { MessageFlags, userMention } from "discord.js";
-import { LogicLayer } from "../../logic";
+import type { LogicLayer } from "../../logic";
 import { ItemTemplate, ItemTemplateSet } from "../classes";
 import { goalCompletionEmbed } from "../shared";
 

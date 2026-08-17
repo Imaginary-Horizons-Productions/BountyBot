@@ -1,13 +1,13 @@
-const { PermissionFlagsBits, SortOrderType, ForumLayoutType, ChannelType, OverwriteType, MessageFlags } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { makeEvergreenBountiesThread, bountyEmbed, bountyControlPanelSelectRow, isMissingPermissionError } = require("../../shared");
-const { DatabaseTypes } = require("../../../database");
+import { ChannelType, type ForumChannel, ForumLayoutType, MessageFlags, OverwriteType, PermissionFlagsBits, SortOrderType } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { SubcommandFunctionality } from "../../classes";
+import { bountyControlPanelSelectRow, bountyEmbed, isMissingPermissionError, makeEvergreenBountiesThread } from "../../shared";
 
-module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
+export default new SubcommandFunctionality("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const customChannelName = interaction.options.getString("channel-name");
 
-		let bountyBoard;
+		let bountyBoard: ForumChannel;
 		try {
 			bountyBoard = await interaction.guild.channels.create({
 				parent: interaction.channel.parentId,
@@ -45,7 +45,7 @@ module.exports = new SubcommandWrapper("bounty-board-forum", "Create a new bount
 		theater.company.bountyBoardOpenTagId = openTagId;
 		theater.company.bountyBoardCompletedTagId = completedTagId;
 
-		const evergreenBounties = [];
+		const evergreenBounties: DatabaseTypes.Bounty[] = [];
 		logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(async bounties => {
 			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
 			for (const bounty of bounties) {

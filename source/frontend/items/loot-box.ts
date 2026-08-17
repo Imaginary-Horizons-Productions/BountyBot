@@ -1,5 +1,5 @@
 import { MessageFlags, bold } from "discord.js";
-import { LogicLayer } from "../../logic";
+import type { LogicLayer } from "../../logic";
 import { ItemTemplate, ItemTemplateSet } from "../classes";
 import { commandMention, sentenceListEN } from "../shared";
 

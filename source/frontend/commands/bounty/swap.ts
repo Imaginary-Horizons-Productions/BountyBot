@@ -1,13 +1,13 @@
-const { StringSelectMenuBuilder, MessageFlags, bold, ModalBuilder, LabelBuilder, TextDisplayBuilder, PermissionFlagsBits } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { emojiFromNumber, addCompanyAnnouncementPrefix, butIgnoreInteractionCollectorErrors, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, getBountyBoardThread, unarchiveAndUnlockThread, bountyEmbed } = require("../../shared");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { timeConversion } = require("../../../shared");
-const { SelectMenuLimits } = require("@sapphire/discord.js-utilities");
-const { DatabaseTypes } = require("../../../database");
-const { BountyState } = require("../../../shared/types");
+import { SelectMenuLimits } from "@sapphire/discord.js-utilities";
+import { bold, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { BountyState } from "../../../shared/types";
+import { SubcommandFunctionality } from "../../classes";
+import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared";
 
-module.exports = new SubcommandWrapper("swap", "Move one of your bounties to another slot to change its reward",
+export default new SubcommandFunctionality("swap", "Move one of your bounties to another slot to change its reward",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const startingPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
 		const bountySlotCount = DatabaseTypes.Hunter.getBountySlotCount(startingPosterLevel, theater.company.maxSimBounties);

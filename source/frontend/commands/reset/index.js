@@ -6,7 +6,7 @@ const { aggregateSubcommands } = require('../../shared');
 let logicLayer;
 
 const mainId = "reset";
-const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = aggregateSubcommands(mainId, [
+const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
 	"all-hunter-stats.js",
 	"server-settings.js"
 ]);

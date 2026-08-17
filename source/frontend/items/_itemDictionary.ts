@@ -1,5 +1,5 @@
 import { StringSelectMenuInteraction } from "discord.js";
-import { LogicLayer } from "../../logic";
+import type { LogicLayer } from "../../logic";
 import { CooldownDictionary } from "../../shared/types";
 import { InteractionTheater, ItemTemplate, ItemTemplateSet } from "../classes";
 

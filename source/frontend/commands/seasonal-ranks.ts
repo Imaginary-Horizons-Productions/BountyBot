@@ -1,12 +1,12 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, roleMention, heading } = require('discord.js');
-const { CommandWrapper } = require('../classes/index.js');
-const { attachOverflowingContentAsFile } = require('../shared');
+import { heading, InteractionContextType, MessageFlags, PermissionFlagsBits, roleMention } from 'discord.js';
+import type { LogicLayer } from '../../logic/index.js';
+import { CommandFunctionality } from '../classes/index.js';
+import { attachOverflowingContentAsFile } from '../shared';
 
-/** @type {import('../../logic/index.js').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "seasonal-ranks";
-module.exports = new CommandWrapper(mainId, "Look up this server's seasonal ranks", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.Guild], 3000,
+export default new CommandFunctionality(mainId, "Look up this server's seasonal ranks", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.Guild], 3000,
 	async (interaction, theater, isDevMode) => {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		if (!ranks || !ranks.length) {

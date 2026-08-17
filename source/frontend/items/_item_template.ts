@@ -1,4 +1,4 @@
-import { LogicLayer } from "../../logic";
+import type { LogicLayer } from "../../logic";
 import { ItemTemplate, ItemTemplateSet } from "../classes";
 
 let logicLayer: LogicLayer;

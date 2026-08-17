@@ -1,5 +1,5 @@
 import { RESTPostAPIContextMenuApplicationCommandsJSONBody } from "discord.js";
-import { LogicLayer } from "../../logic";
+import type { LogicLayer } from "../../logic";
 import { CooldownDictionary, PremiumFlowList } from "../../shared/types";
 import { BuildError, type ContextMenuFunctionality } from "../classes";
 

@@ -1,11 +1,12 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList, bold, PermissionFlagsBits } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, commandMention, bountyEmbed, validateScheduledEventTimestamps, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, selectOptionsFromBounties, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread, refreshBountyBoardThread } = require("../../shared");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
-const { BountyState } = require("../../../shared/types");
+import { ActionRowBuilder, bold, ComponentType, MessageFlags, PermissionFlagsBits, StringSelectMenuBuilder, unorderedList } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { BountyState } from "../../../shared/types";
+import { SubcommandFunctionality } from "../../classes";
+import { bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, getBountyBoardThread, refreshBountyBoardThread, selectOptionsFromBounties, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts";
 
-module.exports = new SubcommandWrapper("edit", "Edit the title, description, image, or time of one of your bounties",
+export default new SubcommandFunctionality("edit", "Edit the title, description, image, or time of one of your bounties",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, openBounties) {
 		interaction.reply({
 			content: "You can select one of your open bounties to edit below.\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
@@ -54,7 +55,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 					return;
 				}
 
-				const updatePayload = { editCount: bounty.editCount + 1 };
+				const updatePayload: Partial<DatabaseTypes.Bounty> = { editCount: bounty.editCount + 1 };
 				if (title) {
 					updatePayload.title = title;
 				}

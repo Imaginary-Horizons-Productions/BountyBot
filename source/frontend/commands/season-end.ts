@@ -1,12 +1,12 @@
-const { PermissionFlagsBits, InteractionContextType, unorderedList } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
+import { InteractionContextType, PermissionFlagsBits, unorderedList } from 'discord.js';
+import type { LogicLayer } from '../../logic';
+import { CommandFunctionality } from '../classes';
+import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared';
 
-/** @type {import('../../logic').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "season-end";
-module.exports = new CommandWrapper(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
+export default new CommandFunctionality(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
 	async (interaction, theater, isDevMode) => {
 		const guild = interaction.guild;

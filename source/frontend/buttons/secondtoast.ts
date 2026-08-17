@@ -1,6 +1,6 @@
 import { MessageFlags } from 'discord.js';
 import { DatabaseTypes } from '../../database';
-import { LogicLayer } from '../../logic';
+import type { LogicLayer } from '../../logic';
 import { ButtonFunctionality } from '../classes';
 import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sendRewardMessage, syncRankRoles, toastEmbed } from '../shared';
 

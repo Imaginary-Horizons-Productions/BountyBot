@@ -1,12 +1,12 @@
-const { TextInputBuilder, ModalBuilder, TextInputStyle, PermissionFlagsBits, EmbedBuilder, InteractionContextType, MessageFlags, LabelBuilder, FileUploadBuilder, userMention } = require('discord.js');
-const { EmbedLimits } = require('@sapphire/discord.js-utilities');
-const { CommandWrapper } = require('../classes');
-const { testGuildId, feedbackChannelId, SKIP_INTERACTION_HANDLING } = require('../../constants');
-const { butIgnoreInteractionCollectorErrors } = require('../shared');
-const { timeConversion } = require('../../shared');
+import { EmbedLimits } from '@sapphire/discord.js-utilities';
+import { EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
+import { timeConversion } from '../../shared';
+import { feedbackChannelId, SKIP_INTERACTION_HANDLING, testGuildId } from '../../shared/constants';
+import { CommandFunctionality } from '../classes';
+import { butIgnoreInteractionCollectorErrors } from '../shared';
 
 const mainId = "feedback";
-module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Open the modal associated with the feedback type to prompt more specific information */
 	(interaction, theater, isDevMode) => {
 		if (!testGuildId || !feedbackChannelId) {
@@ -53,7 +53,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 					);
 				interaction.showModal(modal);
 				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(modalSubmission => {
-					const errors = [];
+					const errors: string[] = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue(titleId)}`)
 						.addFields(
@@ -123,7 +123,7 @@ module.exports = new CommandWrapper(mainId, "Provide BountyBot feedback and get 
 					);
 				interaction.showModal(modal);
 				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(modalSubmission => {
-					const errors = [];
+					const errors: string[] = [];
 					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
 						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue(titleId)}`)
 						.addFields(

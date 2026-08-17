@@ -1,7 +1,7 @@
-const { GuildPremiumTier, MessageFlags } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
+import { GuildPremiumTier, MessageFlags } from "discord.js";
+import { SubcommandFunctionality } from "../../classes";
 
-module.exports = new SubcommandWrapper("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
+export default new SubcommandFunctionality("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 		await Promise.all(

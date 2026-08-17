@@ -1,5 +1,5 @@
 import { EmbedLimits, MessageLimits, ModalLimits, SelectMenuLimits } from "@sapphire/discord.js-utilities";
-import { ActionRowBuilder, AttachmentBuilder, BaseMessageOptionsWithPoll, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, EmbedFooterData, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventCreateOptions, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageCreateOptions, MessageFlags, ModalBuilder, Role, SelectMenuComponentOptionData, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, EmbedFooterData, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventCreateOptions, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, InteractionReplyOptions, LabelBuilder, MessageCreateOptions, MessageFlags, ModalBuilder, Role, SelectMenuComponentOptionData, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
 import * as fs from "fs";
 import { DatabaseTypes } from "../../database/index.ts";
 import { ascendingByProperty, descendingByProperty, discordTimestamp, timeConversion } from "../../shared";
@@ -21,7 +21,7 @@ export function truncateTextToLength(text: string, length: number) {
 }
 
 /** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't */
-export function attachOverflowingContentAsFile(content: string, messageOptions: BaseMessageOptionsWithPoll, filename: string) {
+export function attachOverflowingContentAsFile(content: string, messageOptions: InteractionReplyOptions, filename: string) {
 	if (content.length < MessageLimits.MaximumLength) {
 		messageOptions.content = content;
 	} else {
@@ -420,7 +420,7 @@ export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGui
 }
 
 /** Generate an embed for the given bounty */
-export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: GuildMember, posterLevel: number, shouldOmitRewardsField: boolean, company: DatabaseTypes.Company, hunterIdSet: Set<string>, event: GuildScheduledEvent | null, goalProgress?: { goalCompleted: boolean; currentGP: number; requiredGP: number; }) {
+export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: GuildMember, posterLevel: number, shouldOmitRewardsField: boolean, company: DatabaseTypes.Company, hunterIdSet: Set<string>, event?: GuildScheduledEvent | null, goalProgress?: { goalCompleted: boolean; currentGP: number; requiredGP: number; }) {
 	const fields = [];
 	const embed = new EmbedBuilder().setColor(posterGuildMember.displayColor)
 		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
@@ -465,7 +465,7 @@ export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: Gui
 	return embed;
 }
 
-export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL: string | null, seconderMentions: string[] | undefined) {
+export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL: string | null, seconderMentions?: string[]) {
 	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)

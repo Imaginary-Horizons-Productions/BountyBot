@@ -1,5 +1,5 @@
-import { AnySelectMenuInteraction, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, PermissionFlags, PrimaryEntryPointCommandInteraction, SlashCommandBuilder, Snowflake, UserContextMenuCommandInteraction } from "discord.js";
-import { LogicLayer } from "../../logic/index.ts";
+import { AnySelectMenuInteraction, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, PermissionFlags, SlashCommandBuilder, Snowflake, UserContextMenuCommandInteraction } from "discord.js";
+import type { LogicLayer } from "../../logic/index.ts";
 import { MAX_SET_TIMEOUT } from "../../shared/constants.ts";
 import { MemberOf } from "../../shared/types.ts";
 import { BuildError } from "./BuildError.js";
@@ -58,7 +58,7 @@ export class InteractionFunctionality {
 	}
 };
 
-type CommandProcedure = (interaction: ChatInputCommandInteraction | PrimaryEntryPointCommandInteraction, theater: InteractionTheater, isDevMode: boolean) => void;
+type CommandProcedure = (interaction: ChatInputCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean) => void;
 
 export class CommandFunctionality extends InteractionFunctionality {
 	declare isPremium: boolean;
@@ -127,7 +127,7 @@ export class CommandFunctionality extends InteractionFunctionality {
 	}
 };
 
-type SubcommandProcedure = (interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => Promise<void>;
+export type SubcommandProcedure = (interaction: ChatInputCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => Promise<void>;
 
 export class SubcommandFunctionality {
 	declare procedure: SubcommandProcedure;
@@ -154,7 +154,7 @@ export class ButtonFunctionality extends InteractionFunctionality {
 	}
 };
 
-type SelectMenuProcedure = (interaction: AnySelectMenuInteraction, theater: InteractionTheater, isDevMode: boolean, ...args: string[]) => void;
+type SelectMenuProcedure = (interaction: AnySelectMenuInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, ...args: string[]) => void;
 
 export class SelectFunctionality extends InteractionFunctionality {
 	declare execute: SelectMenuProcedure;
@@ -165,7 +165,7 @@ export class SelectFunctionality extends InteractionFunctionality {
 	}
 };
 
-type SelectOptionProcedure = (interaction: ChatInputCommandInteraction, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, args: unknown[]) => Promise<void>;
+export type SelectOptionProcedure = (interaction: AnySelectMenuInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, args: unknown[]) => Promise<void>;
 
 export class SelectOptionFunctionality {
 	declare name: string;
@@ -184,7 +184,7 @@ export class SelectOptionFunctionality {
 }
 
 export class ContextMenuFunctionality extends InteractionFunctionality {
-	declare execute: (interaction: UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction, theater: InteractionTheater, isDevMode: boolean) => void;
+	declare execute: (interaction: UserContextMenuCommandInteraction<"cached"> | MessageContextMenuCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean) => void;
 	declare isPremium: boolean;
 	declare builder: ContextMenuCommandBuilder;
 
@@ -201,7 +201,7 @@ export class ContextMenuFunctionality extends InteractionFunctionality {
 	}
 };
 
-type UserContextMenuProcedure = (interaction: UserContextMenuCommandInteraction, theater: InteractionTheater, isDevMode: boolean) => void;
+type UserContextMenuProcedure = (interaction: UserContextMenuCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean) => void;
 
 export class UserContextMenuFunctionality extends ContextMenuFunctionality {
 	/** Wrapper properties for context menus on users. */
@@ -211,7 +211,7 @@ export class UserContextMenuFunctionality extends ContextMenuFunctionality {
 	}
 };
 
-type MessageContextMenuProcedure = (interaction: MessageContextMenuCommandInteraction, theater: InteractionTheater, isDevMode: boolean) => void;
+type MessageContextMenuProcedure = (interaction: MessageContextMenuCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean) => void;
 
 export class MessageContextMenuFunctionality extends ContextMenuFunctionality {
 	/** Wrapper properties for context menus on messages. */

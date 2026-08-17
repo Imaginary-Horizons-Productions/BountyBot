@@ -1,4 +1,4 @@
-import { LogicLayer } from '../../logic';
+import type { LogicLayer } from '../../logic';
 import { ButtonFunctionality } from '../classes';
 
 let logicLayer: LogicLayer;

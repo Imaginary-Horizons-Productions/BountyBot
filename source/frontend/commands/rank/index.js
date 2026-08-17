@@ -6,7 +6,7 @@ const { aggregateSubcommands } = require('../../shared');
 let logicLayer;
 
 const mainId = "rank";
-const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = aggregateSubcommands(mainId, [
+const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
 	"add.js",
 	"edit.js",
 	"remove.js"

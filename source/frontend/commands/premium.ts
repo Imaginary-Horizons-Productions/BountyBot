@@ -1,10 +1,10 @@
-const fs = require("fs");
-const { EmbedBuilder, Colors, InteractionContextType, MessageFlags } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { ihpAuthorPayload, randomFooterTip } = require("../shared");
+import { Colors, EmbedBuilder, InteractionContextType, MessageFlags } from 'discord.js';
+import * as fs from "fs";
+import { CommandFunctionality } from '../classes';
+import { ihpAuthorPayload, randomFooterTip } from "../shared";
 
 const mainId = "premium";
-module.exports = new CommandWrapper(mainId, "List perks for supporting IHP development", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
+export default new CommandFunctionality(mainId, "List perks for supporting IHP development", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	async (interaction, theater, isDevMode) => {
 		fs.promises.stat(__filename).then(stats => {
 			interaction.reply({
@@ -19,8 +19,8 @@ module.exports = new CommandWrapper(mainId, "List perks for supporting IHP devel
 							{ name: "/festival", value: "This command allows BountyBot's managers to start or close festivals that multiply XP or GP gained by a selected multiplier for their duration." },
 							{ name: "/config-premium", value: "Premium configurations include configuring the multiplier applied to XP thresholds for bounty hunters to level up in the server and setting the maximum number of bounty slots bounty hunters can acquire." },
 							{ name: "/rank", value: "This command allows BountyBot's managers to customize the seasonal BountyBot ranks." },
-							{ name: "/config-server-thumbnails-premium", value: "Configure thumbnails for server messages, such as the scoreboard, goal completions, and raffles."},
-							{ name: "/config-user-thumbnails-premium", value: "Configure default thumbnails for user interactions with BountyBot, such as on toasts and bounties."}
+							{ name: "/config-server-thumbnails-premium", value: "Configure thumbnails for server messages, such as the scoreboard, goal completions, and raffles." },
+							{ name: "/config-user-thumbnails-premium", value: "Configure default thumbnails for user interactions with BountyBot, such as on toasts and bounties." }
 						)
 						.setFooter(randomFooterTip())
 						.setTimestamp(stats.mtime)

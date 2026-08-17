@@ -1,13 +1,13 @@
-const { ModalBuilder, UserSelectMenuBuilder, TextInputBuilder, StringSelectMenuBuilder, LabelBuilder, TextInputStyle, MessageFlags } = require("discord.js");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { SubcommandWrapper } = require("../../classes");
-const { bountyPing } = require("../../shared/flows/bountyPing");
-const { selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
-const { timeConversion } = require("../../../shared");
-const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
-const { BountyState } = require("../../../shared/types");
+import { LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder } from "discord.js";
+import { timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { BountyState } from "../../../shared/types";
+import { SubcommandFunctionality } from "../../classes";
+import { butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties } from "../../shared";
+import { bountyPing } from "../../shared/flows/bountyPing";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts";
 
-module.exports = new SubcommandWrapper("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
+export default new SubcommandFunctionality("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdMessage = "message";

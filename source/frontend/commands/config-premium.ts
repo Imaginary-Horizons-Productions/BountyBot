@@ -1,4 +1,5 @@
 import { InteractionContextType, MessageFlags, PermissionFlagsBits, unorderedList } from 'discord.js';
+import type { DatabaseTypes } from '../../database';
 import { GLOBAL_MAX_BOUNTY_SLOTS, MAX_BOT_NICKNAME_LENGTH } from '../../shared/constants';
 import { CommandFunctionality } from '../classes';
 import { updateBotNicknameForFestival } from '../shared';
@@ -6,7 +7,7 @@ import { updateBotNicknameForFestival } from '../shared';
 const mainId = "config-premium";
 export default new CommandFunctionality(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
 	(interaction, theater, isDevMode) => {
-		const updatePayload = {};
+		const updatePayload: Partial<DatabaseTypes.Company> = {};
 		let content = "The following server settings have been configured:";
 		const errors = [];
 

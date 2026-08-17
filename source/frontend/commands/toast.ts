@@ -1,18 +1,19 @@
-const { PermissionFlagsBits, InteractionContextType, MessageFlags, userMention, unorderedList } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { textsHaveAutoModInfraction, sentenceListEN, toastEmbed, secondingButtonRow, goalCompletionEmbed, sendRewardMessage, syncRankRoles, rewardSummary, consolidateHunterReceipts, refreshReferenceChannelScoreboardSeasonal, refreshReferenceChannelScoreboardOverall } = require('../shared');
-const { DatabaseTypes } = require('../../database');
+import { InteractionContextType, MessageFlags, PermissionFlagsBits, Snowflake, unorderedList, userMention } from 'discord.js';
+import { DatabaseTypes } from '../../database';
+import type { LogicLayer } from '../../logic';
+import type { CompanyReciept } from '../../shared/types';
+import { CommandFunctionality } from '../classes';
+import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, sentenceListEN, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared';
 
-/** @type {import('../../logic').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "toast";
-module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
+export default new CommandFunctionality(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, theater, isDevMode) => {
 		// Find valid toastees
-		const bannedIds = new Set();
-		const validatedToasteeIds = new Set();
+		const bannedIds = new Set<Snowflake>();
+		const validatedToasteeIds = new Set<Snowflake>();
 		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
 			const guildMember = interaction.options.getMember(optionalToastee);
 			if (guildMember) {
@@ -25,7 +26,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			}
 		}
 
-		let bannedText;
+		let bannedText: string | undefined;
 		if (bannedIds.size > 1) {
 			bannedText = `${sentenceListEN(Array.from(bannedIds).map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
 		} else if (bannedIds.size === 1) {
@@ -57,7 +58,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 			return;
 		}
 
-		const toastText = interaction.options.getString("message");
+		const toastText = interaction.options.getString("message", true);
 		const autoModInfraction = await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")
 		if (autoModInfraction == null) {
 			interaction.reply({ content: `Could not check if the toast breaks automod rules. ${interaction.client.user} may not have the Manage Server permission required to check the automod rules.`, flags: MessageFlags.Ephemeral });
@@ -73,7 +74,7 @@ module.exports = new CommandWrapper(mainId, "Raise a toast to other bounty hunte
 		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, theater.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, imageURL);
 		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
-		let companyReceipt = {};
+		let companyReceipt: CompanyReciept = {};
 		if (hunterReceipts.size > 0) {
 			const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap.get(interaction.user.id), season);
 			companyReceipt = results.companyReceipt;

@@ -1,9 +1,8 @@
-import { AnySelectMenuInteraction, BaseApplicationCommandData, CommandInteraction } from "discord.js";
-import { LogicLayer } from "../../logic";
-import { BuildError, InteractionTheater, SelectOptionFunctionality, SubcommandFunctionality } from "../classes";
+import { BaseApplicationCommandData } from "discord.js";
+import { BuildError, type SelectOptionFunctionality, type SelectOptionProcedure, type SubcommandFunctionality, type SubcommandProcedure } from "../classes";
 
-export async function aggregateSubcommands(mainId: string, fileList: string[]) { //TODONOW became async
-	const mappings: { slashData: BaseApplicationCommandData[], executeDictionary: Record<string, (interaction: CommandInteraction, isDevMode: boolean, ...args: [LogicLayer, unknown]) => Promise<void>> } = {
+export async function aggregateSubcommands(mainId: string, fileList: string[]) { //TODONOW mappings.slashData of wrong type?
+	const mappings: { slashData: BaseApplicationCommandData[], executeDictionary: Record<string, SubcommandProcedure> } = {
 		slashData: [],
 		executeDictionary: {}
 	};
@@ -15,8 +14,8 @@ export async function aggregateSubcommands(mainId: string, fileList: string[]) {
 	return mappings;
 };
 
-export async function aggregateSelectOptionMap(mainId: string, fileList: string[]) { //TODONOW became async
-	const selectOptionMap: Record<string, (interaction: AnySelectMenuInteraction, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, ...args: string[]) => Promise<void>> = {};
+export async function aggregateSelectOptionMap(mainId: string, fileList: string[]) {
+	const selectOptionMap: Record<string, SelectOptionProcedure> = {};
 	for (const fileName of fileList) {
 		const option = (await import(`../selects/${mainId}/${fileName}`)).default as SelectOptionFunctionality;
 		if (option.name in selectOptionMap) {

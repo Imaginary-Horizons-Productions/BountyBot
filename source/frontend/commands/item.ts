@@ -1,15 +1,15 @@
-const { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors, InteractionContextType, MessageFlags, ComponentType, bold, TimestampStyles } = require('discord.js');
-const { CommandWrapper } = require('../classes/index.js');
-const { getItemNames, getItemDescription, useItem, getItemCooldown } = require('../items/_itemDictionary.js');
-const { SKIP_INTERACTION_HANDLING } = require('../../constants.js');
-const { ihpAuthorPayload, randomFooterTip, butIgnoreInteractionCollectorErrors } = require('../shared');
-const { timeConversion, discordTimestamp } = require('../../shared');
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonStyle, Colors, ComponentType, EmbedBuilder, InteractionContextType, MessageFlags, PermissionFlagsBits, TimestampStyles } from 'discord.js';
+import type { LogicLayer } from '../../logic/index.js';
+import { discordTimestamp, timeConversion } from '../../shared';
+import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
+import { CommandFunctionality } from '../classes/index.js';
+import { getItemCooldown, getItemDescription, getItemNames, useItem } from '../items/_itemDictionary.js';
+import { butIgnoreInteractionCollectorErrors, ihpAuthorPayload, randomFooterTip } from '../shared';
 
-/** @type {import('../../logic/index.js').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "item";
-module.exports = new CommandWrapper(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
+export default new CommandFunctionality(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, theater, isDevMode) => {
 		const itemName = interaction.options.getString("item-name");
 		const itemCount = await logicLayer.items.countUserCopies(interaction.user.id, itemName);

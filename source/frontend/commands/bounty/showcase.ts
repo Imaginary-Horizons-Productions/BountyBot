@@ -1,12 +1,12 @@
-const { StringSelectMenuBuilder, MessageFlags, TimestampStyles, ModalBuilder, TextDisplayBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { timeConversion, discordTimestamp } = require("../../../shared");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { selectOptionsFromBounties, bountyEmbed, unarchiveAndUnlockThread, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
-const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
-const { BountyState } = require("../../../shared/types");
+import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, TimestampStyles } from "discord.js";
+import { discordTimestamp, timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { BountyState } from "../../../shared/types";
+import { SubcommandFunctionality } from "../../classes";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../../shared";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts";
 
-module.exports = new SubcommandWrapper("showcase", "Show the embed for one of your existing bounties and increase the reward",
+export default new SubcommandFunctionality("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (!isDevMode && Date.now() < nextShowcaseInMS) {

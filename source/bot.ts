@@ -221,7 +221,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	//#region Command execution
 	if (interaction.isContextMenuCommand()) {
 		getContextMenu(mainId).execute(interaction, origin, isDevMode);
-	} else if (interaction.isCommand()) {
+	} else if (interaction.isChatInputCommand()) {
 		getCommand(mainId).execute(interaction, origin, isDevMode);
 	} else if (interaction.isButton()) {
 		getButton(mainId).execute(interaction, origin, isDevMode, ...args);

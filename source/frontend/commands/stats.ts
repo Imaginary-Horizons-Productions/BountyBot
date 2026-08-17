@@ -1,13 +1,13 @@
-const { EmbedBuilder, Colors, InteractionContextType, MessageFlags, unorderedList, underline, italic } = require('discord.js');
-const { CommandWrapper } = require('../classes');
-const { randomFooterTip, ihpAuthorPayload, fillableTextBar, companyStatsEmbed, hunterProfileEmbed } = require('../shared');
-const { DatabaseTypes } = require('../../database');
+import { Colors, EmbedBuilder, InteractionContextType, italic, MessageFlags, underline, unorderedList } from 'discord.js';
+import { DatabaseTypes } from '../../database';
+import type { LogicLayer } from '../../logic';
+import { CommandFunctionality } from '../classes';
+import { companyStatsEmbed, fillableTextBar, hunterProfileEmbed, ihpAuthorPayload, randomFooterTip } from '../shared';
 
-/** @type {import('../../logic').LogicLayer} */
-let logicLayer;
+let logicLayer: LogicLayer;
 
 const mainId = "stats";
-module.exports = new CommandWrapper(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
+export default new CommandFunctionality(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
 	/** Get the BountyBot stats for yourself or someone else */
 	async (interaction, theater, isDevMode) => {
 		const target = interaction.options.getMember("bounty-hunter");

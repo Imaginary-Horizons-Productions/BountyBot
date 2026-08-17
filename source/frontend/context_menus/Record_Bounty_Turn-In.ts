@@ -1,5 +1,5 @@
 import { bold, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention } from 'discord.js';
-import { LogicLayer } from '../../logic';
+import type { LogicLayer } from '../../logic';
 import { timeConversion } from '../../shared';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
 import { BountyState } from '../../shared/types';

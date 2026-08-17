@@ -22,7 +22,7 @@ export async function configCompanyThumbnails(thumbnailSetKind: string, thumbnai
 	const container = new ContainerBuilder().setAccentColor(Colors.Blurple)
 		.addTextDisplayComponents(new TextDisplayBuilder().setContent(heading(`${thumbnailSetKind} Changes`)))
 
-	const componentsForValidatedImages = [];
+	const componentsForValidatedImages: [TextDisplayBuilder, MediaGalleryBuilder][] = [];
 	for (const { label, payloadProperty } of thumbnailUpdateData) {
 		const thumbnailCollection = modalInteraction.fields.getUploadedFiles(payloadProperty);
 		if (thumbnailCollection) {

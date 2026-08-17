@@ -6,7 +6,7 @@ const { aggregateSubcommands } = require('../../shared');
 let logicLayer;
 
 const mainId = "raffle";
-const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = aggregateSubcommands(mainId, [
+const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
 	"announce-upcoming.js",
 	"by-level.js",
 	"by-rank.js"

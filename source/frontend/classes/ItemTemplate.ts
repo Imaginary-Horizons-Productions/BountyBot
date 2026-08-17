@@ -1,5 +1,5 @@
 import { StringSelectMenuInteraction } from "discord.js";
-import { LogicLayer } from "../../logic";
+import type { LogicLayer } from "../../logic";
 import { InteractionTheater } from "./InteractionTheater";
 
 export class ItemTemplateSet {

@@ -1,4 +1,4 @@
-import { LogicLayer } from "../../logic";
+import type { LogicLayer } from "../../logic";
 import { CooldownDictionary } from "../../shared/types";
 import { BuildError, type ButtonFunctionality } from "../classes";
 

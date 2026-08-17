@@ -62,7 +62,7 @@ export function findBountyCompletions(bountyId: string) {
 /** *Get a Set with the userIds of the specified Bounty's hunters* */
 export async function getHunterIdSet(bountyId: string) {
 	const completions = await db.Completions.findAll({ where: { bountyId } });
-	return completions.reduce((set, completion) => set.add(completion.userId), new Set());
+	return completions.reduce((set, completion) => set.add(completion.userId), new Set<Snowflake>());
 }
 
 /** Filter out the Bounty's poster, bots, and banned Hunters */

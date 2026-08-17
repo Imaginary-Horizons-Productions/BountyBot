@@ -1,9 +1,9 @@
-const { MessageFlags, heading, userMention } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { bountyEmbed } = require("../../shared");
-const { DatabaseTypes } = require("../../../database");
+import { InteractionReplyOptions, MessageFlags, heading, userMention } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { SubcommandFunctionality } from "../../classes";
+import { bountyEmbed } from "../../shared";
 
-module.exports = new SubcommandWrapper("list", "List all of a hunter's open bounties (default: your own)",
+export default new SubcommandFunctionality("list", "List all of a hunter's open bounties (default: your own)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? interaction.user.id;
 		const isEvergreen = listUserId === interaction.client.user.id;
@@ -19,7 +19,7 @@ module.exports = new SubcommandWrapper("list", "List all of a hunter's open boun
 			return;
 		}
 
-		const replyPayload = { flags: MessageFlags.Ephemeral };
+		const replyPayload: InteractionReplyOptions = { flags: MessageFlags.Ephemeral };
 		if (isEvergreen) {
 			const companyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 			replyPayload.content = heading(`Evergreen Bounties on ${interaction.guild.name}`, 2);

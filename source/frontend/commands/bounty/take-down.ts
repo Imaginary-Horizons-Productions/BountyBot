@@ -1,11 +1,11 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { commandMention, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread } = require("../../shared");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { bountyTakeDown } = require("../../shared/flows/bountyTakeDown");
-const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
+import { ActionRowBuilder, ComponentType, MessageFlags, StringSelectMenuBuilder } from "discord.js";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { SubcommandFunctionality } from "../../classes";
+import { butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, selectOptionsFromBounties } from "../../shared";
+import { bountyTakeDown } from "../../shared/flows/bountyTakeDown";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts";
 
-module.exports = new SubcommandWrapper("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
+export default new SubcommandFunctionality("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty instead, you can use ${commandMention("bounty edit")}.`,

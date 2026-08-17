@@ -1,12 +1,12 @@
-const { userMention, bold, MessageFlags, StringSelectMenuBuilder, UserSelectMenuBuilder, ModalBuilder, LabelBuilder, PermissionFlagsBits } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { sentenceListEN, randomCongratulatoryPhrase, selectOptionsFromBounties, butIgnoreInteractionCollectorErrors, getBountyBoardThread, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
-const { timeConversion } = require("../../../shared");
-const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { ensureHunterHasOpenBounty } = require("../_earlyOuts");
-const { BountyState } = require("../../../shared/types");
+import { bold, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
+import { timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { BountyState } from "../../../shared/types";
+import { SubcommandFunctionality } from "../../classes";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts";
 
-module.exports = new SubcommandWrapper("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
+export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
 		const labelIdBountyHunters = "bounty-hunters";

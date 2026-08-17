@@ -1,10 +1,10 @@
-const { ChannelType, PermissionFlagsBits, OverwriteType, MessageFlags } = require("discord.js");
-const { SubcommandWrapper } = require("../../classes");
-const { seasonalScoreboardEmbed, overallScoreboardEmbed, isMissingPermissionError } = require("../../shared");
+import { ChannelType, MessageFlags, OverwriteType, PermissionFlagsBits, type TextChannel } from "discord.js";
+import { SubcommandFunctionality } from "../../classes";
+import { isMissingPermissionError, overallScoreboardEmbed, seasonalScoreboardEmbed } from "../../shared";
 
-module.exports = new SubcommandWrapper("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
+export default new SubcommandFunctionality("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
-		let scoreboard;
+		let scoreboard: TextChannel;
 		try {
 			scoreboard = await interaction.guild.channels.create({
 				parent: interaction.channel.parentId,

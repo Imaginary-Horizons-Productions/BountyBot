@@ -1,6 +1,6 @@
 import { DatabaseTypes } from "../../database";
-import { LogicLayer } from "../../logic";
-import { CompanyReciept } from "../../shared/types";
+import type { LogicLayer } from "../../logic";
+import type { CompanyReciept } from "../../shared/types";
 import { ItemTemplate, ItemTemplateSet } from "../classes";
 import { consolidateHunterReceipts, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, syncRankRoles } from "../shared";
 

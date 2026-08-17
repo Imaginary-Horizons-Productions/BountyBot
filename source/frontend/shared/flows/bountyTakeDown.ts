@@ -1,6 +1,6 @@
 import type { ForumThreadChannel, Guild } from "discord.js";
 import { DatabaseTypes } from "../../../database";
-import { LogicLayer } from "../../../logic";
+import type { LogicLayer } from "../../../logic";
 import { syncRankRoles } from "../dAPIRequests";
 import { butIgnoreErrorIf, butIgnoreMissingPermissionErrors, isMissingPermissionError, isUnknownGuildScheduledEventError } from "../dAPIResponses";
 
