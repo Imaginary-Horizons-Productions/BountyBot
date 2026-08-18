@@ -58,7 +58,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				if (imageAttachmentCollection) {
 					const firstAttachment = imageAttachmentCollection.first();
 					if (firstAttachment) {
-						updatePayload.attachmentURL = imageAttachmentCollection;
+						updatePayload.attachmentURL = firstAttachment.url;
 					} else {
 						updatePayload.attachmentURL = null;
 					}
