@@ -1,8 +1,8 @@
-const { ModalBuilder, TextDisplayBuilder, LabelBuilder, ChannelSelectMenuBuilder, ChannelType, MessageFlags, PermissionFlagsBits } = require("discord.js");
+const { ModalBuilder, TextDisplayBuilder, LabelBuilder, ChannelSelectMenuBuilder, ChannelType, MessageFlags, PermissionFlagsBits, TimestampStyles } = require("discord.js");
 const { SelectOptionWrapper } = require("../../classes");
 const { ensureBountyExistsAndInteractorIsPoster } = require("./_earlyOuts");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
-const { timeConversion } = require("../../../shared");
+const { timeConversion, discordTimestamp } = require("../../../shared");
 const { butIgnoreInteractionCollectorErrors, bountyEmbed, unarchiveAndUnlockThread } = require("../../shared");
 
 module.exports = new SelectOptionWrapper("showcase",
