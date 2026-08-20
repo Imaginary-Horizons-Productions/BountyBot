@@ -1,8 +1,17 @@
-import { InteractionContextType, MessageFlags, PermissionFlagsBits, unorderedList } from 'discord.js';
+import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandIntegerOption, SlashCommandNumberOption, SlashCommandStringOption, unorderedList } from 'discord.js';
 import type { DatabaseTypes } from '../../database';
 import { GLOBAL_MAX_BOUNTY_SLOTS, MAX_BOT_NICKNAME_LENGTH } from '../../shared/constants';
 import { CommandFunctionality } from '../classes';
 import { updateBotNicknameForFestival } from '../shared';
+
+const nicknameOption = new SlashCommandStringOption().setName("nickname")
+	.setDescription("The nickname BountyBot should revert to after festivals end");
+
+const levelThresholdMultiplierOption = new SlashCommandNumberOption().setName("level-threshold-multiplier")
+	.setDescription("Configure the XP coefficient for bounty hunter levels (default 3)");
+
+const bountySlotsOption = new SlashCommandIntegerOption().setName("bounty-slots")
+	.setDescription(`Configure the max number (between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS}) of bounty slots hunters can have (default 5)`);
 
 const mainId = "config-premium";
 export default new CommandFunctionality(mainId, "Configure premium BountyBot settings for this server", PermissionFlagsBits.ManageGuild, true, [InteractionContextType.Guild], 3000,
@@ -11,7 +20,7 @@ export default new CommandFunctionality(mainId, "Configure premium BountyBot set
 		let content = "The following server settings have been configured:";
 		const errors = [];
 
-		const nickname = interaction.options.getString("nickname");
+		const nickname = interaction.options.getString(nicknameOption.name);
 		if (nickname !== null) {
 			if (nickname.length > MAX_BOT_NICKNAME_LENGTH) {
 				errors.push(`\`${nickname}\` could not be set for Nickname. \`${nickname}\` is ${nickname.length} characters long, but cannot be longer than ${MAX_BOT_NICKNAME_LENGTH}.`);
@@ -24,7 +33,7 @@ export default new CommandFunctionality(mainId, "Configure premium BountyBot set
 			}
 		}
 
-		const xpCoefficient = interaction.options.getNumber("level-threshold-multiplier");
+		const xpCoefficient = interaction.options.getNumber(levelThresholdMultiplierOption.name);
 		if (xpCoefficient !== null) {
 			if (xpCoefficient <= 0) {
 				errors.push(`${xpCoefficient} could not be set for Level Threshold Multiplier. It must be a number greater than 0.`)
@@ -34,7 +43,7 @@ export default new CommandFunctionality(mainId, "Configure premium BountyBot set
 			}
 		}
 
-		const slots = interaction.options.getInteger("bounty-slots");
+		const slots = interaction.options.getInteger(bountySlotsOption.name);
 		if (slots !== null) {
 			if (slots < 1 || slots > GLOBAL_MAX_BOUNTY_SLOTS) {
 				errors.push(`${slots} could not be set for Bounty Slots. It must be a number between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS} (inclusive).`);
@@ -51,22 +60,7 @@ export default new CommandFunctionality(mainId, "Configure premium BountyBot set
 		interaction.reply({ content, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(
-	{
-		type: "String",
-		name: "nickname",
-		description: "The nickname BountyBot should revert to after festivals end",
-		required: false
-	},
-	{
-		type: "Number",
-		name: "level-threshold-multiplier",
-		description: "Configure the XP coefficient for bounty hunter levels (default 3)",
-		required: false,
-	},
-	{
-		type: "Integer",
-		name: "bounty-slots",
-		description: `Configure the max number (between 1 and ${GLOBAL_MAX_BOUNTY_SLOTS}) of bounty slots hunters can have (default 5)`,
-		required: false
-	}
+	nicknameOption,
+	levelThresholdMultiplierOption,
+	bountySlotsOption
 );

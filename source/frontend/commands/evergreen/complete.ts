@@ -1,0 +1,131 @@
+import { LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } from "discord.js";
+import { DatabaseTypes } from "../../../database";
+import { timeConversion } from "../../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import type { CompanyReciept, HunterReceipt } from "../../../shared/types";
+import { SubcommandFunctionality } from "../../classes";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles } from "../../shared";
+import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts";
+
+export default new SubcommandFunctionality("complete", "Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters",
+	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
+		const labelIdBountyId = "bounty-id";
+		const labelIdBountyHunters = "bounty-hunters";
+		const maxHunters = 10;
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+			.setTitle("Payout an Evergreen Bounty")
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Bounty")
+					.setStringSelectMenuComponent(
+						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
+							.setPlaceholder("Select an evergreen bounty...")
+							.setOptions(selectOptionsFromBounties(evergreenBounties))
+					),
+				new LabelBuilder().setLabel("Bounty Hunters")
+					.setUserSelectMenuComponent(
+						new UserSelectMenuBuilder().setCustomId(labelIdBountyHunters)
+							.setPlaceholder(`Select up to ${maxHunters} bounty hunters...`)
+							.setMaxValues(maxHunters)
+					)
+			);
+		await interaction.showModal(modal);
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+			.catch(butIgnoreInteractionCollectorErrors);
+		if (!modalSubmission) {
+			return;
+		}
+
+		const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
+		const bounty = await logicLayer.bounties.findBounty(bountyId);
+		const validatedHunters = new Map();
+		for (const [memberId, guildMember] of modalSubmission.fields.getSelectedMembers(labelIdBountyHunters)) {
+			const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, theater.company.id);
+			if (isDevMode || (!guildMember.user.bot && !hunter.isBanned)) {
+				validatedHunters.set(memberId, hunter);
+			}
+		}
+
+		if (validatedHunters.size < 1) {
+			modalSubmission.reply({ content: "No valid bounty hunters received. Bots cannot be credited for bounty completion.", flags: MessageFlags.Ephemeral })
+			return;
+		}
+
+		const season = await logicLayer.seasons.incrementSeasonStat(theater.company.id, "bountiesCompleted");
+
+		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
+		const companyReceipt: CompanyReciept = { guildName: modalSubmission.guild.name };
+		const hunterReceipts = new Map();
+
+		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
+		// Evergreen bounties are not eligible for showcase bonuses
+		const bountyBaseValue = DatabaseTypes.Bounty.calculateCompleterReward(previousCompanyLevel, bounty.slotNumber, 0);
+		const bountyValue = Math.floor(bountyBaseValue * theater.company.xpFestivalMultiplier);
+		await logicLayer.bounties.bulkCreateCompletions(bountyId, theater.company.id, [...validatedHunters.keys()], bountyValue);
+
+		const xpMultiplierString = theater.company.festivalMultiplierString("xp");
+		const goalProgress = {
+			totalGP: 0,
+			goalCompleted: false,
+			currentGP: 0,
+			requiredGP: 0
+		};
+		const finalContributorIds = new Set(validatedHunters.keys());
+		for (const userId of validatedHunters.keys()) {
+			const hunterReceipt: HunterReceipt = { xp: bountyBaseValue, xpMultiplier: xpMultiplierString };
+			let hunter = await logicLayer.hunters.findOneHunter(userId, theater.company.id);
+			const previousHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
+			hunter = await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
+			const currentHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
+			if (currentHunterLevel > previousHunterLevel) {
+				hunterReceipt.levelUp = { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel };
+			}
+			hunterReceipts.set(userId, hunterReceipt);
+			logicLayer.seasons.changeSeasonXP(userId, theater.company.id, season.id, bountyValue);
+			const { goalProgress: { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunter, season);
+			goalProgress.totalGP += gpContributed;
+			goalProgress.goalCompleted ||= goalCompleted;
+			goalProgress.currentGP = currentGP;
+			goalProgress.requiredGP = requiredGP;
+			contributorIds.forEach(id => finalContributorIds.add(id));
+		}
+
+		hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
+		if (previousCompanyLevel < currentCompanyLevel) {
+			companyReceipt.levelUp = currentCompanyLevel;
+		}
+		const announcementPayload = {
+			embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, theater.company, finalContributorIds, null, goalProgress)],
+			withResponse: true
+		};
+		if (goalProgress.totalGP > 0) {
+			companyReceipt.gp = goalProgress.totalGP;
+			companyReceipt.gpMultiplier = theater.company.festivalMultiplierString("gp");
+		}
+		if (goalProgress.goalCompleted) {
+			announcementPayload.embeds.push(goalCompletionEmbed([...finalContributorIds.keys()]));
+		}
+		const response = await modalSubmission.reply(announcementPayload);
+		const descendingRanks = await logicLayer.ranks.findAllRanks(theater.company.id);
+		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
+		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await modalSubmission.guild.roles.fetch());
+		syncRankRoles(seasonalHunterReceipts, descendingRanks, modalSubmission.guild.members);
+		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
+		sendRewardMessage(response.resource.message, rewardSummary("bounty", companyReceipt, hunterReceipts, theater.company.maxSimBounties), `${bounty.title} Rewards`);
+		if (theater.company.scoreboardIsSeasonal) {
+			refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
+		} else {
+			refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
+		}
+		if (theater.company.bountyBoardId) {
+			const hunterIdMap = {};
+			for (const bounty of evergreenBounties) {
+				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+			}
+			const bountyBoard = await modalSubmission.guild.channels.fetch(theater.company.bountyBoardId);
+			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+		} else if (!modalSubmission.member.manageable) {
+			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
+		}
+	})
+);

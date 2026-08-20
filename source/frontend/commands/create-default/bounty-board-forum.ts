@@ -1,11 +1,14 @@
-import { ChannelType, type ForumChannel, ForumLayoutType, MessageFlags, OverwriteType, PermissionFlagsBits, SortOrderType } from "discord.js";
+import { ChannelType, type ForumChannel, ForumLayoutType, MessageFlags, OverwriteType, PermissionFlagsBits, SlashCommandStringOption, SortOrderType } from "discord.js";
 import { DatabaseTypes } from "../../../database";
 import { SubcommandFunctionality } from "../../classes";
 import { bountyControlPanelSelectRow, bountyEmbed, isMissingPermissionError, makeEvergreenBountiesThread } from "../../shared";
 
+const channelNameOption = new SlashCommandStringOption().setName("channel-name")
+	.setDescription("The name for the bounty board forum");
+
 export default new SubcommandFunctionality("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
-		const customChannelName = interaction.options.getString("channel-name");
+		const customChannelName = interaction.options.getString(channelNameOption.name);
 
 		let bountyBoard: ForumChannel;
 		try {
@@ -78,11 +81,4 @@ export default new SubcommandFunctionality("bounty-board-forum", "Create a new b
 		theater.company.save();
 		interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, flags: MessageFlags.Ephemeral });
 	}
-).setOptions(
-	{
-		type: "String",
-		name: "channel-name",
-		description: "The name for the bounty board forum",
-		required: false
-	}
-);
+).setOptions(channelNameOption);

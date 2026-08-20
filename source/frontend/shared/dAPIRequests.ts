@@ -74,7 +74,7 @@ export async function refreshBountyBoardThread(starterMessage: Message, { title,
 }
 
 /** Fetches a bounty's thread from the bounty board forum */
-export async function getBountyBoardThread(guild: Guild, bountyBoardId: Snowflake, postingId: Snowflake) {
+export async function getBountyBoardThread(guild: Guild, bountyBoardId: Snowflake | null, postingId: Snowflake | null) {
 	if (!bountyBoardId || !postingId) {
 		return null;
 	}

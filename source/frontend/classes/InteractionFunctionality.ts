@@ -1,4 +1,4 @@
-import { AnySelectMenuInteraction, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, PermissionFlags, SlashCommandBuilder, Snowflake, UserContextMenuCommandInteraction } from "discord.js";
+import { AnySelectMenuInteraction, ApplicationCommandOptionType, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, PermissionFlags, SlashCommandAttachmentOption, SlashCommandBooleanOption, SlashCommandBuilder, SlashCommandChannelOption, SlashCommandIntegerOption, SlashCommandMentionableOption, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, SlashCommandUserOption, Snowflake, UserContextMenuCommandInteraction } from "discord.js";
 import type { LogicLayer } from "../../logic/index.ts";
 import { MAX_SET_TIMEOUT } from "../../shared/constants.ts";
 import { MemberOf } from "../../shared/types.ts";
@@ -60,6 +60,17 @@ export class InteractionFunctionality {
 
 type CommandProcedure = (interaction: ChatInputCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean) => void;
 
+export type SupportedSlashCommandOptionType =
+	| SlashCommandStringOption
+	| SlashCommandIntegerOption
+	| SlashCommandBooleanOption
+	| SlashCommandUserOption
+	| SlashCommandChannelOption
+	| SlashCommandRoleOption
+	| SlashCommandMentionableOption
+	| SlashCommandNumberOption
+	| SlashCommandAttachmentOption;
+
 export class CommandFunctionality extends InteractionFunctionality {
 	declare isPremium: boolean;
 	declare autocomplete?: Record<string, { name: string; value: string; }[]>;
@@ -80,65 +91,94 @@ export class CommandFunctionality extends InteractionFunctionality {
 		}
 	}
 
-	setOptions(...optionArguments: { type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: { name: string, value: string }[], choices?: { name: string, value: string }[] }[]) {
-		optionArguments.forEach(optionArgument => {
-			this.builder[`add${optionArgument.type}Option`](option => {
-				option.setName(optionArgument.name).setDescription(optionArgument.description).setRequired(optionArgument.required);
-				if (optionArgument.autocomplete?.length > 0) {
-					if (optionArgument.name in this.autocomplete) {
-						throw new BuildError(`duplicate autocomplete key (${optionArgument.name})`);
-					}
-					option.setAutocomplete(true);
-					this.autocomplete[optionArgument.name] = optionArgument.autocomplete;
-				} else if (optionArgument.choices?.length > 0) {
-					option.addChoices(...optionArgument.choices);
-				}
-				return option;
-			})
-		})
+	setOptions(...options: SupportedSlashCommandOptionType[]) {
+		for (const option of options) {
+			switch (option.type) {
+				case ApplicationCommandOptionType.String:
+					this.builder.addStringOption(option);
+					break;
+				case ApplicationCommandOptionType.Integer:
+					this.builder.addIntegerOption(option);
+					break;
+				case ApplicationCommandOptionType.Boolean:
+					this.builder.addBooleanOption(option);
+					break;
+				case ApplicationCommandOptionType.User:
+					this.builder.addUserOption(option);
+					break;
+				case ApplicationCommandOptionType.Channel:
+					this.builder.addChannelOption(option);
+					break;
+				case ApplicationCommandOptionType.Role:
+					this.builder.addRoleOption(option);
+					break;
+				case ApplicationCommandOptionType.Mentionable:
+					this.builder.addMentionableOption(option);
+					break;
+				case ApplicationCommandOptionType.Number:
+					this.builder.addNumberOption(option);
+					break;
+				case ApplicationCommandOptionType.Attachment:
+					this.builder.addAttachmentOption(option);
+					break;
+			}
+		}
 		return this;
 	}
 
-	setSubcommands(subcommandArguments: { name: string, description: string, optionArguments?: { type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: { name: string, value: string }[], choices?: { name: string, value: string }[] } }[]) {
-		subcommandArguments.forEach(subcommandArgument => {
-			this.builder.addSubcommand(subcommand => {
-				subcommand.setName(subcommandArgument.name).setDescription(subcommandArgument.description);
-				if ("optionArguments" in subcommandArgument) {
-					subcommandArgument.optionArguments.forEach(optionArgument => {
-						subcommand[`add${optionArgument.type}Option`](option => {
-							option.setName(optionArgument.name).setDescription(optionArgument.description).setRequired(optionArgument.required);
-							if (optionArgument.autocomplete?.length > 0) {
-								if (optionArgument.name in this.autocomplete) {
-									throw new BuildError(`duplicate autocomplete key (${optionArgument.name})`);
-								}
-								option.setAutocomplete(true);
-								this.autocomplete[optionArgument.name] = optionArgument.autocomplete;
-							} else if (optionArgument.choices?.length > 0) {
-								option.addChoices(...optionArgument.choices);
-							}
-							return option;
-						})
-					})
-				}
-				return subcommand;
-			})
-		})
+	setSubcommands(subcommandBuilders: SlashCommandSubcommandBuilder[]) {
+		for (const builder of subcommandBuilders) {
+			this.builder.addSubcommand(builder);
+		}
 		return this;
 	}
 };
 
 export type SubcommandProcedure = (interaction: ChatInputCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => Promise<void>;
 
-export class SubcommandFunctionality {
+export class SubcommandFunctionality { //TODONOW consider builder.addSubcommand instead
 	declare procedure: SubcommandProcedure;
+	declare builder: SlashCommandSubcommandBuilder;
 
 	constructor(name: string, description: string, procedureArgument: SubcommandProcedure) {
-		this.data = { name, description };
+		this.builder = new SlashCommandSubcommandBuilder()
+			.setName(name)
+			.setDescription(description)
 		this.procedure = procedureArgument;
 	}
 
-	setOptions(...options: { type: "Attachment" | "Boolean" | "Channel" | "Integer" | "Mentionable" | "Number" | "Role" | "String" | "User", name: string, description: string, required: boolean, autocomplete?: { name: string, value: string }[], choices?: { name: string, value: string }[] }[]) {
-		this.data.optionsInput = options;
+	setOptions(...options: SupportedSlashCommandOptionType[]) {
+		for (const option of options) {
+			switch (option.type) {
+				case ApplicationCommandOptionType.String:
+					this.builder.addStringOption(option);
+					break;
+				case ApplicationCommandOptionType.Integer:
+					this.builder.addIntegerOption(option);
+					break;
+				case ApplicationCommandOptionType.Boolean:
+					this.builder.addBooleanOption(option);
+					break;
+				case ApplicationCommandOptionType.User:
+					this.builder.addUserOption(option);
+					break;
+				case ApplicationCommandOptionType.Channel:
+					this.builder.addChannelOption(option);
+					break;
+				case ApplicationCommandOptionType.Role:
+					this.builder.addRoleOption(option);
+					break;
+				case ApplicationCommandOptionType.Mentionable:
+					this.builder.addMentionableOption(option);
+					break;
+				case ApplicationCommandOptionType.Number:
+					this.builder.addNumberOption(option);
+					break;
+				case ApplicationCommandOptionType.Attachment:
+					this.builder.addAttachmentOption(option);
+					break;
+			}
+		}
 		return this;
 	}
 }
@@ -165,13 +205,13 @@ export class SelectFunctionality extends InteractionFunctionality {
 	}
 };
 
-export type SelectOptionProcedure = (interaction: AnySelectMenuInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, args: unknown[]) => Promise<void>;
+export type SelectOptionProcedure<T> = (interaction: AnySelectMenuInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, args: T) => Promise<void>;
 
-export class SelectOptionFunctionality {
+export class SelectOptionFunctionality<T> {
 	declare name: string;
-	declare execute: SelectOptionProcedure
+	declare execute: SelectOptionProcedure<T>
 
-	constructor(nameArgument: string, procedure: SelectOptionProcedure) {
+	constructor(nameArgument: string, procedure: SelectOptionProcedure<T>) {
 		if (!nameArgument) {
 			throw new BuildError("missing select option name");
 		}

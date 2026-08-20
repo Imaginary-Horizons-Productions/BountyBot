@@ -1,6 +1,13 @@
-import { ChannelType, MessageFlags, OverwriteType, PermissionFlagsBits, type TextChannel } from "discord.js";
+import { ChannelType, MessageFlags, OverwriteType, PermissionFlagsBits, SlashCommandStringOption, type TextChannel } from "discord.js";
 import { SubcommandFunctionality } from "../../classes";
 import { isMissingPermissionError, overallScoreboardEmbed, seasonalScoreboardEmbed } from "../../shared";
+
+const scoreboardTypeOption = new SlashCommandStringOption().setName("scoreboard-type")
+	.setDescription("Pick if the scoreboard will show season XP or overall XP, only one updates")
+	.setChoices(
+		{ name: "Season Scoreboard", value: "season" },
+		{ name: "Overall Scoreboard", value: "overall" }
+	).setRequired(true);
 
 export default new SubcommandFunctionality("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
@@ -32,7 +39,7 @@ export default new SubcommandFunctionality("scoreboard-reference", "Create a ref
 				console.error(error);
 			}
 		}
-		const isSeasonal = interaction.options.getString("scoreboard-type") === "season";
+		const isSeasonal = interaction.options.getString(scoreboardTypeOption.name, true) === scoreboardTypeOption.choices?.[0].value;
 		const embeds = [];
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
 		if (isSeasonal) {
@@ -49,15 +56,4 @@ export default new SubcommandFunctionality("scoreboard-reference", "Create a ref
 		});
 		interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, flags: MessageFlags.Ephemeral });
 	}
-).setOptions(
-	{
-		type: "String",
-		name: "scoreboard-type",
-		description: "Pick if the scoreboard will show season XP or overall XP, only one updates",
-		required: true,
-		choices: [
-			{ name: "Season Scoreboard", value: "season" },
-			{ name: "Overall Scoreboard", value: "overall" }
-		]
-	}
-);
+).setOptions(scoreboardTypeOption);

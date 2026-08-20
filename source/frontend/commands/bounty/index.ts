@@ -6,7 +6,7 @@ import { aggregateSubcommands } from '../../shared';
 let logicLayer: LogicLayer;
 
 const mainId = "bounty";
-const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
+const { subcommandBuilders, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
 	"complete.js",
 	"edit.js",
 	"list.js",
@@ -24,4 +24,4 @@ export default new CommandFunctionality(mainId, "Bounties are user-created objec
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}).setSubcommands(subcommandSlashData);
+}).setSubcommands(subcommandBuilders);

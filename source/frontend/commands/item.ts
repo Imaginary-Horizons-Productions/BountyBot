@@ -1,4 +1,4 @@
-import { ActionRowBuilder, bold, ButtonBuilder, ButtonStyle, Colors, ComponentType, EmbedBuilder, InteractionContextType, MessageFlags, PermissionFlagsBits, TimestampStyles } from 'discord.js';
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonStyle, Colors, ComponentType, EmbedBuilder, InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandStringOption, TimestampStyles } from 'discord.js';
 import type { LogicLayer } from '../../logic/index.js';
 import { discordTimestamp, timeConversion } from '../../shared';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
@@ -8,10 +8,17 @@ import { butIgnoreInteractionCollectorErrors, ihpAuthorPayload, randomFooterTip 
 
 let logicLayer: LogicLayer;
 
+const itemNameOption = new SlashCommandStringOption().setName("item-name")
+	.setDescription("The item to look up details on")
+	.setAutocomplete(true)
+	.setChoices(
+		getItemNames([]).map(name => ({ name, value: name }))
+	).setRequired(true);
+
 const mainId = "item";
 export default new CommandFunctionality(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	async (interaction, theater, isDevMode) => {
-		const itemName = interaction.options.getString("item-name");
+		const itemName = interaction.options.getString(itemNameOption.name, true);
 		const itemCount = await logicLayer.items.countUserCopies(interaction.user.id, itemName);
 		const hasItem = itemCount > 0 || isDevMode;
 		let embedColor = Colors.Blurple;
@@ -29,8 +36,8 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 					.setFooter(randomFooterTip())
 			],
 			components: [
-				new ActionRowBuilder().addComponents(
-					new ButtonBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}`)
+				new ActionRowBuilder<ButtonBuilder>().addComponents(
+					new ButtonBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 						.setStyle(ButtonStyle.Primary)
 						.setLabel(`Use a ${itemName}`)
 						.setDisabled(!hasItem)
@@ -72,13 +79,7 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 		});
 	}
 ).setOptions(
-	{
-		type: "String",
-		name: "item-name",
-		description: "The item to look up details on",
-		required: true,
-		autocomplete: getItemNames([]).map(name => ({ name, value: name }))
-	}
+	itemNameOption
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
 });

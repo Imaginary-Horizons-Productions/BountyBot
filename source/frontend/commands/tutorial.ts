@@ -1,8 +1,15 @@
-import { Colors, EmbedBuilder, InteractionContextType, MessageFlags } from 'discord.js';
+import { Colors, EmbedBuilder, InteractionContextType, MessageFlags, SlashCommandStringOption } from 'discord.js';
 import * as fs from "fs";
 import { BOUNTYBOT_INVITE_URL } from '../../shared/constants';
 import { CommandFunctionality } from '../classes';
 import { commandMention, ihpAuthorPayload, randomFooterTip } from "../shared";
+
+const tutorialTypeOption = new SlashCommandStringOption().setName("tutorial-type")
+	.setDescription("Get starting bounty hunter tips or server setup tips")
+	.setChoices(
+		{ name: "Starting Bounty Hunter Tips", value: "hunter" },
+		{ name: "Server Setup Tips", value: "server" }
+	).setRequired(true);
 
 const mainId = "tutorial";
 export default new CommandFunctionality(mainId, "Get tips for starting with BountyBot", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
@@ -14,8 +21,8 @@ export default new CommandFunctionality(mainId, "Get tips for starting with Boun
 				.setFooter(randomFooterTip())
 				.setTimestamp(stats.mtime);
 
-			switch (interaction.options.getString("tutorial-type")) {
-				case "hunter":
+			switch (interaction.options.getString(tutorialTypeOption.name)) {
+				case tutorialTypeOption.choices?.[0].value:
 					embed.setTitle("Bounty Hunter Starting Tips")
 						.setDescription("BountyBot allows server members to post objectives as bounties and awards XP to the bounty hunters who complete them. Here's how you can get started:")
 						.addFields(
@@ -25,7 +32,7 @@ export default new CommandFunctionality(mainId, "Get tips for starting with Boun
 							{ name: "Other Features", value: `To get a list of all BountyBot's commands, use ${commandMention("commands")}.` }
 						)
 					break;
-				case "server":
+				case tutorialTypeOption.choices?.[1].value:
 					embed.setTitle("Server Setup Tips")
 						.setDescription("Following are some suggestions for setting up BountyBot on your server.\n\nNOTE: If you kick BountyBot, it will delete all data related to your server from the database.")
 						.addFields(
@@ -42,15 +49,4 @@ export default new CommandFunctionality(mainId, "Get tips for starting with Boun
 			interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		})
 	}
-).setOptions(
-	{
-		type: "String",
-		name: "tutorial-type",
-		description: "Get starting bounty hunter tips or server setup tips",
-		required: true,
-		choices: [
-			{ name: "Starting Bounty Hunter Tips", value: "hunter" },
-			{ name: "Server Setup Tips", value: "server" }
-		]
-	}
-);
+).setOptions(tutorialTypeOption);

@@ -1,4 +1,4 @@
-import { InteractionContextType, MessageFlags, PermissionFlagsBits, Snowflake, unorderedList, userMention } from 'discord.js';
+import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandAttachmentOption, SlashCommandStringOption, SlashCommandUserOption, Snowflake, unorderedList, userMention } from 'discord.js';
 import { DatabaseTypes } from '../../database';
 import type { LogicLayer } from '../../logic';
 import type { CompanyReciept } from '../../shared/types';
@@ -7,6 +7,29 @@ import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannel
 
 let logicLayer: LogicLayer;
 
+const messageOption = new SlashCommandStringOption().setName("message")
+	.setDescription("The text of the toast to raise")
+	.setRequired(true);
+
+const toasteeOption = new SlashCommandUserOption().setName("toastee")
+	.setDescription("A bounty hunter you are toasting to")
+	.setRequired(true);
+
+const secondToasteeOption = new SlashCommandUserOption().setName("second-toastee")
+	.setDescription("A bounty hunter you are toasting to")
+
+const thirdToasteeOption = new SlashCommandUserOption().setName("third-toastee")
+	.setDescription("A bounty hunter you are toasting to")
+
+const fourthToasteeOption = new SlashCommandUserOption().setName("fourth-toastee")
+	.setDescription("A bounty hunter you are toasting to")
+
+const fifthToasteeOption = new SlashCommandUserOption().setName("fifth-toastee")
+	.setDescription("A bounty hunter you are toasting to")
+
+const imageOption = new SlashCommandAttachmentOption().setName("image-url")
+	.setDescription("The image to add to the toast")
+
 const mainId = "toast";
 export default new CommandFunctionality(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
@@ -14,8 +37,8 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 		// Find valid toastees
 		const bannedIds = new Set<Snowflake>();
 		const validatedToasteeIds = new Set<Snowflake>();
-		for (const optionalToastee of ["toastee", "second-toastee", "third-toastee", "fourth-toastee", "fifth-toastee"]) {
-			const guildMember = interaction.options.getMember(optionalToastee);
+		for (const option of [toasteeOption, secondToasteeOption, thirdToasteeOption, fourthToasteeOption, fifthToasteeOption]) {
+			const guildMember = interaction.options.getMember(option.name);
 			if (guildMember) {
 				const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(guildMember.id, interaction.guild.id);
 				if (hunter.isBanned) {
@@ -42,23 +65,13 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 			errors.push(sentences.join(" "));
 		}
 
-		// Validate image-url is a URL
-		const imageURL = interaction.options.getString("image-url");
-		try {
-			if (imageURL) {
-				new URL(imageURL);
-			}
-		} catch (error) {
-			errors.push(error.message);
-		}
-
 		// Early-out if any errors
 		if (errors.length > 0) {
 			interaction.reply({ content: `The following errors were encountered while raising your toast:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		const toastText = interaction.options.getString("message", true);
+		const toastText = interaction.options.getString(messageOption.name, true);
 		const autoModInfraction = await textsHaveAutoModInfraction(interaction.channel, interaction.member, [toastText], "toast")
 		if (autoModInfraction == null) {
 			interaction.reply({ content: `Could not check if the toast breaks automod rules. ${interaction.client.user} may not have the Manage Server permission required to check the automod rules.`, flags: MessageFlags.Ephemeral });
@@ -72,7 +85,8 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
 		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
-		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, theater.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, imageURL);
+		const attachment = interaction.options.getAttachment(imageOption.name);
+		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, theater.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, attachment?.url);
 		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 		let companyReceipt: CompanyReciept = {};
 		if (hunterReceipts.size > 0) {
@@ -88,7 +102,7 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 		}
 		companyReceipt.guildName = interaction.guild.name;
 
-		const embeds = [toastEmbed(theater.company.toastThumbnailURL, toastText, Array.from(validatedToasteeIds), interaction.member, goalProgress, imageURL)];
+		const embeds = [toastEmbed(theater.company.toastThumbnailURL, toastText, Array.from(validatedToasteeIds), interaction.member, goalProgress, attachment?.url)];
 		if (goalProgress.goalCompleted) {
 			embeds.push(goalCompletionEmbed(goalProgress.contributorIds));
 		}
@@ -118,48 +132,13 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 		});
 	}
 ).setOptions(
-	{
-		type: "String",
-		name: "message",
-		description: "The text of the toast to raise",
-		required: true
-	},
-	{
-		type: "User",
-		name: "toastee",
-		description: "A bounty hunter you are toasting to",
-		required: true
-	},
-	{
-		type: "User",
-		name: "second-toastee",
-		description: "A bounty hunter you are toasting to",
-		required: false
-	},
-	{
-		type: "User",
-		name: "third-toastee",
-		description: "A bounty hunter you are toasting to",
-		required: false
-	},
-	{
-		type: "User",
-		name: "fourth-toastee",
-		description: "A bounty hunter you are toasting to",
-		required: false
-	},
-	{
-		type: "User",
-		name: "fifth-toastee",
-		description: "A bounty hunter you are toasting to",
-		required: false
-	},
-	{
-		type: "String",
-		name: "image-url",
-		description: "The URL to the image to add to the toast",
-		required: false
-	}
+	messageOption,
+	toasteeOption,
+	secondToasteeOption,
+	thirdToasteeOption,
+	fourthToasteeOption,
+	fifthToasteeOption,
+	imageOption
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
 });

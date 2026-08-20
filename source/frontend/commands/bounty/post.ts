@@ -32,7 +32,7 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 		interaction.reply({
 			content: "You can post a bounty for other server members to help out with. Here's some examples:\n\t• __Party Up__ Get bounty hunters to join you for a game session\n\t• __WTB/WTS__ Get the word out that you're looking to trade\n\t• __Achievement Get__ Get help working toward an achievement\n\nTo make a bounty, you'll need:\n\t• a title\n\t• a description\nOptionally, you can also add:\n\t• a url for an image\n\t• a start and end time (to make an event to go with your bounty)\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
 			components: [
-				new ActionRowBuilder().addComponents(
+				new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("XP awarded depends on slot used...")
 						.setOptions(slotOptions)
@@ -119,7 +119,7 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 					return;
 				}
 
-				const rawBounty = {
+				const rawBounty: Partial<DatabaseTypes.Bounty> = {
 					userId: modalSubmission.user.id,
 					companyId: modalSubmission.guildId,
 					slotNumber: parseInt(slotNumber),
@@ -129,7 +129,7 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 					rawBounty.description = description;
 				}
 				const errors = [];
-				const warnings = [];
+				const warnings: string[] = [];
 
 				const attachmentFileCollection = modalSubmission.fields.getUploadedFiles(imageId);
 				if (attachmentFileCollection) {

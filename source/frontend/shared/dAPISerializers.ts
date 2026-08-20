@@ -84,7 +84,7 @@ export function randomFooterTip() {
 }
 
 export function disabledSelectRow(placeholderText: string) {
-	return new ActionRowBuilder().addComponents(
+	return new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(
 		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
 			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
 			.setDisabled(true)
@@ -93,7 +93,7 @@ export function disabledSelectRow(placeholderText: string) {
 
 export function bountyControlPanelSelectRow(bountyId: string) {
 	return [
-		new ActionRowBuilder().addComponents(
+		new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
 			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
 				.setPlaceholder("Select a bounty command...")
 				.setOptions(
@@ -465,7 +465,7 @@ export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: Gui
 	return embed;
 }
 
-export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL: string | null, seconderMentions?: string[]) {
+export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL?: string, seconderMentions?: string[]) {
 	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
@@ -486,7 +486,7 @@ export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds
 }
 
 export function secondingButtonRow(toastId: string) {
-	return new ActionRowBuilder().addComponents(
+	return new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
 			.setLabel("Hear, hear!")
 			.setEmoji("🥂")

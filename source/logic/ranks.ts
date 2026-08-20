@@ -1,6 +1,6 @@
 import { Snowflake } from "discord.js";
 import { Op } from "sequelize";
-import { Database } from "../database";
+import { Database, DatabaseTypes } from "../database";
 
 let db: Database;
 
@@ -22,7 +22,7 @@ export function createDefaultRanks(companyId: Snowflake, roleIds: Snowflake[]) {
 	})));
 }
 
-export function createCustomRank(rawRank: { companyId: string, threshold: number, roleId?: string, rankmoji?: string }) {
+export function createCustomRank(rawRank: Partial<DatabaseTypes.Rank>) {
 	return db.Ranks.create(rawRank);
 }
 

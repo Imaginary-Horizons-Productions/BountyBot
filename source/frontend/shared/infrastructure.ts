@@ -1,15 +1,15 @@
-import { BaseApplicationCommandData } from "discord.js";
+import { SlashCommandSubcommandBuilder } from "discord.js";
 import { BuildError, type SelectOptionFunctionality, type SelectOptionProcedure, type SubcommandFunctionality, type SubcommandProcedure } from "../classes";
 
-export async function aggregateSubcommands(mainId: string, fileList: string[]) { //TODONOW mappings.slashData of wrong type?
-	const mappings: { slashData: BaseApplicationCommandData[], executeDictionary: Record<string, SubcommandProcedure> } = {
-		slashData: [],
+export async function aggregateSubcommands(mainId: string, fileList: string[]) {
+	const mappings: { subcommandBuilders: SlashCommandSubcommandBuilder[], executeDictionary: Record<string, SubcommandProcedure> } = {
+		subcommandBuilders: [],
 		executeDictionary: {}
 	};
 	for (const fileName of fileList) {
 		const subcommand = (await import(`../commands/${mainId}/${fileName}`)).default as SubcommandFunctionality;
-		mappings.slashData.push(subcommand.data);
-		mappings.executeDictionary[subcommand.data.name] = subcommand.procedure;
+		mappings.subcommandBuilders.push(subcommand.builder);
+		mappings.executeDictionary[subcommand.builder.name] = subcommand.procedure;
 	};
 	return mappings;
 };

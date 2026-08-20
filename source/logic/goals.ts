@@ -24,7 +24,7 @@ export function createGoal(companyId: Snowflake, type: "bounties" | "toasts" | "
  *
  * negative gpContributed values allowed
  */
-function createGoalContribution(goalId: string, contributorId: Snowflake, gpContributed: number) {
+export function createGoalContribution(goalId: string, contributorId: Snowflake, gpContributed: number) {
 	return db.Contributions.create({ goalId, userId: contributorId, value: gpContributed });
 }
 

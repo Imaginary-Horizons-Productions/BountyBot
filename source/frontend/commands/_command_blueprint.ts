@@ -1,26 +1,21 @@
-import { InteractionContextType, PermissionFlagsBits } from 'discord.js';
+import { InteractionContextType, PermissionFlagsBits, SlashCommandStringOption } from 'discord.js';
 import type { LogicLayer } from '../../logic';
 import { CommandFunctionality } from '../classes';
 import { aggregateSubcommands } from '../shared';
 
 let logicLayer: LogicLayer;
 
+const commandOption = new SlashCommandStringOption();
+
 const mainId = "";
-const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, []);
+const { subcommandBuilders, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, []);
 export default new CommandFunctionality(mainId, "description", PermissionFlagsBits.ViewChannel, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Command specifications go here */
 	(interaction, origin, isDevMode) => {
 
 	}
 ).setOptions(
-	{
-		type: "",
-		name: "",
-		description: "",
-		required: false,
-		autocomplete: [{ name: "", value: "" }], // optional
-		choices: [{ name: "", value: "" }] // optional
-	}
+	commandOption
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}).setSubcommands(subcommandSlashData);
+}).setSubcommands(subcommandBuilders);

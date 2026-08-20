@@ -11,7 +11,7 @@ export default new SubcommandFunctionality("edit", "Edit the title, description,
 		interaction.reply({
 			content: "You can select one of your open bounties to edit below.\n\nKeep in mind that while you're in charge of adding completers and ending the bounty, the bounty is still subject to server rules and moderation.",
 			components: [
-				new ActionRowBuilder().addComponents(
+				new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to edit...")
 						.setOptions(selectOptionsFromBounties(openBounties))

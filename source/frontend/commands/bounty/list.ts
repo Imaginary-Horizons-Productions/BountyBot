@@ -1,11 +1,14 @@
-import { InteractionReplyOptions, MessageFlags, heading, userMention } from "discord.js";
+import { InteractionReplyOptions, MessageFlags, SlashCommandUserOption, heading, userMention } from "discord.js";
 import { DatabaseTypes } from "../../../database";
 import { SubcommandFunctionality } from "../../classes";
 import { bountyEmbed } from "../../shared";
 
+const bountyHunterOption = new SlashCommandUserOption().setName("bounty-hunter")
+	.setDescription("The bounty hunter to show open bounties for");
+
 export default new SubcommandFunctionality("list", "List all of a hunter's open bounties (default: your own)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
-		const listUserId = interaction.options.getUser("bounty-hunter")?.id ?? interaction.user.id;
+		const listUserId = interaction.options.getUser(bountyHunterOption.name)?.id ?? interaction.user.id;
 		const isEvergreen = listUserId === interaction.client.user.id;
 		const existingBounties = await logicLayer.bounties.findOpenBounties(listUserId, interaction.guild.id);
 		if (existingBounties.length < 1) {
@@ -38,11 +41,4 @@ export default new SubcommandFunctionality("list", "List all of a hunter's open 
 		}
 		interaction.reply(replyPayload);
 	}
-).setOptions(
-	{
-		type: "User",
-		name: "bounty-hunter",
-		description: "The bounty hunter to show open bounties for",
-		required: false
-	}
-);
+).setOptions(bountyHunterOption);

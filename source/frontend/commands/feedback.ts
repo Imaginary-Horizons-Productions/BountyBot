@@ -1,9 +1,16 @@
 import { EmbedLimits } from '@sapphire/discord.js-utilities';
-import { EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
+import { EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, SlashCommandStringOption, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
 import { timeConversion } from '../../shared';
 import { feedbackChannelId, SKIP_INTERACTION_HANDLING, testGuildId } from '../../shared/constants';
 import { CommandFunctionality } from '../classes';
 import { butIgnoreInteractionCollectorErrors } from '../shared';
+
+const feedbackTypeOption = new SlashCommandStringOption().setName("feedback-type")
+	.setDescription("the type of feedback you'd like to provide")
+	.setChoices(
+		{ name: "bug report", value: "bug" },
+		{ name: "feature request", value: "feature" }
+	).setRequired(true);
 
 const mainId = "feedback";
 export default new CommandFunctionality(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
@@ -14,8 +21,8 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 			return;
 		}
 
-		switch (interaction.options.getString("feedback-type")) {
-			case "bug": {
+		switch (interaction.options.getString(feedbackTypeOption.name, true)) {
+			case feedbackTypeOption.choices?.[0].value: {
 				const titleId = "title";
 				const stepsId = "steps";
 				const actualId = "actual";
@@ -68,8 +75,11 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 					}
 
 					const imageFileCollection = modalSubmission.fields.getUploadedFiles(imageId);
-					if (imageFileCollection?.size > 0) {
-						embed.setImage(imageFileCollection.first().url);
+					if (imageFileCollection) {
+						const firstAttachment = imageFileCollection.first();
+						if (firstAttachment) {
+							embed.setImage(firstAttachment.url);
+						}
 					}
 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
@@ -82,7 +92,7 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 					})
 				}).catch(butIgnoreInteractionCollectorErrors);
 			} break;
-			case "feature": {
+			case feedbackTypeOption.choices?.[1].value: {
 				const titleId = "title";
 				const userInputId = "user";
 				const functionalityId = "functionality";
@@ -138,8 +148,11 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 					}
 
 					const imageFileCollection = modalSubmission.fields.getUploadedFiles(imageId);
-					if (imageFileCollection?.size > 0) {
-						embed.setImage(imageFileCollection.first().url);
+					if (imageFileCollection) {
+						const firstAttachment = imageFileCollection.first();
+						if (firstAttachment) {
+							embed.setImage(firstAttachment.url);
+						}
 					}
 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
@@ -156,11 +169,5 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 		}
 	}
 ).setOptions(
-	{
-		type: "String",
-		name: "feedback-type",
-		description: "the type of feedback you'd like to provide",
-		required: true,
-		choices: [{ name: "bug report", value: "bug" }, { name: "feature request", value: "feature" }]
-	}
+	feedbackTypeOption
 );

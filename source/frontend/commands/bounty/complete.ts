@@ -1,4 +1,4 @@
-import { bold, channelMention, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, strikethrough, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
+import { bold, channelMention, type InteractionEditReplyOptions, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, strikethrough, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
 import { DatabaseTypes } from "../../../database";
 import { timeConversion } from "../../../shared";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
@@ -99,7 +99,7 @@ export default new SubcommandFunctionality("complete", "Close one of your open b
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		const rewardMessageContent = rewardSummary("bounty", companyReceipt, hunterReceipts, theater.company.maxSimBounties);
 
-		const acknowledgeOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
+		const acknowledgeOptions: InteractionEditReplyOptions = { content: `${userMention(bounty.userId)}'s bounty, ` };
 		if (goalProgress.goalCompleted) {
 			acknowledgeOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 		}

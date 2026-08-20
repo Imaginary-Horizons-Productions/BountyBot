@@ -10,7 +10,7 @@ export default new SubcommandFunctionality("take-down", "Take down one of your b
 		interaction.reply({
 			content: `If you'd like to change the title, description, image, or time of your bounty instead, you can use ${commandMention("bounty edit")}.`,
 			components: [
-				new ActionRowBuilder().addComponents(
+				new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
 					new StringSelectMenuBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 						.setPlaceholder("Select a bounty to take down...")
 						.setOptions(selectOptionsFromBounties(bounties))

@@ -10,7 +10,7 @@ export function setDB(database: Database) {
 	db = database;
 }
 
-export function createBounty(rawBounty: { userId: string, companyId: string, slotNumber: number, isEvergreen: boolean, title: string }) {
+export function createBounty(rawBounty: Partial<DatabaseTypes.Bounty>) {
 	return db.Bounties.create(rawBounty);
 }
 

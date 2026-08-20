@@ -1,4 +1,4 @@
-import { StringSelectMenuInteraction } from "discord.js";
+import { ButtonInteraction } from "discord.js";
 import type { LogicLayer } from "../../logic";
 import { InteractionTheater } from "./InteractionTheater";
 
@@ -16,7 +16,7 @@ export class ItemTemplateSet {
 	}
 }
 
-type ItemProcedure = (interaction: StringSelectMenuInteraction<"cached">, theater: InteractionTheater) => Promise<number>;
+type ItemProcedure = (interaction: ButtonInteraction<"cached">, theater: InteractionTheater) => Promise<number>;
 
 export class ItemTemplate {
 	declare name: string;

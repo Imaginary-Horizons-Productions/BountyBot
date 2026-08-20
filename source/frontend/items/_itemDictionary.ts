@@ -1,4 +1,4 @@
-import { StringSelectMenuInteraction } from "discord.js";
+import { ButtonInteraction } from "discord.js";
 import type { LogicLayer } from "../../logic";
 import { CooldownDictionary } from "../../shared/types";
 import { InteractionTheater, ItemTemplate, ItemTemplateSet } from "../classes";
@@ -38,7 +38,7 @@ export function getItemCooldown(itemName: string) {
 }
 
 /** the truthiness of the awaited return indicates whether to skip decrementing the item count */
-export function useItem(itemName: string, interaction: StringSelectMenuInteraction<"cached">, theater: InteractionTheater) {
+export function useItem(itemName: string, interaction: ButtonInteraction<"cached">, theater: InteractionTheater) {
 	return ITEMS[itemName].effect(interaction, theater);
 }
 

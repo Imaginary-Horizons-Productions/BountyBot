@@ -6,7 +6,7 @@ import { aggregateSubcommands } from '../../shared';
 let logicLayer: LogicLayer;
 
 const mainId = "create-default";
-const { slashData: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
+const { subcommandBuilders: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
 	"bounty-board-forum.js",
 	"scoreboard-reference.js",
 	"rank-roles.js"

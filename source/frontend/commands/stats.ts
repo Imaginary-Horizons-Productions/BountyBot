@@ -1,4 +1,4 @@
-import { Colors, EmbedBuilder, InteractionContextType, italic, MessageFlags, underline, unorderedList } from 'discord.js';
+import { Colors, EmbedBuilder, InteractionContextType, italic, MessageFlags, SlashCommandUserOption, underline, unorderedList } from 'discord.js';
 import { DatabaseTypes } from '../../database';
 import type { LogicLayer } from '../../logic';
 import { CommandFunctionality } from '../classes';
@@ -6,11 +6,14 @@ import { companyStatsEmbed, fillableTextBar, hunterProfileEmbed, ihpAuthorPayloa
 
 let logicLayer: LogicLayer;
 
+const bountyHunterOption = new SlashCommandUserOption().setName("bounty-hunter")
+	.setDescription("Whose stats to check; BountyBot for the server stats, empty for yourself");
+
 const mainId = "stats";
 export default new CommandFunctionality(mainId, "Get the BountyBot stats for yourself or someone else", null, false, [InteractionContextType.Guild], 3000,
 	/** Get the BountyBot stats for yourself or someone else */
 	async (interaction, theater, isDevMode) => {
-		const target = interaction.options.getMember("bounty-hunter");
+		const target = interaction.options.getMember(bountyHunterOption.name);
 		const guild = interaction.guild;
 		const [currentSeason] = await logicLayer.seasons.findOrCreateCurrentSeason(guild.id);
 		if (target) {
@@ -123,12 +126,7 @@ export default new CommandFunctionality(mainId, "Get the BountyBot stats for you
 		}
 	}
 ).setOptions(
-	{
-		type: "User",
-		name: "bounty-hunter",
-		description: "Whose stats to check; BountyBot for the server stats, empty for yourself",
-		required: false
-	}
+	bountyHunterOption
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
 });
