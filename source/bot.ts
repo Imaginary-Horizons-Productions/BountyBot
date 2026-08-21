@@ -384,17 +384,13 @@ dAPIClient.on(Events.ChannelDelete, async channel => {
 
 	logicBlob.companies.findCompanyByPK(channel.guild.id).then(company => {
 		if (company) {
-			let shouldSaveCompany = false;
 			if (channel.id === company.bountyBoardId) {
-				company.bountyBoardId = null;
-				shouldSaveCompany = true;
+				company.update({ bountyBoardId: null });
 			} else if (channel.id === company.scoreboardChannelId) {
-				company.scoreboardChannelId = null;
-				company.scoreboardMessageId = null;
-				shouldSaveCompany = true;
-			}
-			if (shouldSaveCompany) {
-				company.save();
+				company.update({
+					scoreboardChannelId: null,
+					scoreboardMessageId: null
+				});
 			}
 		}
 	})
