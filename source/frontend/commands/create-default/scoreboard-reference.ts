@@ -49,10 +49,11 @@ export default new SubcommandFunctionality("scoreboard-reference", "Create a ref
 			embeds.push(await overallScoreboardEmbed(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress));
 		}
 		scoreboard.send({ embeds }).then(message => {
-			theater.company.scoreboardChannelId = scoreboard.id;
-			theater.company.scoreboardMessageId = message.id;
-			theater.company.scoreboardIsSeasonal = isSeasonal;
-			theater.company.save();
+			theater.company.update({
+				scoreboardChannelId: scoreboard.id,
+				scoreboardMessageId: message.id,
+				scoreboardIsSeasonal: isSeasonal
+			})
 		});
 		interaction.reply({ content: `A new scoreboard reference channel has been created: ${scoreboard}`, flags: MessageFlags.Ephemeral });
 	}

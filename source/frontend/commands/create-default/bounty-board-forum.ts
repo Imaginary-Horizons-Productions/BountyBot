@@ -43,10 +43,12 @@ export default new SubcommandFunctionality("bounty-board-forum", "Create a new b
 			}
 		}
 
-		theater.company.bountyBoardId = bountyBoard.id;
 		const [{ id: openTagId }, { id: completedTagId }] = bountyBoard.availableTags;
-		theater.company.bountyBoardOpenTagId = openTagId;
-		theater.company.bountyBoardCompletedTagId = completedTagId;
+		theater.company.update({
+			bountyBoardId: bountyBoard.id,
+			bountyBoardOpenTagId: openTagId,
+			bountyBoardCompletedTagId: completedTagId
+		});
 
 		const evergreenBounties: DatabaseTypes.Bounty[] = [];
 		logicLayer.bounties.findCompanyBountiesByCreationDate(interaction.guildId).then(async bounties => {
@@ -78,7 +80,6 @@ export default new SubcommandFunctionality("bounty-board-forum", "Create a new b
 			}
 		});
 
-		theater.company.save();
 		interaction.reply({ content: `A new bounty board has been created: ${bountyBoard}`, flags: MessageFlags.Ephemeral });
 	}
 ).setOptions(channelNameOption);

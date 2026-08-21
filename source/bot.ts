@@ -377,7 +377,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	}
 })
 
-dAPIClient.on(Events.ChannelDelete, async channel => {
+dAPIClient.on(Events.ChannelDelete, channel => {
 	if (channel.isDMBased()) {
 		return;
 	}

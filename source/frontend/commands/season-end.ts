@@ -17,8 +17,7 @@ export default new CommandFunctionality(mainId, "Start a new season for this ser
 		companyStatsEmbed(guild, theater.company.getXP(hunterMap), participantCount, currentSeason, lastSeason).then(async embed => {
 			const seasonBeforeEndingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			if (seasonBeforeEndingSeason) {
-				seasonBeforeEndingSeason.isPreviousSeason = false;
-				seasonBeforeEndingSeason.save();
+				seasonBeforeEndingSeason.update({ isPreviousSeason: false });
 			}
 			const endingSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "current");
 			const shoutouts = [];
@@ -39,9 +38,7 @@ export default new CommandFunctionality(mainId, "Start a new season for this ser
 				if (mostGoalContributions) {
 					shoutouts.push(`<@${mostGoalContributions.userId}> made the most goal contributions this season!`);
 				}
-				endingSeason.isCurrentSeason = false;
-				endingSeason.isPreviousSeason = true;
-				endingSeason.save();
+				endingSeason.update({ isCurrentSeason: false, isPreviousSeason: true });
 			}
 			await logicLayer.seasons.createSeason(interaction.guildId);
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);

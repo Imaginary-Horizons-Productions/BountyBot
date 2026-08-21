@@ -21,8 +21,7 @@ export async function makeEvergreenBountiesThread(threadManager: GuildTextThread
 		message: { embeds },
 		appliedTags: [company.bountyBoardOpenTagId]
 	});
-	company.evergreenThreadId = thread.id;
-	company.save();
+	company.update({ evergreenThreadId: thread.id });
 	thread.pin();
 	return thread;
 }

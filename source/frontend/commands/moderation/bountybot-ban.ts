@@ -20,11 +20,10 @@ export default new SubcommandFunctionality("bountybot-ban", "Toggle whether the 
 		} else {
 			hunter = (await logicLayer.hunters.findOrCreateBountyHunter(discordUser.id, interaction.guild.id)).hunter[0];
 		}
-		hunter.isBanned = !hunter.isBanned;
-		if (hunter.isBanned) {
-			hunter.hasBeenBanned = true;
-		}
-		hunter.save();
+		hunter.update({
+			isBanned: !hunter.isBanned,
+			hasBeenBanned: true
+		});
 		interaction.reply({ content: `${discordUser} has been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on this server.`, flags: MessageFlags.Ephemeral });
 		if (!discordUser.bot) {
 			discordUser.send(`You have been ${hunter.isBanned ? "" : "un"}banned from interacting with BountyBot on ${interaction.guild.name}. The reason provided was: ${interaction.options.getString(reasonOption.name, true)}`)
