@@ -1,4 +1,4 @@
-import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, TimestampStyles } from "discord.js";
+import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, Snowflake, TimestampStyles } from "discord.js";
 import { promises as fsa } from "fs";
 import cron from "node-cron";
 import { Sequelize } from "sequelize";
@@ -13,7 +13,7 @@ import { LOGIC_LAYER as logicBlob } from "./logic/index.ts";
 import { announcementsChannelId, commandIds, lastPostedVersion, premium, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, testGuildId } from "./shared/constants.ts";
 import { discordTimestamp } from "./shared/index.ts";
 import { DatabaseOptionsDictionary, RunMode } from "./shared/json_serializers/DatabaseOptionsDictionary.ts";
-import type { CompanyReciept, CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
+import { GoalProgressKind, type CooldownDictionary, type PremiumFlowList } from "./shared/types.ts";
 
 const runMode = (process.argv[2] || RunMode.Development) as RunMode;
 
@@ -43,7 +43,7 @@ addContextMenusToPremiumList(premiumFlowList);
 //#endregion
 
 //#region Database Setup
-const isDevMode = runMode === "development";
+const isDevMode = runMode === RunMode.Development;
 const dbConnection = new Sequelize(new DatabaseOptionsDictionary((await import("../config/config.json", { with: { type: "json" } })).default)[runMode]);
 const db = await dbConnection.authenticate().then(() => {
 	return initDB(dbConnection);
@@ -92,7 +92,7 @@ dAPIClient.on(Events.ClientReady, () => {
 			try {
 				import(authPath, { with: { type: "json" } }).then(auth => {
 					new REST({ version: "10" }).setToken(auth.default.token).put(
-						Routes.applicationCommands(dAPIClient.user.id),
+						Routes.applicationCommands(auth.botId),
 						{ body: [...slashData, ...contextMenuData] }
 					).then(commands => {
 						if (!(function responseIsApplicationCommands(commands: unknown): commands is ApplicationCommand[] {
@@ -167,11 +167,11 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 		mainId = interaction.commandName;
 		const command = getCommand(mainId);
 		const focusedOption = interaction.options.getFocused(true);
-		const unfilteredChoices = command.autocomplete?.[focusedOption.name] ?? [];
+		const unfilteredChoices = command.autocompleteMap?.[focusedOption.name] ?? [];
 		if (unfilteredChoices.length < 1) {
 			console.error(`Attempted autocomplete on misconfigured command ${mainId} ${focusedOption.name}`);
 		}
-		const choices = unfilteredChoices.filter(choice => choice.value.toLowerCase().includes(focusedOption.value.toLowerCase()))
+		const choices = unfilteredChoices.filter(choice => choice.value.toString().toLowerCase().includes(focusedOption.value.toLowerCase()))
 			.slice(0, 25);
 		interaction.respond(choices);
 		return;
@@ -234,6 +234,11 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	//#endregion
 });
 
+/** NOTE this type guard guarantees `toastMessageId`'s existance by assuming the `MessageReactionAdd` context */
+function isReactionToastExtant(candidate: {} | null): candidate is DatabaseTypes.Toast & { toastMessageId: string } {
+	return !!candidate;
+}
+
 dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	if (reaction.emoji.name !== "🥂") {
 		return;
@@ -246,12 +251,19 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 	// If receiving a Partial, fetch entities
 	let guild = reaction.message.guild;
-	let hostMessage = reaction.message;
-	let hostChannel = hostMessage?.channel;
-	if (reaction.partial) {
+	if (!guild) {
 		guild = await dAPIClient.guilds.fetch(reaction.message.guildId);
-		hostChannel = await guild.channels.fetch(reaction.message.channelId);
-		hostMessage = await hostChannel.messages.fetch(reaction.message.id);
+	}
+	let hostMessage = reaction.message;
+	if (hostMessage.partial) {
+		let fetchedMessage = await reaction.message.channel.messages.fetch(reaction.message.id);
+		if (!fetchedMessage) {
+			return;
+		}
+		hostMessage = fetchedMessage;
+	}
+	if (!reaction.message.channel.isSendable()) {
+		return;
 	}
 
 	// Reject toasts on own message or toasts on bot messages if not in development mode
@@ -287,18 +299,21 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	const [season] = await logicBlob.seasons.findOrCreateCurrentSeason(guild.id);
 	const descendingRanks = await logicBlob.ranks.findAllRanks(guild.id);
 	const guildRoles = await guild.roles.fetch();
-	let goalProgress;
+	let completedGoalContributorIds: Snowflake[] | undefined;
 	const recipientIds = [hostMessage.author.id];
-	if (existingToast) {
+	if (isReactionToastExtant(existingToast)) {
 		// If extant toast, create Seconding
-		const companyReceipt = { guildName: guild.name };
-		goalProgress = await logicBlob.goals.progressGoal(company, "secondings", interactingHunter, season);
+		const { companyReceipt, goalProgress } = await logicBlob.goals.progressGoal(company, GoalProgressKind.Seconding, interactingHunter, season);
+		companyReceipt.guildName = guild.name;
+		if (goalProgress.goalCompleted) {
+			completedGoalContributorIds = goalProgress.contributorIds;
+		}
 		if (goalProgress.gpContributed > 0) {
 			companyReceipt.gp = goalProgress.gpContributed;
 		}
 		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, recipientIds, season.id);
 		const toastMessage = await reaction.message.channel.messages.fetch(existingToast.toastMessageId);
-		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await reaction.message.guild.members.fetch(user.id), goalProgress, existingToast.imageURL, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
+		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await guild.members.fetch(user.id), goalProgress, existingToast.imageURL, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
 
 		const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
@@ -321,12 +336,15 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		const toastText = `${randomCongratulatoryPhrase()}! Reaction Toast: ${hostMessage.url}`;
 		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientIds, hunterMap, season.id, toastText, null, hostMessage.id);
 
-		const companyReceipt: CompanyReciept = { guildName: guild.name };
+		const { companyReceipt, goalProgress } = await logicBlob.goals.progressGoal(company, GoalProgressKind.Toast, interactingHunter, season);
+		companyReceipt.guildName = guild.name;
+		if (goalProgress.goalCompleted) {
+			completedGoalContributorIds = goalProgress.contributorIds;
+		}
 		const currentCompanyLevel = DatabaseTypes.Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
-		goalProgress = await logicBlob.goals.progressGoal(company, "toasts", interactingHunter, season);
 		if (goalProgress.gpContributed > 0) {
 			companyReceipt.gp = goalProgress.gpContributed;
 		}
@@ -351,15 +369,19 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 			}
 		});
 	}
-	if (goalProgress.goalCompleted) {
-		hostChannel.send({
-			embeds: [goalCompletionEmbed(goalProgress.contributorIds)],
+	if (completedGoalContributorIds) {
+		reaction.message.channel.send({
+			embeds: [goalCompletionEmbed(completedGoalContributorIds)],
 			flags: MessageFlags.SuppressNotifications
 		});
 	}
 })
 
 dAPIClient.on(Events.ChannelDelete, async channel => {
+	if (channel.isDMBased()) {
+		return;
+	}
+
 	logicBlob.companies.findCompanyByPK(channel.guild.id).then(company => {
 		if (company) {
 			let shouldSaveCompany = false;

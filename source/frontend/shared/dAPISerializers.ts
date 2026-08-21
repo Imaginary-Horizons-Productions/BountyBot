@@ -466,7 +466,7 @@ export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: Gui
 	return embed;
 }
 
-export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL?: string, seconderMentions?: string[]) {
+export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL?: string | null, seconderMentions?: string[]) {
 	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)

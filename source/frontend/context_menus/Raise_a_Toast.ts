@@ -53,7 +53,7 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
 			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
-			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, theater.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText, null);
+			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, theater.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText);
 			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 			let companyReceipt = {};
 			if (hunterReceipts.size > 0) {

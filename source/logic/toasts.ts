@@ -70,7 +70,7 @@ function isToastCrit(critRoll: number, effectiveToastLevel: number) {
 	return critRoll * critRoll * critRoll > 3375000 / effectiveToastLevel
 }
 
-export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, senderId: Snowflake, toasteeIds: Snowflake[], hunterMap: Map<Snowflake, DatabaseTypes.Hunter>, seasonId: string, toastText: string, imageURL?: string, hostMessageId?: Snowflake) {
+export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, senderId: Snowflake, toasteeIds: Snowflake[], hunterMap: Map<Snowflake, DatabaseTypes.Hunter>, seasonId: string, toastText: string, imageURL?: string | null, hostMessageId?: Snowflake) {
 	const hunterReceipts: HunterReceiptMap = new Map();
 	// Make database entities
 	const recentToasts = await db.Toasts.findAll({ where: { companyId: guild.id, senderId, createdAt: { [Op.gt]: dateInPast({ d: 2 }) } }, include: db.Recipients });
