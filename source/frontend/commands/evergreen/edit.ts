@@ -3,7 +3,7 @@ import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
-import { bountyEmbed, butIgnoreInteractionCollectorErrors, editBountyModalAndSubmissionOptions, refreshEvergreenBountiesThread, selectOptionsFromBounties, textsHaveAutoModInfraction } from "../../shared/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, refreshEvergreenBountiesThread, selectOptionsFromBounties, textsHaveAutoModInfraction } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("edit", "Change the name, description, or image of an evergreen bounty",
@@ -24,7 +24,7 @@ export default new SubcommandFunctionality("edit", "Change the name, description
 			// Verify bounty exists
 			const selectedBounty = evergreenBounties.find(bounty => bounty.id === bountyId);
 			if (selectedBounty?.state !== BountyState.Open) {
-				interaction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
+				collectedInteraction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
 				return;
 			}
 

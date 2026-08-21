@@ -24,7 +24,7 @@ export default new SubcommandFunctionality("edit", "Edit the title, description,
 			// Verify bounty exists
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
 			if (bounty?.state !== BountyState.Open) {
-				interaction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
+				collectedInteraction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
 				return;
 			}
 

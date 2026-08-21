@@ -67,7 +67,7 @@ export default new SubcommandFunctionality("post", `Post an evergreen bounty, li
 			const rawBounty: Partial<DatabaseTypes.Bounty> = {
 				userId: interaction.client.user.id,
 				companyId: interaction.guildId,
-				slotNumber: parseInt(slotNumber),
+				slotNumber,
 				isEvergreen: true,
 				title
 			};

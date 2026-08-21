@@ -47,14 +47,14 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 			await theater.hunter.reload();
 			const reloadedBountySlotCount = DatabaseTypes.Hunter.getBountySlotCount(theater.hunter.getLevel(theater.company.xpCoefficient), theater.company.maxSimBounties);
 			if (parseInt(slotNumber) > reloadedBountySlotCount) {
-				interaction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
+				collectedInteraction.update({ content: `You haven't unlocked bounty slot ${slotNumber} yet.`, components: [] });
 				return;
 			}
 
 			// Check slot is not occupied
 			const existingBounty = await logicLayer.bounties.findBounty({ userId: interaction.user.id, companyId: interaction.guild.id, slotNumber: parseInt(slotNumber) });
 			if (existingBounty) {
-				interaction.update({ content: `You already have a bounty in slot ${slotNumber}.`, components: [] });
+				collectedInteraction.update({ content: `You already have a bounty in slot ${slotNumber}.`, components: [] });
 				return;
 			}
 
