@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 			// Verify bounty exists
 			const selectedBounty = evergreenBounties.find(bounty => bounty.id === bountyId);
 			if (selectedBounty?.state !== "open") {
-				interaction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
+				collectedInteraction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
 				return;
 			}
 
