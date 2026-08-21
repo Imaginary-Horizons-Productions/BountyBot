@@ -1,5 +1,5 @@
 import { EmbedLimits, MessageLimits, ModalLimits, SelectMenuLimits } from "@sapphire/discord.js-utilities";
-import type { EmbedFooterData, GuildScheduledEventCreateOptions, InteractionReplyOptions, MessageCreateOptions, SelectMenuComponentOptionData } from "discord.js";
+import type { EmbedAuthorOptions, EmbedFooterData, EmbedFooterOptions, GuildScheduledEventCreateOptions, InteractionReplyOptions, MessageCreateOptions, SelectMenuComponentOptionData } from "discord.js";
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageFlags, ModalBuilder, Role, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
 import * as fs from "fs";
 import { DatabaseTypes } from "../../database/index.ts";
@@ -349,7 +349,7 @@ export async function overallScoreboardEmbed(company: DatabaseTypes.Company, gui
 		scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
+		.setAuthor(ihpAuthorPayload)
 		.setThumbnail(company.scoreboardThumbnailURL)
 		.setTitle("The Scoreboard")
 		.setFooter(randomFooterTip())
@@ -405,7 +405,7 @@ export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGui
 		description += `\nThey have earned ${italic("0 XP")} this season`;
 	}
 	return new EmbedBuilder().setColor(Colors[targetHunter.profileColor])
-		.setAuthor(module.exports.ihpAuthorPayload)
+		.setAuthor(ihpAuthorPayload)
 		.setThumbnail(targetGuildMember.user.avatarURL())
 		.setTitle(`${targetGuildMember.displayName} is ${underline(`Level ${currentLevel}`)}`)
 		.setDescription(description)
@@ -467,11 +467,16 @@ export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: Gui
 }
 
 export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL?: string | null, seconderMentions?: string[]) {
+	const footerOptions: EmbedFooterOptions = { text: senderMember.displayName };
+	const iconURL = senderMember.user.avatarURL();
+	if (iconURL) {
+		footerOptions.iconURL = iconURL;
+	}
 	const embed = new EmbedBuilder().setColor("e5b271")
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
 		.setDescription(`A toast to ${sentenceListEN(recipientIds.map(id => userMention(id)))}!`)
-		.setFooter({ text: senderMember.displayName, iconURL: senderMember.user.avatarURL() });
+		.setFooter(footerOptions);
 	if (goalProgress.goalCompleted) {
 		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
 	} else if (goalProgress.requiredGP > 0) {
@@ -503,9 +508,18 @@ export function goalCompletionEmbed(contributorIds: string[]) {
 		.addFields({ name: "Contributors", value: sentenceListEN(contributorIds.map(id => userMention(id))) })
 }
 
+function guildToEmbedAuthorOptions(guild: Guild) {
+	const payload: EmbedAuthorOptions = { name: guild.name };
+	const iconURL = guild.iconURL();
+	if (iconURL) {
+		payload.iconURL = iconURL;
+	}
+	return payload;
+}
+
 export function raffleResultEmbed(profileColor: keyof typeof Colors, guild: Guild, thumbnailURL: string, winner: GuildMember, qualificationText: string) {
 	const embed = new EmbedBuilder().setColor(Colors[profileColor])
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setAuthor(guildToEmbedAuthorOptions(guild))
 		.setTitle("Raffle Results")
 		.setThumbnail(thumbnailURL)
 		.setDescription(`The winner of this raffle is: ${winner}`)
@@ -520,7 +534,7 @@ export function raffleResultEmbed(profileColor: keyof typeof Colors, guild: Guil
 
 export async function userReportEmbed(hunter: DatabaseTypes.Hunter, guild: Guild, member: GuildMember, dqCount: number, lastFiveBounties: (DatabaseTypes.Bounty & { Completions: DatabaseTypes.Completion[] })[]) {
 	const embed = new EmbedBuilder().setColor(member.displayColor)
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL() })
+		.setAuthor(guildToEmbedAuthorOptions(guild))
 		.setTitle(`Moderation Stats: ${member.user.tag}`)
 		.setThumbnail(member.user.avatarURL())
 		.setDescription(`Display Name: ${bold(member.displayName)} (id: ${italic(member.id)})\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)

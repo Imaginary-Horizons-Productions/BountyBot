@@ -1,9 +1,18 @@
 import { EmbedLimits } from '@sapphire/discord.js-utilities';
-import { EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, SlashCommandStringOption, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
+import { EmbedAuthorOptions, EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, SlashCommandStringOption, TextInputBuilder, TextInputStyle, User, userMention } from 'discord.js';
 import { feedbackChannelId, SKIP_INTERACTION_HANDLING, testGuildId } from '../../shared/constants.ts';
 import { timeConversion } from '../../shared/index.ts';
 import { CommandFunctionality } from '../classes/index.ts';
 import { butIgnoreInteractionCollectorErrors } from '../shared/index.ts';
+
+function userToUniqueEmbedAuthorOptions(user: User) {
+	const payload: EmbedAuthorOptions = { name: user.username };
+	const iconURL = user.avatarURL();
+	if (iconURL) {
+		payload.iconURL = iconURL;
+	}
+	return payload;
+}
 
 const feedbackTypeOption = new SlashCommandStringOption().setName("feedback-type")
 	.setDescription("the type of feedback you'd like to provide")
@@ -61,7 +70,7 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 				interaction.showModal(modal);
 				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(modalSubmission => {
 					const errors: string[] = [];
-					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
+					const embed = new EmbedBuilder().setAuthor(userToUniqueEmbedAuthorOptions(modalSubmission.user))
 						.setTitle(`Bug Report: ${modalSubmission.fields.getTextInputValue(titleId)}`)
 						.addFields(
 							{ name: "Reporter", value: userMention(modalSubmission.user.id) },
@@ -85,6 +94,14 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
 						return testGuild.channels.fetch(feedbackChannelId);
 					}).then(feedbackChannel => {
+						if (!feedbackChannel) {
+							modalSubmission.reply({ content: "There was an error finding the Imaginary Horizons Productions's feedback channel.", flags: MessageFlags.Ephemeral })
+							return;
+						}
+						if (!feedbackChannel.isSendable() || feedbackChannel.isThread()) {
+							modalSubmission.reply({ content: "The Imaginary Horizons Productions's feedback channel appears to be configured as a channel that cannot receive messages or create invites.", flags: MessageFlags.Ephemeral })
+							return;
+						}
 						feedbackChannel.createInvite({ maxAge: 0 }).then(invite => {
 							feedbackChannel.send({ embeds: [embed] });
 							modalSubmission.reply({ content: `Your bug report has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}.You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: MessageFlags.Ephemeral })
@@ -134,7 +151,7 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 				interaction.showModal(modal);
 				interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(modalSubmission => {
 					const errors: string[] = [];
-					const embed = new EmbedBuilder().setAuthor({ name: modalSubmission.user.username, iconURL: modalSubmission.user.avatarURL() })
+					const embed = new EmbedBuilder().setAuthor(userToUniqueEmbedAuthorOptions(modalSubmission.user))
 						.setTitle(`Feature Request: ${modalSubmission.fields.getTextInputValue(titleId)}`)
 						.addFields(
 							{ name: "Reporter", value: userMention(modalSubmission.user.id) },
@@ -158,6 +175,14 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 					modalSubmission.client.guilds.fetch(testGuildId).then(testGuild => {
 						return testGuild.channels.fetch(feedbackChannelId);
 					}).then(feedbackChannel => {
+						if (!feedbackChannel) {
+							modalSubmission.reply({ content: "There was an error finding the Imaginary Horizons Productions's feedback channel.", flags: MessageFlags.Ephemeral })
+							return;
+						}
+						if (!feedbackChannel.isSendable() || feedbackChannel.isThread()) {
+							modalSubmission.reply({ content: "The Imaginary Horizons Productions's feedback channel appears to be configured as a channel that cannot receive messages or create invites.", flags: MessageFlags.Ephemeral })
+							return;
+						}
 						feedbackChannel.createInvite({ maxAge: 0 }).then(invite => {
 							feedbackChannel.send({ embeds: [embed] });
 							modalSubmission.reply({ content: `Your feature request has been recorded${errors.length > 0 ? `, but the following errors were encountered: ${errors.join(", ")}` : ""}. You can join the Imaginary Horizons Productions test server to provide additional information here: ${invite.url}`, flags: MessageFlags.Ephemeral })

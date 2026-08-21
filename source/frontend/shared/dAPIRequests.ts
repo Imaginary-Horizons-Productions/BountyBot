@@ -1,5 +1,5 @@
-import type { MessageEditOptions, PublicThreadChannel, Snowflake } from "discord.js";
-import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, GuildTextThreadManager, Message, MessageFlags, ThreadChannel } from "discord.js";
+import type { GuildForumThreadManager, MessageEditOptions, Snowflake } from "discord.js";
+import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, Message, MessageFlags, ThreadChannel } from "discord.js";
 import { DatabaseTypes } from "../../database/index.ts";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
 import { ascendingByProperty } from "../../shared/index.ts";
@@ -15,7 +15,7 @@ import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./
  * - describe entity in BountyBot context (eg "EvergreenBountyBoard" instead of "ForumChannel")
  */
 
-export async function makeEvergreenBountiesThread(threadManager: GuildTextThreadManager<PublicThreadChannel>, embeds: EmbedBuilder[], company: DatabaseTypes.Company) {
+export async function makeEvergreenBountiesThread(threadManager: GuildForumThreadManager, embeds: EmbedBuilder[], company: DatabaseTypes.Company) {
 	const thread = await threadManager.create({
 		name: "Evergreen Bounties",
 		message: { embeds },
