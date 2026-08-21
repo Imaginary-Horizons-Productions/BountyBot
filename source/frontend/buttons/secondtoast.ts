@@ -1,8 +1,8 @@
 import { MessageFlags } from 'discord.js';
-import { DatabaseTypes } from '../../database';
+import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic';
-import { ButtonFunctionality } from '../classes';
-import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sendRewardMessage, syncRankRoles, toastEmbed } from '../shared';
+import { ButtonFunctionality } from '../classes/index.ts';
+import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sendRewardMessage, syncRankRoles, toastEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

@@ -1,9 +1,10 @@
-import { AnySelectMenuInteraction, ApplicationCommandOptionType, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, PermissionFlags, SlashCommandAttachmentOption, SlashCommandBooleanOption, SlashCommandBuilder, SlashCommandChannelOption, SlashCommandIntegerOption, SlashCommandMentionableOption, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, SlashCommandUserOption, Snowflake, UserContextMenuCommandInteraction } from "discord.js";
+import type { AnySelectMenuInteraction, ApplicationCommandOptionChoiceData, PermissionFlags, Snowflake } from "discord.js";
+import { ApplicationCommandOptionType, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, SlashCommandAttachmentOption, SlashCommandBooleanOption, SlashCommandBuilder, SlashCommandChannelOption, SlashCommandIntegerOption, SlashCommandMentionableOption, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, SlashCommandUserOption, UserContextMenuCommandInteraction } from "discord.js";
 import type { LogicLayer } from "../../logic/index.ts";
 import { MAX_SET_TIMEOUT } from "../../shared/constants.ts";
-import { MemberOf } from "../../shared/types.ts";
-import { BuildError } from "./BuildError.js";
-import { InteractionTheater } from "./InteractionTheater.ts";
+import type { MemberOf } from "../../shared/types.ts";
+import { BuildError } from "./BuildError.ts";
+import type { InteractionTheater } from "./InteractionTheater.ts";
 
 type InteractionProcedure =
 	| CommandProcedure
@@ -71,9 +72,11 @@ export type SupportedSlashCommandOptionType =
 	| SlashCommandNumberOption
 	| SlashCommandAttachmentOption;
 
+type AutocompleteMap = Record<string, ApplicationCommandOptionChoiceData[]>;
+
 export class CommandFunctionality extends InteractionFunctionality {
 	declare isPremium: boolean;
-	declare autocomplete?: Record<string, { name: string; value: string; }[]>;
+	declare autocompleteMap?: AutocompleteMap;
 	declare builder: SlashCommandBuilder;
 	declare execute: CommandProcedure;
 
@@ -81,7 +84,6 @@ export class CommandFunctionality extends InteractionFunctionality {
 	constructor(mainIdArgument: string, descriptionArgument: string, defaultMemberPermission: MemberOf<PermissionFlags> | null, isPremiumCommand: boolean, contextEnums: InteractionContextType[], cooldownInMS: number, procedure: CommandProcedure) {
 		super(mainIdArgument, cooldownInMS, procedure);
 		this.isPremium = isPremiumCommand;
-		this.autocomplete = {};
 		this.builder = new SlashCommandBuilder()
 			.setName(mainIdArgument)
 			.setDescription(descriptionArgument)
@@ -123,6 +125,18 @@ export class CommandFunctionality extends InteractionFunctionality {
 					break;
 			}
 		}
+		return this;
+	}
+
+	setAutocompleteMap(optionName: string, choices: ApplicationCommandOptionChoiceData[]) {
+		if (!this.autocompleteMap) {
+			this.autocompleteMap = { [optionName]: choices };
+			return this;
+		}
+		if (optionName in this.autocompleteMap) {
+			throw new BuildError(`Duplicate autocomplete optionName (${optionName})`);
+		}
+		this.autocompleteMap[optionName] = choices;
 		return this;
 	}
 

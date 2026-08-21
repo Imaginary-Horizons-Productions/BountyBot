@@ -1,9 +1,10 @@
-import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandAttachmentOption, SlashCommandStringOption, SlashCommandUserOption, Snowflake, unorderedList, userMention } from 'discord.js';
-import { DatabaseTypes } from '../../database';
-import type { LogicLayer } from '../../logic';
-import type { CompanyReciept } from '../../shared/types';
-import { CommandFunctionality } from '../classes';
-import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, sentenceListEN, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared';
+import type { Snowflake } from "discord.js";
+import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandAttachmentOption, SlashCommandStringOption, SlashCommandUserOption, unorderedList, userMention } from 'discord.js';
+import { DatabaseTypes } from '../../database/index.ts';
+import type { LogicLayer } from '../../logic/index.ts';
+import type { CompanyReciept } from '../../shared/types.ts';
+import { CommandFunctionality } from '../classes/index.ts';
+import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, sentenceListEN, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

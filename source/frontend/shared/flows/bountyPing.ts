@@ -1,6 +1,6 @@
 import { MessageFlags, ModalSubmitInteraction, ThreadChannel, userMention } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { BountyState } from "../../../shared/types";
+import type { DatabaseTypes } from "../../../database";
+import { BountyState } from "../../../shared/types.ts";
 
 export async function bountyPing(modalSubmission: ModalSubmitInteraction, labelIds: { message: string; excludedBountyHunters: string; }, bounty: DatabaseTypes.Bounty, bountyThread: ThreadChannel | null) {
 	if (!bounty || bounty.state !== BountyState.Open) {

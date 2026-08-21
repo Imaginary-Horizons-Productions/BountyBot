@@ -1,7 +1,7 @@
 import { InteractionContextType, PermissionFlagsBits, SlashCommandStringOption } from 'discord.js';
 import type { LogicLayer } from '../../logic';
-import { CommandFunctionality } from '../classes';
-import { aggregateSubcommands } from '../shared';
+import { CommandFunctionality } from '../classes/index.ts';
+import { aggregateSubcommands } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

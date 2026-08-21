@@ -1,19 +1,17 @@
 import { ActionRowBuilder, bold, ButtonBuilder, ButtonStyle, Colors, ComponentType, EmbedBuilder, InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandStringOption, TimestampStyles } from 'discord.js';
 import type { LogicLayer } from '../../logic/index.js';
-import { discordTimestamp, timeConversion } from '../../shared';
-import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
-import { CommandFunctionality } from '../classes/index.js';
-import { getItemCooldown, getItemDescription, getItemNames, useItem } from '../items/_itemDictionary.js';
-import { butIgnoreInteractionCollectorErrors, ihpAuthorPayload, randomFooterTip } from '../shared';
+import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
+import { discordTimestamp, timeConversion } from '../../shared/index.ts';
+import { CommandFunctionality } from '../classes/index.ts';
+import { getItemCooldown, getItemDescription, getItemNames, useItem } from '../items/_itemDictionary.ts';
+import { butIgnoreInteractionCollectorErrors, ihpAuthorPayload, randomFooterTip } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 
 const itemNameOption = new SlashCommandStringOption().setName("item-name")
 	.setDescription("The item to look up details on")
 	.setAutocomplete(true)
-	.setChoices(
-		getItemNames([]).map(name => ({ name, value: name }))
-	).setRequired(true);
+	.setRequired(true);
 
 const mainId = "item";
 export default new CommandFunctionality(mainId, "Get details on a selected item and a button to use it", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
@@ -80,6 +78,9 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 	}
 ).setOptions(
 	itemNameOption
+).setAutocompleteMap(
+	itemNameOption.name,
+	getItemNames([]).map(name => ({ name, value: name }))
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
 });

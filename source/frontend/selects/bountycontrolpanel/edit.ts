@@ -1,7 +1,7 @@
 import { MessageFlags, PermissionFlagsBits } from "discord.js";
-import { SelectOptionFunctionality } from "../../classes";
-import { bountyEmbed, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, refreshBountyBoardThread, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared";
-import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts";
+import { SelectOptionFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, refreshBountyBoardThread, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared/index.ts";
+import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
 export default new SelectOptionFunctionality("edit",
 	ensureBountyExistsAndInteractorIsPoster(

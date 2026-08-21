@@ -1,10 +1,10 @@
 import { EmbedLimits } from "@sapphire/discord.js-utilities";
 import { FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { timeConversion } from "../../../shared";
-import { MAX_EVERGREEN_SLOTS, SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { SubcommandFunctionality } from "../../classes";
-import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, textsHaveAutoModInfraction } from "../../shared";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { MAX_EVERGREEN_SLOTS, SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, textsHaveAutoModInfraction } from "../../shared/index.ts";
 
 export default new SubcommandFunctionality("post", `Post an evergreen bounty, limit ${MAX_EVERGREEN_SLOTS}`,
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {

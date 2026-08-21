@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, Colors, ContainerBuilder, FileUploadBuilder, heading, LabelBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, MessageFlags, ModalBuilder, TextDisplayBuilder } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
 
 export async function configCompanyThumbnails(thumbnailSetKind: string, thumbnailUpdateData: { label: string; description: string; payloadProperty: keyof DatabaseTypes.Company; }[], interaction: ChatInputCommandInteraction, company: DatabaseTypes.Company) {
 	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`).setTitle(`Configure ${thumbnailSetKind}s`);

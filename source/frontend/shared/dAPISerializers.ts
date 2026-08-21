@@ -1,11 +1,12 @@
 import { EmbedLimits, MessageLimits, ModalLimits, SelectMenuLimits } from "@sapphire/discord.js-utilities";
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, EmbedFooterData, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventCreateOptions, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, InteractionReplyOptions, LabelBuilder, MessageCreateOptions, MessageFlags, ModalBuilder, Role, SelectMenuComponentOptionData, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
+import type { EmbedFooterData, GuildScheduledEventCreateOptions, InteractionReplyOptions, MessageCreateOptions, SelectMenuComponentOptionData } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageFlags, ModalBuilder, Role, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
 import * as fs from "fs";
 import { DatabaseTypes } from "../../database/index.ts";
-import { ascendingByProperty, descendingByProperty, discordTimestamp, timeConversion } from "../../shared";
 import { COMPANY_XP_COEFFICIENT, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } from "../../shared/constants.ts";
+import { ascendingByProperty, descendingByProperty, discordTimestamp, timeConversion } from "../../shared/index.ts";
 import { BountyState } from "../../shared/types.ts";
-import { emojiFromNumber, fillableTextBar, randomCongratulatoryPhrase, sentenceListEN } from "./stringConstructors";
+import { emojiFromNumber, fillableTextBar, randomCongratulatoryPhrase, sentenceListEN } from "./stringConstructors.ts";
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
 

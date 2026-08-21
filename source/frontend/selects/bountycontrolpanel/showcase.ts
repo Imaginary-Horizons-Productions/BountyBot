@@ -1,10 +1,10 @@
 import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, TimestampStyles } from "discord.js";
-import { discordTimestamp, timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SelectOptionFunctionality } from "../../classes";
-import { bountyEmbed, butIgnoreInteractionCollectorErrors, unarchiveAndUnlockThread } from "../../shared";
-import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { discordTimestamp, timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SelectOptionFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, unarchiveAndUnlockThread } from "../../shared/index.ts";
+import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
 export default new SelectOptionFunctionality("showcase",
 	ensureBountyExistsAndInteractorIsPoster(

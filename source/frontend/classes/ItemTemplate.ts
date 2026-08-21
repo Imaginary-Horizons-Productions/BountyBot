@@ -1,6 +1,6 @@
 import { ButtonInteraction } from "discord.js";
 import type { LogicLayer } from "../../logic";
-import { InteractionTheater } from "./InteractionTheater";
+import type { InteractionTheater } from "./InteractionTheater.ts";
 
 export class ItemTemplateSet {
 	declare items: ItemTemplate[];

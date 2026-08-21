@@ -1,9 +1,9 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } from "discord.js";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { SelectOptionFunctionality } from "../../classes";
-import { butIgnoreInteractionCollectorErrors } from "../../shared";
-import { bountyTakeDown } from "../../shared/flows/bountyTakeDown";
-import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { SelectOptionFunctionality } from "../../classes/index.ts";
+import { bountyTakeDown } from "../../shared/flows/bountyTakeDown.ts";
+import { butIgnoreInteractionCollectorErrors } from "../../shared/index.ts";
+import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
 export default new SelectOptionFunctionality("takedown",
 	ensureBountyExistsAndInteractorIsPoster(

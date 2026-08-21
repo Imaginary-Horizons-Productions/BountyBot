@@ -1,7 +1,8 @@
 import { MessageFlags, bold } from "discord.js";
 import type { LogicLayer } from "../../logic";
-import { ItemTemplate, ItemTemplateSet } from "../classes";
-import { addCompanyAnnouncementPrefix } from "../shared";
+import { GoalProgressKind } from "../../shared/types.ts";
+import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
+import { addCompanyAnnouncementPrefix } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
 
@@ -15,7 +16,7 @@ export default new ItemTemplateSet(
 				return 0;
 			}
 
-			const eligibleTypes = ["bounties", "toasts", "secondings"];
+			const eligibleTypes = [GoalProgressKind.Bounty, GoalProgressKind.Toast, GoalProgressKind.Seconding];
 			const goalType = eligibleTypes[Math.floor(Math.random() * eligibleTypes.length)];
 			const previousSeason = await logicLayer.seasons.findOneSeason(interaction.guildId, "previous");
 			const activeHunters = previousSeason ? await logicLayer.seasons.getParticipantCount(previousSeason.id) : 0;

@@ -1,10 +1,10 @@
 import { bold, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
-import { timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SubcommandFunctionality } from "../../classes";
-import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared";
-import { ensureHunterHasOpenBounty } from "../_earlyOuts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {

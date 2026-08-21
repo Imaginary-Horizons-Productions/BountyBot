@@ -1,13 +1,14 @@
 import { Colors, EmbedBuilder, InteractionContextType, MessageFlags } from 'discord.js';
 import fs from "fs";
-import { BOUNTYBOT_INVITE_URL } from '../../shared/constants';
-import { CommandFunctionality } from '../classes';
+import { fileURLToPath } from 'url';
+import { BOUNTYBOT_INVITE_URL } from '../../shared/constants.ts';
+import { CommandFunctionality } from '../classes/index.ts';
 
 const mainId = "about";
 export default new CommandFunctionality(mainId, "Get BountyBot's description and contributors", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Get BountyBot's description and contributors */
 	(interaction, theater, isDevMode) => {
-		fs.promises.stat(__filename).then(stats => {
+		fs.promises.stat(fileURLToPath(import.meta.url)).then(stats => {
 			const avatarURL = interaction.client.user.avatarURL();
 			interaction.reply({
 				embeds: [

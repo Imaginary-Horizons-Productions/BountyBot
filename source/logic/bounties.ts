@@ -1,8 +1,8 @@
-import { GuildMember, Snowflake } from "discord.js";
+import { GuildMember, type Snowflake } from "discord.js";
 import { Op } from "sequelize";
-import { Database, DatabaseTypes } from "../database";
-import { BountyState, HunterReceipt } from "../shared/types";
-import { rollItemForHunter } from "./items";
+import { type Database, DatabaseTypes } from "../database/index.ts";
+import { BountyState, type HunterReceipt } from "../shared/types.ts";
+import { rollItemForHunter } from "./items.ts";
 
 let db: Database;
 

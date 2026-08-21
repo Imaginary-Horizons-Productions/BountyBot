@@ -1,4 +1,4 @@
-import { HunterReceiptMap } from "../../shared/types";
+import type { HunterReceiptMap } from "../../shared/types.ts";
 
 /** In place, updates the object value in `originalMap` with the objects for each id in an `addedMap` */
 export function consolidateHunterReceipts(originalMap: HunterReceiptMap, ...addedMaps: HunterReceiptMap[]) {

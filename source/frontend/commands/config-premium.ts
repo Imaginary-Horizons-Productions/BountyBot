@@ -1,8 +1,8 @@
 import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandIntegerOption, SlashCommandNumberOption, SlashCommandStringOption, unorderedList } from 'discord.js';
-import type { DatabaseTypes } from '../../database';
-import { GLOBAL_MAX_BOUNTY_SLOTS, MAX_BOT_NICKNAME_LENGTH } from '../../shared/constants';
-import { CommandFunctionality } from '../classes';
-import { updateBotNicknameForFestival } from '../shared';
+import type { DatabaseTypes } from '../../database/index.ts';
+import { GLOBAL_MAX_BOUNTY_SLOTS, MAX_BOT_NICKNAME_LENGTH } from '../../shared/constants.ts';
+import { CommandFunctionality } from '../classes/index.ts';
+import { updateBotNicknameForFestival } from '../shared/index.ts';
 
 const nicknameOption = new SlashCommandStringOption().setName("nickname")
 	.setDescription("The nickname BountyBot should revert to after festivals end");

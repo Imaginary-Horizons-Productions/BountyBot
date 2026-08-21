@@ -1,18 +1,18 @@
-import { RESTPostAPIContextMenuApplicationCommandsJSONBody } from "discord.js";
+import type { RESTPostAPIContextMenuApplicationCommandsJSONBody } from "discord.js";
 import type { LogicLayer } from "../../logic";
-import { CooldownDictionary, PremiumFlowList } from "../../shared/types";
-import { BuildError, type ContextMenuFunctionality } from "../classes";
+import type { CooldownDictionary, PremiumFlowList } from "../../shared/types.ts";
+import { BuildError, type ContextMenuFunctionality } from "../classes/index.ts";
 
 export const contextMenuFiles: string[] = [
-	"BountyBot_Stats.js",
-	"Raise_a_Toast.js",
-	"Record_Bounty_Turn-In.js"
+	"./BountyBot_Stats.ts",
+	"./Raise_a_Toast.ts",
+	"./Record_Bounty_Turn-In.ts"
 ];
 
 const CONTEXT_MENU_FUNCTIONALITIES = new Map<string, ContextMenuFunctionality>();
 export const contextMenuData: RESTPostAPIContextMenuApplicationCommandsJSONBody[] = [];
 
-for (const file of exports.contextMenuFiles) {
+for (const file of contextMenuFiles) {
 	const contextMenu: ContextMenuFunctionality = (await import(`./${file}`)).default;
 	if (CONTEXT_MENU_FUNCTIONALITIES.has(contextMenu.mainId)) {
 		throw new BuildError(`Duplicate context menu mainId: ${contextMenu.mainId}`)

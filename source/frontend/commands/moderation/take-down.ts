@@ -1,7 +1,7 @@
 import { ActionRowBuilder, bold, ComponentType, MessageFlags, SlashCommandUserOption, StringSelectMenuBuilder, userMention } from "discord.js";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, syncRankRoles } from "../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, syncRankRoles } from "../../shared/index.ts";
 
 const posterOption = new SlashCommandUserOption().setName("poster")
 	.setDescription("The mention of the poster of the bounty")

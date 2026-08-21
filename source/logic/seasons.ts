@@ -1,9 +1,9 @@
-import { Collection, Role, Snowflake } from "discord.js";
+import type { Collection, Role, Snowflake } from "discord.js";
 import { Op } from "sequelize";
-import { Database, DatabaseTypes } from "../database";
-import { Participation } from "../database/models/Participation";
-import { descendingByProperty } from "../shared";
-import { calculateXPMean, calculateXPStandardDeviation } from "./shared";
+import type { Database, DatabaseTypes } from "../database";
+import type { Participation } from "../database/models/Participation.ts";
+import { descendingByProperty } from "../shared/index.ts";
+import { calculateXPMean, calculateXPStandardDeviation } from "./shared/index.ts";
 
 let db: Database;
 

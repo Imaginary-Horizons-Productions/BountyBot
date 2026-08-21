@@ -1,4 +1,4 @@
-import { DatabaseTypes } from "../../database";
+import type { DatabaseTypes } from "../../database";
 
 export function calculateXPMean(participations: Map<any, DatabaseTypes.Participation>) {
 	if (participations.size < 1) {

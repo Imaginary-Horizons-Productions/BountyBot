@@ -1,5 +1,5 @@
 import { InteractionContextType, MessageFlags } from 'discord.js';
-import { CommandFunctionality } from '../classes';
+import { CommandFunctionality } from '../classes/index.ts';
 
 const mainId = "data-policy";
 export default new CommandFunctionality(mainId, "Get a link to BountyBot's data policy page", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,

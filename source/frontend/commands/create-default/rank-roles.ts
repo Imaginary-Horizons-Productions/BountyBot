@@ -1,5 +1,5 @@
 import { GuildPremiumTier, MessageFlags } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
+import { SubcommandFunctionality } from "../../classes/index.ts";
 
 export default new SubcommandFunctionality("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {

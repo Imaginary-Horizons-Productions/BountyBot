@@ -1,10 +1,10 @@
 import { ActionRowBuilder, ComponentType, MessageFlags, StringSelectMenuBuilder, unorderedList } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SubcommandFunctionality } from "../../classes";
-import { bountyEmbed, butIgnoreInteractionCollectorErrors, editBountyModalAndSubmissionOptions, refreshEvergreenBountiesThread, selectOptionsFromBounties, textsHaveAutoModInfraction } from "../../shared";
-import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, editBountyModalAndSubmissionOptions, refreshEvergreenBountiesThread, selectOptionsFromBounties, textsHaveAutoModInfraction } from "../../shared/index.ts";
+import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("edit", "Change the name, description, or image of an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {

@@ -1,8 +1,8 @@
-import { Guild, Snowflake, userMention } from "discord.js";
+import { type Guild, type Snowflake, userMention } from "discord.js";
 import { Op } from "sequelize";
 import type { Database, DatabaseTypes } from "../database";
-import { dateInPast } from "../shared";
-import { HunterReceipt, HunterReceiptMap } from "../shared/types";
+import { dateInPast } from "../shared/index.ts";
+import type { HunterReceipt, HunterReceiptMap } from "../shared/types";
 
 let db: Database;
 

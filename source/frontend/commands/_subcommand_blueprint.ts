@@ -1,5 +1,5 @@
 import { SlashCommandStringOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
+import { SubcommandFunctionality } from "../../classes/index.ts";
 
 const subcommandOption = new SlashCommandStringOption();
 

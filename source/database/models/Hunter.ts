@@ -1,7 +1,7 @@
 import type { Colors, Snowflake } from "discord.js";
 import { type Sequelize, DataTypes, Model } from "sequelize";
 import type { Database } from "..";
-import { Bounty } from './Bounty';
+import { Bounty } from './Bounty.ts';
 
 /** This class stores a user's information related to a specific company */
 export class Hunter extends Model {

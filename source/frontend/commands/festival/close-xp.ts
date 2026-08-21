@@ -1,7 +1,7 @@
 import type { Snowflake } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { SubcommandFunctionality } from "../../classes";
-import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared/index.ts";
 
 export default new SubcommandFunctionality("close-xp", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {

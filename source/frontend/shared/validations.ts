@@ -1,7 +1,7 @@
 import { AutoModerationActionType, GuildMember, TextChannel } from "discord.js";
 import { YEAR_IN_MS } from "../../shared/constants.ts";
 import { discordTimestamp } from "../../shared/index.ts";
-import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses";
+import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses.ts";
 
 /** @file Validations - Checks for issues with user input data */
 

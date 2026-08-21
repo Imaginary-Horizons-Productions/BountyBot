@@ -1,40 +1,40 @@
-import { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 import type { LogicLayer } from '../../logic';
-import { CooldownDictionary, PremiumFlowList } from '../../shared/types';
-import { type CommandFunctionality, BuildError } from '../classes';
+import type { CooldownDictionary, PremiumFlowList } from '../../shared/types.ts';
+import { type CommandFunctionality, BuildError } from '../classes/index.ts';
 
 export const commandFiles = [
-	"about.js",
-	"bounty", //TODONOW providing directory name doesn't short cut to index.js in module, right?
-	"commands.js",
-	"config-premium.js",
-	"config-server-thumbnails-premium.js",
-	"config-user-thumbnails-premium.js",
-	"config-server.js",
-	"create-default",
-	"data-policy.js",
-	"evergreen",
-	"feedback.js",
-	"festival",
-	"inventory.js",
-	"item.js",
-	"moderation",
-	"premium.js",
-	"raffle",
-	"rank",
-	"reset",
-	"scoreboard.js",
-	"season-end.js",
-	"seasonal-ranks",
-	"stats.js",
-	"toast.js",
-	"tutorial.js",
-	"version.js"
+	"./bounty/index.ts",
+	"./create-default/index.ts",
+	"./evergreen/index.ts",
+	"./festival/index.ts",
+	"./moderation/index.ts",
+	"./raffle/index.ts",
+	"./rank/index.ts",
+	"./reset/index.ts",
+	"./about.ts",
+	"./commands.ts",
+	"./config-premium.ts",
+	"./config-server-thumbnails-premium.ts",
+	"./config-user-thumbnails-premium.ts",
+	"./config-server.ts",
+	"./data-policy.ts",
+	"./feedback.ts",
+	"./inventory.ts",
+	"./item.ts",
+	"./premium.ts",
+	"./scoreboard.ts",
+	"./season-end.ts",
+	"./seasonal-ranks.ts",
+	"./stats.ts",
+	"./toast.ts",
+	"./tutorial.ts",
+	"./version.ts"
 ];
 const COMMAND_FUNCTIONALITIES = new Map<string, CommandFunctionality>();
 export const slashData: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
-for (const file of exports.commandFiles) {
+for (const file of commandFiles) {
 	const command: CommandFunctionality = (await import(`./${file}`)).default;
 	if (COMMAND_FUNCTIONALITIES.has(command.mainId)) {
 		throw new BuildError(`Duplicate command mainId: ${command.mainId}`);

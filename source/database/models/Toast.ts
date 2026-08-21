@@ -1,7 +1,7 @@
 import type { Snowflake } from "discord.js";
-import { DataTypes, HasManyGetAssociationsMixin, Model, type Sequelize } from "sequelize";
+import { DataTypes, type HasManyGetAssociationsMixin, Model, type Sequelize } from "sequelize";
 import type { Database } from "..";
-import { Recipient } from "./Recipient";
+import { Recipient } from "./Recipient.ts";
 
 /** This model represents a toast raised for a group of bounty hunters */
 export class Toast extends Model {

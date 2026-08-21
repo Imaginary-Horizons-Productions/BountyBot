@@ -1,7 +1,7 @@
 import { heading, InteractionContextType, MessageFlags, PermissionFlagsBits, roleMention } from 'discord.js';
-import type { LogicLayer } from '../../logic/index.js';
-import { CommandFunctionality } from '../classes/index.js';
-import { attachOverflowingContentAsFile } from '../shared';
+import type { LogicLayer } from '../../logic/index.ts';
+import { CommandFunctionality } from '../classes/index.ts';
+import { attachOverflowingContentAsFile } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

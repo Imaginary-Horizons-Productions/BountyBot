@@ -1,15 +1,15 @@
 import { InteractionContextType, PermissionFlagsBits } from 'discord.js';
 import type { LogicLayer } from '../../../logic';
-import { CommandFunctionality } from '../../classes';
-import { aggregateSubcommands } from '../../shared';
+import { CommandFunctionality } from '../../classes/index.ts';
+import { aggregateSubcommands } from '../../shared/index.ts';
 
 let logicLayer: LogicLayer;
 
 const mainId = "create-default";
-const { subcommandBuilders: subcommandSlashData, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
-	"bounty-board-forum.js",
-	"scoreboard-reference.js",
-	"rank-roles.js"
+const { subcommandBuilders, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
+	"bounty-board-forum.ts",
+	"scoreboard-reference.ts",
+	"rank-roles.ts"
 ]);
 export default new CommandFunctionality(mainId, "Create a Discord resource for use by BountyBot", PermissionFlagsBits.ManageChannels, false, [InteractionContextType.Guild], 30000,
 	(interaction, theater, isDevMode) => {
@@ -17,4 +17,4 @@ export default new CommandFunctionality(mainId, "Create a Discord resource for u
 	}
 ).setLogicLinker(logicBlob => {
 	logicLayer = logicBlob;
-}).setSubcommands(subcommandSlashData);
+}).setSubcommands(subcommandBuilders);

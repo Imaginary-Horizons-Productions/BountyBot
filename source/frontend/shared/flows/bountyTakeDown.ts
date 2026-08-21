@@ -1,8 +1,8 @@
 import type { ForumThreadChannel, Guild } from "discord.js";
-import { DatabaseTypes } from "../../../database";
+import { DatabaseTypes } from "../../../database/index.ts";
 import type { LogicLayer } from "../../../logic";
-import { syncRankRoles } from "../dAPIRequests";
-import { butIgnoreErrorIf, butIgnoreMissingPermissionErrors, isMissingPermissionError, isUnknownGuildScheduledEventError } from "../dAPIResponses";
+import { syncRankRoles } from "../dAPIRequests.ts";
+import { butIgnoreErrorIf, butIgnoreMissingPermissionErrors, isMissingPermissionError, isUnknownGuildScheduledEventError } from "../dAPIResponses.ts";
 
 export async function bountyTakeDown(logicLayer: LogicLayer, guild: Guild, bounty: DatabaseTypes.Bounty, posterHunter: DatabaseTypes.Hunter, bountyThread: ForumThreadChannel | null) {
 	await logicLayer.bounties.deleteBountyCompletions(bounty.id);

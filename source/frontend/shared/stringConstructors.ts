@@ -2,7 +2,7 @@ import { MessageLimits } from "@sapphire/discord.js-utilities";
 import { bold, heading, italic, userMention } from "discord.js";
 import { DatabaseTypes } from "../../database/index.ts";
 import { commandIds } from "../../shared/constants.ts";
-import { CompanyReciept, HunterReceiptMap } from "../../shared/types";
+import type { CompanyReciept, HunterReceiptMap } from "../../shared/types.ts";
 
 /**
  * @file String Constructors - formatted reusable strings

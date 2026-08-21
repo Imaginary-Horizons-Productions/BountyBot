@@ -1,7 +1,7 @@
 import { InteractionContextType, PermissionFlagsBits, unorderedList } from 'discord.js';
 import type { LogicLayer } from '../../logic';
-import { CommandFunctionality } from '../classes';
-import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared';
+import { CommandFunctionality } from '../classes/index.ts';
+import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

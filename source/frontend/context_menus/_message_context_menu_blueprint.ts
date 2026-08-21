@@ -1,6 +1,6 @@
 import { InteractionContextType } from 'discord.js';
 import type { LogicLayer } from '../../logic';
-import { MessageContextMenuFunctionality } from '../classes';
+import { MessageContextMenuFunctionality } from '../classes/index.ts';
 
 let logicLayer: LogicLayer;
 

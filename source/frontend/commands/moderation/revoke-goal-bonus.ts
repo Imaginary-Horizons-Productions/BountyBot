@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandUserOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreCantDirectMessageThisUserErrors } from "../../shared";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { butIgnoreCantDirectMessageThisUserErrors } from "../../shared/index.ts";
 
 const revokeeOption = new SlashCommandUserOption().setName("revokee")
 	.setDescription("The bounty hunter for whom to revoke item find bonus")

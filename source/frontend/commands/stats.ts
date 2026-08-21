@@ -1,8 +1,8 @@
 import { Colors, EmbedBuilder, InteractionContextType, italic, MessageFlags, SlashCommandUserOption, underline, unorderedList } from 'discord.js';
-import { DatabaseTypes } from '../../database';
-import type { LogicLayer } from '../../logic';
-import { CommandFunctionality } from '../classes';
-import { companyStatsEmbed, fillableTextBar, hunterProfileEmbed, ihpAuthorPayload, randomFooterTip } from '../shared';
+import { DatabaseTypes } from '../../database/index.ts';
+import type { LogicLayer } from '../../logic/index.ts';
+import { CommandFunctionality } from '../classes/index.ts';
+import { companyStatsEmbed, fillableTextBar, hunterProfileEmbed, ihpAuthorPayload, randomFooterTip } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

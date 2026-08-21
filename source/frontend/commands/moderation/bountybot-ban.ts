@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandStringOption, SlashCommandUserOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreCantDirectMessageThisUserErrors } from "../../shared";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { butIgnoreCantDirectMessageThisUserErrors } from "../../shared/index.ts";
 
 const userOption = new SlashCommandUserOption().setName("user")
 	.setDescription("The user to ban or unban")

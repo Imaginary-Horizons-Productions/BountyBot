@@ -1,9 +1,9 @@
 import { EmbedLimits } from '@sapphire/discord.js-utilities';
 import { EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, SlashCommandStringOption, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
-import { timeConversion } from '../../shared';
-import { feedbackChannelId, SKIP_INTERACTION_HANDLING, testGuildId } from '../../shared/constants';
-import { CommandFunctionality } from '../classes';
-import { butIgnoreInteractionCollectorErrors } from '../shared';
+import { feedbackChannelId, SKIP_INTERACTION_HANDLING, testGuildId } from '../../shared/constants.ts';
+import { timeConversion } from '../../shared/index.ts';
+import { CommandFunctionality } from '../classes/index.ts';
+import { butIgnoreInteractionCollectorErrors } from '../shared/index.ts';
 
 const feedbackTypeOption = new SlashCommandStringOption().setName("feedback-type")
 	.setDescription("the type of feedback you'd like to provide")

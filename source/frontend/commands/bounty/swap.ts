@@ -1,11 +1,11 @@
 import { SelectMenuLimits } from "@sapphire/discord.js-utilities";
 import { bold, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SubcommandFunctionality } from "../../classes";
-import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared/index.ts";
 
 export default new SubcommandFunctionality("swap", "Move one of your bounties to another slot to change its reward",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {

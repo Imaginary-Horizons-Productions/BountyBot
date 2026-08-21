@@ -1,8 +1,8 @@
 import { ChatInputCommandInteraction, GuildMember, MessageFlags } from "discord.js";
-import { DatabaseTypes } from "../../database";
+import type { DatabaseTypes } from "../../database";
 import type { LogicLayer } from "../../logic";
-import { InteractionTheater } from "../classes";
-import { commandMention } from "../shared";
+import type { InteractionTheater } from "../classes";
+import { commandMention } from "../shared/index.ts";
 
 export function ensureUserFromSlashOptionHasBountyHunter(optionName: string, next: (interaction: ChatInputCommandInteraction<"cached">, origin: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer, entities: { member: GuildMember; hunter: DatabaseTypes.Hunter; }) => Promise<void>) {
 	return async (interaction: ChatInputCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => {

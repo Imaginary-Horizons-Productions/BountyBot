@@ -1,11 +1,12 @@
-import { InteractionReplyOptions, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SubcommandFunctionality } from "../../classes";
-import { bountyEmbed, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties } from "../../shared";
-import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts";
+import type { InteractionReplyOptions } from "discord.js";
+import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties } from "../../shared/index.ts";
+import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("showcase", "Show the embed for an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {

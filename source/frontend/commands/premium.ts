@@ -1,12 +1,13 @@
 import { Colors, EmbedBuilder, InteractionContextType, MessageFlags } from 'discord.js';
 import * as fs from "fs";
-import { CommandFunctionality } from '../classes';
-import { ihpAuthorPayload, randomFooterTip } from "../shared";
+import { fileURLToPath } from 'url';
+import { CommandFunctionality } from '../classes/index.ts';
+import { ihpAuthorPayload, randomFooterTip } from "../shared/index.ts";
 
 const mainId = "premium";
 export default new CommandFunctionality(mainId, "List perks for supporting IHP development", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	async (interaction, theater, isDevMode) => {
-		fs.promises.stat(__filename).then(stats => {
+		fs.promises.stat(fileURLToPath(import.meta.url)).then(stats => {
 			interaction.reply({
 				embeds: [
 					new EmbedBuilder().setColor(Colors.Blurple)

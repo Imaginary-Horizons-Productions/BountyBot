@@ -1,8 +1,8 @@
-import { DatabaseTypes } from "../../database";
+import { DatabaseTypes } from "../../database/index.ts";
 import type { LogicLayer } from "../../logic";
 import type { CompanyReciept } from "../../shared/types";
-import { ItemTemplate, ItemTemplateSet } from "../classes";
-import { consolidateHunterReceipts, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, syncRankRoles } from "../shared";
+import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
+import { consolidateHunterReceipts, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, syncRankRoles } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
 

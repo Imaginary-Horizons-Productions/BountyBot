@@ -1,6 +1,6 @@
 import { InteractionContextType, PermissionFlagsBits } from "discord.js";
-import { CommandFunctionality } from "../classes";
-import { configCompanyThumbnails } from "../shared/flows/configCompanyThumbnails";
+import { CommandFunctionality } from "../classes/index.ts";
+import { configCompanyThumbnails } from "../shared/flows/configCompanyThumbnails.ts";
 
 const mainId = "config-user-thumbnails-premium";
 const thumbnailUpdateData = [

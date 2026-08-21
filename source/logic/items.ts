@@ -1,8 +1,8 @@
-import { Snowflake } from "discord.js";
+import type { Snowflake } from "discord.js";
 import { Op } from "sequelize";
-import { Database, DatabaseTypes } from "../database";
-import { dateInPast } from "../shared";
+import type { Database, DatabaseTypes } from "../database";
 import { premium } from "../shared/constants.ts";
+import { dateInPast } from "../shared/index.ts";
 
 let db: Database;
 

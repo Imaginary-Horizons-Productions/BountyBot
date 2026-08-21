@@ -1,10 +1,11 @@
-import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, GuildTextThreadManager, Message, MessageEditOptions, MessageFlags, PublicThreadChannel, Snowflake, ThreadChannel } from "discord.js";
+import type { MessageEditOptions, PublicThreadChannel, Snowflake } from "discord.js";
+import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, GuildTextThreadManager, Message, MessageFlags, ThreadChannel } from "discord.js";
 import { DatabaseTypes } from "../../database/index.ts";
-import { ascendingByProperty } from "../../shared";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
-import { HunterReceiptMap } from "../../shared/types.ts";
-import { butIgnoreUnknownChannelErrors, isUnknownMessageError } from "./dAPIResponses";
-import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./dAPISerializers";
+import { ascendingByProperty } from "../../shared/index.ts";
+import type { HunterReceiptMap } from "../../shared/types.ts";
+import { butIgnoreUnknownChannelErrors, isUnknownMessageError } from "./dAPIResponses.ts";
+import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./dAPISerializers.ts";
 
 /**
  * @file Discord API (dAPI) Requests - groups of requests to dAPI formalized into functions

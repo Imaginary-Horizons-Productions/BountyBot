@@ -1,8 +1,8 @@
 import { SlashCommandNumberOption, type Snowflake } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { SubcommandFunctionality } from "../../classes";
-import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared";
-import { ensureNumberFromSlashOptionIsGreaterThanOne } from "../_earlyOuts";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared/index.ts";
+import { ensureNumberFromSlashOptionIsGreaterThanOne } from "../_earlyOuts.ts";
 
 const multiplierOption = new SlashCommandNumberOption().setName("multiplier")
 	.setDescription("The amount to multiply GP by")

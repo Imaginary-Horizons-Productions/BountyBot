@@ -1,19 +1,19 @@
 import { InteractionContextType, PermissionFlagsBits } from 'discord.js';
 import type { LogicLayer } from '../../../logic';
-import { CommandFunctionality } from '../../classes';
-import { aggregateSubcommands } from '../../shared';
+import { CommandFunctionality } from '../../classes/index.ts';
+import { aggregateSubcommands } from '../../shared/index.ts';
 
 let logicLayer: LogicLayer;
 
 const mainId = "moderation";
 const { subcommandBuilders, executeDictionary: subcommandExecuteDictionary } = await aggregateSubcommands(mainId, [
-	"bountybot-ban.js",
-	"gp-penalty.js",
-	"revoke-goal-bonus.js",
-	"season-disqualify.js",
-	"take-down.js",
-	"user-report.js",
-	"xp-penalty.js"
+	"./bountybot-ban.ts",
+	"./gp-penalty.ts",
+	"./revoke-goal-bonus.ts",
+	"./season-disqualify.ts",
+	"./take-down.ts",
+	"./user-report.ts",
+	"./xp-penalty.ts"
 ]);
 export default new CommandFunctionality(mainId, "BountyBot moderation tools", PermissionFlagsBits.ManageRoles, false, [InteractionContextType.Guild], 3000,
 	(interaction, theater, isDevMode) => {

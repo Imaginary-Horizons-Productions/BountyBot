@@ -1,11 +1,11 @@
 import type { LogicLayer } from "../../logic";
-import { CooldownDictionary } from "../../shared/types";
-import { BuildError, type ButtonFunctionality } from "../classes";
+import type { CooldownDictionary } from "../../shared/types.ts";
+import { BuildError, type ButtonFunctionality } from "../classes/index.ts";
 
 const BUTTON_FUNCTIONALITIES = new Map<string, ButtonFunctionality>();
 
 for (const file of [
-	"./secondtoast.js"
+	"./secondtoast.ts"
 ]) {
 	const button: ButtonFunctionality = (await import(file)).default;
 	if (BUTTON_FUNCTIONALITIES.has(button.mainId)) {

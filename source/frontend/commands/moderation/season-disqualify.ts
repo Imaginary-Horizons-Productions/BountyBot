@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandStringOption, SlashCommandUserOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreCantDirectMessageThisUserErrors, syncRankRoles } from "../../shared";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { butIgnoreCantDirectMessageThisUserErrors, syncRankRoles } from "../../shared/index.ts";
 
 const bountyHunterOption = new SlashCommandUserOption().setName("bounty-hunter")
 	.setDescription("The mention of the hunter to disqualify/requalify")

@@ -1,7 +1,7 @@
 import { MessageFlags, bold } from "discord.js";
 import type { LogicLayer } from "../../logic";
-import { ItemTemplate, ItemTemplateSet } from "../classes";
-import { commandMention } from "../shared";
+import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
+import { commandMention } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
 

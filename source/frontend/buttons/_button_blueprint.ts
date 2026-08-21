@@ -1,5 +1,5 @@
 import type { LogicLayer } from '../../logic';
-import { ButtonFunctionality } from '../classes';
+import { ButtonFunctionality } from '../classes/index.ts';
 
 let logicLayer: LogicLayer;
 

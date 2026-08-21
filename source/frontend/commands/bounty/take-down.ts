@@ -1,9 +1,9 @@
 import { ActionRowBuilder, ComponentType, MessageFlags, StringSelectMenuBuilder } from "discord.js";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, selectOptionsFromBounties } from "../../shared";
-import { bountyTakeDown } from "../../shared/flows/bountyTakeDown";
-import { ensureHunterHasOpenBounty } from "../_earlyOuts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyTakeDown } from "../../shared/flows/bountyTakeDown.ts";
+import { butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, selectOptionsFromBounties } from "../../shared/index.ts";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("take-down", "Take down one of your bounties without awarding XP (forfeit posting XP)",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {

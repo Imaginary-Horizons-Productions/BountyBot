@@ -1,7 +1,7 @@
 import { InteractionContextType, MessageFlags, SlashCommandStringOption } from 'discord.js';
 import type { LogicLayer } from '../../logic';
-import { CommandFunctionality } from '../classes';
-import { overallScoreboardEmbed, seasonalScoreboardEmbed } from '../shared';
+import { CommandFunctionality } from '../classes/index.ts';
+import { overallScoreboardEmbed, seasonalScoreboardEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

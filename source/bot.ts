@@ -3,18 +3,18 @@ import { promises as fsa } from "fs";
 import cron from "node-cron";
 import { Sequelize } from "sequelize";
 import { DatabaseTypes, initDB } from "./database/index.ts";
-import { addButtonsToCooldownDictionary, getButton, linkAllButtonsToLogic } from "./frontend/buttons/_buttonDictionary.js";
+import { addButtonsToCooldownDictionary, getButton, linkAllButtonsToLogic } from "./frontend/buttons/_buttonDictionary.ts";
 import { addCommandsToCooldownDictionary, addCommandsToPremiumList, getCommand, linkAllCommandsToLogic, slashData } from "./frontend/commands/_commandDictionary.ts";
-import { addContextMenusToCooldownDictionary, addContextMenusToPremiumList, contextMenuData, getContextMenu, linkAllContextMenusToLogic as setContextMenuLogic } from "./frontend/context_menus/_contextMenuDictionary.js";
-import { addItemsToCooldownDictionary, linkAllItemsToLogic } from "./frontend/items/_itemDictionary.js";
-import { addSelectsToCooldownDictionary, getSelect, linkAllSelectsToLogic } from "./frontend/selects/_selectDictionary.js";
-import { commandMention, consolidateHunterReceipts, goalCompletionEmbed, latestVersionChangesEmbed, randomCongratulatoryPhrase, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, toastEmbed } from "./frontend/shared/index.js";
-import { LOGIC_LAYER as logicBlob } from "./logic/index.js";
+import { addContextMenusToCooldownDictionary, addContextMenusToPremiumList, contextMenuData, getContextMenu, linkAllContextMenusToLogic as setContextMenuLogic } from "./frontend/context_menus/_contextMenuDictionary.ts";
+import { addItemsToCooldownDictionary, linkAllItemsToLogic } from "./frontend/items/_itemDictionary.ts";
+import { addSelectsToCooldownDictionary, getSelect, linkAllSelectsToLogic } from "./frontend/selects/_selectDictionary.ts";
+import { commandMention, consolidateHunterReceipts, goalCompletionEmbed, latestVersionChangesEmbed, randomCongratulatoryPhrase, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, toastEmbed } from "./frontend/shared/index.ts";
+import { LOGIC_LAYER as logicBlob } from "./logic/index.ts";
 import { announcementsChannelId, commandIds, lastPostedVersion, premium, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, testGuildId } from "./shared/constants.ts";
-import { discordTimestamp } from "./shared/index.js";
-import { CompanyReciept, CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
+import { discordTimestamp } from "./shared/index.ts";
+import type { CompanyReciept, CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
 
-const runMode = process.argv[4] || "development";
+const runMode = process.argv[2] || "development";
 
 const log = console.log;
 
@@ -43,7 +43,7 @@ addContextMenusToPremiumList(premiumFlowList);
 
 //#region Database Setup
 const isDevMode = runMode === "development";
-const dbConnection = new Sequelize(require(__dirname + '/../config/config.json')[runMode]);
+const dbConnection = new Sequelize((await import("../config/config.json", { with: { type: "json" } })).default[runMode]);
 const db = await dbConnection.authenticate().then(() => {
 	return initDB(dbConnection);
 })
@@ -72,7 +72,7 @@ const dAPIClient = new Client({
 	partials: [Partials.GuildMember, Partials.Message, Partials.Reaction],
 	intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.GuildMessageReactions]
 });
-dAPIClient.login((await import(authPath)).default.token);
+dAPIClient.login((await import(authPath, { with: { type: "json" } })).default.token);
 
 //#region Event Handlers
 dAPIClient.on(Events.ClientReady, () => {
@@ -89,18 +89,20 @@ dAPIClient.on(Events.ClientReady, () => {
 	if (!isDevMode) {
 		(() => {
 			try {
-				new REST({ version: "10" }).setToken(require(authPath).token).put(
-					Routes.applicationCommands(dAPIClient.user.id),
-					{ body: [...slashData, ...contextMenuData] }
-				).then(commands => {
-					if (!(function responseIsApplicationCommands(commands: unknown): commands is ApplicationCommand[] {
-						return Array.isArray(commands) && commands.every(command => "id" in command && "name" in command);
-					})(commands)) {
-						throw new Error("Production command upload received a response that was not ApplicationCommand[]");
-					}
-					for (const command of commands) {
-						commandIds[command.name] = command.id;
-					}
+				import(authPath, { with: { type: "json" } }).then(auth => {
+					new REST({ version: "10" }).setToken(auth.default.token).put(
+						Routes.applicationCommands(dAPIClient.user.id),
+						{ body: [...slashData, ...contextMenuData] }
+					).then(commands => {
+						if (!(function responseIsApplicationCommands(commands: unknown): commands is ApplicationCommand[] {
+							return Array.isArray(commands) && commands.every(command => "id" in command && "name" in command);
+						})(commands)) {
+							throw new Error("Production command upload received a response that was not ApplicationCommand[]");
+						}
+						for (const command of commands) {
+							commandIds[command.name] = command.id;
+						}
+					})
 				})
 			} catch (error) {
 				console.error(error);

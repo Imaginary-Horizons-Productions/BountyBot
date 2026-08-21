@@ -1,8 +1,8 @@
 import { EmbedLimits } from "@sapphire/discord.js-utilities";
 import { MessageFlags, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, unorderedList } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { SubcommandFunctionality } from "../../classes";
-import { commandMention, syncRankRoles } from "../../shared";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { commandMention, syncRankRoles } from "../../shared/index.ts";
 
 const varianceThresholdOption = new SlashCommandNumberOption().setName("variance-threshold")
 	.setDescription("The number of standard deviations above mean of season XP earned to qualify")

@@ -1,10 +1,10 @@
 {
 	"type": "module",
 	"scripts": {
-		"start": "node index.js production",
-		"start:dev": "node scripts/uploadCommandsToTestGuild.js && node index.js",
-		"clearCommands": "node scripts/clearCommands.js",
-		"initialize": "npm ci && node scripts/initialize"
+		"start": "node .\\shard-manager.ts production",
+		"start:dev": "node .\\scripts\\uploadCommandsToTestGuild.ts && node .\\source\\bot.ts",
+		"clearCommands": "node .\\scripts\\clearCommands.ts",
+		"initialize": "npm ci && node .\\scripts\\initialize.ts"
 	},
 	"dependencies": {
 		"@sapphire/discord.js-utilities": "7.3.3",

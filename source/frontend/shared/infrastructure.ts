@@ -1,5 +1,5 @@
 import { SlashCommandSubcommandBuilder } from "discord.js";
-import { BuildError, type SelectOptionFunctionality, type SelectOptionProcedure, type SubcommandFunctionality, type SubcommandProcedure } from "../classes";
+import { BuildError, type SelectOptionFunctionality, type SelectOptionProcedure, type SubcommandFunctionality, type SubcommandProcedure } from "../classes/index.ts";
 
 export async function aggregateSubcommands(mainId: string, fileList: string[]) {
 	const mappings: { subcommandBuilders: SlashCommandSubcommandBuilder[], executeDictionary: Record<string, SubcommandProcedure> } = {

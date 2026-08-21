@@ -1,5 +1,5 @@
 import type { TimestampStylesString } from "discord.js";
-import { MemberOf } from "./types";
+import type { MemberOf } from "./types.ts";
 
 export const TimeUnitKind = {
 	Week: "w",

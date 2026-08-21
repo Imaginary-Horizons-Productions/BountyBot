@@ -1,6 +1,6 @@
-import { Interaction } from "discord.js";
-import { Database } from "../database";
-import { InteractionTheater } from "../frontend/classes";
+import type { Interaction } from "discord.js";
+import type { Database } from "../database";
+import type { InteractionTheater } from "../frontend/classes";
 
 let db: Database;
 

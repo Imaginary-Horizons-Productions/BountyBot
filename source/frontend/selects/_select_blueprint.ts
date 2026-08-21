@@ -1,5 +1,5 @@
 import type { LogicLayer } from "../../logic";
-import { SelectFunctionality } from "../classes";
+import { SelectFunctionality } from "../classes/index.ts";
 
 let logicLayer: LogicLayer;
 

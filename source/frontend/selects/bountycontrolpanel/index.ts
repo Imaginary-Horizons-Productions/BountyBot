@@ -1,19 +1,19 @@
 import type { LogicLayer } from "../../../logic";
-import { SelectFunctionality } from '../../classes';
-import { aggregateSelectOptionMap } from '../../shared';
+import { SelectFunctionality } from '../../classes/index.ts';
+import { aggregateSelectOptionMap } from '../../shared/index.ts';
 
 let logicLayer: LogicLayer;
 
 const optionMap = await aggregateSelectOptionMap("bountycontrolpanel", [
-	"complete.js",
-	"edit.js",
-	"nochange.js",
-	"ping.js",
-	"recordturnin.js",
-	"revoketurnin.js",
-	"showcase.js",
-	"swap.js",
-	"takedown.js"
+	"complete.ts",
+	"edit.ts",
+	"nochange.ts",
+	"ping.ts",
+	"recordturnin.ts",
+	"revoketurnin.ts",
+	"showcase.ts",
+	"swap.ts",
+	"takedown.ts"
 ]);
 
 const mainId = "bountycontrolpanel";

@@ -1,7 +1,8 @@
-const { REST, Routes } = require('discord.js');
-const { token, botId, testGuildId } = require('../config/auth.json');
+import { REST, Routes } from 'discord.js';
+import config from '../config/auth.json' with { type: "json" };
+const { botId, testGuildId, token } = config;
 
-const rest = new REST({ version: 10 }).setToken(token);
+const rest = new REST({ version: "10" }).setToken(token);
 
 (async () => {
 	try {

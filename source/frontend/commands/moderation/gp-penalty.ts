@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandIntegerOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { commandMention } from "../../shared";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { commandMention } from "../../shared/index.ts";
 
 const penaltyOption = new SlashCommandIntegerOption().setName("penalty")
 	.setDescription("The amount of GP to subtract from the Server Goal")

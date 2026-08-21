@@ -1,12 +1,13 @@
 import { SelectMenuLimits } from "@sapphire/discord.js-utilities";
-import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, SelectMenuComponentOptionData, StringSelectMenuBuilder, TextDisplayBuilder, bold } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SelectOptionFunctionality } from "../../classes";
-import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, isMissingPermissionError, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared";
-import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts";
+import type { SelectMenuComponentOptionData } from "discord.js";
+import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, bold } from "discord.js";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SelectOptionFunctionality } from "../../classes/index.ts";
+import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, isMissingPermissionError, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared/index.ts";
+import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
 export default new SelectOptionFunctionality("swap",
 	ensureBountyExistsAndInteractorIsPoster(

@@ -1,7 +1,7 @@
-import { Snowflake } from "discord.js";
+import type { Snowflake } from "discord.js";
 import { Op } from "sequelize";
-import { Database, DatabaseTypes } from "../database";
-import { CompanyReciept, GoalProgressKind, GoalState } from "../shared/types";
+import type { Database, DatabaseTypes } from "../database";
+import { type CompanyReciept, GoalProgressKind, GoalState } from "../shared/types.ts";
 
 let db: Database;
 

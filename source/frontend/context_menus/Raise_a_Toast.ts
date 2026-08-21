@@ -1,10 +1,10 @@
 import { InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle, userMention } from 'discord.js';
-import { DatabaseTypes } from '../../database';
+import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic';
-import { timeConversion } from '../../shared';
-import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
-import { UserContextMenuFunctionality } from '../classes';
-import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared';
+import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
+import { timeConversion } from '../../shared/index.ts';
+import { UserContextMenuFunctionality } from '../classes/index.ts';
+import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

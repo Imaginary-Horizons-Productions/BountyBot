@@ -1,11 +1,11 @@
 import type { LogicLayer } from "../../logic";
-import { CooldownDictionary } from "../../shared/types";
-import { BuildError, SelectFunctionality } from "../classes";
+import type { CooldownDictionary } from "../../shared/types.ts";
+import { BuildError, type SelectFunctionality } from "../classes/index.ts";
 
 const SELECT_FUNCTIONALITIES = new Map<string, SelectFunctionality>();
 
 for (const file of [
-	"./bountycontrolpanel.ts"
+	"./bountycontrolpanel/index.ts"
 ]) {
 	const select: SelectFunctionality = (await import(file)).default;
 	if (SELECT_FUNCTIONALITIES.has(select.mainId)) {

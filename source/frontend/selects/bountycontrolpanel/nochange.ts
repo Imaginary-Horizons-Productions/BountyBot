@@ -1,5 +1,5 @@
-import { ZERO_WIDTH_WHITE_SPACE } from "../../../shared/constants";
-import { SelectOptionFunctionality } from "../../classes";
+import { ZERO_WIDTH_WHITE_SPACE } from "../../../shared/constants.ts";
+import { SelectOptionFunctionality } from "../../classes/index.ts";
 
 export default new SelectOptionFunctionality("nochange", async (interaction, theater, isDevMode, logicLayer, args) => {
 	/* Discord Selects keep their selection after resolving. If a user wants to use the same command

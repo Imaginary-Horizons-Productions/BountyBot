@@ -1,6 +1,6 @@
 import { AttachmentBuilder, InteractionContextType, MessageFlags, SlashCommandStringOption } from 'discord.js';
-import { CommandFunctionality } from '../classes';
-import { latestVersionChangesEmbed } from '../shared';
+import { CommandFunctionality } from '../classes/index.ts';
+import { latestVersionChangesEmbed } from '../shared/index.ts';
 
 const notesLengthOption = new SlashCommandStringOption().setName("notes-length")
 	.setDescription("Get the changes in last version or the full change log")

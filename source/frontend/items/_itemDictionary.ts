@@ -1,21 +1,21 @@
 import { ButtonInteraction } from "discord.js";
 import type { LogicLayer } from "../../logic";
-import { CooldownDictionary } from "../../shared/types";
-import { InteractionTheater, ItemTemplate, ItemTemplateSet } from "../classes";
+import type { CooldownDictionary } from "../../shared/types.ts";
+import type { InteractionTheater, ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 
 const ITEMS: Record<string, ItemTemplate> = {};
 const ITEM_LOGIC_SETTERS: ((logicBlob: LogicLayer) => void)[] = [];
 const ITEM_NAMES: string[] = [];
 
 for (const file of [
-	"bonus-bounty-showcase.js",
-	"bounty-thumbnail.js",
-	"colorizers.js",
-	"goal-initializer.js",
-	"loot-box.js",
-	"progress-in-a-can.js",
-	"unidentified-item.js",
-	"xp-boosts.js"
+	"./bonus-bounty-showcase.ts",
+	"./bounty-thumbnail.ts",
+	"./colorizers.ts",
+	"./goal-initializer.ts",
+	"./loot-box.ts",
+	"./progress-in-a-can.ts",
+	"./unidentified-item.ts",
+	"./xp-boosts.ts"
 ]) {
 	const itemTemplateSet: ItemTemplateSet = (await import(`./${file}`)).default;
 	ITEM_LOGIC_SETTERS.push(itemTemplateSet.setLogic);

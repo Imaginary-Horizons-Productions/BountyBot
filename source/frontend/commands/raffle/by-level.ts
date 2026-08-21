@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandIntegerOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { raffleResultEmbed } from "../../shared";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { raffleResultEmbed } from "../../shared/index.ts";
 
 const levelOption = new SlashCommandIntegerOption().setName("level")
 	.setDescription("The level a hunter needs to be eligible for this raffle")

@@ -1,8 +1,9 @@
 import { Colors, EmbedBuilder, InteractionContextType, MessageFlags, SlashCommandStringOption } from 'discord.js';
 import * as fs from "fs";
-import { BOUNTYBOT_INVITE_URL } from '../../shared/constants';
-import { CommandFunctionality } from '../classes';
-import { commandMention, ihpAuthorPayload, randomFooterTip } from "../shared";
+import { fileURLToPath } from 'url';
+import { BOUNTYBOT_INVITE_URL } from '../../shared/constants.ts';
+import { CommandFunctionality } from '../classes/index.ts';
+import { commandMention, ihpAuthorPayload, randomFooterTip } from "../shared/index.ts";
 
 const tutorialTypeOption = new SlashCommandStringOption().setName("tutorial-type")
 	.setDescription("Get starting bounty hunter tips or server setup tips")
@@ -15,7 +16,7 @@ const mainId = "tutorial";
 export default new CommandFunctionality(mainId, "Get tips for starting with BountyBot", null, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Send the user a embed with tips to start using BountyBot */
 	(interaction, theater, isDevMode) => {
-		fs.promises.stat(__filename).then(stats => {
+		fs.promises.stat(fileURLToPath(import.meta.url)).then(stats => {
 			const embed = new EmbedBuilder().setColor(Colors.Blurple).setAuthor(ihpAuthorPayload)
 				.setThumbnail(interaction.client.user.avatarURL())
 				.setFooter(randomFooterTip())

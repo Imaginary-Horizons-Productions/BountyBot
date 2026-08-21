@@ -1,8 +1,8 @@
 import { InteractionContextType, MessageFlags } from 'discord.js';
-import { DatabaseTypes } from '../../database';
+import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic';
-import { UserContextMenuFunctionality } from '../classes';
-import { companyStatsEmbed, hunterProfileEmbed } from '../shared';
+import { UserContextMenuFunctionality } from '../classes/index.ts';
+import { companyStatsEmbed, hunterProfileEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

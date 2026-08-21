@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ComponentType, DiscordjsErrorCodes, MessageFlags, StringSelectMenuBuilder } from "discord.js";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreCantDirectMessageThisUserErrors, raffleResultEmbed, selectOptionsFromRanks } from "../../shared";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { butIgnoreCantDirectMessageThisUserErrors, raffleResultEmbed, selectOptionsFromRanks } from "../../shared/index.ts";
 
 export default new SubcommandFunctionality("by-rank", "Select a user at or above a particular rank",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {

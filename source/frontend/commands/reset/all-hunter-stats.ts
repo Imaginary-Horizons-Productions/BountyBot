@@ -1,6 +1,6 @@
 import { MessageFlags } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreCantDirectMessageThisUserErrors, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from "../../shared";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { butIgnoreCantDirectMessageThisUserErrors, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from "../../shared/index.ts";
 
 export default new SubcommandFunctionality("all-hunter-stats", "IRREVERSIBLY reset all bounty hunter stats on this server",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {

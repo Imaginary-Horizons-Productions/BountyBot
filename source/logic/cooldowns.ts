@@ -1,8 +1,8 @@
-import { Snowflake } from "discord.js";
+import type { Snowflake } from "discord.js";
 import { Op } from "sequelize";
-import { Database, DatabaseTypes } from "../database/index.ts";
-import { dateInPast } from "../shared";
+import type { Database, DatabaseTypes } from "../database/index.ts";
 import { GLOBAL_COMMAND_COOLDOWN } from "../shared/constants.ts";
+import { dateInPast } from "../shared/index.ts";
 
 let db: Database;
 
@@ -16,7 +16,7 @@ export async function checkGlobalCooldonwForUser(userId: Snowflake, now: Date) {
 		const endOfCD = new Date(latestUserInteraction.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
 		return {
 			endOfCD,
-			isOnCD: endOfCD <= now,
+			isOnCD: endOfCD > now,
 			lastCommandName: latestUserInteraction.interactionName
 		};
 	} else {
@@ -29,7 +29,7 @@ export async function checkSpecificCooldownForUser(userId: Snowflake, interactio
 	if (latestSpecificUserInteraction) {
 		return {
 			endOfCD: latestSpecificUserInteraction.cooldownTime,
-			isOnCD: latestSpecificUserInteraction.cooldownTime <= now
+			isOnCD: latestSpecificUserInteraction.cooldownTime > now
 		}
 	} else {
 		return { endOfCD: null, isOnCD: false } as const;

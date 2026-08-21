@@ -1,7 +1,7 @@
 import { MessageFlags, SlashCommandIntegerOption, SlashCommandStringOption, SlashCommandUserOption, userMention } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreCantDirectMessageThisUserErrors, syncRankRoles } from "../../shared";
-import { ensureUserFromSlashOptionHasBountyHunter } from "../_earlyOuts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { butIgnoreCantDirectMessageThisUserErrors, syncRankRoles } from "../../shared/index.ts";
+import { ensureUserFromSlashOptionHasBountyHunter } from "../_earlyOuts.ts";
 
 const bountyHunterOption = new SlashCommandUserOption().setName("bounty-hunter")
 	.setDescription("The bounty hunter to remove XP from")

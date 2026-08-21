@@ -1,7 +1,7 @@
 import { MessageFlags, SlashCommandUserOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { userReportEmbed } from "../../shared";
-import { ensureUserFromSlashOptionHasBountyHunter } from "../_earlyOuts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { userReportEmbed } from "../../shared/index.ts";
+import { ensureUserFromSlashOptionHasBountyHunter } from "../_earlyOuts.ts";
 
 const userOption = new SlashCommandUserOption().setName("user")
 	.setDescription("The mention of the user")

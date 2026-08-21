@@ -1,6 +1,6 @@
 import { SlashCommandStringOption } from "discord.js";
-import { SubcommandFunctionality } from "../../classes";
-import { addCompanyAnnouncementPrefix } from "../../shared";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { addCompanyAnnouncementPrefix } from "../../shared/index.ts";
 
 const announcementOption = new SlashCommandStringOption().setName("announcement")
 	.setDescription("A timestamp and/or eligibilty requirements can encourage interaction")

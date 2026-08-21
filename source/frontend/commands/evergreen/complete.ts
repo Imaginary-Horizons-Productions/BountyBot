@@ -1,11 +1,11 @@
 import { LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import type { CompanyReciept, HunterReceipt } from "../../../shared/types";
-import { SubcommandFunctionality } from "../../classes";
-import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles } from "../../shared";
-import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts";
+import { DatabaseTypes } from "../../../database/index.ts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import type { CompanyReciept, HunterReceipt } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles } from "../../shared/index.ts";
+import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("complete", "Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {

@@ -1,10 +1,10 @@
 import { bold, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention } from 'discord.js';
 import type { LogicLayer } from '../../logic';
-import { timeConversion } from '../../shared';
-import { SKIP_INTERACTION_HANDLING } from '../../shared/constants';
-import { BountyState } from '../../shared/types';
-import { UserContextMenuFunctionality } from '../classes';
-import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, unarchiveAndUnlockThread } from '../shared';
+import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
+import { timeConversion } from '../../shared/index.ts';
+import { BountyState } from '../../shared/types.ts';
+import { UserContextMenuFunctionality } from '../classes/index.ts';
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, unarchiveAndUnlockThread } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
 

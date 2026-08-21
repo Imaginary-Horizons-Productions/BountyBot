@@ -1,4 +1,4 @@
-import { AnySelectMenuInteraction, MessageFlags } from "discord.js";
+import { type AnySelectMenuInteraction, MessageFlags } from "discord.js";
 import type { DatabaseTypes } from "../../../database";
 import type { LogicLayer } from "../../../logic";
 import type { InteractionTheater } from "../../classes";

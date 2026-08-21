@@ -1,11 +1,11 @@
 import { LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder } from "discord.js";
-import { timeConversion } from "../../../shared";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SubcommandFunctionality } from "../../classes";
-import { butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties } from "../../shared";
-import { bountyPing } from "../../shared/flows/bountyPing";
-import { ensureHunterHasOpenBounty } from "../_earlyOuts";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyPing } from "../../shared/flows/bountyPing.ts";
+import { butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties } from "../../shared/index.ts";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {

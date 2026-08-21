@@ -1,10 +1,10 @@
 import { ActionRowBuilder, bold, ComponentType, MessageFlags, PermissionFlagsBits, StringSelectMenuBuilder, unorderedList } from "discord.js";
-import { DatabaseTypes } from "../../../database";
-import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants";
-import { BountyState } from "../../../shared/types";
-import { SubcommandFunctionality } from "../../classes";
-import { bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, getBountyBoardThread, refreshBountyBoardThread, selectOptionsFromBounties, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared";
-import { ensureHunterHasOpenBounty } from "../_earlyOuts";
+import type { DatabaseTypes } from "../../../database";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, getBountyBoardThread, refreshBountyBoardThread, selectOptionsFromBounties, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared/index.ts";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 
 export default new SubcommandFunctionality("edit", "Edit the title, description, image, or time of one of your bounties",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, openBounties) {

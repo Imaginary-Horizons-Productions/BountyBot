@@ -1,8 +1,6 @@
-const { MessageLimits, GuildMemberLimits } = require("@sapphire/discord.js-utilities");
-
-import { PremiumDictionary } from "../frontend/classes/PremiumDictionary";
-
-import unparsedPremium from "../../config/premium.json";
+import { GuildMemberLimits, MessageLimits } from "@sapphire/discord.js-utilities";
+import unparsedPremium from "../../config/premium.json" with { type: "json" };
+import { PremiumDictionary } from "../frontend/classes/index.ts";
 
 // Conversion Factors
 export const YEAR_IN_MS = 31556926000;
@@ -17,8 +15,10 @@ export const channelBrowserMention = "<id:customize>";
 export const discordIconURL = "https://cdn.discordapp.com/attachments/618523876187570187/1110265047516721333/discord-mark-blue.png";
 
 // Config
-export { feedbackChannelId, testGuildId } from "../../config/auth.json";
-export { announcementsChannelId, lastPostedVersion } from "../../config/versionData.json";
+import auth from "../../config/auth.json" with { type: "json" };
+import versionData from "../../config/versionData.json" with { type: "json" };
+export const { feedbackChannelId, testGuildId } = auth;
+export const { announcementsChannelId, lastPostedVersion } = versionData;
 export const premium = new PremiumDictionary(unparsedPremium);
 export const commandIds: Record<string, string> = {};
 

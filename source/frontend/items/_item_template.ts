@@ -1,5 +1,5 @@
 import type { LogicLayer } from "../../logic";
-import { ItemTemplate, ItemTemplateSet } from "../classes";
+import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 
 let logicLayer: LogicLayer;
 
