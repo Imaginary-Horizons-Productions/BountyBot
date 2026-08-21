@@ -1,6 +1,6 @@
 import { GuildMemberLimits, MessageLimits } from "@sapphire/discord.js-utilities";
 import unparsedPremium from "../../config/premium.json" with { type: "json" };
-import { PremiumDictionary } from "../frontend/classes/index.ts";
+import { PremiumDictionary } from "./json_serializers/PremiumDictionary.ts";
 
 // Conversion Factors
 export const YEAR_IN_MS = 31556926000;

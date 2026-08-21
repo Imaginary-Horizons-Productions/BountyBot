@@ -12,9 +12,10 @@ import { commandMention, consolidateHunterReceipts, goalCompletionEmbed, latestV
 import { LOGIC_LAYER as logicBlob } from "./logic/index.ts";
 import { announcementsChannelId, commandIds, lastPostedVersion, premium, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, testGuildId } from "./shared/constants.ts";
 import { discordTimestamp } from "./shared/index.ts";
+import { DatabaseOptionsDictionary, RunMode } from "./shared/json_serializers/DatabaseOptionsDictionary.ts";
 import type { CompanyReciept, CooldownDictionary, PremiumFlowList } from "./shared/types.ts";
 
-const runMode = process.argv[2] || "development";
+const runMode = (process.argv[2] || RunMode.Development) as RunMode;
 
 const log = console.log;
 
@@ -43,7 +44,7 @@ addContextMenusToPremiumList(premiumFlowList);
 
 //#region Database Setup
 const isDevMode = runMode === "development";
-const dbConnection = new Sequelize((await import("../config/config.json", { with: { type: "json" } })).default[runMode]);
+const dbConnection = new Sequelize(new DatabaseOptionsDictionary((await import("../config/config.json", { with: { type: "json" } })).default)[runMode]);
 const db = await dbConnection.authenticate().then(() => {
 	return initDB(dbConnection);
 })
