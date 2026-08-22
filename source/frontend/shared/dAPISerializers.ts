@@ -1,0 +1,566 @@
+import { EmbedLimits, MessageLimits, ModalLimits, SelectMenuLimits } from "@sapphire/discord.js-utilities";
+import type { EmbedAuthorOptions, EmbedFooterData, EmbedFooterOptions, GuildScheduledEventCreateOptions, InteractionReplyOptions, MessageCreateOptions, SelectMenuComponentOptionData } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageFlags, ModalBuilder, Role, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
+import * as fs from "fs";
+import { DatabaseTypes } from "../../database/index.ts";
+import { COMPANY_XP_COEFFICIENT, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } from "../../shared/constants.ts";
+import { ascendingByProperty, descendingByProperty, discordTimestamp, timeConversion } from "../../shared/index.ts";
+import { BountyState } from "../../shared/types.ts";
+import { emojiFromNumber, fillableTextBar, randomCongratulatoryPhrase, sentenceListEN } from "./stringConstructors.ts";
+
+/** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
+
+//#region Serialization Utilities - modifies a given entity
+// Naming Convention: describe modifications, don't match other conventions
+
+export function truncateTextToLength(text: string, length: number) {
+	if (text.length > length) {
+		return `${text.slice(0, length - 1)}…`;
+	} else {
+		return text;
+	}
+}
+
+/** Checks if the given `content` fits in a Discord message and attaches it as a file if it doesn't */
+export function attachOverflowingContentAsFile(content: string, messageOptions: InteractionReplyOptions, filename: string) {
+	if (content.length < MessageLimits.MaximumLength) {
+		messageOptions.content = content;
+	} else {
+		messageOptions.files = [new AttachmentBuilder(Buffer.from(content, 'utf16le'), { name: filename })];
+	}
+	return messageOptions;
+}
+
+/** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent") */
+export function addCompanyAnnouncementPrefix(company: DatabaseTypes.Company, messageOptions: MessageCreateOptions) {
+	if (company.announcementPrefix == "@silent") {
+		if ("flags" in messageOptions) {
+			messageOptions.flags |= MessageFlags.SuppressNotifications;
+		} else {
+			messageOptions.flags = MessageFlags.SuppressNotifications;
+		}
+	} else if (company.announcementPrefix != "") {
+		messageOptions.content = `${company.announcementPrefix} ${messageOptions.content}`;
+	}
+	return messageOptions;
+}
+//#endregion
+
+//#region Serializers - returns whole entities
+// Naming Convention: `${outputType}From${inputType}`
+
+const discordTips: EmbedFooterData[] = [
+	"Message starting with @silent don't send notifications; good for when everyone's asleep.",
+	"Surround your message with || to mark it a spoiler (not shown until reader clicks on it).",
+	"Surround a part of your messag with ~~ to add strikethrough styling.",
+	"Don't forget to check slash commands for optional arguments.",
+	"Some slash commands can be used in DMs, others can't.",
+	"Server subscriptions cost more on mobile because the mobile app stores take a cut."
+].map(text => ({ text, iconURL: discordIconURL }));
+const bountyBotTips: EmbedFooterData[] = [
+	"You can showcase one of your bounties once a week to increase its rewards.",
+	"Send bug reports or feature requests with the \"/feedback\".",
+	"Bounties can't be completed until 5 minutes after they've been posted. Don't make them too easy!",
+	"You get XP for posting a bounty, but lose that XP if it's taken down before it's completed.",
+	"You get XP when your bounties are completed. Thanks for posting!",
+	"You get more XP when a bigger group completes your bounties. Thanks for organizing!",
+	"Sometimes when you raise a toast to someone, it'll crit and grant you XP too!",
+	"Your chance for Critical Toast is lower when repeatedly toasting the same bounty hunters. Spread the love!",
+	"Users who can manage BountyBot aren't included in seasonal rewards to avoid conflicts of interest.",
+	"Anyone can post a bounty, even you!",
+	"Anyone can raise a toast, even you!",
+	"The Overjustification Effect means a small reward can be less motivating than no reward.",
+	"Manage bounties from within games with the Discord Overlay (default: Shift + Tab)!",
+	"Server level is based on total bounty hunter level--higher server level means better evergreen bounty rewards.",
+	"A bounty poster cannot complete their own bounty.",
+	"Adding a description, image or time to a bounty all add 1 bonus XP for the poster.",
+	"Bounty posters have double the chance to find items compared to completers.",
+	"Quickly raise a toast to a Discord message by reacting with 🥂!"
+].map(text => ({ text, iconURL: bountyBotIconURL }));
+const tipPool = bountyBotTips.concat(bountyBotTips, discordTips);
+
+/** twice as likely to roll an application specific tip as a discord tip */
+export function randomFooterTip() {
+	return tipPool[Math.floor(Math.random() * tipPool.length)];
+}
+
+export function disabledSelectRow(placeholderText: string) {
+	return new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(
+		new UserSelectMenuBuilder().setCustomId(SKIP_INTERACTION_HANDLING)
+			.setPlaceholder(truncateTextToLength(placeholderText, SelectMenuLimits.MaximumPlaceholderCharacters))
+			.setDisabled(true)
+	)
+}
+
+export function bountyControlPanelSelectRow(bountyId: string) {
+	return [
+		new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+			new StringSelectMenuBuilder().setCustomId(`bountycontrolpanel${SAFE_DELIMITER}${bountyId}`)
+				.setPlaceholder("Select a bounty command...")
+				.setOptions(
+					{ label: "No Change", description: "You can move the selection to this option without changing anything", value: "nochange" },
+					{ emoji: "📥", label: "Record other hunters' turn-ins", description: "Confirm another hunter has turned-in this bounty", value: "recordturnin" },
+					{ emoji: "🚫", label: "Revoke other hunters' turn-ins", description: "Remove credit for turning in this bounty from another hunter", value: "revoketurnin" },
+					{ emoji: "🔝", label: "Showcase this bounty", description: "Increase the rewards on this bounty and promote it in another channel", value: "showcase" },
+					{ emoji: "🔴", label: "Ping interested bounty hunters", description: "Message and mention interested bounty hunters (reacted to bounty board thread or marked on event)", value: "ping" },
+					{ emoji: "✅", label: "Complete this bounty", description: "Distribute rewards for turn-ins and mark this bounty completed", value: "complete" },
+					{ emoji: "📝", label: "Edit this bounty", description: "Change details about this bounty", value: "edit" },
+					{ emoji: "🔄", label: "Swap this bounty to another slot", description: "Move this bounty to another slot, changing its base reward", value: "swap" },
+					{ emoji: "🗑️", label: "Take this bounty down", description: "Take this bounty down without distrbuting rewards", value: "takedown" }
+				)
+		)
+	]
+}
+
+export function bountyScheduledEventPayload(title: string, posterName: string, slotNumber: number, startTimestamp: number, endTimestamp: number, description?: string, imageURL?: string) {
+	const payload: GuildScheduledEventCreateOptions = {
+		name: `Bounty: ${title}`,
+		scheduledStartTime: startTimestamp * 1000,
+		scheduledEndTime: endTimestamp * 1000,
+		privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+		entityType: GuildScheduledEventEntityType.External,
+		entityMetadata: { location: `${posterName}'s #${slotNumber} Bounty` }
+	};
+	if (description) {
+		payload.description = description;
+	}
+	if (imageURL) {
+		payload.image = imageURL;
+	}
+	return payload;
+}
+
+export function selectOptionsFromBounties(bounties: DatabaseTypes.Bounty[]) {
+	return bounties.map(bounty => {
+		const optionPayload: SelectMenuComponentOptionData = {
+			emoji: emojiFromNumber(bounty.slotNumber),
+			label: bounty.title,
+			value: bounty.id
+		}
+		if (bounty.description) {
+			optionPayload.description = truncateTextToLength(bounty.description, SelectMenuLimits.MaximumLengthOfDescriptionOfOption);
+		}
+		return optionPayload;
+	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
+}
+
+export function selectOptionsFromBountiesWithBaseRewardAsDescription(bountyMap: Map<number, DatabaseTypes.Bounty>, posterLevel: number) {
+	// Since the bounty entries are tuples of [slotNumber, bounty], sorting by "property 0" sorts by slotNumber
+	return Array.from(bountyMap.entries()).sort(ascendingByProperty(0)).map(([slotNumber, bounty]) => ({
+		emoji: emojiFromNumber(slotNumber),
+		label: bounty.title,
+		description: truncateTextToLength(`Base Reward: ${DatabaseTypes.Bounty.calculateCompleterReward(posterLevel, slotNumber, 0)} XP`, SelectMenuLimits.MaximumLengthOfDescriptionOfOption),
+		value: bounty.id
+	})).slice(0, SelectMenuLimits.MaximumOptionsLength);
+}
+
+export function selectOptionsFromRanks(ranks: DatabaseTypes.Rank[], allGuildRoles: Collection<string, Role>) {
+	return ranks.map((rank, index) => {
+		const option: SelectMenuComponentOptionData = {
+			label: rank.getName(allGuildRoles, index),
+			description: `Variance Threshold: ${rank.threshold}`,
+			value: rank.threshold.toString()
+		};
+		if (rank.rankmoji) {
+			option.emoji = rank.rankmoji;
+		}
+		return option;
+	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
+}
+
+/** key for constructing the ModalBuilder's customId uniquely */
+export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty, bountyScheduledEvent: GuildScheduledEvent | null, isEvergreen: boolean, key: string) {
+	const inputIds = {
+		title: "title",
+		description: "description",
+		image: "image"
+	};
+	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${key}`)
+		.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
+		.addLabelComponents(
+			new LabelBuilder().setLabel("Title")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("title")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Short)
+						.setPlaceholder("Most Discord markdown allowed...")
+						.setValue(bounty.title)
+				),
+			new LabelBuilder().setLabel("Description")
+				.setDescription("A detailed description of the bounty. Leave empty to clear.")
+				.setTextInputComponent(
+					new TextInputBuilder().setCustomId("description")
+						.setRequired(false)
+						.setStyle(TextInputStyle.Paragraph)
+						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image, timestamps")
+						.setValue(bounty.description ?? "")
+				),
+			new LabelBuilder().setLabel("Image")
+				.setDescription("A diagram or splash image for the bounty. Reupload to keep.")
+				.setFileUploadComponent(
+					new FileUploadBuilder().setCustomId("image")
+						.setRequired(false)
+				)
+		);
+	if (!isEvergreen) {
+		inputIds.startTimestamp = "startTimestamp";
+		inputIds.endTimestamp = "endTimestamp";
+		const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
+			.setRequired(false)
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("Required if making an event with the bounty");
+		const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
+			.setRequired(false)
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("Required if making an event with the bounty");
+
+		if (bountyScheduledEvent) {
+			eventStartComponent.setValue((bountyScheduledEvent.scheduledStartTimestamp / 1000).toString());
+			eventEndComponent.setValue((bountyScheduledEvent.scheduledEndTimestamp / 1000).toString());
+		}
+		modal.addLabelComponents(
+			new LabelBuilder().setLabel("Event Start")
+				.setDescription("The Unix Timestamp for the start time. Leave empty to clear.")
+				.setTextInputComponent(eventStartComponent),
+			new LabelBuilder().setLabel("Event End")
+				.setDescription("The Unix Timestamp for the end time. Leave empty to clear.")
+				.setTextInputComponent(eventEndComponent)
+		)
+	}
+	return { modal, inputIds, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
+}
+
+/** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */
+export async function latestVersionChangesEmbed() {
+	const changelogPath = "./ChangeLog.md";
+	const data = await fs.promises.readFile(changelogPath, { encoding: 'utf8' });
+	const stats = await fs.promises.stat(changelogPath);
+	const dividerRegEx = /## .+ Version/g;
+	const changesStartRegEx = /\.\d+[cfib]*:/g;
+	let titleStart = dividerRegEx.exec(data).index;
+	changesStartRegEx.exec(data);
+	let sectionEnd = dividerRegEx.exec(data).index;
+
+	return new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
+		.setURL('https://discord.gg/JxqE9EpKt9')
+		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')
+		.setDescription(data.slice(changesStartRegEx.lastIndex, sectionEnd).slice(0, EmbedLimits.MaximumDescriptionLength))
+		.addFields({ name: "Become a Sponsor", value: "Chip in for server costs or get premium features by sponsoring [BountyBot on GitHub](https://github.com/Imaginary-Horizons-Productions/BountyBot)" })
+		.setFooter(randomFooterTip())
+		.setTimestamp(stats.mtime);
+}
+export async function companyStatsEmbed(guild: Guild, companyXP: number, participantCount: number, currentSeason: DatabaseTypes.Season, lastSeason: DatabaseTypes.Season) {
+	const currentCompanyLevel = DatabaseTypes.Company.getLevel(companyXP);
+	const currentLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
+	const nextLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
+	const currentSeasonXP = await currentSeason.totalXP;
+	const lastSeasonXP = await lastSeason?.totalXP ?? 0;
+
+	const particpantPercentage = participantCount / guild.memberCount * 100;
+	const seasonXPDifference = currentSeasonXP - lastSeasonXP;
+	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
+	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
+	return new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setTitle(`${guild.name} is ${underline(`Level ${currentCompanyLevel}`)}`)
+		.setThumbnail(guild.iconURL())
+		.setDescription(`${fillableTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}${italic("Next Level:")} ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
+		.addFields(
+			{ name: "Total Bounty Hunter Level", value: `${companyXP} level${companyXP == 1 ? "" : "s"}`, inline: true },
+			{ name: "Participation", value: `${participantCount} server members have interacted with BountyBot this season (${particpantPercentage.toPrecision(3)}% of server members)` },
+			{ name: `${currentSeasonXP} XP Earned Total (${seasonXPDifference === 0 ? "same as last season" : `${seasonXPDifference > 0 ? `+${seasonXPDifference} more XP` : `${seasonXPDifference * -1} fewer XP`} than last season`})`, value: `${currentSeason.bountiesCompleted} bounties (${seasonBountyDifference === 0 ? "same as last season" : `${seasonBountyDifference > 0 ? bold(`+${seasonBountyDifference} more bounties`) : bold(`${seasonBountyDifference * -1} fewer bounties`)} than last season`})\n${currentSeason.toastsRaised} toasts (${seasonToastDifference === 0 ? "same as last season" : `${seasonToastDifference > 0 ? bold(`+${seasonToastDifference} more toasts`) : bold(`${seasonToastDifference * -1} fewer toasts`)} than last season`})` }
+		)
+		.setFooter(randomFooterTip())
+		.setTimestamp()
+}
+
+/** A seasonal scoreboard orders a company's hunters by their seasonal xp */
+export async function seasonalScoreboardEmbed(company: DatabaseTypes.Company, guild: Guild, participationMap: Map<string, DatabaseTypes.Participation>, ranks: DatabaseTypes.Rank[], goalProgress: { currentGP: number; requiredGP: number; }) {
+	const hunterMembers = await guild.members.fetch({ user: Array.from(participationMap.keys()) });
+	const rankmojiArray = ranks.map(rank => rank.rankmoji);
+
+	const scorelines = [];
+	for (const participation of Array.from(participationMap.values()).sort(descendingByProperty("xp"))) {
+		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
+			let scoreline = `#${participation.placement} ${bold(hunterMembers.get(participation.userId).displayName)} ${participation.xp} season XP`;
+			if (rankmojiArray[participation.rankIndex] && !participation.isRankDisqualified && participation.rankIndex !== null) {
+				scoreline = `${rankmojiArray[participation.rankIndex]} ${scoreline}`;
+			}
+			scorelines.push(scoreline);
+		}
+	}
+	const embed = new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(module.exports.ihpAuthorPayload)
+		.setThumbnail(company.scoreboardThumbnailURL)
+		.setTitle("The Season Scoreboard")
+		.setFooter(randomFooterTip())
+		.setTimestamp();
+	let description = "";
+	const andMore = "…and more";
+	const maxDescriptionLength = EmbedLimits.MaximumDescriptionLength - andMore.length;
+	for (const scoreline of scorelines) {
+		if (description.length + scoreline.length <= maxDescriptionLength) {
+			description += `${scoreline}\n`;
+		} else {
+			description += andMore;
+			break;
+		}
+	}
+
+	if (description) {
+		embed.setDescription(description);
+	} else {
+		embed.setDescription("No Bounty Hunters yet…");
+	}
+
+	const fields = [];
+	const { currentGP, requiredGP } = goalProgress;
+	if (currentGP < requiredGP) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+	}
+	if (company.xpFestivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString("xp")}.` });
+	}
+	if (company.gpFestivalMultiplier !== 1) {
+		fields.push({ name: "GP Festival", value: `A GP multiplier festival is currently active for ${company.festivalMultiplierString("gp")}.` });
+	}
+	if (company.nextRaffleString) {
+		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
+	}
+
+	if (fields.length > 0) {
+		embed.addFields(fields);
+	}
+	return embed;
+}
+
+/** An overall scoreboard orders a company's hunters by total xp */
+export async function overallScoreboardEmbed(company: DatabaseTypes.Company, guild: Guild, hunterMap: Map<string, DatabaseTypes.Hunter>, goalProgress: { currentGP: number; requiredGP: number; }) {
+	const hunterMembers = await guild.members.fetch({ user: Array.from(hunterMap.keys()) });
+
+	const scorelines = [];
+	for (const hunter of Array.from(hunterMap.values()).sort(descendingByProperty("xp"))) {
+		if (hunter.xp < 1) {
+			break;
+		}
+		const guildMember = hunterMembers.get(hunter.userId);
+		scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
+	}
+	const embed = new EmbedBuilder().setColor(Colors.Blurple)
+		.setAuthor(ihpAuthorPayload)
+		.setThumbnail(company.scoreboardThumbnailURL)
+		.setTitle("The Scoreboard")
+		.setFooter(randomFooterTip())
+		.setTimestamp();
+	let description = "";
+	const andMore = "…and more";
+	const maxDescriptionLength = EmbedLimits.MaximumDescriptionLength - andMore.length;
+	for (const scoreline of scorelines) {
+		if (description.length + scoreline.length <= maxDescriptionLength) {
+			description += `${scoreline}\n`;
+		} else {
+			description += andMore;
+			break;
+		}
+	}
+
+	if (description) {
+		embed.setDescription(description);
+	} else {
+		embed.setDescription("No Bounty Hunters yet…");
+	}
+
+	const fields = [];
+	const { currentGP, requiredGP } = goalProgress;
+	if (currentGP < requiredGP) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(currentGP, requiredGP, 15)} ${currentGP}/${requiredGP} GP` });
+	}
+	if (company.xpFestivalMultiplier !== 1) {
+		fields.push({ name: "XP Festival", value: `An XP multiplier festival is currently active for ${company.festivalMultiplierString("xp")}.` });
+	}
+	if (company.gpFestivalMultiplier !== 1) {
+		fields.push({ name: "GP Festival", value: `A GP multiplier festival is currently active for ${company.festivalMultiplierString("gp")}.` });
+	}
+	if (company.nextRaffleString) {
+		fields.push({ name: "Next Raffle", value: `The next raffle will be on ${company.nextRaffleString}!` });
+	}
+
+	if (fields.length > 0) {
+		embed.addFields(fields);
+	}
+
+	return embed;
+}
+
+export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGuildMember: GuildMember, currentLevel: number, currentLevelThreshold: number, nextLevelThreshold: number, currentParticipation: DatabaseTypes.Participation | undefined, rankName: string | null, previousParticipations: DatabaseTypes.Participation[], mostSecondedToast: DatabaseTypes.Toast) {
+	let description = `${fillableTextBar(targetHunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}`;
+	if (currentParticipation) {
+		description += `\nThey have earned ${italic(`${currentParticipation.xp} XP`)} this season`;
+		if (rankName) {
+			description += ` which qualifies for ${rankName}`;
+		}
+	} else {
+		description += `\nThey have earned ${italic("0 XP")} this season`;
+	}
+	return new EmbedBuilder().setColor(Colors[targetHunter.profileColor])
+		.setAuthor(ihpAuthorPayload)
+		.setThumbnail(targetGuildMember.user.avatarURL())
+		.setTitle(`${targetGuildMember.displayName} is ${underline(`Level ${currentLevel}`)}`)
+		.setDescription(description)
+		.addFields(
+			{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
+			{ name: "Total XP Earned", value: `${targetHunter.xp} XP`, inline: true },
+			{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with ${bold(`${mostSecondedToast.secondings} secondings`)}` : "No toasts seconded yet..." },
+			{ name: "Bounty Stats", value: `Bounties Hunted: ${targetHunter.othersFinished} bount${targetHunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${targetHunter.mineFinished} bount${targetHunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
+			{ name: "Toast Stats", value: `Toasts Raised: ${targetHunter.toastsRaised} toast${targetHunter.toastsRaised === 1 ? "" : "s"}\nToasts Seconded: ${targetHunter.toastsSeconded} toast${targetHunter.toastsSeconded === 1 ? "" : "s"}\nToasts Recieved: ${targetHunter.toastsReceived} toast${targetHunter.toastsReceived === 1 ? "" : "s"}`, inline: true },
+		)
+		.setFooter(randomFooterTip())
+		.setTimestamp()
+}
+
+/** Generate an embed for the given bounty */
+export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: GuildMember, posterLevel: number, shouldOmitRewardsField: boolean, company: DatabaseTypes.Company, hunterIdSet: Set<string>, event?: GuildScheduledEvent | null, goalProgress?: { goalCompleted: boolean; currentGP: number; requiredGP: number; }) {
+	const fields = [];
+	const embed = new EmbedBuilder().setColor(posterGuildMember.displayColor)
+		.setThumbnail(bounty.thumbnailURL ?? company[`${bounty.state}BountyThumbnailURL`])
+		.setTitle(bounty.state === BountyState.Completed ? `Bounty Complete! ${bounty.title}` : bounty.title)
+		.setTimestamp();
+	if (bounty.description) {
+		embed.setDescription(bounty.description);
+	}
+	if (bounty.attachmentURL) {
+		embed.setImage(bounty.attachmentURL);
+	}
+	if (event) {
+		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
+	}
+	if (!shouldOmitRewardsField) {
+		fields.push({ name: "Reward", value: `${DatabaseTypes.Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString("xp")}`, inline: true });
+	}
+
+	if (bounty.isEvergreen) {
+		embed.setAuthor({ name: `Evergreen Bounty #${bounty.slotNumber}`, iconURL: posterGuildMember.user.displayAvatarURL() });
+	} else {
+		embed.setAuthor({ name: `${posterGuildMember.displayName}'s #${bounty.slotNumber} Bounty`, iconURL: posterGuildMember.user.displayAvatarURL() });
+	}
+	if (hunterIdSet.size > 0) {
+		const completersFieldText = sentenceListEN(Array.from(hunterIdSet.values()).map(id => userMention(id)));
+		const turnInFieldName = !bounty.isEvergreen && bounty.state === BountyState.Open ? "Pending Turn-Ins:" : "Turned-In By:";
+		if (completersFieldText.length <= EmbedLimits.MaximumFieldValueLength) {
+			fields.push({ name: turnInFieldName, value: completersFieldText });
+		} else {
+			fields.push({ name: turnInFieldName, value: "Too many to display!" });
+		}
+	}
+	if (goalProgress?.goalCompleted) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Completed!` });
+	} else if (goalProgress && goalProgress.requiredGP > 0) {
+		fields.push({ name: "Server Goal", value: `${fillableTextBar(goalProgress.currentGP, goalProgress.requiredGP, 15)} ${goalProgress.currentGP}/${goalProgress.requiredGP} GP` });
+	}
+
+	if (fields.length > 0) {
+		embed.addFields(fields);
+	}
+	return embed;
+}
+
+export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds: string[], senderMember: GuildMember, goalProgress: { goalCompleted: boolean; currentGP: number; requiredGP: number; }, imageURL?: string | null, seconderMentions?: string[]) {
+	const footerOptions: EmbedFooterOptions = { text: senderMember.displayName };
+	const iconURL = senderMember.user.avatarURL();
+	if (iconURL) {
+		footerOptions.iconURL = iconURL;
+	}
+	const embed = new EmbedBuilder().setColor("e5b271")
+		.setThumbnail(thumbnailURL)
+		.setTitle(toastText)
+		.setDescription(`A toast to ${sentenceListEN(recipientIds.map(id => userMention(id)))}!`)
+		.setFooter(footerOptions);
+	if (goalProgress.goalCompleted) {
+		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(15, 15, 15)} Complete!` });
+	} else if (goalProgress.requiredGP > 0) {
+		embed.addFields({ name: "Server Goal", value: `${fillableTextBar(goalProgress.currentGP, goalProgress.requiredGP, 15)} ${goalProgress.currentGP}/${goalProgress.requiredGP} GP` });
+	}
+	if (imageURL) {
+		embed.setImage(imageURL);
+	}
+	if (seconderMentions) {
+		embed.addFields({ name: "Seconded by", value: sentenceListEN(seconderMentions, false) });
+	}
+	return embed;
+}
+
+export function secondingButtonRow(toastId: string) {
+	return new ActionRowBuilder<ButtonBuilder>().addComponents(
+		new ButtonBuilder().setCustomId(`secondtoast${SAFE_DELIMITER}${toastId}`)
+			.setLabel("Hear, hear!")
+			.setEmoji("🥂")
+			.setStyle(ButtonStyle.Primary)
+	)
+}
+
+export function goalCompletionEmbed(contributorIds: string[]) {
+	return new EmbedBuilder().setColor("e5b271")
+		.setTitle("Server Goal Completed")
+		.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
+		.setDescription(`${randomCongratulatoryPhrase()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)
+		.addFields({ name: "Contributors", value: sentenceListEN(contributorIds.map(id => userMention(id))) })
+}
+
+function guildToEmbedAuthorOptions(guild: Guild) {
+	const payload: EmbedAuthorOptions = { name: guild.name };
+	const iconURL = guild.iconURL();
+	if (iconURL) {
+		payload.iconURL = iconURL;
+	}
+	return payload;
+}
+
+export function raffleResultEmbed(profileColor: keyof typeof Colors, guild: Guild, thumbnailURL: string, winner: GuildMember, qualificationText: string) {
+	const embed = new EmbedBuilder().setColor(Colors[profileColor])
+		.setAuthor(guildToEmbedAuthorOptions(guild))
+		.setTitle("Raffle Results")
+		.setThumbnail(thumbnailURL)
+		.setDescription(`The winner of this raffle is: ${winner}`)
+		.addFields({ name: "Qualifications", value: qualificationText })
+		.setTimestamp();
+
+	if (guild.bannerURL()) {
+		embed.setImage(guild.bannerURL());
+	}
+	return embed;
+}
+
+export async function userReportEmbed(hunter: DatabaseTypes.Hunter, guild: Guild, member: GuildMember, dqCount: number, lastFiveBounties: (DatabaseTypes.Bounty & { Completions: DatabaseTypes.Completion[] })[]) {
+	const embed = new EmbedBuilder().setColor(member.displayColor)
+		.setAuthor(guildToEmbedAuthorOptions(guild))
+		.setTitle(`Moderation Stats: ${member.user.tag}`)
+		.setThumbnail(member.user.avatarURL())
+		.setDescription(`Display Name: ${bold(member.displayName)} (id: ${italic(member.id)})\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
+		.addFields(
+			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
+			{ name: "Disqualifications", value: `${dqCount} season DQs`, inline: true },
+			{ name: "Penalties", value: `${hunter.penaltyCount} penalties (${hunter.penaltyPointTotal} points total)`, inline: true }
+		)
+		.setFooter(randomFooterTip())
+		.setTimestamp();
+
+	let bountyHistory = "";
+	for (let i = 0; i < lastFiveBounties.length; i++) {
+		const bounty = lastFiveBounties[i];
+		bountyHistory += underline(bounty.title);
+		if (bounty.description !== null) {
+			bountyHistory += ` ${bounty.description}`;
+		}
+		bountyHistory += `${sentenceListEN((await bounty.getCompletions()).map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
+	}
+
+	if (bountyHistory === "") {
+		bountyHistory = "No recent bounties";
+	}
+	return embed.addFields({ name: "Last 5 Completed Bounties Created by this User", value: bountyHistory });
+}
+//#endregion
+
+export const ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };

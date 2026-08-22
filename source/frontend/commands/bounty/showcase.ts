@@ -1,0 +1,72 @@
+import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, TimestampStyles } from "discord.js";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { discordTimestamp, timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../../shared/index.ts";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
+
+export default new SubcommandFunctionality("showcase", "Show the embed for one of your existing bounties and increase the reward",
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
+		const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
+		if (!isDevMode && Date.now() < nextShowcaseInMS) {
+			interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		if (!interaction.channel.members.has(interaction.client.user.id)) {
+			interaction.reply({ content: "BountyBot can't post public messages in this channel.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		const labelIdBountyId = "bounty-id";
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+			.setTitle("Showcase a Bounty")
+			.addTextDisplayComponents(
+				new TextDisplayBuilder().setContent("You can showcase 1 bounty per week. The showcased bounty's XP reward will be increased.")
+			)
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Bounty")
+					.setStringSelectMenuComponent(
+						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
+							.setPlaceholder("Select a bounty...")
+							.setOptions(selectOptionsFromBounties(bounties))
+					)
+			);
+		await interaction.showModal(modal);
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+			.catch(butIgnoreInteractionCollectorErrors);
+		if (!modalSubmission) {
+			return;
+		}
+
+		/** Unnecessary Validations
+		 * "user can view and send messages in target channel"
+		 * - User could not have sent slash command if unable to view and send messages. In case of input persisting over permission change, a showcase is low enough stakes to allow.
+		*/
+		const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
+		let bounty = await logicLayer.bounties.findBounty(bountyId);
+		if (bounty.state !== BountyState.Open) {
+			modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		bounty = await bounty.increment("showcaseCount");
+		await theater.hunter.update({ lastShowcaseTimestamp: new Date() });
+		const currentPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
+		const embed = bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bountyId), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents));
+		const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
+
+		modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds: [embed] });
+
+		if (bountyThread) {
+			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+				(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
+				await unarchiveAndUnlockThread(bountyThread, "bounty showcased by poster");
+			}
+			if (bountyThread.sendable) {
+				bountyThread.send({ content: `${modalSubmission.member} increased the reward on this bounty!`, flags: MessageFlags.SuppressNotifications });
+			}
+		}
+	})
+);

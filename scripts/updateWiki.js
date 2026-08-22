@@ -19,7 +19,7 @@ if (commandFiles.length > 0) {
 		/** @type {CommandWrapper} */
 		const command = require(`./../source/frontend/commands/${filename}`);
 		text += `### /${command.mainId}\n`;
-		if (command.premiumCommand) {
+		if (command.isPremium) {
 			text += `> 💎 Premium Command 💎\n\n`
 		}
 		text += `> Usable in: ${sentenceListEN(command.builder.contexts.map(context => contextDictionary[context]))}\n\n`;
@@ -60,7 +60,7 @@ if (contextMenuFiles.length > 0) {
 		/** @type {ContextMenuWrapper} */
 		const contextMenu = require(`./../source/frontend/context_menus/${file}`);
 		text += `### ${contextMenu.builder.type === ApplicationCommandType.User ? "User -> Apps" : "Message -> Apps"} -> ${contextMenu.mainId}\n`;
-		if (contextMenu.premiumCommand) {
+		if (contextMenu.isPremium) {
 			text += `> 💎 Premium Feature 💎\n\n`
 		}
 		text += `> Usable in: ${sentenceListEN(contextMenu.builder.contexts.map(context => contextDictionary[context]))}\n\n`;
