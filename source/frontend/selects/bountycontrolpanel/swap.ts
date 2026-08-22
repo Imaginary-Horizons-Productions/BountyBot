@@ -90,7 +90,7 @@ export default new SelectOptionFunctionality("swap",
 				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(modalSubmission.channel, auditLogReason);
 			}
-			if (modalSubmission.channel.sendable) {
+			if (modalSubmission.channel?.isSendable()) {
 				modalSubmission.reply({ content: `This bounty's slot was switched from ${sourceSlot} to ${destinationSlot}. It is now worth ${destinationRewardValue} XP.`, flags: MessageFlags.SuppressNotifications });
 			}
 
@@ -111,7 +111,7 @@ export default new SelectOptionFunctionality("swap",
 			const channel = modalSubmission.fields.getSelectedChannels(labelIdChannel).first();
 			channel.send(addCompanyAnnouncementPrefix(theater.company, { content: `${modalSubmission.member}'s bounty, ${bold(bounty.title)} is now worth ${destinationRewardValue} XP.` }))
 				.catch(error => {
-					if (isMissingPermissionError) {
+					if (isMissingPermissionError(error)) {
 						modalSubmission.followUp({ content: `Your bounty swap could not be announced in ${channel} because ${modalSubmission.client.user} doesn't have permission to view or send messages in that channel.`, flags: MessageFlags.Ephemeral });
 					} else {
 						console.error(error);

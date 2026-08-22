@@ -42,7 +42,7 @@ export default new SelectOptionFunctionality("revoketurnin",
 				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins revoked by poster");
 			}
-			if (modalSubmission.channel.sendable) {
+			if (modalSubmission.channel?.isSendable()) {
 				modalSubmission.reply({ content: `${sentenceListEN(removedIds.map(id => userMention(id)))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 			}
 		}

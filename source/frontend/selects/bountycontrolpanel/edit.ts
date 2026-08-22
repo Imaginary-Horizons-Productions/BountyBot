@@ -72,7 +72,7 @@ export default new SelectOptionFunctionality("edit",
 					refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed: bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), event) }, auditLogReason);
 					await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
 				}
-				if (modalSubmission.channel.sendable) {
+				if (modalSubmission.channel?.isSendable()) {
 					await modalSubmission.reply({ content: "This bounty was edited.", flags: MessageFlags.SuppressNotifications });
 				}
 			});

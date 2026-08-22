@@ -74,7 +74,7 @@ export default new SelectOptionFunctionality("complete",
 				return;
 			}
 
-			if (modalSubmission.channel.sendable) {
+			if (modalSubmission.channel?.isSendable()) {
 				await modalSubmission.deferReply({ flags: MessageFlags.SuppressNotifications });
 			}
 			const season = await logicLayer.seasons.incrementSeasonStat(bounty.companyId, "bountiesCompleted");

@@ -47,8 +47,8 @@ export default new SelectOptionFunctionality("recordturnin",
 				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins recorded by poster");
 			}
-			if (modalSubmission.channel.sendable) {
-				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
+			if (modalSubmission.channel?.isSendable()) {
+				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values()).map(id => userMention(id)))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 			}
 		}
 	)

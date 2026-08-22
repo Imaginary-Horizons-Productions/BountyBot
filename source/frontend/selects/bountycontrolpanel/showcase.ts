@@ -63,7 +63,7 @@ export default new SelectOptionFunctionality("showcase",
 				modalSubmission.message.edit({ embeds });
 				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty showcased by poster");
 			}
-			if (modalSubmission.channel.sendable) {
+			if (modalSubmission.channel?.isSendable()) {
 				modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on this bounty!` });
 			}
 		}
