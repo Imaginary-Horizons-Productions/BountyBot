@@ -47,7 +47,7 @@ module.exports = new SelectOptionWrapper("recordturnin",
 				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins recorded by poster");
 			}
 			if (modalSubmission.channel.sendable) {
-				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
+				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values()).map(id => userMention(id)))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 			}
 		}
 	)

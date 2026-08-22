@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ComponentType, unorderedList } = require("discord.js");
 const { SubcommandWrapper } = require("../../classes");
-const { textsHaveAutoModInfraction, selectOptionsFromBounties, bountyEmbed, refreshEvergreenBountiesThread, editBountyModalAndSubmissionOptions, butIgnoreInteractionCollectorErrors } = require("../../shared");
+const { textsHaveAutoModInfraction, selectOptionsFromBounties, bountyEmbed, refreshEvergreenBountiesThread, editBountyModalAndSubmissionOptions, butIgnoreInteractionCollectorErrors, commandMention } = require("../../shared");
 const { SKIP_INTERACTION_HANDLING } = require("../../../constants");
 const { Company } = require("../../../database/models");
 const { ensureCompanyHasEnoughOpenEvergreenBounties } = require("../_earlyOuts");
@@ -23,7 +23,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 			// Verify bounty exists
 			const selectedBounty = evergreenBounties.find(bounty => bounty.id === bountyId);
 			if (selectedBounty?.state !== "open") {
-				interaction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
+				collectedInteraction.update({ content: `There is no evergreen bounty #${bountyId}.`, components: [] });
 				return;
 			}
 
@@ -58,7 +58,7 @@ module.exports = new SubcommandWrapper("edit", "Change the name, description, or
 				if (imageAttachmentCollection) {
 					const firstAttachment = imageAttachmentCollection.first();
 					if (firstAttachment) {
-						updatePayload.attachmentURL = imageAttachmentCollection;
+						updatePayload.attachmentURL = firstAttachment.url;
 					} else {
 						updatePayload.attachmentURL = null;
 					}

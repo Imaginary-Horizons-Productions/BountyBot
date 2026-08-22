@@ -109,7 +109,7 @@ module.exports = new SelectOptionWrapper("swap",
 			const channel = modalSubmission.fields.getSelectedChannels(labelIdChannel).first();
 			channel.send(addCompanyAnnouncementPrefix(origin.company, { content: `${modalSubmission.member}'s bounty, ${bold(bounty.title)} is now worth ${destinationRewardValue} XP.` }))
 				.catch(error => {
-					if (isMissingPermissionError) {
+					if (isMissingPermissionError(error)) {
 						modalSubmission.followUp({ content: `Your bounty swap could not be announced in ${channel} because ${modalSubmission.client.user} doesn't have permission to view or send messages in that channel.`, flags: MessageFlags.Ephemeral });
 					} else {
 						console.error(error);

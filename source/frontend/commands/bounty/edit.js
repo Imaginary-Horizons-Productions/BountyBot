@@ -22,7 +22,7 @@ module.exports = new SubcommandWrapper("edit", "Edit the title, description, ima
 			// Verify bounty exists
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
 			if (bounty?.state !== "open") {
-				interaction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
+				collectedInteraction.update({ content: `The selected bounty doesn't seem to be open.`, components: [] });
 				return;
 			}
 
