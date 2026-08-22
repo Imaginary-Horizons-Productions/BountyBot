@@ -1,13 +1,13 @@
-import { MessageFlags, ModalSubmitInteraction, ThreadChannel, userMention } from "discord.js";
+import { MessageFlags, ModalSubmitInteraction, Snowflake, ThreadChannel, userMention } from "discord.js";
 import type { DatabaseTypes } from "../../../database";
 import { BountyState } from "../../../shared/types.ts";
 
-export async function bountyPing(modalSubmission: ModalSubmitInteraction, labelIds: { message: string; excludedBountyHunters: string; }, bounty: DatabaseTypes.Bounty, bountyThread: ThreadChannel | null) {
+export async function bountyPing(modalSubmission: ModalSubmitInteraction<"cached">, labelIds: { message: string; excludedBountyHunters: string; }, bounty: DatabaseTypes.Bounty, bountyThread: ThreadChannel | null) {
 	if (!bounty || bounty.state !== BountyState.Open) {
 		modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
 		return;
 	}
-	const interestedHunterIds = new Set();
+	const interestedHunterIds = new Set<Snowflake>();
 	if (bountyThread) {
 		// Using the force flag here because route through the bounty control panel didn't have reactions cached (discord.js bug?)
 		const postingMessage = await bountyThread.fetchStarterMessage({ force: true });
@@ -38,7 +38,7 @@ export async function bountyPing(modalSubmission: ModalSubmitInteraction, labelI
 		}
 	}
 
-	if (modalSubmission.channel.sendable) {
+	if (modalSubmission.channel?.isSendable()) {
 		modalSubmission.reply({ content: `${Array.from(interestedHunterIds.values()).map(id => userMention(id))} ${modalSubmission.fields.getTextInputValue(labelIds.message)}` });
 	}
 }

@@ -1,4 +1,4 @@
-import { LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder } from "discord.js";
+import { LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ThreadChannel, UserSelectMenuBuilder } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
 import { BountyState } from "../../../shared/types.ts";
@@ -41,13 +41,14 @@ export default new SelectOptionFunctionality("ping",
 				return;
 			}
 
-			bounty = await logicLayer.bounties.findBounty(bounty.id);
-			if (!bounty || bounty.state !== BountyState.Open) {
+			const selectedBounty = await logicLayer.bounties.findBounty(bounty.id);
+			if (!selectedBounty || selectedBounty.state !== BountyState.Open) {
 				modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
 				return;
 			}
 
-			bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, bounty, interaction.channel);
+			// Type assertion (interaction.channel as ThreadChannel | null) guaranteed because this select option is only usable from the Bounty Board (a forum)
+			bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, selectedBounty, interaction.channel as ThreadChannel | null);
 		}
 	)
 );
