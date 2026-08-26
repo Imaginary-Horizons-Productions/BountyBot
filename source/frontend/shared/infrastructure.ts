@@ -14,10 +14,10 @@ export async function aggregateSubcommands(mainId: string, fileList: string[]) {
 	return mappings;
 };
 
-export async function aggregateSelectOptionMap(mainId: string, fileList: string[]) {
-	const selectOptionMap: Record<string, SelectOptionProcedure> = {};
+export async function aggregateSelectOptionMap<T>(mainId: string, fileList: string[]) {
+	const selectOptionMap: Record<string, SelectOptionProcedure<T>> = {};
 	for (const fileName of fileList) {
-		const option = (await import(`../selects/${mainId}/${fileName}`)).default as SelectOptionFunctionality;
+		const option = (await import(`../selects/${mainId}/${fileName}`)).default as SelectOptionFunctionality<T>;
 		if (option.name in selectOptionMap) {
 			throw new BuildError(`duplicate select option name: ${option.name}`);
 		}

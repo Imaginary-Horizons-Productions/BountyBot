@@ -3,6 +3,7 @@ import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
 import { timeConversion } from '../../shared/index.ts';
+import { CompanyReciept } from '../../shared/types.ts';
 import { UserContextMenuFunctionality } from '../classes/index.ts';
 import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 
@@ -55,7 +56,7 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, theater.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText);
 			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
-			let companyReceipt = {};
+			let companyReceipt: CompanyReciept = {};
 			if (hunterReceipts.size > 0) {
 				const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap[interaction.user.id], season);
 				companyReceipt = results.companyReceipt;

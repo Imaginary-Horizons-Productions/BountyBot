@@ -1,4 +1,4 @@
-import { MessageFlags, userMention } from "discord.js";
+import { MessageCreateOptions, MessageFlags, userMention } from "discord.js";
 import type { LogicLayer } from "../../logic";
 import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { goalCompletionEmbed } from "../shared/index.ts";
@@ -16,7 +16,7 @@ export default new ItemTemplateSet(
 			}
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
 			const { goalProgress } = await logicLayer.goals.progressGoal(theater.company, goal.type, theater.hunter, season);
-			const resultPayload = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${goalProgress.gpContributed} GP the Server Goal!` };
+			const resultPayload: MessageCreateOptions = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${goalProgress.gpContributed} GP the Server Goal!` };
 			if (goalProgress.goalCompleted) {
 				resultPayload.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 			}

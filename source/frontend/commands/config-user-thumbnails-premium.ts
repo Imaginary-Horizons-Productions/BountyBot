@@ -1,9 +1,10 @@
 import { InteractionContextType, PermissionFlagsBits } from "discord.js";
 import { CommandFunctionality } from "../classes/index.ts";
+import { ConfigCompanyThumbnailsSettings } from "../shared/_types.ts";
 import { configCompanyThumbnails } from "../shared/flows/configCompanyThumbnails.ts";
 
 const mainId = "config-user-thumbnails-premium";
-const thumbnailUpdateData = [
+const thumbnailUpdateData: ConfigCompanyThumbnailsSettings = [
 	{
 		label: "Toast Thumbnail",
 		description: "Set an image to use as thumbnail on toasts",

@@ -1,4 +1,5 @@
 import { MessageFlags, PermissionFlagsBits } from "discord.js";
+import { DatabaseTypes } from "../../../database/index.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, refreshBountyBoardThread, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
@@ -32,7 +33,7 @@ export default new SelectOptionFunctionality("edit",
 					return;
 				}
 
-				const updatePayload = { editCount: bounty.editCount + 1 };
+				const updatePayload: Partial<DatabaseTypes.Bounty> = { editCount: bounty.editCount + 1 };
 				if (title) {
 					updatePayload.title = title;
 				}
