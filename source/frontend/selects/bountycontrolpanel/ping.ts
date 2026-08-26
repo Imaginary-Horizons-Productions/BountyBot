@@ -1,4 +1,4 @@
-import { LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ThreadChannel, UserSelectMenuBuilder } from "discord.js";
+import { LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
 import { BountyState } from "../../../shared/types.ts";
@@ -47,8 +47,9 @@ export default new SelectOptionFunctionality("ping",
 				return;
 			}
 
-			// Type assertion (interaction.channel as ThreadChannel | null) guaranteed because this select option is only usable from the Bounty Board (a forum)
-			bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, selectedBounty, interaction.channel as ThreadChannel | null);
+			if (interaction.channel?.isThread()) {
+				bountyPing(modalSubmission, { message: labelIdMessage, excludedBountyHunters: labelIdExcludedBountyHunters }, selectedBounty, interaction.channel);
+			}
 		}
 	)
 );

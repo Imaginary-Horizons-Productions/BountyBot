@@ -30,7 +30,7 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 					.setAuthor(ihpAuthorPayload)
 					.setTitle(itemName)
 					.setDescription(getItemDescription(itemName))
-					.addFields({ name: "You have", value: isDevMode ? "Debug Mode" : itemCount })
+					.addFields({ name: "You have", value: isDevMode ? "Debug Mode" : itemCount.toString() })
 					.setFooter(randomFooterTip())
 			],
 			components: [
