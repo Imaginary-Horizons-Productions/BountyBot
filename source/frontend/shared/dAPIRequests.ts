@@ -1,4 +1,4 @@
-import type { GuildForumThreadManager, MessageEditOptions, Snowflake } from "discord.js";
+import type { GuildForumThreadManager, MessageCreateOptions, MessageEditOptions, Snowflake } from "discord.js";
 import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, Message, MessageFlags, ThreadChannel } from "discord.js";
 import { DatabaseTypes } from "../../database/index.ts";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
@@ -129,7 +129,7 @@ export async function refreshReferenceChannelScoreboardOverall(company: Database
 }
 
 export function sendRewardMessage(embedMessage: Message, content: string, threadTitle: string) {
-	const rewardsPayload = { content, flags: MessageFlags.SuppressNotifications };
+	const rewardsPayload: MessageCreateOptions = { content, flags: MessageFlags.SuppressNotifications };
 	if (embedMessage.channel.isThread()) {
 		// If already in thread, send message
 		embedMessage.channel.send(rewardsPayload);
