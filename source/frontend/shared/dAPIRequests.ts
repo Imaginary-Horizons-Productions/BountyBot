@@ -1,4 +1,4 @@
-import type { GuildForumThreadManager, MessageCreateOptions, MessageEditOptions, Snowflake } from "discord.js";
+import type { GuildForumThreadCreateOptions, GuildForumThreadManager, MessageCreateOptions, MessageEditOptions, Snowflake } from "discord.js";
 import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, Message, MessageFlags, ThreadChannel } from "discord.js";
 import { DatabaseTypes } from "../../database/index.ts";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
@@ -16,11 +16,14 @@ import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./
  */
 
 export async function makeEvergreenBountiesThread(threadManager: GuildForumThreadManager, embeds: EmbedBuilder[], company: DatabaseTypes.Company) {
-	const thread = await threadManager.create({
+	const threadPayload: GuildForumThreadCreateOptions = {
 		name: "Evergreen Bounties",
 		message: { embeds },
-		appliedTags: [company.bountyBoardOpenTagId]
-	});
+	};
+	if (company.bountyBoardOpenTagId) {
+		threadPayload.appliedTags = [company.bountyBoardOpenTagId];
+	}
+	const thread = await threadManager.create(threadPayload);
 	company.update({ evergreenThreadId: thread.id });
 	thread.pin();
 	return thread;
