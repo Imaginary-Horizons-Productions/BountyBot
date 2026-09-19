@@ -1,4 +1,4 @@
-import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, Snowflake, TimestampStyles } from "discord.js";
+import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, Snowflake, time, TimestampStyles } from "discord.js";
 import { promises as fsa } from "fs";
 import cron from "node-cron";
 import { Sequelize } from "sequelize";
@@ -11,7 +11,6 @@ import { addSelectsToCooldownDictionary, getSelect, linkAllSelectsToLogic } from
 import { commandMention, consolidateHunterReceipts, goalCompletionEmbed, latestVersionChangesEmbed, randomCongratulatoryPhrase, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, toastEmbed } from "./frontend/shared/index.ts";
 import { LOGIC_LAYER as logicBlob } from "./logic/index.ts";
 import { announcementsChannelId, commandIds, lastPostedVersion, premium, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, testGuildId } from "./shared/constants.ts";
-import { discordTimestamp } from "./shared/index.ts";
 import { DatabaseOptionsDictionary, RunMode } from "./shared/json_serializers/DatabaseOptionsDictionary.ts";
 import { GoalProgressKind, type CooldownDictionary, type PremiumFlowList } from "./shared/types.ts";
 
@@ -20,13 +19,13 @@ const runMode = (process.argv[2] || RunMode.Development) as RunMode;
 const log = console.log;
 
 console.log = function () {
-	log.apply(console, [`${discordTimestamp(Math.floor(Date.now() / 1000))} ${runMode} mode`, ...arguments]);
+	log.apply(console, [`${time(Math.floor(Date.now() / 1000))} ${runMode} mode`, ...arguments]);
 }
 
 const error = console.error;
 
 console.error = function () {
-	error.apply(console, [`${discordTimestamp(Math.floor(Date.now() / 1000))} ${runMode} mode`, ...arguments]);
+	error.apply(console, [`${time(Math.floor(Date.now() / 1000))} ${runMode} mode`, ...arguments]);
 }
 
 //#region pre-Client Setup
@@ -210,12 +209,12 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 	const commandTime = new Date();
 	const { endOfCD: endOfGlobalCD, isOnCD: isOnGlobalCD, lastCommandName } = await logicBlob.cooldowns.checkGlobalCooldownForUser(interaction.user.id, commandTime);
 	if (isOnGlobalCD) {
-		interaction.reply({ content: `Please wait, your BountyBot global cooldown expires in ${discordTimestamp(Math.floor(endOfGlobalCD.getTime() / 1000), TimestampStyles.RelativeTime)}${lastCommandName ? ` (last used command: ${lastCommandName})` : ""}.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `Please wait, your BountyBot global cooldown expires in ${time(Math.floor(endOfGlobalCD.getTime() / 1000), TimestampStyles.RelativeTime)}${lastCommandName ? ` (last used command: ${lastCommandName})` : ""}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	const { endOfCD: endOfIndividualCD, isOnCD: isOnIndividualCD } = await logicBlob.cooldowns.checkSpecificCooldownForUser(interaction.user.id, mainId, commandTime);
 	if (isOnIndividualCD) {
-		interaction.reply({ content: `Please wait, your BountyBot \`/${mainId}\` cooldown expires in ${discordTimestamp(Math.floor(endOfIndividualCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
+		interaction.reply({ content: `Please wait, your BountyBot \`/${mainId}\` cooldown expires in ${time(Math.floor(endOfIndividualCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: [MessageFlags.Ephemeral] });
 		return;
 	}
 	await logicBlob.cooldowns.updateCooldowns(interaction.user.id, mainId, commandTime, cooldownDictionary[mainId]);

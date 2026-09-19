@@ -1,6 +1,6 @@
-import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, TimestampStyles } from "discord.js";
+import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, time, TimestampStyles } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { discordTimestamp, timeConversion } from "../../../shared/index.ts";
+import { timeConversion } from "../../../shared/index.ts";
 import { BountyState } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, unarchiveAndUnlockThread } from "../../shared/index.ts";
@@ -11,7 +11,7 @@ export default new SelectOptionFunctionality("showcase",
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 			if (!isDevMode && Date.now() < nextShowcaseInMS) {
-				interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+				interaction.reply({ content: `You can showcase another bounty in ${time(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 

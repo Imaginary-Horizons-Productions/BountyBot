@@ -1,4 +1,3 @@
-import type { TimestampStylesString } from "discord.js";
 import type { MemberOf } from "./types.ts";
 
 export const TimeUnitKind = {
@@ -108,17 +107,5 @@ export function descendingByProperty(property: string | number) {
 			throw new Error(`Attempted to use descendingByProperty on non-number property "${property}"`);
 		}
 		return b[property] - a[property];
-	}
-}
-
-/** Formats a Unix Epoch into a string that Discord parses into the viewer's timezone, including style options
- * @param secondsSinceStartOf1970 aka the Unix Epoch, must be an integer to parse
- * @param style using Discord.js's `TimestampStyles` recommended, see that object's properties for examples
- */
-export function discordTimestamp(secondsSinceStartOf1970: number, style?: TimestampStylesString) {
-	if (style) {
-		return `<t:${secondsSinceStartOf1970}:${style}>`;
-	} else {
-		return `<t:${secondsSinceStartOf1970}>`;
 	}
 }

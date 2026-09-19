@@ -1,7 +1,7 @@
-import { ActionRowBuilder, bold, ButtonBuilder, ButtonStyle, Colors, ComponentType, EmbedBuilder, InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandStringOption, TimestampStyles } from 'discord.js';
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonStyle, Colors, ComponentType, EmbedBuilder, InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandStringOption, time, TimestampStyles } from 'discord.js';
 import type { LogicLayer } from '../../logic/index.js';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
-import { discordTimestamp, timeConversion } from '../../shared/index.ts';
+import { timeConversion } from '../../shared/index.ts';
 import { CommandFunctionality } from '../classes/index.ts';
 import { getItemCooldown, getItemDescription, getItemNames, useItem } from '../items/_itemDictionary.ts';
 import { butIgnoreInteractionCollectorErrors, ihpAuthorPayload, randomFooterTip } from '../shared/index.ts';
@@ -59,7 +59,7 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 			const cooldownName = `item-${itemName}`;
 			const { isOnCD, endOfCD } = await logicLayer.cooldowns.checkSpecificCooldownForUser(collectedInteration.user.id, cooldownName, now);
 			if (isOnCD) {
-				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${discordTimestamp(Math.floor(endOfCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${time(Math.floor(endOfCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));

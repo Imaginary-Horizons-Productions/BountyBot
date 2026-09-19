@@ -1,16 +1,15 @@
-import { ShardingManager } from "discord.js";
-import { discordTimestamp } from "./source/shared/index.ts";
+import { ShardingManager, time } from "discord.js";
 
 const log = console.log;
 
 console.log = function () {
-	log.apply(console, [`${discordTimestamp(Math.floor(Date.now() / 1000))} `, ...arguments]);
+	log.apply(console, [`${time(Math.floor(Date.now() / 1000))} `, ...arguments]);
 }
 
 const error = console.error;
 
 console.error = function () {
-	error.apply(console, [`${discordTimestamp(Math.floor(Date.now() / 1000))} `, ...arguments]);
+	error.apply(console, [`${time(Math.floor(Date.now() / 1000))} `, ...arguments]);
 }
 const manager = new ShardingManager("./source/bot.ts", {
 	token: (await import("./config/auth.json", { with: { type: "json" } })).default.token,

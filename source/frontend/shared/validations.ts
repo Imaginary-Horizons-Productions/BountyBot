@@ -1,6 +1,5 @@
-import { AutoModerationActionType, GuildMember, TextChannel } from "discord.js";
+import { AutoModerationActionType, GuildMember, TextChannel, time } from "discord.js";
 import { YEAR_IN_MS } from "../../shared/constants.ts";
-import { discordTimestamp } from "../../shared/index.ts";
 import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses.ts";
 
 /** @file Validations - Checks for issues with user input data */
@@ -64,17 +63,17 @@ export function validateScheduledEventTimestamps(startTimestamp?: number, endTim
 	if (!startTimestamp) {
 		errors.push(`Start Timestamp must be an integer. Received: ${startTimestamp}`);
 	} else if (nowTimestamp >= startTimestamp || startTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to ${discordTimestamp(startTimestamp)}`);
+		errors.push(`Start Timestamp must be between now and 5 years in the future. Received: ${startTimestamp}, which computes to ${time(startTimestamp)}`);
 	}
 
 	if (!endTimestamp) {
 		errors.push(`End Timestamp must be an integer. Received: ${endTimestamp}`);
 	} else if (nowTimestamp >= endTimestamp || endTimestamp >= nowTimestamp + (5 * YEAR_IN_MS)) {
-		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to ${discordTimestamp(endTimestamp)}`);
+		errors.push(`End Timestamp must be between now and 5 years in the future. Received: ${endTimestamp}, which computes to ${time(endTimestamp)}`);
 	}
 
 	if (startTimestamp && endTimestamp && startTimestamp > endTimestamp) {
-		errors.push(`End Timestamp (${discordTimestamp(endTimestamp)}) was before Start Timestamp (${discordTimestamp(startTimestamp)}).`);
+		errors.push(`End Timestamp (${time(endTimestamp)}) was before Start Timestamp (${time(startTimestamp)}).`);
 	}
 	return errors;
 }

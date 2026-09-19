@@ -1,6 +1,6 @@
-import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, TimestampStyles } from "discord.js";
+import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, time, TimestampStyles } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { discordTimestamp, timeConversion } from "../../../shared/index.ts";
+import { timeConversion } from "../../../shared/index.ts";
 import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../../shared/index.ts";
@@ -10,7 +10,7 @@ export default new SubcommandFunctionality("showcase", "Show the embed for one o
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
 		if (!isDevMode && Date.now() < nextShowcaseInMS) {
-			interaction.reply({ content: `You can showcase another bounty in ${discordTimestamp(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+			interaction.reply({ content: `You can showcase another bounty in ${time(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 

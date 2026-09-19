@@ -1,10 +1,10 @@
 import { EmbedLimits, MessageLimits, ModalLimits, SelectMenuLimits } from "@sapphire/discord.js-utilities";
 import type { EmbedAuthorOptions, EmbedFooterData, EmbedFooterOptions, GuildScheduledEventCreateOptions, InteractionReplyOptions, MessageCreateOptions, SelectMenuComponentOptionData } from "discord.js";
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageFlags, ModalBuilder, Role, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageFlags, ModalBuilder, Role, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, time, underline, userMention } from "discord.js";
 import * as fs from "fs";
 import { DatabaseTypes } from "../../database/index.ts";
 import { BountyBotColors, COMPANY_XP_COEFFICIENT, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } from "../../shared/constants.ts";
-import { ascendingByProperty, descendingByProperty, discordTimestamp, timeConversion } from "../../shared/index.ts";
+import { ascendingByProperty, descendingByProperty, timeConversion } from "../../shared/index.ts";
 import { BountyState } from "../../shared/types.ts";
 import { emojiFromNumber, fillableTextBar, randomCongratulatoryPhrase, sentenceListEN } from "./stringConstructors.ts";
 
@@ -434,7 +434,7 @@ export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: Gui
 		embed.setImage(bounty.attachmentURL);
 	}
 	if (event) {
-		fields.push({ name: "Time", value: `${discordTimestamp(event.scheduledStartTimestamp / 1000)} - ${discordTimestamp(event.scheduledEndTimestamp / 1000)}` });
+		fields.push({ name: "Time", value: `${time(event.scheduledStartTimestamp / 1000)} - ${time(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
 		fields.push({ name: "Reward", value: `${DatabaseTypes.Bounty.calculateCompleterReward(posterLevel, bounty.slotNumber, bounty.showcaseCount)} XP${company.festivalMultiplierString("xp")}`, inline: true });
