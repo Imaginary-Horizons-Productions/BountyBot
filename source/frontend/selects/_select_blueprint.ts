@@ -1,0 +1,14 @@
+import type { LogicLayer } from "../../logic";
+import { SelectFunctionality } from "../classes/index.ts";
+
+let logicLayer: LogicLayer;
+
+const mainId = "";
+export default new SelectFunctionality(mainId, 3000,
+	/** Specs */
+	(interaction, theater, isDevMode, args) => {
+
+	}
+).setLogicLinker(logicBlob => {
+	logicLayer = logicBlob;
+});
