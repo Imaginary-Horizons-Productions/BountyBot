@@ -93,12 +93,22 @@ export function dateInFuture(timeMap: HeterogeneousDuration) {
 	return new Date(nowMS);
 }
 
-export function ascendingByProperty(property: string) {
-	return (a: { [property]: number }, b: { [property]: number }) => a[property] - b[property];
+export function ascendingByProperty(property: string | number) {
+	return (a: any, b: any) => {
+		if (typeof b[property] !== "number" || typeof a[property] !== "number") {
+			throw new Error(`Attempted to use ascendingByProperty on non-number property "${property}"`);
+		}
+		return a[property] - b[property];
+	}
 }
 
-export function descendingByProperty(property: string) {
-	return (a: { [property]: number }, b: { [property]: number }) => b[property] - a[property];
+export function descendingByProperty(property: string | number) {
+	return (a: any, b: any) => {
+		if (typeof b[property] !== "number" || typeof a[property] !== "number") {
+			throw new Error(`Attempted to use descendingByProperty on non-number property "${property}"`);
+		}
+		return b[property] - a[property];
+	}
 }
 
 /** Formats a Unix Epoch into a string that Discord parses into the viewer's timezone, including style options
