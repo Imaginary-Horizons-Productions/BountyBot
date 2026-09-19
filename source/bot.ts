@@ -208,7 +208,7 @@ dAPIClient.on(Events.InteractionCreate, async interaction => {
 
 	// #region General Cooldown Management
 	const commandTime = new Date();
-	const { endOfCD: endOfGlobalCD, isOnCD: isOnGlobalCD, lastCommandName } = await logicBlob.cooldowns.checkGlobalCooldonwForUser(interaction.user.id, commandTime);
+	const { endOfCD: endOfGlobalCD, isOnCD: isOnGlobalCD, lastCommandName } = await logicBlob.cooldowns.checkGlobalCooldownForUser(interaction.user.id, commandTime);
 	if (isOnGlobalCD) {
 		interaction.reply({ content: `Please wait, your BountyBot global cooldown expires in ${discordTimestamp(Math.floor(endOfGlobalCD.getTime() / 1000), TimestampStyles.RelativeTime)}${lastCommandName ? ` (last used command: ${lastCommandName})` : ""}.`, flags: [MessageFlags.Ephemeral] });
 		return;

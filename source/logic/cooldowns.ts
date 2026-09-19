@@ -10,7 +10,7 @@ export function setDB(database: Database) {
 	db = database;
 }
 
-export async function checkGlobalCooldonwForUser(userId: Snowflake, now: Date) {
+export async function checkGlobalCooldownForUser(userId: Snowflake, now: Date) {
 	const latestUserInteraction = await db.UserInteractions.findOne({ where: { userId }, order: [["cooldownTime", "DESC"]] });
 	if (latestUserInteraction) {
 		const endOfCD = new Date(latestUserInteraction.lastInteractTime.getTime() + GLOBAL_COMMAND_COOLDOWN);
