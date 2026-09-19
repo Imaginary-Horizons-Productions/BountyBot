@@ -1,4 +1,4 @@
-import type { AnySelectMenuInteraction, ApplicationCommandOptionChoiceData, PermissionFlags, Snowflake } from "discord.js";
+import type { AnySelectMenuInteraction, ApplicationCommandOptionChoiceData, PermissionFlags } from "discord.js";
 import { ApplicationCommandOptionType, ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, InteractionContextType, MessageContextMenuCommandInteraction, SlashCommandAttachmentOption, SlashCommandBooleanOption, SlashCommandBuilder, SlashCommandChannelOption, SlashCommandIntegerOption, SlashCommandMentionableOption, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, SlashCommandUserOption, UserContextMenuCommandInteraction } from "discord.js";
 import type { LogicLayer } from "../../logic/index.ts";
 import { MAX_SET_TIMEOUT } from "../../shared/constants.ts";
@@ -32,30 +32,6 @@ export class InteractionFunctionality {
 	setLogicLinker(setLogicFunction: (logicBlob: LogicLayer) => void) {
 		this.linkToLogic = setLogicFunction;
 		return this;
-	}
-
-	/** returns Unix Timestamp when cooldown will expire or null in case of expired or missing cooldown */
-	getCooldownTimestamp(userId: Snowflake, cooldownMap: Map<string, Map<string, number>>) {
-		const now = Date.now();
-
-		if (!cooldownMap.has(this.mainId)) {
-			cooldownMap.set(this.mainId, new Map());
-		}
-
-		const timestamps = cooldownMap.get(this.mainId);
-		if (timestamps.has(userId)) {
-			const expirationTime = timestamps.get(userId) + this.cooldown;
-
-			if (now < expirationTime) {
-				return Math.round(expirationTime / 1000);
-			} else {
-				timestamps.delete(userId);
-			}
-		} else {
-			timestamps.set(userId, now);
-			setTimeout(() => timestamps.delete(userId), this.cooldown);
-		}
-		return null;
 	}
 };
 
