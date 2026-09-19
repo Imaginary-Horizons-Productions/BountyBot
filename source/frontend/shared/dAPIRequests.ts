@@ -156,12 +156,17 @@ export async function syncRankRoles(hunterRecipts: HunterReceiptMap, descendingR
 			rankChangeIds.push(id);
 		}
 	}
-	const rankRoleIds = descendingRanks.map(rank => rank.roleId).filter(id => !!id);
+	const rankRoleIds = [];
+	for (const rank of descendingRanks) {
+		if (rank.roleId) {
+			rankRoleIds.push(rank.roleId);
+		}
+	}
 	const members = await guildMemberManager.fetch({ user: rankChangeIds });
 	for (const [id, member] of members) {
 		await member.roles.remove(rankRoleIds);
 		const receipt = hunterRecipts.get(id);
-		if (receipt?.rankUp.newRankIndex) {
+		if (receipt?.rankUp?.newRankIndex) {
 			const rankRoleId = descendingRanks[receipt.rankUp.newRankIndex].roleId;
 			if (rankRoleId) {
 				await member.roles.add(rankRoleId).catch(console.error);
