@@ -3,7 +3,7 @@ import type { EmbedAuthorOptions, EmbedFooterData, EmbedFooterOptions, GuildSche
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageFlags, ModalBuilder, Role, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, underline, userMention } from "discord.js";
 import * as fs from "fs";
 import { DatabaseTypes } from "../../database/index.ts";
-import { COMPANY_XP_COEFFICIENT, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } from "../../shared/constants.ts";
+import { BountyBotColors, COMPANY_XP_COEFFICIENT, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } from "../../shared/constants.ts";
 import { ascendingByProperty, descendingByProperty, discordTimestamp, timeConversion } from "../../shared/index.ts";
 import { BountyState } from "../../shared/types.ts";
 import { emojiFromNumber, fillableTextBar, randomCongratulatoryPhrase, sentenceListEN } from "./stringConstructors.ts";
@@ -472,7 +472,7 @@ export function toastEmbed(thumbnailURL: string, toastText: string, recipientIds
 	if (iconURL) {
 		footerOptions.iconURL = iconURL;
 	}
-	const embed = new EmbedBuilder().setColor("e5b271")
+	const embed = new EmbedBuilder().setColor(BountyBotColors.Parchment)
 		.setThumbnail(thumbnailURL)
 		.setTitle(toastText)
 		.setDescription(`A toast to ${sentenceListEN(recipientIds.map(id => userMention(id)))}!`)
@@ -501,7 +501,7 @@ export function secondingButtonRow(toastId: string) {
 }
 
 export function goalCompletionEmbed(contributorIds: string[]) {
-	return new EmbedBuilder().setColor("e5b271")
+	return new EmbedBuilder().setColor(BountyBotColors.Parchment)
 		.setTitle("Server Goal Completed")
 		.setThumbnail("https://cdn.discordapp.com/attachments/673600843630510123/1309260766318166117/trophy-cup.png?ex=6740ef9b&is=673f9e1b&hm=218e19ede07dcf85a75ecfb3dde26f28adfe96eb7b91e89de11b650f5c598966&")
 		.setDescription(`${randomCongratulatoryPhrase()}, the Server Goal was completed! Contributors have double chance to find items on their next bounty completion.`)

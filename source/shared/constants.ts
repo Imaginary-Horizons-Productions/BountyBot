@@ -32,3 +32,6 @@ export const GLOBAL_MAX_BOUNTY_SLOTS = MessageLimits.MaximumEmbeds;
 export const MAX_EVERGREEN_SLOTS = MessageLimits.MaximumEmbeds;
 export const GLOBAL_COMMAND_COOLDOWN = 2000; // in ms
 export const MAX_BOT_NICKNAME_LENGTH = GuildMemberLimits.MaximumDisplayNameLength - 3; // We reserve 3 characters for festival tag nicknaming
+export const BountyBotColors = {
+	Parchment: "#E5B271"
+} as const;

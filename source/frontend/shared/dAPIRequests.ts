@@ -18,7 +18,7 @@ import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./
 export async function makeEvergreenBountiesThread(threadManager: GuildForumThreadManager, embeds: EmbedBuilder[], company: DatabaseTypes.Company) {
 	const threadPayload: GuildForumThreadCreateOptions = {
 		name: "Evergreen Bounties",
-		message: { embeds },
+		message: { embeds }
 	};
 	if (company.bountyBoardOpenTagId) {
 		threadPayload.appliedTags = [company.bountyBoardOpenTagId];
