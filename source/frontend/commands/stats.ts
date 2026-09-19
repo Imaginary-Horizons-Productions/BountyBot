@@ -1,4 +1,4 @@
-import { Colors, EmbedBuilder, InteractionContextType, italic, MessageFlags, SlashCommandUserOption, underline, unorderedList } from 'discord.js';
+import { EmbedBuilder, InteractionContextType, italic, MessageFlags, SlashCommandUserOption, underline, unorderedList } from 'discord.js';
 import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic/index.ts';
 import { CommandFunctionality } from '../classes/index.ts';
@@ -94,7 +94,7 @@ export default new CommandFunctionality(mainId, "Get the BountyBot stats for you
 
 			interaction.reply({
 				embeds: [
-					new EmbedBuilder().setColor(Colors[theater.hunter.profileColor])
+					new EmbedBuilder().setColor(theater.hunter.profileColor)
 						.setAuthor(ihpAuthorPayload)
 						.setThumbnail(interaction.user.avatarURL())
 						.setTitle(`You are ${underline(`Level ${currentHunterLevel}`)} in ${guild.name}`)

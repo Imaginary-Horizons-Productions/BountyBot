@@ -19,10 +19,10 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 		const itemName = interaction.options.getString(itemNameOption.name, true);
 		const itemCount = await logicLayer.items.countUserCopies(interaction.user.id, itemName);
 		const hasItem = itemCount > 0 || isDevMode;
-		let embedColor = Colors.Blurple;
+		let embedColor: keyof typeof Colors = "Blurple";
 		if (itemName.includes("Profile Colorizer")) {
 			const [color] = itemName.split("Profile Colorizer");
-			embedColor = Colors[color.replace(/ /g, "")];
+			embedColor = color.replace(/ /g, "") as keyof typeof Colors;
 		}
 		interaction.reply({
 			embeds: [

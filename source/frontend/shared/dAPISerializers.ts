@@ -404,7 +404,7 @@ export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGui
 	} else {
 		description += `\nThey have earned ${italic("0 XP")} this season`;
 	}
-	return new EmbedBuilder().setColor(Colors[targetHunter.profileColor])
+	return new EmbedBuilder().setColor(targetHunter.profileColor)
 		.setAuthor(ihpAuthorPayload)
 		.setThumbnail(targetGuildMember.user.avatarURL())
 		.setTitle(`${targetGuildMember.displayName} is ${underline(`Level ${currentLevel}`)}`)
@@ -518,7 +518,7 @@ function guildToEmbedAuthorOptions(guild: Guild) {
 }
 
 export function raffleResultEmbed(profileColor: keyof typeof Colors, guild: Guild, thumbnailURL: string, winner: GuildMember, qualificationText: string) {
-	const embed = new EmbedBuilder().setColor(Colors[profileColor])
+	const embed = new EmbedBuilder().setColor(profileColor)
 		.setAuthor(guildToEmbedAuthorOptions(guild))
 		.setTitle("Raffle Results")
 		.setThumbnail(thumbnailURL)
