@@ -1,4 +1,4 @@
-import { MessageCreateOptions, MessageFlags, userMention } from "discord.js";
+import { type MessageCreateOptions, MessageFlags, userMention } from "discord.js";
 import type { LogicLayer } from "../../logic";
 import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { goalCompletionEmbed } from "../shared/index.ts";

@@ -1,4 +1,4 @@
-import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, Snowflake, time, TimestampStyles } from "discord.js";
+import { ActivityType, ApplicationCommand, Client, Events, IntentsBitField, MessageFlags, Partials, REST, Routes, time, TimestampStyles, type Snowflake } from "discord.js";
 import { promises as fsa } from "fs";
 import cron from "node-cron";
 import { Sequelize } from "sequelize";

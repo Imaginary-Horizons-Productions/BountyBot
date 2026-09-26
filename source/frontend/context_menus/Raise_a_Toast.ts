@@ -3,7 +3,7 @@ import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
 import { timeConversion } from '../../shared/index.ts';
-import { CompanyReciept } from '../../shared/types.ts';
+import type { CompanyReciept } from '../../shared/types.ts';
 import { UserContextMenuFunctionality } from '../classes/index.ts';
 import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 

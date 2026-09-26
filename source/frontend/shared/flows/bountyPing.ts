@@ -1,4 +1,4 @@
-import { MessageFlags, ModalSubmitInteraction, Snowflake, ThreadChannel, userMention } from "discord.js";
+import { MessageFlags, ModalSubmitInteraction, type Snowflake, ThreadChannel, userMention } from "discord.js";
 import type { DatabaseTypes } from "../../../database";
 import { BountyState } from "../../../shared/types.ts";
 

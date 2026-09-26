@@ -1,5 +1,5 @@
 import { EmbedLimits } from '@sapphire/discord.js-utilities';
-import { EmbedAuthorOptions, EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, SlashCommandStringOption, TextInputBuilder, TextInputStyle, User, userMention } from 'discord.js';
+import { type EmbedAuthorOptions, EmbedBuilder, FileUploadBuilder, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, SlashCommandStringOption, TextInputBuilder, TextInputStyle, User, userMention } from 'discord.js';
 import { feedbackChannelId, SKIP_INTERACTION_HANDLING, testGuildId } from '../../shared/constants.ts';
 import { timeConversion } from '../../shared/index.ts';
 import { CommandFunctionality } from '../classes/index.ts';
