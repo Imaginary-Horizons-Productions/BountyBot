@@ -15,5 +15,8 @@
 	},
 	"devDependencies": {
 		"sequelize-cli": "6.6.3"
+	},
+	"allowScripts": {
+		"sqlite3@6.0.1": true
 	}
 }
