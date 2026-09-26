@@ -9,7 +9,7 @@ let logicLayer: LogicLayer;
 const mainId = "secondtoast";
 export default new ButtonFunctionality(mainId, 3000,
 	/** Provide each recipient of a toast an extra XP, roll crit toast for author, and update embed */
-	async (interaction, theater, isDevMode, [toastId]) => {
+	async (interaction, theater, isDevMode, toastId) => {
 		const originalToast = await logicLayer.toasts.findToastByPK(toastId);
 		if (!originalToast) {
 			interaction.reply({ content: "Database record of this toast could not be found.", flags: MessageFlags.Ephemeral });
