@@ -242,7 +242,7 @@ export async function latestVersionChangesEmbed() {
 	let sectionEnd = dividerRegEx.exec(data).index;
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
+		.setAuthor(ihpAuthorPayload)
 		.setTitle(data.slice(titleStart + 3, changesStartRegEx.lastIndex))
 		.setURL('https://discord.gg/JxqE9EpKt9')
 		.setThumbnail('https://cdn.discordapp.com/attachments/545684759276421120/734099622846398565/newspaper.png')
@@ -263,7 +263,7 @@ export async function companyStatsEmbed(guild: Guild, companyXP: number, partici
 	const seasonBountyDifference = currentSeason.bountiesCompleted - (lastSeason?.bountiesCompleted ?? 0);
 	const seasonToastDifference = currentSeason.toastsRaised - (lastSeason?.toastsRaised ?? 0);
 	return new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
+		.setAuthor(ihpAuthorPayload)
 		.setTitle(`${guild.name} is ${underline(`Level ${currentCompanyLevel}`)}`)
 		.setThumbnail(guild.iconURL())
 		.setDescription(`${fillableTextBar(companyXP - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}${italic("Next Level:")} ${nextLevelThreshold - companyXP} Bounty Hunter Levels`)
@@ -292,7 +292,7 @@ export async function seasonalScoreboardEmbed(company: DatabaseTypes.Company, gu
 		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
-		.setAuthor(module.exports.ihpAuthorPayload)
+		.setAuthor(ihpAuthorPayload)
 		.setThumbnail(company.scoreboardThumbnailURL)
 		.setTitle("The Season Scoreboard")
 		.setFooter(randomFooterTip())
