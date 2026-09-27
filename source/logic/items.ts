@@ -13,7 +13,7 @@ export function setDB(database: Database) {
 
 export async function getInventory(userId: Snowflake) {
 	const inventoryMap = new Map<string, number>();
-	for (const item of await db.Items.findAll({ where: { userId, used: false } })) {
+	for (const item of await db.Items.findAll({ where: { userId, used: null } })) {
 		const itemCount = inventoryMap.get(item.itemName);
 		if (itemCount !== undefined) {
 			inventoryMap.set(item.itemName, itemCount + 1);
