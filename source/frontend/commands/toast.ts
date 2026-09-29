@@ -83,7 +83,7 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 		}
 
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
-		let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
 		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		const attachment = interaction.options.getAttachment(imageOption.name);
@@ -95,7 +95,6 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 			companyReceipt = results.companyReceipt;
 			goalProgress = results.goalProgress;
 
-			hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			if (previousCompanyLevel < currentCompanyLevel) {
 				companyReceipt.levelUp = currentCompanyLevel;
