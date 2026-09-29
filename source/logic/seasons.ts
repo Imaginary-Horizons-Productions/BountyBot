@@ -154,7 +154,6 @@ export async function updatePlacementsAndRanks(participationMap: Map<string, Dat
 
 /** *Generates a map of all of a Season's Participations' placement changes* */
 export async function calculatePlacementChanges(participationMap: Map<any, DatabaseTypes.Participation>) {
-	// @ts-expect-error type guard for key in descendingByProperty required?
 	const participationArray = Array.from(participationMap.values()).sort(descendingByProperty("xp"));
 	let recentPlacement = participationMap.size;
 	let previousScore = 0;
