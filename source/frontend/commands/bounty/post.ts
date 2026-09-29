@@ -40,7 +40,12 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			if (!collectedInteraction) {
+				interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
+				return;
+			}
+
 			const [slotNumber] = collectedInteraction.values;
 			// Check user actually has slot
 			await theater.company.reload();

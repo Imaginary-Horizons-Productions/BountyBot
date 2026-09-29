@@ -27,7 +27,12 @@ export default new SubcommandFunctionality("take-down", "Take down another user'
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			if (!collectedInteraction) {
+				interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
+				return;
+			}
+
 			const bounty = await logicLayer.bounties.findBounty(collectedInteraction.values[0]);
 			if (!bounty) {
 				collectedInteraction.reply({ content: "The selected bounty seems to already have been taken down.", flags: MessageFlags.Ephemeral });

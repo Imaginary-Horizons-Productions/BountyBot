@@ -43,28 +43,33 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteration => {
-			if (!isDevMode && Date.now() < collectedInteration.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
-				collectedInteration.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: MessageFlags.Ephemeral });
+		}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
+			if (!collectedInteraction) {
+				interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
+				return;
+			}
+
+			if (!isDevMode && Date.now() < collectedInteraction.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
+				collectedInteraction.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			if (!isDevMode && await logicLayer.items.countUserCopies(interaction.user.id, itemName) < 1) {
-				collectedInteration.reply({ content: `You don't have any ${itemName}.`, flags: MessageFlags.Ephemeral });
+				collectedInteraction.reply({ content: `You don't have any ${itemName}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			const now = new Date();
 
 			const cooldownName = `item-${itemName}`;
-			const { isOnCD, endOfCD } = await logicLayer.cooldowns.checkSpecificCooldownForUser(collectedInteration.user.id, cooldownName, now);
+			const { isOnCD, endOfCD } = await logicLayer.cooldowns.checkSpecificCooldownForUser(collectedInteraction.user.id, cooldownName, now);
 			if (isOnCD) {
-				collectedInteration.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${time(Math.floor(endOfCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+				collectedInteraction.reply({ content: `Please wait, you can use another ${bold(itemName)} again ${time(Math.floor(endOfCD.getTime() / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
-			await logicLayer.cooldowns.updateCooldowns(collectedInteration.user.id, cooldownName, now, getItemCooldown(itemName));
+			await logicLayer.cooldowns.updateCooldowns(collectedInteraction.user.id, cooldownName, now, getItemCooldown(itemName));
 
-			useItem(itemName, collectedInteration, theater).then(usedCount => {
+			useItem(itemName, collectedInteraction, theater).then(usedCount => {
 				if (usedCount > 0 && !isDevMode) {
 					logicLayer.items.consume(interaction.user.id, itemName, usedCount);
 				}

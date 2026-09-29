@@ -23,7 +23,12 @@ export default new SubcommandFunctionality("by-rank", "Select a user at or above
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			if (!collectedInteraction) {
+				interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
+				return;
+			}
+
 			await collectedInteraction.deferUpdate();
 			const threshold = Number(collectedInteraction.values[0]);
 			const reloadedRanks = await Promise.all(ranks.map(rank => rank.reload()));

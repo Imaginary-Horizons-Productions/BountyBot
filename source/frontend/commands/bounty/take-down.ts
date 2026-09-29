@@ -18,9 +18,18 @@ export default new SubcommandFunctionality("take-down", "Take down one of your b
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			if (!collectedInteraction) {
+				interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
+				return;
+			}
+
 			const [bountyId] = collectedInteraction.values;
 			const bounty = await logicLayer.bounties.findBounty(bountyId);
+			if (!bounty) {
+				collectedInteraction.reply({ content: "The selected bounty appears to already have been taken down.", flags: MessageFlags.Ephemeral });
+				return;
+			}
 
 			const bountyThread = await getBountyBoardThread(collectedInteraction.guild, theater.company.bountyBoardId, bounty.postingId);
 			bountyTakeDown(logicLayer, collectedInteraction.guild, bounty, theater.hunter, bountyThread);

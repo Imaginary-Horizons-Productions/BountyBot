@@ -18,7 +18,12 @@ export default new SubcommandFunctionality("take-down", "Take down one of the se
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(response => response.resource.message.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+		}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
+			if (!collectedInteraction) {
+				interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
+				return;
+			}
+
 			const [bountyId] = collectedInteraction.values;
 			const [bounty] = evergreenBounties.splice(evergreenBounties.findIndex(bounty => bounty.id === bountyId), 1);
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
