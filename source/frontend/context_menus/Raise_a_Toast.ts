@@ -51,18 +51,17 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 			}
 
 			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
-			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 
 			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, theater.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText);
 			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 			let companyReceipt: CompanyReciept = {};
 			if (hunterReceipts.size > 0) {
-				const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap[interaction.user.id], season);
+				const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap.get(interaction.user.id), season);
 				companyReceipt = results.companyReceipt;
 				goalProgress = results.goalProgress;
 
-				hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
 				const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 				if (previousCompanyLevel < currentCompanyLevel) {
 					companyReceipt.levelUp = currentCompanyLevel;
