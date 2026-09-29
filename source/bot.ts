@@ -307,9 +307,6 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		if (goalProgress.goalCompleted) {
 			completedGoalContributorIds = goalProgress.contributorIds;
 		}
-		if (goalProgress.gpContributed > 0) {
-			companyReceipt.gp = goalProgress.gpContributed;
-		}
 		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, recipientIds, season.id);
 		const toastMessage = await reaction.message.channel.messages.fetch(existingToast.toastMessageId);
 		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await guild.members.fetch(user.id), goalProgress, existingToast.imageURL, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
@@ -343,9 +340,6 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		const currentCompanyLevel = DatabaseTypes.Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
-		}
-		if (goalProgress.gpContributed > 0) {
-			companyReceipt.gp = goalProgress.gpContributed;
 		}
 
 		reaction.message.channel.send({
