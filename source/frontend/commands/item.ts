@@ -49,7 +49,7 @@ export default new CommandFunctionality(mainId, "Get details on a selected item 
 				return;
 			}
 
-			if (!isDevMode && Date.now() < collectedInteraction.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
+			if (!isDevMode && collectedInteraction.member.joinedTimestamp !== null && Date.now() < collectedInteraction.member.joinedTimestamp + timeConversion(1, "d", "ms")) {
 				collectedInteraction.reply({ content: `Items cannot be used in servers that have been joined less than 24 hours ago.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
