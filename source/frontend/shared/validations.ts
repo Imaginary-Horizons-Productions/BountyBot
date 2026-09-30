@@ -27,8 +27,10 @@ export async function textsHaveAutoModInfraction(channel: TextChannel, member: G
 		const hasKeywordFilter = texts.some(text => rule.triggerMetadata.keywordFilter.some(regex => new RegExp(regex).test(text)));
 		const hasAllowListFilter = texts.some(text => rule.triggerMetadata.allowList.some(regex => new RegExp(regex).test(text)))
 		//TODO #94 fetch Discord presets from enum
-		const exceedsMentionLimit = texts.some(text => {
-			text.match(/<@[\d&]+>/)?.length > rule.triggerMetadata.mentionTotalLimit
+		const mentionTotalLimit = rule.triggerMetadata.mentionTotalLimit;
+		const exceedsMentionLimit = mentionTotalLimit !== null && texts.some(text => {
+			const mentionMatches = text.match(/<@[\d&]+>/g);
+			return mentionMatches && (mentionMatches.length > mentionTotalLimit);
 		});
 		if (((hasRegexTrigger || hasKeywordFilter) && !hasAllowListFilter) || exceedsMentionLimit) {
 			for (const action of rule.actions) {
