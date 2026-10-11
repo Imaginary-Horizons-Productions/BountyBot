@@ -85,7 +85,7 @@ export default new SubcommandFunctionality("complete", "Close one of your open b
 
 		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, theater.hunter, validatedHunters, season, theater.company);
-		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", theater.hunter, season);
+		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", theater.hunter, season, !!hunterReceipts.size);
 		companyReceipt.guildName = modalSubmission.guild.name;
 		hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
 		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));

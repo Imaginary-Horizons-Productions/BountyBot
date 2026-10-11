@@ -15,7 +15,7 @@ export default new ItemTemplateSet(
 				return 0;
 			}
 			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(interaction.guildId);
-			const { goalProgress } = await logicLayer.goals.progressGoal(theater.company, goal.type, theater.hunter, season);
+			const { goalProgress } = await logicLayer.goals.progressGoal(theater.company, goal.type, theater.hunter, season, true);
 			const resultPayload: MessageCreateOptions = { content: `${userMention(interaction.user.id)}'s Progress-in-a-Can contributed ${goalProgress.gpContributed} GP the Server Goal!` };
 			if (goalProgress.goalCompleted) {
 				resultPayload.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];

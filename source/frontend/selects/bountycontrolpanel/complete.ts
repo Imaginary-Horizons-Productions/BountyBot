@@ -82,7 +82,7 @@ export default new SelectOptionFunctionality("complete",
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
 			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, theater.company);
-			const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunterMap.get(bounty.userId), season);
+			const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunterMap.get(bounty.userId), season, !!hunterReceipts.size);
 			companyReceipt.guildName = modalSubmission.guild.name;
 
 			hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);

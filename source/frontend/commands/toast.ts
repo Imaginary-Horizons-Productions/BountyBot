@@ -91,7 +91,7 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
 		let companyReceipt: CompanyReciept = {};
 		if (hunterReceipts.size > 0) {
-			const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap.get(interaction.user.id), season);
+			const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap.get(interaction.user.id), season, true);
 			companyReceipt = results.companyReceipt;
 			goalProgress = results.goalProgress;
 

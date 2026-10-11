@@ -1,7 +1,7 @@
 import type { Snowflake } from "discord.js";
 import { Op } from "sequelize";
 import type { Database, DatabaseTypes } from "../database";
-import { type CompanyReciept, GoalProgressKind, GoalState } from "../shared/types.ts";
+import { type CompanyReciept, GoalProgressKind, GoalState, type HunterReceiptMap } from "../shared/types.ts";
 
 let db: Database;
 
@@ -44,36 +44,38 @@ const GOAL_POINT_MAP = {
 	[GoalProgressKind.Seconding]: 2
 } as const;
 
-export async function progressGoal(company: DatabaseTypes.Company, progressKind: GoalProgressKind, hunter: DatabaseTypes.Hunter, season: DatabaseTypes.Season) {
+export async function progressGoal(company: DatabaseTypes.Company, progressKind: GoalProgressKind, hunter: DatabaseTypes.Hunter, season: DatabaseTypes.Season, progGoal: boolean) {
 	let contributorIds: Snowflake[] = [];
 	const companyReceipt: CompanyReciept = {};
 	let gpDisplay = 0, gpEarned = 0, goalCompleted = false, currentGP = 0, requiredGP = 0;
-	const goal = await db.Goals.findOne({ where: { companyId: company.id, state: GoalState.Ongoing }, order: [["createdAt", "DESC"]] });
-	if (goal) {
-		requiredGP = goal.requiredGP;
-		gpDisplay = GOAL_POINT_MAP[progressKind];
-		if (goal.type === progressKind) {
-			gpDisplay *= 2;
-		}
-		gpEarned = gpDisplay;
-		companyReceipt.gp = gpDisplay;
-		if (company.gpFestivalMultiplier > 1) {
-			gpEarned *= company.gpFestivalMultiplier;
-			companyReceipt.gpMultiplier = company.festivalMultiplierString("gp");
-		}
-		await createGoalContribution(goal.id, hunter.userId, gpEarned);
-		hunter.increment("goalContributions");
-		const [participation] = await db.Participations.findOrCreate({ where: { companyId: company.id, userId: hunter.userId, seasonId: season.id } });
-		participation.increment("goalContributions");
-		const contributions = await db.Contributions.findAll({ where: { goalId: goal.id } });
-		currentGP = contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
-		goalCompleted = goal.requiredGP <= currentGP;
-		if (goalCompleted) {
-			contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
-			db.Hunters.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: contributorIds } } });
-			goal.update({ state: GoalState.Completed });
-		} else {
-			contributorIds.push(hunter.userId);
+	if (progGoal) {
+		const goal = await db.Goals.findOne({ where: { companyId: company.id, state: GoalState.Ongoing }, order: [["createdAt", "DESC"]] });
+		if (goal) {
+			requiredGP = goal.requiredGP;
+			gpDisplay = GOAL_POINT_MAP[progressKind];
+			if (goal.type === progressKind) {
+				gpDisplay *= 2;
+			}
+			gpEarned = gpDisplay;
+			companyReceipt.gp = gpDisplay;
+			if (company.gpFestivalMultiplier > 1) {
+				gpEarned *= company.gpFestivalMultiplier;
+				companyReceipt.gpMultiplier = company.festivalMultiplierString("gp");
+			}
+			await createGoalContribution(goal.id, hunter.userId, gpEarned);
+			hunter.increment("goalContributions");
+			const [participation] = await db.Participations.findOrCreate({ where: { companyId: company.id, userId: hunter.userId, seasonId: season.id } });
+			participation.increment("goalContributions");
+			const contributions = await db.Contributions.findAll({ where: { goalId: goal.id } });
+			currentGP = contributions.reduce((totalGP, contribution) => totalGP + contribution.value, 0);
+			goalCompleted = goal.requiredGP <= currentGP;
+			if (goalCompleted) {
+				contributorIds = Array.from(new Set(contributions.map(contribution => contribution.userId)));
+				db.Hunters.update({ itemFindBoost: true }, { where: { userId: { [Op.in]: contributorIds } } });
+				goal.update({ state: GoalState.Completed });
+			} else {
+				contributorIds.push(hunter.userId);
+			}
 		}
 	}
 	return {

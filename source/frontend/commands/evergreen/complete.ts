@@ -81,7 +81,7 @@ export default new SubcommandFunctionality("complete", "Distribute rewards for t
 			}
 			hunterReceipts.set(userId, hunterReceipt);
 			logicLayer.seasons.changeSeasonXP(userId, theater.company.id, season.id, bountyValue);
-			const { goalProgress: { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunter, season);
+			const { goalProgress: { gpContributed, goalCompleted, contributorIds, currentGP, requiredGP } } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunter, season, !!hunterReceipts.size);
 			goalProgress.totalGP += gpContributed;
 			goalProgress.goalCompleted ||= goalCompleted;
 			goalProgress.currentGP = currentGP;
