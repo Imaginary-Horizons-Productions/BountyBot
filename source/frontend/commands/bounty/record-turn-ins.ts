@@ -1,0 +1,69 @@
+import { bold, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
+import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { timeConversion } from "../../../shared/index.ts";
+import { BountyState } from "../../../shared/types.ts";
+import { SubcommandFunctionality } from "../../classes/index.ts";
+import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
+import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
+
+export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
+	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
+		const labelIdBountyId = "bounty-id";
+		const labelIdBountyHunters = "bounty-hunters";
+		const maxHunters = 10;
+		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
+			.setTitle("Record Bounty Turn-Ins")
+			.addLabelComponents(
+				new LabelBuilder().setLabel("Bounty")
+					.setStringSelectMenuComponent(
+						new StringSelectMenuBuilder().setCustomId(labelIdBountyId)
+							.setPlaceholder("Select a bounty...")
+							.setOptions(selectOptionsFromBounties(bounties))
+					),
+				new LabelBuilder().setLabel("Bounty Hunters")
+					.setUserSelectMenuComponent(
+						new UserSelectMenuBuilder().setCustomId(labelIdBountyHunters)
+							.setPlaceholder(`Select up to ${maxHunters} bounty hunters...`)
+							.setMaxValues(maxHunters)
+					)
+			);
+		await interaction.showModal(modal);
+		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
+			.catch(butIgnoreInteractionCollectorErrors);
+		if (!modalSubmission) {
+			return;
+		}
+
+		const bounty = await logicLayer.bounties.findBounty(modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0]);
+		if (!bounty || bounty.state !== BountyState.Open) {
+			modalSubmission.reply({ content: "Your selected bounty could not be found.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), isDevMode);
+		const sentences = [];
+		if (bannedTurnInIds.size > 0) {
+			sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${sentenceListEN(Array.from(bannedTurnInIds.values().map(id => userMention(id))))}`);
+		}
+		if (newTurnInIds.size < 1) {
+			sentences.unshift("No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties.");
+		} else {
+			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
+			const newTurnInList = sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
+			sentences.unshift(`Turn-ins of ${bold(bounty.title)} have been recorded for the following hunters: ${newTurnInList}`);
+
+			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
+			if (bountyThread) {
+				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins recorded by poster");
+				}
+				if (bountyThread.sendable) {
+					bountyThread.send({ content: `${newTurnInList} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
+				}
+			}
+		}
+
+		modalSubmission.reply({ content: sentences.join("\n\n"), flags: MessageFlags.Ephemeral });
+	})
+);
