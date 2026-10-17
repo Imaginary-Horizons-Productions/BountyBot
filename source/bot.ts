@@ -302,20 +302,20 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	const recipientIds = [hostMessage.author.id];
 	if (isReactionToastExtant(existingToast)) {
 		// If extant toast, create Seconding
-		const { companyReceipt, goalProgress } = await logicBlob.goals.progressGoal(company, GoalProgressKind.Seconding, interactingHunter, season);
-		companyReceipt.guildName = guild.name;
-		if (goalProgress.goalCompleted) {
-			completedGoalContributorIds = goalProgress.contributorIds;
-		}
 		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, recipientIds, season.id);
-		const toastMessage = await reaction.message.channel.messages.fetch(existingToast.toastMessageId);
-		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await guild.members.fetch(user.id), goalProgress, existingToast.imageURL, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
-
+		
 		const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		const currentCompanyLevel = DatabaseTypes.Company.getLevel(company.getXP(await logicBlob.hunters.getCompanyHunterMap(guild.id)));
+		const { companyReceipt, goalProgress } = await logicBlob.goals.progressGoal(company, GoalProgressKind.Seconding, interactingHunter, season, !!hunterReceipts.size);
+		const toastMessage = await reaction.message.channel.messages.fetch(existingToast.toastMessageId);
+		toastMessage.edit({ embeds: [toastEmbed(company.toastThumbnailURL, existingToast.text, recipientIds, await guild.members.fetch(user.id), goalProgress, existingToast.imageURL, await logicBlob.toasts.findSecondingMentions(existingToast.id))] });
+		companyReceipt.guildName = guild.name;
+		if (goalProgress.goalCompleted) {
+			completedGoalContributorIds = goalProgress.contributorIds;
+		}
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
@@ -332,7 +332,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		const toastText = `${randomCongratulatoryPhrase()}! Reaction Toast: ${hostMessage.url}`;
 		const { toastId, hunterReceipts } = await logicBlob.toasts.raiseToast(guild, company, user.id, recipientIds, hunterMap, season.id, toastText, null, hostMessage.id);
 
-		const { companyReceipt, goalProgress } = await logicBlob.goals.progressGoal(company, GoalProgressKind.Toast, interactingHunter, season);
+		const { companyReceipt, goalProgress } = await logicBlob.goals.progressGoal(company, GoalProgressKind.Toast, interactingHunter, season, !!hunterReceipts.size);
 		companyReceipt.guildName = guild.name;
 		if (goalProgress.goalCompleted) {
 			completedGoalContributorIds = goalProgress.contributorIds;

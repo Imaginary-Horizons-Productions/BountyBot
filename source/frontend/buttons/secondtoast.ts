@@ -33,7 +33,7 @@ export default new ButtonFunctionality(mainId, 3000,
 
 		const hunterReceipts = await logicLayer.toasts.secondToast(theater.hunter, originalToast, theater.company, recipientIds, season.id);
 
-		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "secondings", theater.hunter, season);
+		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "secondings", theater.hunter, season, !!hunterReceipts.size);
 		companyReceipt.guildName = interaction.guild.name;
 
 		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
