@@ -1,7 +1,7 @@
 import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandBooleanOption, SlashCommandStringOption } from 'discord.js';
 import type { DatabaseTypes } from '../../database';
 import { CommandFunctionality } from '../classes/index.ts';
-
+//TODONOW type errors
 const notificationOption = new SlashCommandStringOption().setName("notification")
 	.setDescription("Configure who to send notifications to (default @here)")
 	.setChoices(

@@ -7,7 +7,7 @@ import { CommandFunctionality } from '../classes/index.ts';
 import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, sentenceListEN, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const messageOption = new SlashCommandStringOption().setName("message")
 	.setDescription("The text of the toast to raise")
 	.setRequired(true);

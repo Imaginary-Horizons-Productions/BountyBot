@@ -4,7 +4,7 @@ import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("take-down", "Take down one of the server's Evergreen Bounties",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		interaction.reply({

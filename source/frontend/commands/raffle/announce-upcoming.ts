@@ -5,7 +5,7 @@ import { addCompanyAnnouncementPrefix } from "../../shared/index.ts";
 const announcementOption = new SlashCommandStringOption().setName("announcement")
 	.setDescription("A timestamp and/or eligibilty requirements can encourage interaction")
 	.setRequired(true);
-
+//TODONOW type errors
 export default new SubcommandFunctionality("announce-upcoming", "Announce an upcoming raffle",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const announcement = interaction.options.getString(announcementOption.name, true);

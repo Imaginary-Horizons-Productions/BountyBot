@@ -5,7 +5,7 @@ import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyControlPanelSelectRow, bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, emojiFromNumber, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, syncRankRoles, textsHaveAutoModInfraction, validateScheduledEventTimestamps } from "../../shared/index.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);

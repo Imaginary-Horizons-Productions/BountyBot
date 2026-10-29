@@ -3,7 +3,7 @@ import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { disabledSelectRow, selectOptionsFromRanks, sentenceListEN, syncRankRoles } from "../../shared/index.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("remove", "Remove one or more existing seasonal ranks",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);

@@ -5,7 +5,7 @@ import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";

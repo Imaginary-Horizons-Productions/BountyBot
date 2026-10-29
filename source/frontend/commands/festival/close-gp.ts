@@ -2,7 +2,7 @@ import type { Snowflake } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared/index.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("close-gp", "End the festival, returning to normal GP",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		await theater.company.update({ "gpFestivalMultiplier": 1 });

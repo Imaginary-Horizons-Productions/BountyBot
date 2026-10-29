@@ -2,6 +2,10 @@ import type { Snowflake } from "discord.js";
 
 export type MemberOf<T> = T[keyof T];
 
+export function isNotNull<T>(candidate: T | null): candidate is T {
+	return candidate !== null;
+}
+
 export type CooldownDictionary = Record<string, number>;
 
 export type PremiumFlowList = string[];

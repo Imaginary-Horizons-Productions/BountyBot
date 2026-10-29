@@ -1,5 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, ComponentType, MessageFlags } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyTakeDown } from "../../shared/flows/bountyTakeDown.ts";
 import { butIgnoreInteractionCollectorErrors } from "../../shared/index.ts";
@@ -21,7 +22,7 @@ export default new SelectOptionFunctionality("takedown",
 				flags: MessageFlags.Ephemeral,
 				withResponse: true
 			}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.Button })).then(async collectedInteraction => {
-				if (!collectedInteraction) {
+				if (!collectedInteraction || !isNotNull(collectedInteraction.channel) || collectedInteraction.channel.type !== ChannelType.PublicThread) {
 					interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
 					return;
 				}

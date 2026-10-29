@@ -8,7 +8,7 @@ import { UserContextMenuFunctionality } from '../classes/index.ts';
 import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const mainId = "Raise a Toast";
 export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive toast text, then raise the toast to the user */

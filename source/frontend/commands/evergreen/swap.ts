@@ -5,7 +5,7 @@ import { timeConversion } from "../../../shared/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { butIgnoreInteractionCollectorErrors, refreshEvergreenBountiesThread, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("swap", "Swap the rewards of two evergreen bounties",
 	ensureCompanyHasEnoughOpenEvergreenBounties(2, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		const labelIdSourceBountyId = "first-bounty-id";

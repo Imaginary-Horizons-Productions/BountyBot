@@ -1,7 +1,7 @@
 import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, time, TimestampStyles } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
-import { BountyState } from "../../../shared/types.ts";
+import { BountyState, isNotNull } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
@@ -9,7 +9,7 @@ import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 export default new SelectOptionFunctionality("showcase",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
-			const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
+			const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp ?? 0).valueOf() + timeConversion(1, "w", "ms");
 			if (!isDevMode && Date.now() < nextShowcaseInMS) {
 				interaction.reply({ content: `You can showcase another bounty in ${time(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 				return;
@@ -35,36 +35,47 @@ export default new SelectOptionFunctionality("showcase",
 			}
 
 			// Unnecessary Validations: "bounty existence", "posting thread existence"; if a bounty thread (or the bounty, which cascades the delete to the thread) is deleted while its modal is open, the modal does not submit
-			const channel = modalSubmission.fields.getSelectedChannels(labelIdChannel).first();
-			if (!channel.members.has(modalSubmission.client.user.id)) {
-				modalSubmission.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
-				return;
-			}
+			const channelCollection = modalSubmission.fields.getSelectedChannels(labelIdChannel);
+			if (isNotNull(channelCollection)) {
+				const channel = channelCollection.first();
+				if (channel !== undefined && channel.isSendable()) {
+					const bountyBotPermissions = channel.permissionsFor(modalSubmission.client.user.id);
+					if (bountyBotPermissions !== null && !bountyBotPermissions.has(PermissionFlagsBits.ViewChannel)) {
+						modalSubmission.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
+						return;
+					}
 
-			if (!channel.permissionsFor(modalSubmission.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
-				modalSubmission.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
-				return;
-			}
+					const userPermissions = channel.permissionsFor(modalSubmission.user.id);
+					if (userPermissions === null || !userPermissions.has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
+						modalSubmission.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
+						return;
+					}
 
-			await bounty.reload();
-			if (bounty.state !== BountyState.Open) {
-				modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
-				return;
-			}
+					await bounty.reload();
+					if (bounty.state !== BountyState.Open) {
+						modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
+						return;
+					}
 
-			bounty = await bounty.increment("showcaseCount");
-			await theater.hunter.update({ lastShowcaseTimestamp: new Date() });
-			const currentPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
-			const embeds = [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))];
+					bounty = await bounty.increment("showcaseCount");
+					await theater.hunter.update({ lastShowcaseTimestamp: new Date() });
+					const currentPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
+					const embeds = [bountyEmbed(bounty, modalSubmission.member, currentPosterLevel, false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))];
 
-			channel.send({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds });
+					channel.send({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds });
 
-			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				modalSubmission.message.edit({ embeds });
-				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty showcased by poster");
-			}
-			if (modalSubmission.channel?.isSendable()) {
-				modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on this bounty!` });
+					if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						if (isNotNull(modalSubmission.message)) {
+							modalSubmission.message.edit({ embeds });
+							if (isNotNull(modalSubmission.channel) && modalSubmission.channel.isThread()) {
+								await unarchiveAndUnlockThread(modalSubmission.channel, "bounty showcased by poster");
+							}
+						}
+					}
+					if (modalSubmission.channel?.isSendable()) {
+						modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on this bounty!` });
+					}
+				}
 			}
 		}
 	)

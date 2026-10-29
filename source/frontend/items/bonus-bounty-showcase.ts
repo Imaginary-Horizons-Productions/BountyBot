@@ -7,7 +7,7 @@ import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { bountyEmbed, getBountyBoardThread, isInteractionCollectorError, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const itemName = "Bonus Bounty Showcase";
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),

@@ -5,7 +5,7 @@ import { timeConversion } from "../../../shared/index.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sentenceListEN, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
-
+//TODONOW type errors
 export default new SelectOptionFunctionality("complete",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {

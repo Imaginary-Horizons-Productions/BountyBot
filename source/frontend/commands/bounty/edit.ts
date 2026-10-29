@@ -5,7 +5,7 @@ import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, getBountyBoardThread, refreshBountyBoardThread, selectOptionsFromBounties, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("edit", "Edit the title, description, image, or time of one of your bounties",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, openBounties) {
 		interaction.reply({

@@ -5,7 +5,7 @@ import { CommandFunctionality } from '../classes/index.ts';
 import { companyStatsEmbed, fillableTextBar, hunterProfileEmbed, ihpAuthorPayload, randomFooterTip } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const bountyHunterOption = new SlashCommandUserOption().setName("bounty-hunter")
 	.setDescription("Whose stats to check; BountyBot for the server stats, empty for yourself");
 

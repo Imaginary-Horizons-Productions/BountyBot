@@ -5,7 +5,7 @@ import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { addCompanyAnnouncementPrefix } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const itemName = "Goal Initializer";
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Begin a Server Goal if there isn't already one running", 3000,

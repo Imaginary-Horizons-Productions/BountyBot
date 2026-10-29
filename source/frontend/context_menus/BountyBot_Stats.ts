@@ -5,7 +5,7 @@ import { UserContextMenuFunctionality } from '../classes/index.ts';
 import { companyStatsEmbed, hunterProfileEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const mainId = "BountyBot Stats";
 export default new UserContextMenuFunctionality(mainId, null, false, [InteractionContextType.Guild], 3000,
 	async (interaction, theater, isDevMode) => {

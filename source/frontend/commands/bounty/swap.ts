@@ -6,7 +6,7 @@ import { timeConversion } from "../../../shared/index.ts";
 import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared/index.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("swap", "Move one of your bounties to another slot to change its reward",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const startingPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);

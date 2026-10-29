@@ -4,7 +4,7 @@ import { CommandFunctionality } from '../classes/index.ts';
 import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const mainId = "season-end";
 export default new CommandFunctionality(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */

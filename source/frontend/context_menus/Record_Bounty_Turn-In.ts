@@ -7,7 +7,7 @@ import { UserContextMenuFunctionality } from '../classes/index.ts';
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, unarchiveAndUnlockThread } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const mainId = "Record Bounty Turn-In";
 export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */

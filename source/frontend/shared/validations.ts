@@ -1,5 +1,6 @@
 import { AutoModerationActionType, GuildMember, TextChannel, time } from "discord.js";
 import { YEAR_IN_MS } from "../../shared/constants.ts";
+import { isNotNull } from "../../shared/types.ts";
 import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses.ts";
 
 /** @file Validations - Checks for issues with user input data */
@@ -38,12 +39,16 @@ export async function textsHaveAutoModInfraction(channel: TextChannel, member: G
 					case AutoModerationActionType.SendAlertMessage:
 						if (action.metadata.channelId) {
 							const alertChannel = await channel.guild.channels.fetch(action.metadata.channelId);
-							alertChannel.send(`${member} tripped AutoMod in a ${context} with text(s): ${texts.join(", ")}`);
+							if (isNotNull(alertChannel) && alertChannel.isSendable()) {
+								alertChannel.send(`${member} tripped AutoMod in a ${context} with text(s): ${texts.join(", ")}`);
+							}
 						}
 						break;
 					case AutoModerationActionType.Timeout:
-						member.timeout(action.metadata.durationSeconds * 1000, `AutoMod timeout in a ${context} with texts: ${texts.join(", ")}`)
-							.catch(butIgnoreMissingPermissionErrors);
+						if (isNotNull(action.metadata.durationSeconds)) {
+							member.timeout(action.metadata.durationSeconds * 1000, `AutoMod timeout in a ${context} with texts: ${texts.join(", ")}`)
+								.catch(butIgnoreMissingPermissionErrors);
+						}
 						break;
 					case AutoModerationActionType.BlockMessage:
 						member.send(action.metadata.customMessage || `Your ${context} could not be completed because it tripped AutoMod.`)

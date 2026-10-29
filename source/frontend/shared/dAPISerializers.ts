@@ -1,11 +1,11 @@
 import { EmbedLimits, MessageLimits, ModalLimits, SelectMenuLimits } from "@sapphire/discord.js-utilities";
-import type { EmbedAuthorOptions, EmbedFooterData, EmbedFooterOptions, GuildScheduledEventCreateOptions, InteractionReplyOptions, MessageCreateOptions, SelectMenuComponentOptionData } from "discord.js";
+import type { AwaitModalSubmitOptions, EmbedAuthorOptions, EmbedFooterData, EmbedFooterOptions, GuildScheduledEventCreateOptions, InteractionReplyOptions, MessageCreateOptions, ModalSubmitInteraction, SelectMenuComponentOptionData } from "discord.js";
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Collection, Colors, EmbedBuilder, FileUploadBuilder, Guild, GuildMember, GuildScheduledEvent, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, LabelBuilder, MessageFlags, ModalBuilder, Role, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, bold, italic, time, underline, userMention } from "discord.js";
 import * as fs from "fs";
 import { DatabaseTypes } from "../../database/index.ts";
 import { BountyBotColors, COMPANY_XP_COEFFICIENT, SAFE_DELIMITER, SKIP_INTERACTION_HANDLING, bountyBotIconURL, discordIconURL } from "../../shared/constants.ts";
 import { ascendingByProperty, descendingByProperty, timeConversion } from "../../shared/index.ts";
-import { BountyState } from "../../shared/types.ts";
+import { BountyState, isNotNull } from "../../shared/types.ts";
 import { emojiFromNumber, fillableTextBar, randomCongratulatoryPhrase, sentenceListEN } from "./stringConstructors.ts";
 
 /** @file Discord API (dAPI) Serializers - changes our data into the shapes dAPI wants */
@@ -34,7 +34,8 @@ export function attachOverflowingContentAsFile(content: string, messageOptions: 
 /** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent") */
 export function addCompanyAnnouncementPrefix(company: DatabaseTypes.Company, messageOptions: MessageCreateOptions) {
 	if (company.announcementPrefix == "@silent") {
-		if ("flags" in messageOptions) {
+		if (messageOptions.flags !== undefined) {
+			// @ts-expect-error not sure how to narrow type on messageOptions to only bitfields
 			messageOptions.flags |= MessageFlags.SuppressNotifications;
 		} else {
 			messageOptions.flags = MessageFlags.SuppressNotifications;
@@ -170,7 +171,7 @@ export function selectOptionsFromRanks(ranks: DatabaseTypes.Rank[], allGuildRole
 
 /** key for constructing the ModalBuilder's customId uniquely */
 export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty, bountyScheduledEvent: GuildScheduledEvent | null, isEvergreen: boolean, key: string) {
-	const inputIds = {
+	const inputIds: { title: string; description: string; image: string; startTimestamp?: string; endTimestamp?: string; } = {
 		title: "title",
 		description: "description",
 		image: "image"
@@ -214,7 +215,7 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 			.setStyle(TextInputStyle.Short)
 			.setPlaceholder("Required if making an event with the bounty");
 
-		if (bountyScheduledEvent) {
+		if (bountyScheduledEvent && isNotNull(bountyScheduledEvent.scheduledStartTimestamp) && isNotNull(bountyScheduledEvent.scheduledEndTimestamp)) {
 			eventStartComponent.setValue((bountyScheduledEvent.scheduledStartTimestamp / 1000).toString());
 			eventEndComponent.setValue((bountyScheduledEvent.scheduledEndTimestamp / 1000).toString());
 		}
@@ -227,7 +228,8 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 				.setTextInputComponent(eventEndComponent)
 		)
 	}
-	return { modal, inputIds, submissionOptions: { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") } };
+	const submissionOptions: AwaitModalSubmitOptions<ModalSubmitInteraction> = { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") };
+	return { modal, inputIds, submissionOptions };
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */
@@ -237,9 +239,9 @@ export async function latestVersionChangesEmbed() {
 	const stats = await fs.promises.stat(changelogPath);
 	const dividerRegEx = /## .+ Version/g;
 	const changesStartRegEx = /\.\d+[cfib]*:/g;
-	let titleStart = dividerRegEx.exec(data).index;
+	let titleStart = dividerRegEx.exec(data)?.index ?? 0;
 	changesStartRegEx.exec(data);
-	let sectionEnd = dividerRegEx.exec(data).index;
+	let sectionEnd = dividerRegEx.exec(data)?.index;
 
 	return new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(ihpAuthorPayload)
@@ -283,9 +285,10 @@ export async function seasonalScoreboardEmbed(company: DatabaseTypes.Company, gu
 
 	const scorelines = [];
 	for (const participation of Array.from(participationMap.values()).sort(descendingByProperty("xp"))) {
-		if (participation.xp > 0 && hunterMembers.has(participation.userId)) {
-			let scoreline = `#${participation.placement} ${bold(hunterMembers.get(participation.userId).displayName)} ${participation.xp} season XP`;
-			if (rankmojiArray[participation.rankIndex] && !participation.isRankDisqualified && participation.rankIndex !== null) {
+		const hunter = hunterMembers.get(participation.userId);
+		if (participation.xp > 0 && hunter) {
+			let scoreline = `#${participation.placement} ${bold(hunter.displayName)} ${participation.xp} season XP`;
+			if (isNotNull(participation.rankIndex) && rankmojiArray[participation.rankIndex] && !participation.isRankDisqualified) {
 				scoreline = `${rankmojiArray[participation.rankIndex]} ${scoreline}`;
 			}
 			scorelines.push(scoreline);
@@ -346,7 +349,9 @@ export async function overallScoreboardEmbed(company: DatabaseTypes.Company, gui
 			break;
 		}
 		const guildMember = hunterMembers.get(hunter.userId);
-		scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
+		if (guildMember) {
+			scorelines.push(`${bold(guildMember.displayName)} ${underline(`Level ${hunter.getLevel(company.xpCoefficient)}`)} ${italic(`${hunter.xp} XP`)}`);
+		}
 	}
 	const embed = new EmbedBuilder().setColor(Colors.Blurple)
 		.setAuthor(ihpAuthorPayload)
@@ -410,7 +415,7 @@ export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGui
 		.setTitle(`${targetGuildMember.displayName} is ${underline(`Level ${currentLevel}`)}`)
 		.setDescription(description)
 		.addFields(
-			{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
+			{ name: "Season Placements", value: `Currently: ${!currentParticipation || currentParticipation.placement === 0 ? "Unranked" : `#${currentParticipation.placement}`}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 			{ name: "Total XP Earned", value: `${targetHunter.xp} XP`, inline: true },
 			{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with ${bold(`${mostSecondedToast.secondings} secondings`)}` : "No toasts seconded yet..." },
 			{ name: "Bounty Stats", value: `Bounties Hunted: ${targetHunter.othersFinished} bount${targetHunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${targetHunter.mineFinished} bount${targetHunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
@@ -433,7 +438,7 @@ export function bountyEmbed(bounty: DatabaseTypes.Bounty, posterGuildMember: Gui
 	if (bounty.attachmentURL) {
 		embed.setImage(bounty.attachmentURL);
 	}
-	if (event) {
+	if (event && isNotNull(event.scheduledStartTimestamp) && isNotNull(event.scheduledEndTimestamp)) {
 		fields.push({ name: "Time", value: `${time(event.scheduledStartTimestamp / 1000)} - ${time(event.scheduledEndTimestamp / 1000)}` });
 	}
 	if (!shouldOmitRewardsField) {
@@ -537,7 +542,7 @@ export async function userReportEmbed(hunter: DatabaseTypes.Hunter, guild: Guild
 		.setAuthor(guildToEmbedAuthorOptions(guild))
 		.setTitle(`Moderation Stats: ${member.user.tag}`)
 		.setThumbnail(member.user.avatarURL())
-		.setDescription(`Display Name: ${bold(member.displayName)} (id: ${italic(member.id)})\nAccount created on: ${member.user.createdAt.toDateString()}\nJoined server on: ${member.joinedAt.toDateString()}`)
+		.setDescription(`Display Name: ${bold(member.displayName)} (id: ${italic(member.id)})\nAccount created on: ${member.user.createdAt.toDateString()}\n${isNotNull(member.joinedAt) ? `Joined server on: ${member.joinedAt.toDateString()}` : ""}`)
 		.addFields(
 			{ name: "Bans", value: `Currently Banned: ${hunter.isBanned ? "Yes" : "No"}\nHas Been Banned: ${hunter.hasBeenBanned ? "Yes" : "No"}`, inline: true },
 			{ name: "Disqualifications", value: `${dqCount} season DQs`, inline: true },
@@ -553,7 +558,13 @@ export async function userReportEmbed(hunter: DatabaseTypes.Hunter, guild: Guild
 		if (bounty.description !== null) {
 			bountyHistory += ` ${bounty.description}`;
 		}
-		bountyHistory += `${sentenceListEN((await bounty.getCompletions()).map(completion => `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`))}\n\n`;
+		bountyHistory += `${sentenceListEN((await bounty.getCompletions()).map(completion => {
+			if (isNotNull(completion.userId)) {
+				return `\n${userMention(completion.userId)} +${completion.xpAwarded} XP`
+			} else {
+				return "";
+			}
+		}))}\n\n`;
 	}
 
 	if (bountyHistory === "") {

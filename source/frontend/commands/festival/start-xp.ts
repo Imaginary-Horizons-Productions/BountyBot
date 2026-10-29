@@ -7,7 +7,7 @@ import { ensureNumberFromSlashOptionIsGreaterThanOne } from "../_earlyOuts.ts";
 const multiplierOption = new SlashCommandNumberOption().setName("multiplier")
 	.setDescription("The amount to multiply XP by")
 	.setRequired(true);
-
+//TODONOW type errors
 export default new SubcommandFunctionality("start-xp", "Start an XP multiplier festival",
 	ensureNumberFromSlashOptionIsGreaterThanOne(multiplierOption.name, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, multiplier) {
 		theater.company.update({ "xpFestivalMultiplier": multiplier });

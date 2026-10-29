@@ -5,7 +5,7 @@ import { bountyControlPanelSelectRow, bountyEmbed, isMissingPermissionError, mak
 
 const channelNameOption = new SlashCommandStringOption().setName("channel-name")
 	.setDescription("The name for the bounty board forum");
-
+//TODONOW type errors
 export default new SubcommandFunctionality("bounty-board-forum", "Create a new bounty board forum channel sibling to this channel",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const customChannelName = interaction.options.getString(channelNameOption.name);

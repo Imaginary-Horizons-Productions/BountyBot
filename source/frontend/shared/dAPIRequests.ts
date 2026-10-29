@@ -3,7 +3,7 @@ import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, Mes
 import { DatabaseTypes } from "../../database/index.ts";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
 import { ascendingByProperty } from "../../shared/index.ts";
-import type { HunterReceiptMap } from "../../shared/types.ts";
+import { isNotNull, type HunterReceiptMap } from "../../shared/types.ts";
 import { butIgnoreUnknownChannelErrors, isUnknownMessageError } from "./dAPIResponses.ts";
 import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./dAPISerializers.ts";
 
@@ -37,9 +37,14 @@ export async function refreshEvergreenBountiesThread(bountyBoardChannel: ForumCh
 	const embeds = evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => bountyEmbed(bounty, bountyBotGuildMember, companyLevel, false, company, hunterIdMap[bounty.id]));
 	if (company.evergreenThreadId) {
 		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
-			const message = await thread.fetchStarterMessage();
-			message.edit({ embeds });
-			return thread;
+			if (isNotNull(thread)) {
+				const message = await thread.fetchStarterMessage();
+				if (isNotNull(message)) {
+					message.edit({ embeds });
+					return thread;
+				}
+			}
+			return makeEvergreenBountiesThread(bountyBoardChannel.threads, embeds, company);
 		});
 	} else {
 		return makeEvergreenBountiesThread(bountyBoardChannel.threads, embeds, company);

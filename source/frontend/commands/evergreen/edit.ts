@@ -5,7 +5,7 @@ import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, refreshEvergreenBountiesThread, selectOptionsFromBounties, textsHaveAutoModInfraction } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("edit", "Change the name, description, or image of an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		interaction.reply({

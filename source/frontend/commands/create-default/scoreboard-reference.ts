@@ -1,7 +1,7 @@
 import { ChannelType, MessageFlags, OverwriteType, PermissionFlagsBits, SlashCommandStringOption, type TextChannel } from "discord.js";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { isMissingPermissionError, overallScoreboardEmbed, seasonalScoreboardEmbed } from "../../shared/index.ts";
-
+//TODONOW type errors
 const scoreboardTypeOption = new SlashCommandStringOption().setName("scoreboard-type")
 	.setDescription("Pick if the scoreboard will show season XP or overall XP, only one updates")
 	.setChoices(

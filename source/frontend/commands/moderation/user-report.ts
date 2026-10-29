@@ -6,7 +6,7 @@ import { ensureUserFromSlashOptionHasBountyHunter } from "../_earlyOuts.ts";
 const userOption = new SlashCommandUserOption().setName("user")
 	.setDescription("The mention of the user")
 	.setRequired(true);
-
+//TODONOW type errors
 export default new SubcommandFunctionality("user-report", "Get the BountyBot moderation stats for a user",
 	ensureUserFromSlashOptionHasBountyHunter(userOption.name, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, { member, hunter }) {
 		const dqCount = await logicLayer.seasons.getDQCount(member.id, interaction.guild.id);

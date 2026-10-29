@@ -5,7 +5,7 @@ import { MAX_EVERGREEN_SLOTS, SKIP_INTERACTION_HANDLING } from "../../../shared/
 import { timeConversion } from "../../../shared/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, textsHaveAutoModInfraction } from "../../shared/index.ts";
-
+//TODONOW type errors
 export default new SubcommandFunctionality("post", `Post an evergreen bounty, limit ${MAX_EVERGREEN_SLOTS}`,
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);

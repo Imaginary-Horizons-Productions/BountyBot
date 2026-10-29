@@ -7,7 +7,7 @@ import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { bountyEmbed, commandMention, getBountyBoardThread, isInteractionCollectorError, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
-
+//TODONOW type errors
 const itemName = "Bounty Thumbnail";
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Adds an image to one of your open bounties!", 3000,

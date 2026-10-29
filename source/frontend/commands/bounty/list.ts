@@ -3,7 +3,7 @@ import { MessageFlags, SlashCommandUserOption, heading, userMention } from "disc
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed } from "../../shared/index.ts";
-
+//TODONOW type errors
 const bountyHunterOption = new SlashCommandUserOption().setName("bounty-hunter")
 	.setDescription("The bounty hunter to show open bounties for");
 

@@ -5,7 +5,7 @@ import { BountyState } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
-
+//TODONOW type errors
 export default new SelectOptionFunctionality("revoketurnin",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
