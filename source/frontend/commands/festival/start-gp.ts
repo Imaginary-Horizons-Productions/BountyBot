@@ -1,5 +1,6 @@
-import { SlashCommandNumberOption, type Snowflake } from "discord.js";
+import { ChannelType, SlashCommandNumberOption, type Snowflake } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared/index.ts";
 import { ensureNumberFromSlashOptionIsGreaterThanOne } from "../_earlyOuts.ts";
@@ -7,7 +8,7 @@ import { ensureNumberFromSlashOptionIsGreaterThanOne } from "../_earlyOuts.ts";
 const multiplierOption = new SlashCommandNumberOption().setName("multiplier")
 	.setDescription("The amount to multiply GP by")
 	.setRequired(true);
-//TODONOW type errors
+
 export default new SubcommandFunctionality("start-gp", "Start a GP multiplier festival",
 	ensureNumberFromSlashOptionIsGreaterThanOne(multiplierOption.name, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, multiplier) {
 		theater.company.update({ "gpFestivalMultiplier": multiplier });
@@ -22,12 +23,14 @@ export default new SubcommandFunctionality("start-gp", "Start a GP multiplier fe
 		}
 		if (theater.company.bountyBoardId) {
 			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
-			const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
-			const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
-			for (const bounty of evergreenBounties) {
-				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+			if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(interaction.guild.members.me)) {
+				const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
+				const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
+				for (const bounty of evergreenBounties) {
+					hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+				}
+				refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	})
 ).setOptions(multiplierOption);

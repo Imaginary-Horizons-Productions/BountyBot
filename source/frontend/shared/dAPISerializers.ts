@@ -32,7 +32,7 @@ export function attachOverflowingContentAsFile(content: string, messageOptions: 
 }
 
 /** Apply the company's announcement prefix to the message (bots suppress notifications through flags instead of starting with "@silent") */
-export function addCompanyAnnouncementPrefix(company: DatabaseTypes.Company, messageOptions: MessageCreateOptions) {
+export function addCompanyAnnouncementPrefix<T extends MessageCreateOptions | InteractionReplyOptions>(company: DatabaseTypes.Company, messageOptions: T): T {
 	if (company.announcementPrefix == "@silent") {
 		if (messageOptions.flags !== undefined) {
 			// @ts-expect-error not sure how to narrow type on messageOptions to only bitfields

@@ -1,8 +1,9 @@
-import type { Snowflake } from "discord.js";
+import { ChannelType, type Snowflake } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared/index.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("close-gp", "End the festival, returning to normal GP",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		await theater.company.update({ "gpFestivalMultiplier": 1 });
@@ -17,12 +18,14 @@ export default new SubcommandFunctionality("close-gp", "End the festival, return
 		}
 		if (theater.company.bountyBoardId) {
 			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
-			const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
-			const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
-			for (const bounty of evergreenBounties) {
-				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+			if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(interaction.guild.members.me)) {
+				const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
+				const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
+				for (const bounty of evergreenBounties) {
+					hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+				}
+				refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 			}
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id))), interaction.guild.members.me, hunterIdMap);
 		}
 	}
 );

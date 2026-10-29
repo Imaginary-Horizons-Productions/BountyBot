@@ -50,6 +50,6 @@ export function linkAllItemsToLogic(logicBlob: LogicLayer) {
 
 export function addItemsToCooldownDictionary(map: CooldownDictionary) {
 	for (const itemKey in ITEMS) {
-		map[`item-${itemKey}`] = ITEMS[itemKey].cooldown; //TODONOW port fix for incorrectly constructed key names/paths to main?
+		map[`item-${itemKey}`] = ITEMS[itemKey].cooldown;
 	}
 }

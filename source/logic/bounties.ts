@@ -104,7 +104,7 @@ export function findCompanyBountiesByCreationDate(companyId: Snowflake) {
 
 /** *Finds a Hunter's last five bounties for the purpose of making a moderation user report* */
 export function findHuntersLastFiveBounties(userId: Snowflake, companyId: Snowflake) {
-	return db.Bounties.findAll({ where: { userId, companyId, state: BountyState.Completed }, order: [["completedAt", "DESC"]], limit: 5, include: db.Completions });
+	return db.Bounties.findAll({ where: { userId, companyId, state: BountyState.Completed }, order: [["completedAt", "DESC"]], limit: 5, include: db.Completions }) as Promise<(DatabaseTypes.Bounty & { Completions: DatabaseTypes.Completion[] })[]>;
 }
 
 export async function completeBounty(bounty: DatabaseTypes.Bounty, poster: DatabaseTypes.Hunter, validatedHunters: Map<string, DatabaseTypes.Hunter>, season: DatabaseTypes.Season, company: DatabaseTypes.Company) {
