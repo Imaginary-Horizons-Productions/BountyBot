@@ -1,11 +1,11 @@
 import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, userMention, UserSelectMenuBuilder } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
-import { BountyState } from "../../../shared/types.ts";
+import { BountyState, isNotNull } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, randomCongratulatoryPhrase, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SelectOptionFunctionality("recordturnin",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
@@ -35,19 +35,24 @@ export default new SelectOptionFunctionality("recordturnin",
 				return;
 			}
 
-			const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), isDevMode);
+			const selectedMembers = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters);
+			if (selectedMembers === null) {
+				modalSubmission.reply({ content: "No new turn-ins were able to be recorded.", flags: MessageFlags.Ephemeral });
+				return;
+			}
+			const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(selectedMembers.values()), isDevMode);
 			if (newTurnInIds.size < 1) {
-				modalSubmission.reply({ content: `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedTurnInIds.length ? ' The completer(s) mentioned are currently banned.' : ''}`, flags: MessageFlags.Ephemeral });
+				modalSubmission.reply({ content: `No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties. ${bannedTurnInIds.size ? ' The completer(s) mentioned are currently banned.' : ''}`, flags: MessageFlags.Ephemeral });
 				return;
 			}
 
 			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
 
-			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
-				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins recorded by poster");
-			}
-			if (modalSubmission.channel?.isSendable()) {
+			if (isNotNull(modalSubmission.channel) && modalSubmission.channel.isThread()) {
+				if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads) && isNotNull(modalSubmission.message)) {
+					modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins recorded by poster");
+				}
 				modalSubmission.reply({ content: `${sentenceListEN(Array.from(newTurnInIds.values()).map(id => userMention(id)))} ${newTurnInIds.size === 1 ? "has" : "have"} turned in this bounty! ${randomCongratulatoryPhrase()}!` });
 			}
 		}

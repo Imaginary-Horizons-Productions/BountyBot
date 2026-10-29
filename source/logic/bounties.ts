@@ -15,7 +15,7 @@ export function createBounty(rawBounty: Partial<DatabaseTypes.Bounty>) {
 }
 
 /** *Create Completions for multiple Hunters for the same Bounty* */
-export function bulkCreateCompletions(bountyId: string, companyId: Snowflake, userIds: Snowflake[], xpAwarded?: number) {
+export function bulkCreateCompletions(bountyId: string, companyId: Snowflake, userIds: Snowflake[], xpAwarded?: number | null) {
 	const rawCompletions = userIds.map(id => {
 		const rawCompletion: Partial<DatabaseTypes.Completion> = {
 			bountyId,

@@ -1,11 +1,11 @@
 import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, userMention, UserSelectMenuBuilder } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
-import { BountyState } from "../../../shared/types.ts";
+import { BountyState, isNotNull } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SelectOptionFunctionality("revoketurnin",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
@@ -35,14 +35,15 @@ export default new SelectOptionFunctionality("revoketurnin",
 				return;
 			}
 
-			const removedIds = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).map((_, key) => key);
-			await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, removedIds);
+			const selectedMembers = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters);
+			if (isNotNull(selectedMembers) && isNotNull(modalSubmission.channel) && modalSubmission.channel.isThread()) {
+				const removedIds = selectedMembers.map((_, key) => key);
+				await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, removedIds);
 
-			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
-				await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins revoked by poster");
-			}
-			if (modalSubmission.channel?.isSendable()) {
+				if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads) && isNotNull(modalSubmission.message)) {
+					modalSubmission.message.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+					await unarchiveAndUnlockThread(modalSubmission.channel, "bounty turn-ins revoked by poster");
+				}
 				modalSubmission.reply({ content: `${sentenceListEN(removedIds.map(id => userMention(id)))} ${removedIds.length === 1 ? "has" : "have"} been removed as ${removedIds.length === 1 ? "a completer" : "completers"} of this bounty.` });
 			}
 		}
