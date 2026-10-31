@@ -1,10 +1,10 @@
-import { InteractionContextType, PermissionFlagsBits, unorderedList } from 'discord.js';
+import { InteractionContextType, PermissionFlagsBits, Snowflake, unorderedList, userMention } from 'discord.js';
 import type { LogicLayer } from '../../logic';
 import { CommandFunctionality } from '../classes/index.ts';
 import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const mainId = "season-end";
 export default new CommandFunctionality(mainId, "Start a new season for this server, resetting ranks and placements", PermissionFlagsBits.ManageGuild, false, [InteractionContextType.Guild], 3000,
 	/** End the Company's current season and start a new one */
@@ -24,25 +24,30 @@ export default new CommandFunctionality(mainId, "Start a new season for this ser
 			if (endingSeason) {
 				const firstPlace = await logicLayer.seasons.findFirstPlaceParticipation(interaction.guildId, endingSeason.id);
 				if (firstPlace) {
-					shoutouts.push(`<@${firstPlace.userId}> earned the most XP this season!`);
+					shoutouts.push(`${userMention(firstPlace.userId)} earned the most XP this season!`);
 				}
-				const mostPostingsCompleted = await logicLayer.seasons.findParticipationWithTopParticipationStat(interaction.guildId, endingSeason.id, "postingsCompleted");
+				const mostPostingsCompleted = await logicLayer.seasons.findParticipationWithTopParticipationStat(interaction.guildId, endingSeason.id, "postingsComplete");
 				if (mostPostingsCompleted) {
-					shoutouts.push(`<@${mostPostingsCompleted.userId}> posted the most completed bounties this season!`);
+					shoutouts.push(`${userMention(mostPostingsCompleted.userId)} posted the most completed bounties this season!`);
 				}
 				const mostToastsRaised = await logicLayer.seasons.findParticipationWithTopParticipationStat(interaction.guildId, endingSeason.id, "toastsRaised");
 				if (mostToastsRaised) {
-					shoutouts.push(`<@${mostToastsRaised.userId}> raised the most toasts this season!`);
+					shoutouts.push(`${userMention(mostToastsRaised.userId)} raised the most toasts this season!`);
 				}
 				const mostGoalContributions = await logicLayer.seasons.findParticipationWithTopParticipationStat(interaction.guildId, endingSeason.id, "goalContributions");
 				if (mostGoalContributions) {
-					shoutouts.push(`<@${mostGoalContributions.userId}> made the most goal contributions this season!`);
+					shoutouts.push(`${userMention(mostGoalContributions.userId)} made the most goal contributions this season!`);
 				}
 				endingSeason.update({ isCurrentSeason: false, isPreviousSeason: true });
 			}
 			await logicLayer.seasons.createSeason(interaction.guildId);
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
-			const roleIds = ranks.filter(rank => rank.roleId != "").map(rank => rank.roleId);
+			const roleIds: Snowflake[] = [];
+			for (const rank of ranks) {
+				if (rank.roleId) {
+					roleIds.push(rank.roleId);
+				}
+			}
 			if (roleIds.length > 0) {
 				guild.members.fetch({ user: Array.from(hunterMap.keys()) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {

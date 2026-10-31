@@ -253,7 +253,7 @@ export async function latestVersionChangesEmbed() {
 		.setFooter(randomFooterTip())
 		.setTimestamp(stats.mtime);
 }
-export async function companyStatsEmbed(guild: Guild, companyXP: number, participantCount: number, currentSeason: DatabaseTypes.Season, lastSeason: DatabaseTypes.Season) {
+export async function companyStatsEmbed(guild: Guild, companyXP: number, participantCount: number, currentSeason: DatabaseTypes.Season, lastSeason: DatabaseTypes.Season | null) {
 	const currentCompanyLevel = DatabaseTypes.Company.getLevel(companyXP);
 	const currentLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel, COMPANY_XP_COEFFICIENT);
 	const nextLevelThreshold = DatabaseTypes.Hunter.xpThreshold(currentCompanyLevel + 1, COMPANY_XP_COEFFICIENT);
