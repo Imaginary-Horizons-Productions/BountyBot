@@ -1,11 +1,12 @@
 import { EmbedBuilder, InteractionContextType, italic, MessageFlags, SlashCommandUserOption, underline, unorderedList } from 'discord.js';
 import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic/index.ts';
+import { isNotNull } from '../../shared/types.ts';
 import { CommandFunctionality } from '../classes/index.ts';
 import { companyStatsEmbed, fillableTextBar, hunterProfileEmbed, ihpAuthorPayload, randomFooterTip } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const bountyHunterOption = new SlashCommandUserOption().setName("bounty-hunter")
 	.setDescription("Whose stats to check; BountyBot for the server stats, empty for yourself");
 
@@ -44,15 +45,17 @@ export default new CommandFunctionality(mainId, "Get the BountyBot stats for you
 					const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 					const ranks = await logicLayer.ranks.findAllRanks(guild.id);
 					let rankName = null;
-					if (currentParticipation && ranks.length > 0) {
+					if (currentParticipation && isNotNull(currentParticipation.rankIndex) && ranks.length > 0) {
 						rankName = ranks[currentParticipation.rankIndex].getMention(currentParticipation.rankIndex);
 					}
 					const mostSecondedToast = await logicLayer.toasts.findMostSecondedToast(target.id, guild.id);
 
-					interaction.reply({
-						embeds: [hunterProfileEmbed(hunter, target, currentHunterLevel, currentLevelThreshold, nextLevelThreshold, currentParticipation, rankName, previousParticipations, mostSecondedToast)],
-						flags: MessageFlags.Ephemeral
-					});
+					if (isNotNull(mostSecondedToast)) {
+						interaction.reply({
+							embeds: [hunterProfileEmbed(hunter, target, currentHunterLevel, currentLevelThreshold, nextLevelThreshold, currentParticipation, rankName, previousParticipations, mostSecondedToast)],
+							flags: MessageFlags.Ephemeral
+						});
+					}
 				})
 			}
 		} else {
@@ -66,7 +69,7 @@ export default new CommandFunctionality(mainId, "Get the BountyBot stats for you
 			const previousParticipations = currentParticipation === null ? participations : participations.slice(1);
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
 			let rankName = null;
-			if (currentParticipation && ranks.length > 0) {
+			if (currentParticipation && isNotNull(currentParticipation.rankIndex) && ranks.length > 0) {
 				const rankIndex = currentParticipation.rankIndex;
 				rankName = ranks[rankIndex].getMention(rankIndex);
 			}
@@ -100,7 +103,7 @@ export default new CommandFunctionality(mainId, "Get the BountyBot stats for you
 						.setTitle(`You are ${underline(`Level ${currentHunterLevel}`)} in ${guild.name}`)
 						.setDescription(description)
 						.addFields(
-							{ name: "Season Placements", value: `Currently: ${(currentParticipation?.placement ?? 0) === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
+							{ name: "Season Placements", value: `Currently: ${!currentParticipation || currentParticipation.placement === 0 ? "Unranked" : "#" + currentParticipation.placement}\n${previousParticipations.length > 0 ? `Previous Placements: ${previousParticipations.map(participation => `#${participation.placement}`).join(", ")}` : ""}`, inline: true },
 							{ name: "Total XP Earned", value: `${theater.hunter.xp} XP`, inline: true },
 							{ name: "Most Seconded Toast", value: mostSecondedToast ? `"${mostSecondedToast.text}" with **${mostSecondedToast.secondings} secondings**` : "No toasts seconded yet..." },
 							{ name: "Bounty Stats", value: `Bounties Hunted: ${theater.hunter.othersFinished} bount${theater.hunter.othersFinished === 1 ? 'y' : 'ies'}\nBounty Postings: ${theater.hunter.mineFinished} bount${theater.hunter.mineFinished === 1 ? 'y' : 'ies'}`, inline: true },
