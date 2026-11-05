@@ -1,7 +1,7 @@
-import { ChannelType, MessageFlags, OverwriteType, PermissionFlagsBits, SlashCommandStringOption, type TextChannel } from "discord.js";
+import { ChannelType, MessageFlags, OverwriteType, PermissionFlagsBits, SlashCommandStringOption } from "discord.js";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { isMissingPermissionError, overallScoreboardEmbed, seasonalScoreboardEmbed } from "../../shared/index.ts";
-//TODONOW type errors
+
 const scoreboardTypeOption = new SlashCommandStringOption().setName("scoreboard-type")
 	.setDescription("Pick if the scoreboard will show season XP or overall XP, only one updates")
 	.setChoices(
@@ -11,33 +11,35 @@ const scoreboardTypeOption = new SlashCommandStringOption().setName("scoreboard-
 
 export default new SubcommandFunctionality("scoreboard-reference", "Create a reference channel with the BountyBot Scoreboard",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
-		let scoreboard: TextChannel;
-		try {
-			scoreboard = await interaction.guild.channels.create({
-				parent: interaction.channel.parentId,
-				name: "bountybot-scoreboard",
-				type: ChannelType.GuildText,
-				permissionOverwrites: [
-					{
-						id: interaction.client.user,
-						allow: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages],
-						type: OverwriteType.Member
-					},
-					{
-						id: interaction.guildId,
-						allow: [PermissionFlagsBits.ViewChannel],
-						deny: [PermissionFlagsBits.SendMessages]
-					}
-				],
-				reason: `/create-default scoreboard-reference by ${interaction.user}`
-			});
-		} catch (error) {
+		if (interaction.channel === null) {
+			return;
+		}
+		const scoreboard = await interaction.guild.channels.create({
+			parent: interaction.channel.parentId,
+			name: "bountybot-scoreboard",
+			type: ChannelType.GuildText,
+			permissionOverwrites: [
+				{
+					id: interaction.client.user,
+					allow: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageMessages],
+					type: OverwriteType.Member
+				},
+				{
+					id: interaction.guildId,
+					allow: [PermissionFlagsBits.ViewChannel],
+					deny: [PermissionFlagsBits.SendMessages]
+				}
+			],
+			reason: `/create-default scoreboard-reference by ${interaction.user}`
+		}).catch(error => {
 			if (isMissingPermissionError(error)) {
 				interaction.reply({ content: "Could not create a Scoreboard Reference Channel because BountyBot appears to be missing the `ManageChannels` permission.", flags: MessageFlags.Ephemeral });
-				return;
 			} else {
 				console.error(error);
 			}
+		});
+		if (!scoreboard) {
+			return;
 		}
 		const isSeasonal = interaction.options.getString(scoreboardTypeOption.name, true) === scoreboardTypeOption.choices?.[0].value;
 		const embeds = [];

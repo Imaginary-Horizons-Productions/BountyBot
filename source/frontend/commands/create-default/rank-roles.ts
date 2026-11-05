@@ -49,7 +49,7 @@ export default new SubcommandFunctionality("rank-roles", "Create the default ran
 					if (interaction.guild.premiumTier < GuildPremiumTier.Tier2) {
 						delete roleCreateOptions.icon;
 					}
-					roleCreateOptions.position = existingGuildRoles.length + index;
+					roleCreateOptions.position = existingGuildRoles.size + index;
 					return interaction.guild.roles.create(roleCreateOptions);
 				})
 			)
