@@ -4,11 +4,14 @@ import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { goalCompletionEmbed } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const itemName = "Progress-in-a-Can";
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Add a contribution to the currently running Server Goal", 3000,
 		async (interaction, theater) => {
+			if (interaction.channel === null) {
+				return 0;
+			}
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guild.id);
 			if (!goal) {
 				interaction.reply({ content: "There isn't currently a Server Goal running.", flags: MessageFlags.Ephemeral });
