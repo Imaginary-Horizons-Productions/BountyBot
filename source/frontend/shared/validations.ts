@@ -1,4 +1,4 @@
-import { AutoModerationActionType, GuildMember, TextChannel, time } from "discord.js";
+import { AutoModerationActionType, GuildMember, GuildTextBasedChannel, TextChannel, time } from "discord.js";
 import { YEAR_IN_MS } from "../../shared/constants.ts";
 import { isNotNull } from "../../shared/types.ts";
 import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses.ts";
@@ -6,7 +6,7 @@ import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErr
 /** @file Validations - Checks for issues with user input data */
 
 /** Simulate auto mod actions for texts input to BountyBot */
-export async function textsHaveAutoModInfraction(channel: TextChannel, member: GuildMember, texts: string[], context: string) {
+export async function textsHaveAutoModInfraction(channel: TextChannel | GuildTextBasedChannel, member: GuildMember, texts: string[], context: string) {
 	let autoModRules;
 	try {
 		autoModRules = await channel.guild.autoModerationRules.fetch();

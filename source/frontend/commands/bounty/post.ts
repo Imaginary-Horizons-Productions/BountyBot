@@ -1,8 +1,9 @@
 import { EmbedLimits } from "@sapphire/discord.js-utilities";
-import { ActionRowBuilder, ComponentType, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, unorderedList } from "discord.js";
+import { ActionRowBuilder, bold, ChannelType, ComponentType, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, unorderedList } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyControlPanelSelectRow, bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, emojiFromNumber, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, syncRankRoles, textsHaveAutoModInfraction, validateScheduledEventTimestamps } from "../../shared/index.ts";
 //TODONOW type errors
@@ -112,6 +113,9 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 			collectedInteraction.showModal(modal);
 
 			return collectedInteraction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+				if (modalSubmission.channel === null) {
+					return;
+				}
 				const title = modalSubmission.fields.getTextInputValue(titleId);
 				const description = modalSubmission.fields.getTextInputValue(descriptionId);
 
@@ -151,7 +155,7 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 				}
 
 				if (errors.length > 0) {
-					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty **${title}**:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
+					modalSubmission.reply({ content: `The following errors were encountered while posting your bounty ${bold(title)}:\n${unorderedList(errors)}`, flags: MessageFlags.Ephemeral });
 					return;
 				}
 
@@ -171,9 +175,9 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 				});
 
 				let event = null;
-				if (startTimestamp && endTimestamp) {
+				if (startTimestamp && endTimestamp && rawBounty.slotNumber !== undefined && isNotNull(rawBounty.attachmentURL)) {
 					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, rawBounty.slotNumber, startTimestamp, endTimestamp, description, rawBounty.attachmentURL);
-					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.CreateEvents)) {
+					if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.CreateEvents)) {
 						event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 						rawBounty.scheduledEventId = event.id;
 					} else {
@@ -192,13 +196,17 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 					}
 					if (theater.company.bountyBoardId) {
 						modalSubmission.guild.channels.fetch(theater.company.bountyBoardId).then(bountyBoard => {
-							return bountyBoard.threads.create({
-								name: bounty.title,
-								message: { embeds, components: bountyControlPanelSelectRow(bounty.id) },
-								appliedTags: [theater.company.bountyBoardOpenTagId]
-							})
+							if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(theater.company.bountyBoardOpenTagId)) {
+								return bountyBoard.threads.create({
+									name: bounty.title,
+									message: { embeds, components: bountyControlPanelSelectRow(bounty.id) },
+									appliedTags: [theater.company.bountyBoardOpenTagId]
+								})
+							}
 						}).then(posting => {
-							bounty.update({ postingId: posting.id });
+							if (posting !== undefined) {
+								bounty.update({ postingId: posting.id });
+							}
 						});
 					} else {
 						if (!interaction.member.manageable) {
