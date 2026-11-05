@@ -1,4 +1,4 @@
-import { bold, channelMention, type InteractionEditReplyOptions, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, strikethrough, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
+import { bold, channelMention, type InteractionEditReplyOptions, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
@@ -112,7 +112,7 @@ export default new SubcommandFunctionality("complete", "Close one of your open b
 			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 			if (bountyThread) {
 				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed: bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), true, theater.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress), title: strikethrough(bounty.title) }, auditLogReason);
+					refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed: bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), true, theater.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress), title: bounty.title }, auditLogReason);
 					await unarchiveAndUnlockThread(bountyThread, auditLogReason);
 				}
 				if (bountyThread.sendable) {

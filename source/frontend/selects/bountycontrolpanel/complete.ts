@@ -1,4 +1,4 @@
-import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, UserSelectMenuBuilder, strikethrough, userMention } from "discord.js";
+import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, UserSelectMenuBuilder, userMention } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
@@ -100,7 +100,7 @@ export default new SelectOptionFunctionality("complete",
 
 			const auditLogReason = auditReasonBountyComplete;
 			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				refreshBountyBoardThread(modalSubmission.message, { title: strikethrough(bounty.title), embed: bountyEmbed(bounty, modalSubmission.member, hunterMap.get(bounty.userId).getLevel(theater.company.xpCoefficient), true, theater.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress) }, auditLogReason);
+				refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed: bountyEmbed(bounty, modalSubmission.member, hunterMap.get(bounty.userId).getLevel(theater.company.xpCoefficient), true, theater.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress) }, auditLogReason);
 				await unarchiveAndUnlockThread(modalSubmission.channel, auditLogReason);
 			}
 			modalSubmission.channel.edit({ archived: true, appliedTags: [theater.company.bountyBoardCompletedTagId], reason: auditLogReason });
