@@ -5,11 +5,14 @@ import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { addCompanyAnnouncementPrefix } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const itemName = "Goal Initializer";
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Begin a Server Goal if there isn't already one running", 3000,
 		async (interaction, theater) => {
+			if (interaction.channel === null) {
+				return 0;
+			}
 			const goal = await logicLayer.goals.findCurrentServerGoal(interaction.guildId);
 			if (!!goal) {
 				interaction.reply({ content: "This server already has a Server Goal running.", flags: MessageFlags.Ephemeral });
