@@ -1,4 +1,4 @@
-import { InteractionContextType, PermissionFlagsBits, Snowflake, unorderedList, userMention } from 'discord.js';
+import { InteractionContextType, PermissionFlagsBits, type Snowflake, unorderedList, userMention } from 'discord.js';
 import type { LogicLayer } from '../../logic';
 import { CommandFunctionality } from '../classes/index.ts';
 import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared/index.ts';

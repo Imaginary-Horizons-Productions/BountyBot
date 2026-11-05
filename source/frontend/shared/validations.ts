@@ -1,4 +1,4 @@
-import { AutoModerationActionType, GuildMember, GuildTextBasedChannel, TextChannel, time } from "discord.js";
+import { AutoModerationActionType, GuildMember, type GuildTextBasedChannel, TextChannel, time } from "discord.js";
 import { YEAR_IN_MS } from "../../shared/constants.ts";
 import { isNotNull } from "../../shared/types.ts";
 import { butIgnoreCantDirectMessageThisUserErrors, butIgnoreMissingPermissionErrors } from "./dAPIResponses.ts";
