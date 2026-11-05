@@ -55,7 +55,7 @@ export default new SubcommandFunctionality("by-rank", "Select a user at or above
 				interaction.user.send({ content: "A raffle by ranks could not be started because there was an error with finding the rank you selected. Please try again." })
 					.catch(butIgnoreCantDirectMessageThisUserErrors);
 			} else if (error.rawError && Object.values(error.rawError.errors.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
-				interaction.user.send({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji.", flags: MessageFlags.Ephemeral })
+				interaction.user.send({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji." })
 					.catch(butIgnoreCantDirectMessageThisUserErrors);
 			} else {
 				console.error(error);
