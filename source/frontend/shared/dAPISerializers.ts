@@ -399,7 +399,7 @@ export async function overallScoreboardEmbed(company: DatabaseTypes.Company, gui
 	return embed;
 }
 
-export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGuildMember: GuildMember, currentLevel: number, currentLevelThreshold: number, nextLevelThreshold: number, currentParticipation: DatabaseTypes.Participation | undefined, rankName: string | null, previousParticipations: DatabaseTypes.Participation[], mostSecondedToast: DatabaseTypes.Toast) {
+export function hunterProfileEmbed(targetHunter: DatabaseTypes.Hunter, targetGuildMember: GuildMember, currentLevel: number, currentLevelThreshold: number, nextLevelThreshold: number, currentParticipation: DatabaseTypes.Participation | undefined, rankName: string | null, previousParticipations: DatabaseTypes.Participation[], mostSecondedToast: DatabaseTypes.Toast | null) {
 	let description = `${fillableTextBar(targetHunter.xp - currentLevelThreshold, nextLevelThreshold - currentLevelThreshold, 11)}`;
 	if (currentParticipation) {
 		description += `\nThey have earned ${italic(`${currentParticipation.xp} XP`)} this season`;
