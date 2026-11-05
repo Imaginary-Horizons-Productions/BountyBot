@@ -1,7 +1,7 @@
 import { bold, channelMention, type InteractionEditReplyOptions, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { timeConversion } from "../../../shared/index.ts";
+import { dateInPast, timeConversion } from "../../../shared/index.ts";
 import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, getBountyBoardThread, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
@@ -43,7 +43,7 @@ export default new SubcommandFunctionality("complete", "Close one of your open b
 		}
 
 		// disallow completion within 5 minutes of creating bounty
-		if (!isDevMode && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
+		if (!isDevMode && bounty.createdAt < dateInPast({ m: 5 })) {
 			modalSubmission.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty record-turn-ins")} so you won't forget instead.`, flags: MessageFlags.Ephemeral });
 			return;
 		}

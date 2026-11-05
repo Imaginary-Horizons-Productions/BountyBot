@@ -86,7 +86,7 @@ export async function raiseToast(guild: Guild, company: DatabaseTypes.Company, s
 			}
 		}
 	}
-	const toastsInLastDay = recentToasts.filter(toast => new Date(toast.createdAt) > dateInPast({ d: 1 }));
+	const toastsInLastDay = recentToasts.filter(toast => toast.createdAt > dateInPast({ d: 1 }));
 	const hunterIdsToastedInLastDay = new Set<Snowflake>();
 	for (const toast of toastsInLastDay) {
 		for (const recipient of await toast.getRecipients()) {

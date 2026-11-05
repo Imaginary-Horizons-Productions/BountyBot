@@ -21,8 +21,8 @@ export class Bounty extends Model {
 	declare showcaseCount: number;
 	declare completedAt: string;
 	declare editCount: number;
-	declare createdAt: string; //TODONOW are these really strings?
-	declare updatedAt: string;
+	declare createdAt: Date;
+	declare updatedAt: Date;
 
 	declare getCompletions: HasManyGetAssociationsMixin<Completion>;
 

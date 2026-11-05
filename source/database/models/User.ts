@@ -6,8 +6,8 @@ import type { Database } from "..";
 export class User extends Model {
 	declare id: Snowflake;
 	declare isPremium: boolean;
-	declare createdAt: string;
-	declare updatedAt: string;
+	declare createdAt: Date;
+	declare updatedAt: Date;
 }
 
 export function initModel(sequelize: Sequelize) {

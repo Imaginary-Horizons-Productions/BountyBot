@@ -7,8 +7,8 @@ export class Seconding extends Model {
 	declare toastId: string;
 	declare seconderId: Snowflake;
 	declare wasCrit: boolean;
-	declare createdAt: string;
-	declare updatedAt: string;
+	declare createdAt: Date;
+	declare updatedAt: Date;
 }
 
 export function initModel(sequelize: Sequelize) {

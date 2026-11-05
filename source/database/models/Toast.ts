@@ -13,8 +13,8 @@ export class Toast extends Model {
 	declare text: string;
 	declare imageURL: string | null;
 	declare secondings: number;
-	declare createdAt: string;
-	declare updatedAt: string;
+	declare createdAt: Date;
+	declare updatedAt: Date;
 
 	declare getRecipients: HasManyGetAssociationsMixin<Recipient>;
 }

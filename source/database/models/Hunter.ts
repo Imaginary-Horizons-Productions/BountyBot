@@ -22,8 +22,8 @@ export class Hunter extends Model {
 	declare penaltyPointTotal: number;
 	declare profileColor: keyof typeof Colors;
 	declare itemFindBoost: boolean;
-	declare createdAt: string;
-	declare updatedAt: string;
+	declare createdAt: Date;
+	declare updatedAt: Date;
 
 	static xpThreshold(level: number, xpCoefficient: number) {
 		// xp = xpCoefficient*(level - 1)^2

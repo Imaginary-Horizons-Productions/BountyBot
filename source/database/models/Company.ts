@@ -30,8 +30,8 @@ export class Company extends Model {
 	declare scoreboardThumbnailURL: string;
 	declare goalCompletionThumbnailURL: string;
 	declare raffleThumbnailURL: string;
-	declare createdAt: string;
-	declare updatedAt: string;
+	declare createdAt: Date;
+	declare updatedAt: Date;
 
 	static getLevel(xp: number) {
 		return Math.floor(Math.sqrt(xp / 3) + 1);

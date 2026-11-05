@@ -1,16 +1,16 @@
-import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, UserSelectMenuBuilder, userMention } from "discord.js";
+import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, type MessageCreateOptions, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, UserSelectMenuBuilder, userMention } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { timeConversion } from "../../../shared/index.ts";
+import { dateInPast, timeConversion } from "../../../shared/index.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
-import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, sentenceListEN, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
+import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sentenceListEN, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 //TODONOW type errors
 export default new SelectOptionFunctionality("complete",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			// disallow completion within 5 minutes of creating bounty
-			if (!isDevMode && new Date() < new Date(new Date(bounty.createdAt) + timeConversion(5, "m", "ms"))) {
+			if (!isDevMode && bounty.createdAt < dateInPast({ m: 5 })) {
 				interaction.reply({ content: `Bounties cannot be completed within 5 minutes of their posting. You can ${commandMention("bounty record-turn-ins")} so you won't forget instead.`, flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -81,8 +81,12 @@ export default new SelectOptionFunctionality("complete",
 
 			let hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
 			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
-			const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunterMap.get(bounty.userId), validatedHunters, season, theater.company);
-			const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunterMap.get(bounty.userId), season, !!hunterReceipts.size);
+			const hunter = hunterMap.get(bounty.userId);
+			if (hunter === undefined) {
+				return;
+			}
+			const hunterReceipts = await logicLayer.bounties.completeBounty(bounty, hunter, validatedHunters, season, theater.company);
+			const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "bounties", hunter, season, !!hunterReceipts.size);
 			companyReceipt.guildName = modalSubmission.guild.name;
 
 			hunterMap = await logicLayer.hunters.getCompanyHunterMap(theater.company.id);
@@ -105,11 +109,14 @@ export default new SelectOptionFunctionality("complete",
 			}
 			modalSubmission.channel.edit({ archived: true, appliedTags: [theater.company.bountyBoardCompletedTagId], reason: auditLogReason });
 
-			const announcementOptions = { content: `${userMention(bounty.userId)}'s bounty, ${modalSubmission.channel}, was completed!` };
+			const announcementOptions: MessageCreateOptions = { content: `${userMention(bounty.userId)}'s bounty, ${modalSubmission.channel}, was completed!` };
 			if (goalProgress.goalCompleted) {
 				announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 			}
-			modalSubmission.fields.getSelectedChannels(labelIdChannel).first().send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
+			const destinationChannel = modalSubmission.fields.getSelectedChannels(labelIdChannel).first();
+			if (destinationChannel !== undefined && destinationChannel.isSendable()) {
+				destinationChannel.send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
+			}
 			if (theater.company.scoreboardIsSeasonal) {
 				refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
 			} else {
