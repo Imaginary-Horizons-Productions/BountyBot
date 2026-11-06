@@ -24,6 +24,19 @@ export const BountyState = {
 
 export type BountyState = MemberOf<typeof BountyState>;
 
+export const CompanyAnnouncementPrefix = {
+	Online: "@here",
+	Everyone: "@everyone",
+	Silent: "@silent",
+	None: ""
+} as const;
+
+export type CompanyAnnouncementPrefix = MemberOf<typeof CompanyAnnouncementPrefix>;
+
+export function isCompanyAnnouncementPrefix(candidate: string): candidate is CompanyAnnouncementPrefix {
+	return Object.values(CompanyAnnouncementPrefix).some(value => value === candidate);
+}
+
 export const GoalState = {
 	Ongoing: "ongoing",
 	Expired: "expired",

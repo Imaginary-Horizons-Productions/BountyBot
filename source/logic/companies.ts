@@ -1,6 +1,7 @@
 import type { Interaction } from "discord.js";
 import type { Database } from "../database";
 import type { InteractionTheater } from "../frontend/classes";
+import { CompanyAnnouncementPrefix } from "../shared/types";
 
 let db: Database;
 
@@ -31,7 +32,7 @@ export function findCompanyByPK(companyId: string) {
 export function resetCompanySettings(id: string) {
 	db.Companies.update(
 		{
-			announcementPrefix: "@here",
+			announcementPrefix: CompanyAnnouncementPrefix.Online,
 			maxSimBounties: 5,
 			backupTimer: 3600000,
 			xpFestivalMultiplier: 1,

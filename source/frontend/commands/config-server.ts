@@ -1,14 +1,15 @@
 import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandBooleanOption, SlashCommandStringOption } from 'discord.js';
 import type { DatabaseTypes } from '../../database';
+import { CompanyAnnouncementPrefix, isCompanyAnnouncementPrefix, isNotNull } from '../../shared/types.ts';
 import { CommandFunctionality } from '../classes/index.ts';
-//TODONOW type errors
+
 const notificationOption = new SlashCommandStringOption().setName("notification")
 	.setDescription("Configure who to send notifications to (default @here)")
 	.setChoices(
-		{ name: "Notify online members (@here)", value: "@here" },
-		{ name: "Notify all members (@everyone)", value: "@everyone" },
+		{ name: "Notify online members (@here)", value: CompanyAnnouncementPrefix.Online },
+		{ name: "Notify all members (@everyone)", value: CompanyAnnouncementPrefix.Everyone },
 		{ name: "No prefix", value: "(nothing)" },
-		{ name: "Suppress notifications (@silent)", value: "@silent" }
+		{ name: "Suppress notifications (@silent)", value: CompanyAnnouncementPrefix.Silent }
 	);
 
 const disableReactionToastsOption = new SlashCommandBooleanOption().setName("disable-reaction-toasts")
@@ -21,8 +22,12 @@ export default new CommandFunctionality(mainId, "Configure BountyBot settings fo
 		let content = "The following server settings have been configured:";
 
 		const prefix = interaction.options.getString(notificationOption.name);
-		if (prefix !== null) {
-			updatePayload.announcementPrefix = prefix === notificationOption.choices?.[2].value ? "" : prefix;
+		if (isNotNull(prefix)) {
+			if (isCompanyAnnouncementPrefix(prefix)) {
+				updatePayload.announcementPrefix = prefix === notificationOption.choices?.[2].value ? CompanyAnnouncementPrefix.None : prefix;
+			} else if (prefix === notificationOption.choices?.[2].value) {
+				updatePayload.announcementPrefix = CompanyAnnouncementPrefix.None;
+			}
 			content += `\n- The announcment prefix was set to ${prefix}`;
 		}
 
