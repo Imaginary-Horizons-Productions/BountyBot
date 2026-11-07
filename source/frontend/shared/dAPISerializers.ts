@@ -574,4 +574,4 @@ export async function userReportEmbed(hunter: DatabaseTypes.Hunter, guild: Guild
 }
 //#endregion
 
-export const ihpAuthorPayload = { name: "Click here to check out the Imaginary Horizons GitHub", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/Imaginary-Horizons-Productions" };
+export const ihpAuthorPayload = { name: "Click here to sponsor Imaginary Horizons Productions", iconURL: "https://images-ext-2.discordapp.net/external/8DllSg9z_nF3zpNliVC3_Q8nQNu9J6Gs0xDHP_YthRE/https/cdn.discordapp.com/icons/353575133157392385/c78041f52e8d6af98fb16b8eb55b849a.png", url: "https://github.com/sponsors/Imaginary-Horizons-Productions" };
