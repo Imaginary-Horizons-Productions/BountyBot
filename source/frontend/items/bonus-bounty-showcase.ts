@@ -7,7 +7,7 @@ import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { bountyEmbed, getBountyBoardThread, isInteractionCollectorError, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const itemName = "Bonus Bounty Showcase";
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
@@ -32,12 +32,18 @@ export default new ItemTemplateSet(
 				);
 			interaction.showModal(modal);
 			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
-				if (!modalSubmission.channel.members.has(modalSubmission.client.user.id)) {
+				if (modalSubmission.channel === null) {
+					modalSubmission.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
+					return 0;
+				}
+				const channelIsThreadAndBountyBotIsMissing = modalSubmission.channel.isThread() && !modalSubmission.channel.guildMembers.has(modalSubmission.client.user.id);
+				const channelIsNotThreadAndBountyBotIsMissing = !modalSubmission.channel.isThread() && !modalSubmission.channel.members.has(modalSubmission.client.user.id);
+				if (channelIsThreadAndBountyBotIsMissing || channelIsNotThreadAndBountyBotIsMissing) {
 					modalSubmission.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
 
-				if (!modalSubmission.channel.permissionsFor(modalSubmission.user.id).has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
+				if (!modalSubmission.channel?.permissionsFor(modalSubmission.user.id)?.has(PermissionFlagsBits.ViewChannel & PermissionFlagsBits.SendMessages)) {
 					modalSubmission.reply({ content: "You must have permission to view and send messages in the selected channel to showcase a bounty in it.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}
@@ -57,8 +63,8 @@ export default new ItemTemplateSet(
 				modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds: [embed] });
 
 				if (bountyThread) {
-					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-						(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
+					if (modalSubmission.guild.members.me?.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						(await bountyThread.fetchStarterMessage())?.edit({ embeds: [embed] });
 						await unarchiveAndUnlockThread(bountyThread, "Bonus Bounty Showcase item used");
 					}
 					if (bountyThread.sendable) {
