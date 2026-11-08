@@ -126,7 +126,7 @@ export class CommandFunctionality extends InteractionFunctionality {
 
 export type SubcommandProcedure = (interaction: ChatInputCommandInteraction<"cached">, theater: InteractionTheater, isDevMode: boolean, logicLayer: LogicLayer) => Promise<void>;
 
-export class SubcommandFunctionality { //TODONOW consider builder.addSubcommand instead
+export class SubcommandFunctionality {
 	declare procedure: SubcommandProcedure;
 	declare builder: SlashCommandSubcommandBuilder;
 

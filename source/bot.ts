@@ -158,7 +158,6 @@ dAPIClient.on(Events.ClientReady, () => {
 });
 
 dAPIClient.on(Events.InteractionCreate, async interaction => {
-	//TODONOW (or later?) write uncached guild fallback logic (more necessary in sharding?)
 	if (!interaction.inCachedGuild()) return;
 
 	let mainId;

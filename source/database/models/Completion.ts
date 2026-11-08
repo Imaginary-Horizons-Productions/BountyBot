@@ -18,16 +18,16 @@ export function initModel(sequelize: Sequelize) {
 			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4
 		},
-		bountyId: { // TODONOW should be non-nullable?
+		bountyId: {
 			type: DataTypes.UUID
 		},
-		userId: { // TODONOW should be non-nullable?
+		userId: {
 			type: DataTypes.STRING
 		},
-		companyId: { // TODONOW should be non-nullable?
+		companyId: {
 			type: DataTypes.STRING
 		},
-		xpAwarded: { //TODONOW default to 0?
+		xpAwarded: {
 			type: DataTypes.INTEGER
 		}
 	}, {

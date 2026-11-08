@@ -35,7 +35,7 @@ export function initModel(sequelize: Sequelize) {
 			type: DataTypes.UUID,
 			allowNull: false
 		},
-		hunter: { //TODONOW convert to association
+		hunter: {
 			type: DataTypes.VIRTUAL,
 			async get() {
 				return await sequelize.models.Hunter.findOne({ where: { userId: this.userId, companyId: this.companyId } });

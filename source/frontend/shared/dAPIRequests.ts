@@ -87,7 +87,7 @@ export async function getBountyBoardThread(guild: Guild, bountyBoardId: Snowflak
 		return null;
 	}
 	const bountyBoard = await guild.channels.fetch(bountyBoardId).catch(butIgnoreUnknownChannelErrors);
-	if (!bountyBoard || !bountyBoard.isThreadOnly()) { //TODONOW consider cleaning up db
+	if (!bountyBoard || !bountyBoard.isThreadOnly()) {
 		return null;
 	}
 	return bountyBoard.threads.fetch(postingId).catch(error => {
@@ -105,7 +105,7 @@ export async function refreshReferenceChannelScoreboardSeasonal(company: Databas
 	}
 
 	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
-	if (!scoreboard || !scoreboard.isSendable()) { //TODONOW consider cleaning up db
+	if (!scoreboard || !scoreboard.isSendable()) {
 		return;
 	}
 	const embeds = [await seasonalScoreboardEmbed(company, guild, participationMap, descendingRanks, goalProgress)];
@@ -124,7 +124,7 @@ export async function refreshReferenceChannelScoreboardOverall(company: Database
 	}
 
 	const scoreboard = await guild.channels.fetch(company.scoreboardChannelId);
-	if (!scoreboard || !scoreboard.isSendable()) { //TODONOW consider cleaning up db
+	if (!scoreboard || !scoreboard.isSendable()) {
 		return;
 	}
 	const embeds = [await overallScoreboardEmbed(company, guild, hunterMap, goalProgress)];
