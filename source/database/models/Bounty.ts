@@ -19,7 +19,7 @@ export class Bounty extends Model {
 	declare scheduledEventId: string | null;
 	declare state: BountyState;
 	declare showcaseCount: number;
-	declare completedAt: string;
+	declare completedAt: Date;
 	declare editCount: number;
 	declare createdAt: Date;
 	declare updatedAt: Date;

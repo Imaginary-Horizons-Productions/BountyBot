@@ -32,13 +32,10 @@ export default new ItemTemplateSet(
 				);
 			interaction.showModal(modal);
 			return interaction.awaitModalSubmit({ filter: (incoming) => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
-				if (modalSubmission.channel === null) {
-					modalSubmission.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
-					return 0;
-				}
-				const channelIsThreadAndBountyBotIsMissing = modalSubmission.channel.isThread() && !modalSubmission.channel.guildMembers.has(modalSubmission.client.user.id);
-				const channelIsNotThreadAndBountyBotIsMissing = !modalSubmission.channel.isThread() && !modalSubmission.channel.members.has(modalSubmission.client.user.id);
-				if (channelIsThreadAndBountyBotIsMissing || channelIsNotThreadAndBountyBotIsMissing) {
+				if (modalSubmission.channel === null ||
+					modalSubmission.channel.isThread() && !modalSubmission.channel.guildMembers.has(modalSubmission.client.user.id) ||
+					!modalSubmission.channel.isThread() && !modalSubmission.channel.members.has(modalSubmission.client.user.id)
+				) {
 					modalSubmission.reply({ content: "BountyBot is not in the selected channel.", flags: MessageFlags.Ephemeral });
 					return 0;
 				}

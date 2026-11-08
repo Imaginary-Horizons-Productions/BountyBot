@@ -1,20 +1,23 @@
 import { LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextDisplayBuilder, time, TimestampStyles } from "discord.js";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { timeConversion } from "../../../shared/index.ts";
+import { dateInPast, timeConversion } from "../../../shared/index.ts";
 import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
-		const nextShowcaseInMS = new Date(theater.hunter.lastShowcaseTimestamp).valueOf() + timeConversion(1, "w", "ms");
-		if (!isDevMode && Date.now() < nextShowcaseInMS) {
-			interaction.reply({ content: `You can showcase another bounty in ${time(Math.floor(nextShowcaseInMS / 1000), TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
+		if (!isDevMode && theater.hunter.lastShowcaseTimestamp !== null && theater.hunter.lastShowcaseTimestamp > dateInPast({ w: 1 })) {
+			const nextShowcaseSeconds = Math.floor(theater.hunter.lastShowcaseTimestamp.valueOf() + timeConversion(1, "w", "ms")) / 1000;
+			interaction.reply({ content: `You can showcase another bounty in ${time(nextShowcaseSeconds, TimestampStyles.RelativeTime)}.`, flags: MessageFlags.Ephemeral });
 			return;
 		}
 
-		if (!interaction.channel.members.has(interaction.client.user.id)) {
+		if (!interaction.channel ||
+			(interaction.channel.isThread() && !interaction.channel.guildMembers.has(interaction.client.user.id)) ||
+			(!interaction.channel.isThread() && !interaction.channel.members.has(interaction.client.user.id))
+		) {
 			interaction.reply({ content: "BountyBot can't post public messages in this channel.", flags: MessageFlags.Ephemeral });
 			return;
 		}
@@ -46,7 +49,7 @@ export default new SubcommandFunctionality("showcase", "Show the embed for one o
 		*/
 		const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
 		let bounty = await logicLayer.bounties.findBounty(bountyId);
-		if (bounty.state !== BountyState.Open) {
+		if (bounty?.state !== BountyState.Open) {
 			modalSubmission.reply({ content: "The selected bounty does not seem to be open.", flags: MessageFlags.Ephemeral });
 			return;
 		}
@@ -60,8 +63,8 @@ export default new SubcommandFunctionality("showcase", "Show the embed for one o
 		modalSubmission.reply({ content: `${modalSubmission.member} increased the reward on their bounty!`, embeds: [embed] });
 
 		if (bountyThread) {
-			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				(await bountyThread.fetchStarterMessage()).edit({ embeds: [embed] });
+			if (modalSubmission.guild.members.me?.permissions.has(PermissionFlagsBits.ManageThreads)) {
+				(await bountyThread.fetchStarterMessage())?.edit({ embeds: [embed] });
 				await unarchiveAndUnlockThread(bountyThread, "bounty showcased by poster");
 			}
 			if (bountyThread.sendable) {

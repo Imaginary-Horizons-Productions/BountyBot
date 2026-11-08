@@ -8,7 +8,7 @@ export class Hunter extends Model {
 	declare userId: Snowflake;
 	declare companyId: Snowflake;
 	declare xp: number;
-	declare lastShowcaseTimestamp: string | null;
+	declare lastShowcaseTimestamp: Date | null;
 	declare mineFinished: number;
 	declare othersFinished: number;
 	declare toastsRaised: number;
