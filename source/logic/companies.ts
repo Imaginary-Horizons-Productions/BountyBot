@@ -1,7 +1,7 @@
 import type { Interaction } from "discord.js";
 import type { Database } from "../database";
 import type { InteractionTheater } from "../frontend/classes";
-import { CompanyAnnouncementPrefix } from "../shared/types";
+import { CompanyAnnouncementPrefix } from "../shared/types.ts";
 
 let db: Database;
 
