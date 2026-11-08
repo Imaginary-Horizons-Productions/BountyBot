@@ -35,10 +35,13 @@ class XPBoost extends ItemTemplate {
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 				interaction.reply({ content: `${interaction.member} used an ${itemName}.\n${rewardSummary("item", companyReceipt, hunterReceipts, theater.company.maxSimBounties)}` });
 				const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-				if (theater.company.scoreboardIsSeasonal) {
-					refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
-				} else {
-					refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
+				switch (theater.company.scoreboardIsSeasonal) {
+					case true:
+						refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+						break;
+					case false:
+						refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
+						break;
 				}
 				return 1;
 			}

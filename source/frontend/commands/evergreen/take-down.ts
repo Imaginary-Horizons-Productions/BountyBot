@@ -27,7 +27,7 @@ export default new SubcommandFunctionality("take-down", "Take down one of the se
 			const [bountyId] = collectedInteraction.values;
 			const [bounty] = evergreenBounties.splice(evergreenBounties.findIndex(bounty => bounty.id === bountyId), 1);
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
-			if (theater.company.bountyBoardId) {
+			if (theater.company.hasBountyBoard()) {
 				const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
 				if (evergreenBounties.length > 0) {
 					const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));

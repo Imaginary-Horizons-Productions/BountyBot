@@ -62,7 +62,7 @@ export default new SubcommandFunctionality("swap", "Swap the rewards of two ever
 		// Evergreen bounties are not eligible for showcase bonuses
 		modalSubmission.reply(`Some evergreen bounties have been swapped, ${bold(sourceBounty.title)} is now worth ${DatabaseTypes.Bounty.calculateCompleterReward(currentCompanyLevel, destinationSlot, 0)} XP and ${bold(destinationBounty.title)} is now worth ${DatabaseTypes.Bounty.calculateCompleterReward(currentCompanyLevel, sourceSlot, 0)} XP.`);
 
-		if (theater.company.bountyBoardId) {
+		if (theater.company.hasBountyBoard()) {
 			const reloadedBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
 			const hunterIdMap = {};
 			for (const bounty of reloadedBounties) {

@@ -76,7 +76,7 @@ export default new SubcommandFunctionality("edit", "Change the name, description
 
 				// update bounty board
 				const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
-				if (theater.company.bountyBoardId) {
+				if (theater.company.hasBountyBoard()) {
 					const hunterIdMap = {};
 					for (const bounty of evergreenBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);

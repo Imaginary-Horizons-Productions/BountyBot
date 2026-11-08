@@ -1,4 +1,4 @@
-import { InteractionContextType, PermissionFlagsBits, type Snowflake, unorderedList, userMention } from 'discord.js';
+import { heading, InteractionContextType, PermissionFlagsBits, type Snowflake, unorderedList, userMention } from 'discord.js';
 import type { LogicLayer } from '../../logic';
 import { CommandFunctionality } from '../classes/index.ts';
 import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared/index.ts';
@@ -58,14 +58,17 @@ export default new CommandFunctionality(mainId, "Start a new season for this ser
 				})
 			}
 			const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-			if (theater.company.scoreboardIsSeasonal) {
-				refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, new Map(), ranks, goalProgress);
-			} else {
-				refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
+			switch (theater.company.scoreboardIsSeasonal) {
+				case true:
+					refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, new Map(), ranks, goalProgress);
+					break;
+				case false:
+					refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
+					break;
 			}
 			let announcementText = "A new season has started, ranks and placements have been reset!";
 			if (shoutouts.length > 0) {
-				announcementText += `\n## Shoutouts\n${unorderedList(shoutouts)}`;
+				announcementText += `\n${heading("Shoutouts", 2)}\n${unorderedList(shoutouts)}`;
 			}
 			interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: announcementText, embeds: [embed] }));
 		})

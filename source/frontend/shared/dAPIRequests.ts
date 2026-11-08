@@ -100,7 +100,7 @@ export async function getBountyBoardThread(guild: Guild, bountyBoardId: Snowflak
 
 /** Update the Seasonal Scoreboard embed in a server's scoreboard reference channel */
 export async function refreshReferenceChannelScoreboardSeasonal(company: DatabaseTypes.Company, guild: Guild, participationMap: Map<string, DatabaseTypes.Participation>, descendingRanks: DatabaseTypes.Rank[], goalProgress: { requiredGP: number; currentGP: number; }) {
-	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
+	if (!company.hasScoreboard()) {
 		return;
 	}
 
@@ -119,7 +119,7 @@ export async function refreshReferenceChannelScoreboardSeasonal(company: Databas
 
 /** Update the Overall Scoreboard embed in a server's scoreboard reference channel */
 export async function refreshReferenceChannelScoreboardOverall(company: DatabaseTypes.Company, guild: Guild, hunterMap: Map<string, DatabaseTypes.Hunter>, goalProgress: { requiredGP: number; currentGP: number; }) {
-	if (!company.scoreboardChannelId || !company.scoreboardMessageId) {
+	if (!company.hasScoreboard()) {
 		return;
 	}
 

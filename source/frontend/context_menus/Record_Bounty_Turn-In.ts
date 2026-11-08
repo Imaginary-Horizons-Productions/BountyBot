@@ -2,12 +2,12 @@ import { bold, InteractionContextType, LabelBuilder, MessageFlags, ModalBuilder,
 import type { LogicLayer } from '../../logic';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
 import { timeConversion } from '../../shared/index.ts';
-import { BountyState } from '../../shared/types.ts';
+import { BountyState, isNotNull } from '../../shared/types.ts';
 import { UserContextMenuFunctionality } from '../classes/index.ts';
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, unarchiveAndUnlockThread } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const mainId = "Record Bounty Turn-In";
 export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
@@ -31,6 +31,10 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 		const bounties = await logicLayer.bounties.findOpenBounties(theater.hunter.userId, theater.company.id);
 		if (bounties.length < 1) {
 			interaction.reply({ content: "You don't appear to have any open bounties.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		if (interaction.targetMember === null) {
 			return;
 		}
 
@@ -58,9 +62,12 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 
 			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 			if (bountyThread) {
-				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, interaction.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
-					await unarchiveAndUnlockThread(bountyThread, "bounty turn-in recorded by poster");
+				if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					const starterMessage = await bountyThread.fetchStarterMessage();
+					if (isNotNull(starterMessage)) {
+						starterMessage.edit({ embeds: [bountyEmbed(bounty, interaction.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, new Set([interaction.targetId]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+						await unarchiveAndUnlockThread(bountyThread, "bounty turn-in recorded by poster");
+					}
 				}
 				if (bountyThread.sendable) {
 					bountyThread.send({ content: `${userMention(interaction.targetId)} has turned-in this bounty! ${randomCongratulatoryPhrase()}!` });

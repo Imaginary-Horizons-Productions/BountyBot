@@ -49,7 +49,7 @@ export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins o
 			sentences.unshift("No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties.");
 		} else {
 			await logicLayer.bounties.bulkCreateCompletions(bounty.id, bounty.companyId, Array.from(eligibleTurnInIds), null);
-			const newTurnInList = sentenceListEN(Array.from(newTurnInIds.values().map(id => userMention(id))));
+			const newTurnInList = sentenceListEN(Array.from(newTurnInIds.values()).map(id => userMention(id)));
 			sentences.unshift(`Turn-ins of ${bold(bounty.title)} have been recorded for the following hunters: ${newTurnInList}`);
 
 			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);

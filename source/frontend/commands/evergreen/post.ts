@@ -89,7 +89,7 @@ export default new SubcommandFunctionality("post", `Post an evergreen bounty, li
 			// post in bounty board forum
 			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 			interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] })).then(async () => {
-				if (theater.company.bountyBoardId) {
+				if (theater.company.hasBountyBoard()) {
 					const hunterIdMap = {};
 					for (const bounty of existingBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);

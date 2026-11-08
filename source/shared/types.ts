@@ -2,6 +2,8 @@ import type { Snowflake } from "discord.js";
 
 export type MemberOf<T> = T[keyof T];
 
+export type MakePropertiesNonNullable<Type, Keys extends keyof Type> = Type & { [K in keyof Type]: K extends Keys ? NonNullable<Type[K]> : Type[K] };
+
 export function isNotNull<T>(candidate: T | null): candidate is T {
 	return candidate !== null;
 }

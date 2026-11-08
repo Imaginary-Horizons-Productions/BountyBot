@@ -14,13 +14,16 @@ export default new SubcommandFunctionality("start-xp", "Start an XP multiplier f
 		updateBotNicknameForFestival(await interaction.guild.members.fetchMe(), theater.company);
 		interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `An XP multiplier festival has started. Bounty and toast XP will be multiplied by ${multiplier}.` }));
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(theater.company.id);
-		if (theater.company.scoreboardIsSeasonal) {
-			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(theater.company.id);
-			refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(theater.company.id), goalProgress);
-		} else {
-			refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(theater.company.id), goalProgress);
+		switch (theater.company.scoreboardIsSeasonal) {
+			case true:
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(theater.company.id);
+				refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(theater.company.id), goalProgress);
+				break;
+			case false:
+				refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(theater.company.id), goalProgress);
+				break;
 		}
-		if (theater.company.bountyBoardId) {
+		if (theater.company.hasBountyBoard()) {
 			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
 			const existingBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
 			const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};

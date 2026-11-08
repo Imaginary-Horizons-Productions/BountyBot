@@ -112,12 +112,15 @@ export default new SubcommandFunctionality("complete", "Distribute rewards for t
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, modalSubmission.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		sendRewardMessage(response.resource.message, rewardSummary("bounty", companyReceipt, hunterReceipts, theater.company.maxSimBounties), `${bounty.title} Rewards`);
-		if (theater.company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
-		} else {
-			refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
+		switch (theater.company.scoreboardIsSeasonal) {
+			case true:
+				refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
+				break;
+			case false:
+				refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
+				break;
 		}
-		if (theater.company.bountyBoardId) {
+		if (theater.company.hasBountyBoard()) {
 			const hunterIdMap = {};
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);

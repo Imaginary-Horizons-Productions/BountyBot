@@ -2,10 +2,11 @@ import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, type MessageCreate
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { dateInPast, timeConversion } from "../../../shared/index.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sentenceListEN, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SelectOptionFunctionality("complete",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
@@ -16,7 +17,7 @@ export default new SelectOptionFunctionality("complete",
 			}
 
 			const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
-			const memberCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
+			const memberCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId).filter(element => element !== null) });
 			const validatedHunters = new Map();
 			const pendingTurnInDisplayNames = [];
 			for (const [memberId, member] of memberCollection) {
@@ -74,6 +75,10 @@ export default new SelectOptionFunctionality("complete",
 				return;
 			}
 
+			if (modalSubmission.channel === null || modalSubmission.message === null) {
+				return;
+			}
+
 			if (modalSubmission.channel?.isSendable()) {
 				await modalSubmission.deferReply();
 			}
@@ -103,24 +108,31 @@ export default new SelectOptionFunctionality("complete",
 			await modalSubmission.editReply({ content: rewardSummary("bounty", companyReceipt, hunterReceipts, theater.company.maxSimBounties) });
 
 			const auditLogReason = auditReasonBountyComplete;
-			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed: bountyEmbed(bounty, modalSubmission.member, hunterMap.get(bounty.userId).getLevel(theater.company.xpCoefficient), true, theater.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress) }, auditLogReason);
-				await unarchiveAndUnlockThread(modalSubmission.channel, auditLogReason);
+			if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+				refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed: bountyEmbed(bounty, modalSubmission.member, hunter.getLevel(theater.company.xpCoefficient), true, theater.company, new Set(validatedHunters.keys()), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress) }, auditLogReason);
+				if (modalSubmission.channel.isThread()) {
+					await unarchiveAndUnlockThread(modalSubmission.channel, auditLogReason);
+				}
 			}
-			modalSubmission.channel.edit({ archived: true, appliedTags: [theater.company.bountyBoardCompletedTagId], reason: auditLogReason });
+			if (theater.company.hasBountyBoard()) {
+				modalSubmission.channel.edit({ archived: true, appliedTags: [theater.company.bountyBoardCompletedTagId], reason: auditLogReason });
+			}
 
 			const announcementOptions: MessageCreateOptions = { content: `${userMention(bounty.userId)}'s bounty, ${modalSubmission.channel}, was completed!` };
 			if (goalProgress.goalCompleted) {
 				announcementOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 			}
-			const destinationChannel = modalSubmission.fields.getSelectedChannels(labelIdChannel).first();
+			const destinationChannel = modalSubmission.fields.getSelectedChannels(labelIdChannel, true).first();
 			if (destinationChannel !== undefined && destinationChannel.isSendable()) {
 				destinationChannel.send(announcementOptions).catch(butIgnoreMissingPermissionErrors);
 			}
-			if (theater.company.scoreboardIsSeasonal) {
-				refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
-			} else {
-				refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
+			switch (theater.company.scoreboardIsSeasonal) {
+				case true:
+					refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
+					break;
+				case false:
+					refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
+					break;
 			}
 
 			if (bounty.scheduledEventId) {

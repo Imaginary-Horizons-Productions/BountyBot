@@ -303,7 +303,7 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	if (isReactionToastExtant(existingToast)) {
 		// If extant toast, create Seconding
 		const hunterReceipts = await logicBlob.toasts.secondToast(interactingHunter, existingToast, company, recipientIds, season.id);
-		
+
 		const participationMap = await logicBlob.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicBlob.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, guildRoles);
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, guild.members);
@@ -319,10 +319,13 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		if (currentCompanyLevel > previousCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
-		if (company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
-		} else {
-			refreshReferenceChannelScoreboardOverall(company, guild, await logicBlob.hunters.getCompanyHunterMap(guild.id), goalProgress);
+		switch (company.scoreboardIsSeasonal) {
+			case true:
+				refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
+				break;
+			case false:
+				refreshReferenceChannelScoreboardOverall(company, guild, await logicBlob.hunters.getCompanyHunterMap(guild.id), goalProgress);
+				break;
 		}
 
 		sendRewardMessage(toastMessage, `${user.toString()} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, company.maxSimBounties)}`, "Rewards");
@@ -354,10 +357,13 @@ dAPIClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 				sendRewardMessage(message, rewardSummary("toast", companyReceipt, hunterReceipts, company.maxSimBounties), "Rewards");
-				if (company.scoreboardIsSeasonal) {
-					refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
-				} else {
-					refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress);
+				switch (company.scoreboardIsSeasonal) {
+					case true:
+						refreshReferenceChannelScoreboardSeasonal(company, guild, participationMap, descendingRanks, goalProgress);
+						break;
+					case false:
+						refreshReferenceChannelScoreboardOverall(company, guild, hunterMap, goalProgress);
+						break;
 				}
 			}
 		});
@@ -377,13 +383,16 @@ dAPIClient.on(Events.ChannelDelete, channel => {
 
 	logicBlob.companies.findCompanyByPK(channel.guild.id).then(company => {
 		if (company) {
-			if (channel.id === company.bountyBoardId) {
-				company.update({ bountyBoardId: null });
-			} else if (channel.id === company.scoreboardChannelId) {
-				company.update({
-					scoreboardChannelId: null,
-					scoreboardMessageId: null
-				});
+			switch (channel.id) {
+				case company.bountyBoardId:
+					company.update({ bountyBoardId: null, bountyBoardOpenTagId: null, bountyBoardCompletedTagId: null });
+					break;
+				case company.evergreenThreadId:
+					company.update({ evergreenThreadId: null });
+					break;
+				case company.scoreboardChannelId:
+					company.update({ scoreboardChannelId: null, scoreboardMessageId: null });
+					break;
 			}
 		}
 	})
@@ -410,7 +419,7 @@ dAPIClient.on(Events.ThreadDelete, async thread => {
 dAPIClient.on(Events.GuildMemberRemove, async guildMember => {
 	const postingIds = await logicBlob.bounties.deleteHunterBountiesAndCompletionsFromCompany(guildMember.id, guildMember.guild.id);
 	const company = await logicBlob.companies.findCompanyByPK(guildMember.guild.id);
-	if (company?.bountyBoardId) {
+	if (company?.hasBountyBoard()) {
 		const bountyBoard = await guildMember.guild.channels.fetch(company.bountyBoardId);
 		if (bountyBoard?.isThreadOnly()) {
 			for (const postingId of postingIds) {

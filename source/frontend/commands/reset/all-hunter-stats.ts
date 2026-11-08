@@ -13,10 +13,13 @@ export default new SubcommandFunctionality("all-hunter-stats", "IRREVERSIBLY res
 			await season.destroy();
 		}
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(theater.company.id);
-		if (theater.company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, new Map(), await logicLayer.ranks.findAllRanks(theater.company.id), goalProgress);
-		} else {
-			refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, new Map(), goalProgress);
+		switch (theater.company.scoreboardIsSeasonal) {
+			case true:
+				refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, new Map(), await logicLayer.ranks.findAllRanks(theater.company.id), goalProgress);
+				break;
+			case false:
+				refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, new Map(), goalProgress);
+				break;
 		}
 		interaction.user.send(`Resetting bounty hunter stats on ${interaction.guild.name} has completed.`)
 			.catch(butIgnoreCantDirectMessageThisUserErrors);

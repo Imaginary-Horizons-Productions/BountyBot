@@ -15,13 +15,16 @@ export default new SubcommandFunctionality("start-gp", "Start a GP multiplier fe
 		updateBotNicknameForFestival(await interaction.guild.members.fetchMe(), theater.company);
 		interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A GP multiplier festival has started. Goal Point Contributions will be multiplied by ${multiplier}.` }));
 		const goalProgress = await logicLayer.goals.findLatestGoalProgress(theater.company.id);
-		if (theater.company.scoreboardIsSeasonal) {
-			const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(theater.company.id);
-			refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(theater.company.id), goalProgress);
-		} else {
-			refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(theater.company.id), goalProgress);
+		switch (theater.company.scoreboardIsSeasonal) {
+			case true:
+				const [season] = await logicLayer.seasons.findOrCreateCurrentSeason(theater.company.id);
+				refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, await logicLayer.seasons.getParticipationMap(season.id), await logicLayer.ranks.findAllRanks(theater.company.id), goalProgress);
+				break;
+			case false:
+				refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(theater.company.id), goalProgress);
+				break;
 		}
-		if (theater.company.bountyBoardId) {
+		if (theater.company.hasBountyBoard()) {
 			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
 			if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(interaction.guild.members.me)) {
 				const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);

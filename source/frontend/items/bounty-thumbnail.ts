@@ -2,12 +2,12 @@ import { channelMention, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBui
 import type { LogicLayer } from "../../logic";
 import { SKIP_INTERACTION_HANDLING } from "../../shared/constants.ts";
 import { timeConversion } from "../../shared/index.ts";
-import { BountyState } from "../../shared/types.ts";
+import { BountyState, isNotNull } from "../../shared/types.ts";
 import { ItemTemplate, ItemTemplateSet } from "../classes/index.ts";
 import { bountyEmbed, commandMention, getBountyBoardThread, isInteractionCollectorError, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../shared/index.ts";
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const itemName = "Bounty Thumbnail";
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Adds an image to one of your open bounties!", 3000,
@@ -55,9 +55,12 @@ export default new ItemTemplateSet(
 
 				const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 				if (bountyThread) {
-					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-						(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))] });
-						await unarchiveAndUnlockThread(bountyThread, "Bounty Thumbnail item used");
+					if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						const starterMessage = await bountyThread.fetchStarterMessage();
+						if (isNotNull(starterMessage)) {
+							starterMessage.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(interaction.guild.scheduledEvents))] });
+							await unarchiveAndUnlockThread(bountyThread, "Bounty Thumbnail item used");
+						}
 					}
 					if (bountyThread.sendable) {
 						bountyThread.send({ content: `This bounty's poster used ${commandMention("item")} to add a thumbnail to this bounty.`, flags: MessageFlags.SuppressNotifications });

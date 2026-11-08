@@ -123,10 +123,13 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 
 				consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 				sendRewardMessage(response.resource.message, rewardSummary("toast", companyReceipt, hunterReceipts, theater.company.maxSimBounties), "Rewards");
-				if (theater.company.scoreboardIsSeasonal) {
-					refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
-				} else {
-					refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
+				switch (theater.company.scoreboardIsSeasonal) {
+					case true:
+						refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+						break;
+					case false:
+						refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, hunterMap, goalProgress);
+						break;
 				}
 			}
 		});

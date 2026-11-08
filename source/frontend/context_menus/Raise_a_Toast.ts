@@ -87,10 +87,13 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 					consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 					const rewardString = rewardSummary("toast", companyReceipt, hunterReceipts, theater.company.maxSimBounties);
 					sendRewardMessage(response.resource.message, rewardString, "Rewards");
-					if (theater.company.scoreboardIsSeasonal) {
-						refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
-					} else {
-						refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
+					switch (theater.company.scoreboardIsSeasonal) {
+						case true:
+							refreshReferenceChannelScoreboardSeasonal(theater.company, modalSubmission.guild, participationMap, descendingRanks, goalProgress);
+							break;
+						case false:
+							refreshReferenceChannelScoreboardOverall(theater.company, modalSubmission.guild, hunterMap, goalProgress);
+							break;
 					}
 				}
 			});

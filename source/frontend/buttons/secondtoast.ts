@@ -48,10 +48,13 @@ export default new ButtonFunctionality(mainId, 3000,
 		syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 		consolidateHunterReceipts(hunterReceipts, seasonalHunterReceipts);
 		sendRewardMessage(interaction.message, `${interaction.member.displayName} seconded this toast!\n${rewardSummary("seconding", companyReceipt, hunterReceipts, theater.company.maxSimBounties)}`, "Rewards");
-		if (theater.company.scoreboardIsSeasonal) {
-			refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
-		} else {
-			refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
+		switch (theater.company.scoreboardIsSeasonal) {
+			case true:
+				refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+				break;
+			case false:
+				refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
+				break;
 		}
 
 		if (goalProgress.goalCompleted && interaction.channel?.isSendable()) {

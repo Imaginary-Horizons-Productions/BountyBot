@@ -167,10 +167,13 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
 					syncRankRoles(seasonalHunterReceipts, descendingRanks, interaction.guild.members);
 					const goalProgress = await logicLayer.goals.findLatestGoalProgress(interaction.guild.id);
-					if (theater.company.scoreboardIsSeasonal) {
-						refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
-					} else {
-						refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
+					switch (theater.company.scoreboardIsSeasonal) {
+						case true:
+							refreshReferenceChannelScoreboardSeasonal(theater.company, interaction.guild, participationMap, descendingRanks, goalProgress);
+							break;
+						case false:
+							refreshReferenceChannelScoreboardOverall(theater.company, interaction.guild, await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id), goalProgress);
+							break;
 					}
 				});
 
@@ -190,24 +193,20 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 				// post in bounty board forum
 				await theater.hunter.reload();
 				const embeds = [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, new Set(), event)];
-				modalSubmission.reply(addCompanyAnnouncementPrefix(theater.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(() => {
+				modalSubmission.reply(addCompanyAnnouncementPrefix(theater.company, { content: `${modalSubmission.member} has posted a new bounty:`, embeds })).then(async () => {
 					if (warnings.length > 0) {
 						modalSubmission.followUp({ content: `The following issues were encountered while posting your bounty (your bounty was still posted):\n${unorderedList(warnings)}`, flags: MessageFlags.Ephemeral });
 					}
-					if (theater.company.bountyBoardId) {
-						modalSubmission.guild.channels.fetch(theater.company.bountyBoardId).then(bountyBoard => {
-							if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(theater.company.bountyBoardOpenTagId)) {
-								return bountyBoard.threads.create({
-									name: bounty.title,
-									message: { embeds, components: bountyControlPanelSelectRow(bounty.id) },
-									appliedTags: [theater.company.bountyBoardOpenTagId]
-								})
-							}
-						}).then(posting => {
-							if (posting !== undefined) {
-								bounty.update({ postingId: posting.id });
-							}
-						});
+					if (theater.company.hasBountyBoard()) {
+						const bountyBoard = await modalSubmission.guild.channels.fetch(theater.company.bountyBoardId);
+						if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum) {
+							const posting = await bountyBoard.threads.create({
+								name: bounty.title,
+								message: { embeds, components: bountyControlPanelSelectRow(bounty.id) },
+								appliedTags: [theater.company.bountyBoardOpenTagId]
+							})
+							bounty.update({ postingId: posting.id });
+						}
 					} else {
 						if (!interaction.member.manageable) {
 							interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });

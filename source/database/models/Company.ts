@@ -1,6 +1,7 @@
 import { italic, type Snowflake } from "discord.js";
 import { DataTypes, Model, type Sequelize } from "sequelize";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
+import type { MakePropertiesNonNullable } from "../../shared/types.ts";
 import { CompanyAnnouncementPrefix } from "../../shared/types.ts";
 import type { Database } from "../index.ts";
 import type { Hunter } from "./Hunter.js";
@@ -33,6 +34,18 @@ export class Company extends Model {
 	declare raffleThumbnailURL: string;
 	declare createdAt: Date;
 	declare updatedAt: Date;
+
+	hasBountyBoard(): this is MakePropertiesNonNullable<Company, "bountyBoardId" | "bountyBoardOpenTagId" | "bountyBoardCompletedTagId"> {
+		return this.bountyBoardId !== null &&
+			this.bountyBoardOpenTagId !== null &&
+			this.bountyBoardCompletedTagId !== null;
+	}
+
+	hasScoreboard(): this is MakePropertiesNonNullable<Company, "scoreboardChannelId" | "scoreboardMessageId" | "scoreboardIsSeasonal"> {
+		return this.scoreboardChannelId !== null &&
+			this.scoreboardMessageId !== null &&
+			this.scoreboardIsSeasonal !== null;
+	}
 
 	static getLevel(xp: number) {
 		return Math.floor(Math.sqrt(xp / 3) + 1);
