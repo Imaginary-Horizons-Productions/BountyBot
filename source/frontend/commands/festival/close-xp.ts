@@ -1,8 +1,8 @@
-import type { Snowflake } from "discord.js";
+import { ChannelType, type Snowflake } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared/index.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("close-xp", "End the festival, returning to normal XP",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		await theater.company.update({ "xpFestivalMultiplier": 1 });
@@ -20,6 +20,9 @@ export default new SubcommandFunctionality("close-xp", "End the festival, return
 		}
 		if (theater.company.hasBountyBoard()) {
 			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
+			if (bountyBoard === null || bountyBoard.type !== ChannelType.GuildForum || interaction.guild.members.me === null) {
+				return;
+			}
 			const existingBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
 			const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
 			for (const bounty of existingBounties) {
