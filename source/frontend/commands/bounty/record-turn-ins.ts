@@ -5,7 +5,7 @@ import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 const labelIdBountyId = "bounty-id";
 const labelIdBountyHunters = "bounty-hunters";
 const maxHunters = 10;
@@ -41,10 +41,14 @@ export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins o
 			return;
 		}
 
-		const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).values()), isDevMode);
+		const selectedGuildMembers = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters);
+		if (selectedGuildMembers === null) {
+			return; // Should never execute, UserSelect is required
+		}
+		const { eligibleTurnInIds, newTurnInIds, bannedTurnInIds } = await logicLayer.bounties.checkTurnInEligibility(bounty, Array.from(selectedGuildMembers.values()), isDevMode);
 		const sentences = [];
 		if (bannedTurnInIds.size > 0) {
-			sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${sentenceListEN(Array.from(bannedTurnInIds.values().map(id => userMention(id))))}`);
+			sentences.push(`The following users were skipped due to currently being banned from using BountyBot: ${sentenceListEN(Array.from(bannedTurnInIds.values()).map(id => userMention(id)))}`);
 		}
 		if (newTurnInIds.size < 1) {
 			sentences.unshift("No new turn-ins were able to be recorded. You cannot credit yourself or bots for your own bounties.");
@@ -55,8 +59,8 @@ export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins o
 
 			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 			if (bountyThread) {
-				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+				if (modalSubmission.guild.members.me?.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					(await bountyThread.fetchStarterMessage())?.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, eligibleTurnInIds, await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 					await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins recorded by poster");
 				}
 				if (bountyThread.sendable) {
