@@ -1,7 +1,7 @@
 import { MessageFlags, SlashCommandIntegerOption } from "discord.js";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { raffleResultEmbed } from "../../shared/index.ts";
-//TODONOW type errors
+
 const levelOption = new SlashCommandIntegerOption().setName("level")
 	.setDescription("The level a hunter needs to be eligible for this raffle")
 	.setRequired(true);
@@ -16,7 +16,11 @@ export default new SubcommandFunctionality("by-level", "Select a user at or abov
 			return;
 		}
 		const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
-		interaction.reply({ embeds: [raffleResultEmbed(eligibleHunters.find(hunter => hunter.userId === winner.id).profileColor, interaction.guild, theater.company.raffleThumbnailURL, winner, `Level ${levelThreshold} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
+		const winnerHunter = eligibleHunters.find(hunter => hunter.userId === winner?.id);
+		if (winnerHunter === undefined || winner === undefined) {
+			return;
+		}
+		interaction.reply({ embeds: [raffleResultEmbed(winnerHunter.profileColor, interaction.guild, theater.company.raffleThumbnailURL, winner, `Level ${levelThreshold} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
 		theater.company.update("nextRaffleString", null);
 	}
 ).setOptions(levelOption);
