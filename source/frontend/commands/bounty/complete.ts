@@ -1,12 +1,12 @@
 import { bold, channelMention, type InteractionEditReplyOptions, LabelBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, userMention, UserSelectMenuBuilder } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { dateInPast, timeConversion } from "../../../shared/index.ts";
-import { BountyState } from "../../../shared/types.ts";
+import { collectNonNullishValues, dateInPast, timeConversion } from "../../../shared/index.ts";
+import { BountyState, isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, getBountyBoardThread, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		const labelIdBountyId = "bounty-id";
@@ -50,7 +50,7 @@ export default new SubcommandFunctionality("complete", "Close one of your open b
 
 		// Early-out if no completers
 		const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
-		const memberCollection = await modalSubmission.guild.members.fetch({ user: completions.map(reciept => reciept.userId) });
+		const memberCollection = await modalSubmission.guild.members.fetch({ user: collectNonNullishValues(completions, "userId") });
 		const validatedHunters = new Map();
 		for (const [memberId, member] of memberCollection) {
 			if (isDevMode || !member.user.bot) {
@@ -104,16 +104,19 @@ export default new SubcommandFunctionality("complete", "Close one of your open b
 			acknowledgeOptions.embeds = [goalCompletionEmbed(goalProgress.contributorIds)];
 		}
 
-		if (theater.company.hasBountyBoard()) {
+		if (theater.company.hasBountyBoard() && isNotNull(bounty.postingId)) {
 			acknowledgeOptions.content += `${channelMention(bounty.postingId)}, was completed!`;
 			modalSubmission.editReply(acknowledgeOptions);
 
 			const auditLogReason = auditReasonBountyComplete;
 			const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 			if (bountyThread) {
-				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-					refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed: bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), true, theater.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress), title: bounty.title }, auditLogReason);
-					await unarchiveAndUnlockThread(bountyThread, auditLogReason);
+				if (modalSubmission.guild.members.me?.permissions.has(PermissionFlagsBits.ManageThreads)) {
+					const starterMessage = await bountyThread.fetchStarterMessage();
+					if (isNotNull(starterMessage)) {
+						refreshBountyBoardThread(starterMessage, { embed: bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), true, theater.company, new Set([...validatedHunters.keys()]), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents), goalProgress), title: bounty.title }, auditLogReason);
+						await unarchiveAndUnlockThread(bountyThread, auditLogReason);
+					}
 				}
 				if (bountyThread.sendable) {
 					bountyThread.send({ content: rewardMessageContent, flags: MessageFlags.SuppressNotifications });

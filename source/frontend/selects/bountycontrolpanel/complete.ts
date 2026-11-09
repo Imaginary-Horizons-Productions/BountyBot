@@ -1,7 +1,7 @@
 import { ChannelSelectMenuBuilder, ChannelType, LabelBuilder, type MessageCreateOptions, MessageFlags, ModalBuilder, PermissionFlagsBits, TextDisplayBuilder, UserSelectMenuBuilder, userMention } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { dateInPast, timeConversion } from "../../../shared/index.ts";
+import { collectNonNullishValues, dateInPast, timeConversion } from "../../../shared/index.ts";
 import { isNotNull } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sentenceListEN, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
@@ -17,7 +17,7 @@ export default new SelectOptionFunctionality("complete",
 			}
 
 			const completions = await logicLayer.bounties.findBountyCompletions(bounty.id);
-			const memberCollection = await interaction.guild.members.fetch({ user: completions.map(reciept => reciept.userId).filter(element => element !== null) });
+			const memberCollection = await interaction.guild.members.fetch({ user: collectNonNullishValues(completions, "userId") });
 			const validatedHunters = new Map();
 			const pendingTurnInDisplayNames = [];
 			for (const [memberId, member] of memberCollection) {

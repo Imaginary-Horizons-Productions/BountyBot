@@ -1,58 +1,61 @@
-import { GuildPremiumTier, MessageFlags } from "discord.js";
+import { GuildPremiumTier, MessageFlags, resolveColor, Role, RoleCreateOptions } from "discord.js";
 import { SubcommandFunctionality } from "../../classes/index.ts";
-//TODONOW type errors
+
+const auditLogReason = "/create-default rank-roles";
+const roleCreateOptions: RoleCreateOptions[] = [
+	{
+		name: "Platinum Rank",
+		colors: { primaryColor: resolveColor("#669999") },
+		icon: "./source/frontend/images/BountyBotIcon.jpg",
+		hoist: true
+	},
+	{
+		name: "Gold Rank",
+		colors: { primaryColor: resolveColor("#daa520") },
+		icon: "./source/frontend/images/BountyBotIcon.jpg",
+		hoist: true
+	},
+	{
+		name: "Silver Rank",
+		colors: { primaryColor: resolveColor("#ccccff") },
+		icon: "./source/frontend/images/BountyBotIcon.jpg",
+		hoist: true
+	},
+	{
+		name: "Bronze Rank",
+		colors: { primaryColor: resolveColor("#b9722d") },
+		icon: "./source/frontend/images/BountyBotIcon.jpg"
+	}
+];
+
 export default new SubcommandFunctionality("rank-roles", "Create the default ranks for this server including Discord roles (and delete old ranks)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-		await Promise.all(
-			(await logicLayer.ranks.findAllRanks(interaction.guild.id))
-				.map(r => r.roleId)
-				.filter(id => !!id)
-				.map(id => interaction.guild.roles.delete(id, 'Cleaning up BountyBot roles during default rank creation.'))
-		).catch(error => {
-			if (error.code !== 10011) { // Ignore "Unknown Role" errors as we have no way to check if our stored role ids are stale
-				console.error(error);
+		for (const rank of await logicLayer.ranks.findAllRanks(interaction.guild.id)) {
+			if (rank.roleId) {
+				interaction.guild.roles.delete(rank.roleId, auditLogReason)
+					.catch(error => {
+						if (error.code !== 10011) { // Ignore "Unknown Role" errors as we have no way to check if our stored role ids are stale
+							console.error(error);
+						}
+					});
 			}
-		});
+		}
 		const deletedCount = await logicLayer.ranks.deleteCompanyRanks(interaction.guild.id);
-		const roles = await interaction.guild.roles.fetch().then(existingGuildRoles => {
-			return Promise.all(
-				[
-					{
-						name: "Platinum Rank",
-						colors: { primaryColor: "#669999" },
-						icon: "./source/frontend/images/BountyBotIcon.jpg",
-						hoist: true,
-						reason: "/create-default rank-roles"
-					},
-					{
-						name: "Gold Rank",
-						colors: { primaryColor: "#daa520" },
-						icon: "./source/frontend/images/BountyBotIcon.jpg",
-						hoist: true,
-						reason: "/create-default rank-roles"
-					},
-					{
-						name: "Silver Rank",
-						colors: { primaryColor: "#ccccff" },
-						icon: "./source/frontend/images/BountyBotIcon.jpg",
-						hoist: true,
-						reason: "/create-default rank-roles"
-					},
-					{
-						name: "Bronze Rank",
-						colors: { primaryColor: "#b9722d" },
-						icon: "./source/frontend/images/BountyBotIcon.jpg",
-						reason: "/create-default rank-roles"
-					}
-				].map((roleCreateOptions, index) => {
-					if (interaction.guild.premiumTier < GuildPremiumTier.Tier2) {
-						delete roleCreateOptions.icon;
-					}
-					roleCreateOptions.position = existingGuildRoles.size + index;
-					return interaction.guild.roles.create(roleCreateOptions);
-				})
-			)
+		const roles: Role[] = [];
+		await interaction.guild.roles.fetch().then(async existingGuildRoles => {
+			for (let i = 0; i < roleCreateOptions.length; i++) {
+				const roleCreateOption = roleCreateOptions[i];
+				if (interaction.guild.premiumTier < GuildPremiumTier.Tier2) {
+					delete roleCreateOption.icon;
+				}
+				const role = await interaction.guild.roles.create({
+					...roleCreateOptions,
+					position: existingGuildRoles.size + i,
+					reason: auditLogReason
+				});
+				roles.push(role);
+			}
 		});
 
 		const ranks = await logicLayer.ranks.createDefaultRanks(interaction.guildId, roles.map(role => role.id));

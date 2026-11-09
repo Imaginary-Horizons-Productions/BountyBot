@@ -1,5 +1,6 @@
-import { heading, InteractionContextType, PermissionFlagsBits, type Snowflake, unorderedList, userMention } from 'discord.js';
+import { heading, InteractionContextType, PermissionFlagsBits, unorderedList, userMention } from 'discord.js';
 import type { LogicLayer } from '../../logic';
+import { collectNonNullishValues } from '../../shared/index.ts';
 import { CommandFunctionality } from '../classes/index.ts';
 import { addCompanyAnnouncementPrefix, companyStatsEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal } from '../shared/index.ts';
 
@@ -42,12 +43,7 @@ export default new CommandFunctionality(mainId, "Start a new season for this ser
 			}
 			await logicLayer.seasons.createSeason(interaction.guildId);
 			const ranks = await logicLayer.ranks.findAllRanks(interaction.guildId);
-			const roleIds: Snowflake[] = [];
-			for (const rank of ranks) {
-				if (rank.roleId) {
-					roleIds.push(rank.roleId);
-				}
-			}
+			const roleIds = collectNonNullishValues(ranks, "roleId");
 			if (roleIds.length > 0) {
 				guild.members.fetch({ user: Array.from(hunterMap.keys()) }).then(memberCollection => {
 					for (const member of memberCollection.values()) {

@@ -2,7 +2,7 @@ import type { GuildForumThreadCreateOptions, GuildForumThreadManager, MessageCre
 import { EmbedBuilder, ForumChannel, Guild, GuildMember, GuildMemberManager, Message, MessageFlags, ThreadChannel } from "discord.js";
 import { DatabaseTypes } from "../../database/index.ts";
 import { MAX_BOT_NICKNAME_LENGTH } from "../../shared/constants.ts";
-import { ascendingByProperty } from "../../shared/index.ts";
+import { ascendingByProperty, collectNonNullishValues } from "../../shared/index.ts";
 import { isNotNull, type HunterReceiptMap } from "../../shared/types.ts";
 import { butIgnoreUnknownChannelErrors, isUnknownMessageError } from "./dAPIResponses.ts";
 import { bountyEmbed, overallScoreboardEmbed, seasonalScoreboardEmbed } from "./dAPISerializers.ts";
@@ -164,12 +164,7 @@ export async function syncRankRoles(hunterRecipts: HunterReceiptMap, descendingR
 			rankChangeIds.push(id);
 		}
 	}
-	const rankRoleIds = [];
-	for (const rank of descendingRanks) {
-		if (rank.roleId) {
-			rankRoleIds.push(rank.roleId);
-		}
-	}
+	const rankRoleIds = collectNonNullishValues(descendingRanks, "roleId");
 	const members = await guildMemberManager.fetch({ user: rankChangeIds });
 	for (const [id, member] of members) {
 		await member.roles.remove(rankRoleIds);

@@ -109,3 +109,14 @@ export function descendingByProperty(property: string | number) {
 		return b[property] - a[property];
 	}
 }
+
+export function collectNonNullishValues<Type, PropertyName extends keyof Type>(objects: Type[], propertyName: PropertyName) {
+	const values: NonNullable<Type[PropertyName]>[] = [];
+	for (const current of objects) {
+		const value = current[propertyName];
+		if (value !== undefined && value !== null) {
+			values.push(value);
+		}
+	}
+	return values;
+}
