@@ -22,6 +22,15 @@ const feedbackTypeOption = new SlashCommandStringOption().setName("feedback-type
 	).setRequired(true);
 
 const mainId = "feedback";
+const titleId = "title";
+const imageId = "image";
+const stepsId = "steps";
+const actualId = "actual";
+const expectedId = "expected";
+const userInputId = "user";
+const functionalityId = "functionality";
+const benefitId = "benefit";
+
 export default new CommandFunctionality(mainId, "Provide BountyBot feedback and get an invite to the test server", PermissionFlagsBits.SendMessages, false, [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel], 3000,
 	/** Open the modal associated with the feedback type to prompt more specific information */
 	(interaction, theater, isDevMode) => {
@@ -32,11 +41,6 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 
 		switch (interaction.options.getString(feedbackTypeOption.name, true)) {
 			case feedbackTypeOption.choices?.[0].value: {
-				const titleId = "title";
-				const stepsId = "steps";
-				const actualId = "actual";
-				const expectedId = "expected";
-				const imageId = "image";
 				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Bug Report")
 					.addLabelComponents(
@@ -110,11 +114,6 @@ export default new CommandFunctionality(mainId, "Provide BountyBot feedback and 
 				}).catch(butIgnoreInteractionCollectorErrors);
 			} break;
 			case feedbackTypeOption.choices?.[1].value: {
-				const titleId = "title";
-				const userInputId = "user";
-				const functionalityId = "functionality";
-				const benefitId = "benefit";
-				const imageId = "image";
 				const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 					.setTitle("Feature Request")
 					.addLabelComponents(

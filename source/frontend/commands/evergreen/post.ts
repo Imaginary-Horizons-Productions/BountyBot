@@ -6,6 +6,10 @@ import { timeConversion } from "../../../shared/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, textsHaveAutoModInfraction } from "../../shared/index.ts";
 //TODONOW type errors
+const labelIdTitle = "title";
+const labelIdDescription = "description";
+const labelIdImage = "image";
+
 export default new SubcommandFunctionality("post", `Post an evergreen bounty, limit ${MAX_EVERGREEN_SLOTS}`,
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findEvergreenBounties(interaction.guild.id);
@@ -22,9 +26,6 @@ export default new SubcommandFunctionality("post", `Post an evergreen bounty, li
 			return;
 		}
 
-		const labelIdTitle = "title";
-		const labelIdDescription = "description";
-		const labelIdImage = "image";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("New Evergreen Bounty")
 			.addLabelComponents(

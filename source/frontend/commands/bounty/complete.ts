@@ -7,11 +7,12 @@ import { SubcommandFunctionality } from "../../classes/index.ts";
 import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, getBountyBoardThread, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 
+const labelIdBountyId = "bounty-id";
+const labelIdBountyHunters = "hunters";
+const maxHunters = 10;
+
 export default new SubcommandFunctionality("complete", "Close one of your open bounties, distributing rewards to hunters who turned it in",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
-		const labelIdBountyId = "bounty-id";
-		const labelIdBountyHunters = "hunters";
-		const maxHunters = 10;
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Mark your Bounty Complete!")
 			.addLabelComponents(

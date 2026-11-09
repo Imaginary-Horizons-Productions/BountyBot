@@ -7,6 +7,10 @@ import { bountyPing } from "../../shared/flows/bountyPing.ts";
 import { butIgnoreInteractionCollectorErrors } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
+const labelIdMessage = "message";
+const labelIdExcludedBountyHunters = "bounty-hunters";
+const maxHunters = 10;
+
 export default new SelectOptionFunctionality("ping",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
@@ -14,9 +18,6 @@ export default new SelectOptionFunctionality("ping",
 				interaction.reply({ content: "Only the bounty's poster can use these commands.", flags: MessageFlags.Ephemeral });
 				return;
 			}
-			const labelIdMessage = "message";
-			const labelIdExcludedBountyHunters = "bounty-hunters";
-			const maxHunters = 10;
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Ping Interested Bounty Hunters")
 				.addLabelComponents(

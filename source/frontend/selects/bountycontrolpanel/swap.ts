@@ -9,6 +9,9 @@ import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, isMissingPermissionError, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
+const labelIdSlot = "slot";
+const labelIdChannel = "channel";
+
 export default new SelectOptionFunctionality("swap",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
@@ -33,8 +36,6 @@ export default new SelectOptionFunctionality("swap",
 				}
 			}
 
-			const labelIdSlot = "slot";
-			const labelIdChannel = "channel";
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Move Bounty Slots")
 				.addTextDisplayComponents(new TextDisplayBuilder().setContent("Swapping this bounty to another slot will change its Base XP Reward."))

@@ -6,10 +6,11 @@ import { SubcommandFunctionality } from "../../classes/index.ts";
 import { butIgnoreInteractionCollectorErrors, refreshEvergreenBountiesThread, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
 //TODONOW type errors
+const labelIdSourceBountyId = "first-bounty-id";
+const labelIdDestinationBountyId = "second-bounty-id";
+
 export default new SubcommandFunctionality("swap", "Swap the rewards of two evergreen bounties",
 	ensureCompanyHasEnoughOpenEvergreenBounties(2, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
-		const labelIdSourceBountyId = "first-bounty-id";
-		const labelIdDestinationBountyId = "second-bounty-id";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Swap Evergreen Bounty Rewards")
 			.addTextDisplayComponents(new TextDisplayBuilder().setContent("Swapping a bounty to another slot will change the XP reward for that bounty."))

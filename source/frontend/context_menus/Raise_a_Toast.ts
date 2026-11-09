@@ -10,6 +10,8 @@ import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCom
 let logicLayer: LogicLayer;
 //TODONOW type errors
 const mainId = "Raise a Toast";
+const labelIdMessage = "message";
+
 export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive toast text, then raise the toast to the user */
 	async (interaction, theater, isDevMode) => {
@@ -34,13 +36,13 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 			.addLabelComponents(
 				new LabelBuilder().setLabel("Toast Message")
 					.setTextInputComponent(
-						new TextInputBuilder().setCustomId("message")
+						new TextInputBuilder().setCustomId(labelIdMessage)
 							.setStyle(TextInputStyle.Short)
 					)
 			);
 		interaction.showModal(modal);
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
-			const toastText = modalSubmission.fields.getTextInputValue("message");
+			const toastText = modalSubmission.fields.getTextInputValue(labelIdMessage);
 			const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [toastText], "toast");
 			if (autoModInfraction == null) {
 				modalSubmission.reply({ content: `Could not check if the toast breaks automod rules. ${modalSubmission.client.user} may not have the Manage Server permission required to check the automod rules.`, flags: MessageFlags.Ephemeral });

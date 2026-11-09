@@ -7,12 +7,13 @@ import { bountyPing } from "../../shared/flows/bountyPing.ts";
 import { butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 
+const labelIdBountyId = "bounty-id";
+const labelIdMessage = "message";
+const labelIdExcludedBountyHunters = "bounty-hunters";
+const maxHunters = 10;
+
 export default new SubcommandFunctionality("ping", "Mention bounty hunters that reacted to your bounty's thread or event",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
-		const labelIdBountyId = "bounty-id";
-		const labelIdMessage = "message";
-		const labelIdExcludedBountyHunters = "bounty-hunters";
-		const maxHunters = 10;
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Ping Interested Bounty Hunters")
 			.addLabelComponents(

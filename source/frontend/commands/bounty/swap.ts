@@ -7,6 +7,9 @@ import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, emojiFromNumber, getBountyBoardThread, selectOptionsFromBountiesWithBaseRewardAsDescription, truncateTextToLength, unarchiveAndUnlockThread } from "../../shared/index.ts";
 //TODONOW type errors
+const labelIdBountyId = "bounty-id";
+const labelIdSlot = "slot";
+
 export default new SubcommandFunctionality("swap", "Move one of your bounties to another slot to change its reward",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const startingPosterLevel = theater.hunter.getLevel(theater.company.xpCoefficient);
@@ -33,8 +36,6 @@ export default new SubcommandFunctionality("swap", "Move one of your bounties to
 			slotOptions.push(option);
 		}
 
-		const labelIdBountyId = "bounty-id";
-		const labelIdSlot = "slot";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Swap Bounty Rewards")
 			.addTextDisplayComponents(new TextDisplayBuilder().setContent("Swapping a bounty to another slot will change the XP reward for that bounty."))

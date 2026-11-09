@@ -9,6 +9,8 @@ import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, getBo
 let logicLayer: LogicLayer;
 
 const mainId = "Record Bounty Turn-In";
+const labelIdBountyId = "bounty-id";
+
 export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 3000,
 	/** Open a modal to receive bounty slot number, then add the target user as a completer of the given bounty */
 	async (interaction, theater, isDevMode) => {
@@ -38,7 +40,6 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 			return;
 		}
 
-		const labelIdBountyId = "bounty-id";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Record a Bounty Turn-In")
 			.setLabelComponents(

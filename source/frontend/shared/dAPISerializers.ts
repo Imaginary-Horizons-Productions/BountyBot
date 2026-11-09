@@ -181,7 +181,7 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 		.addLabelComponents(
 			new LabelBuilder().setLabel("Title")
 				.setTextInputComponent(
-					new TextInputBuilder().setCustomId("title")
+					new TextInputBuilder().setCustomId(inputIds.title)
 						.setRequired(false)
 						.setStyle(TextInputStyle.Short)
 						.setPlaceholder("Most Discord markdown allowed...")
@@ -190,7 +190,7 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 			new LabelBuilder().setLabel("Description")
 				.setDescription("A detailed description of the bounty. Leave empty to clear.")
 				.setTextInputComponent(
-					new TextInputBuilder().setCustomId("description")
+					new TextInputBuilder().setCustomId(inputIds.description)
 						.setRequired(false)
 						.setStyle(TextInputStyle.Paragraph)
 						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image, timestamps")
@@ -199,18 +199,18 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 			new LabelBuilder().setLabel("Image")
 				.setDescription("A diagram or splash image for the bounty. Reupload to keep.")
 				.setFileUploadComponent(
-					new FileUploadBuilder().setCustomId("image")
+					new FileUploadBuilder().setCustomId(inputIds.image)
 						.setRequired(false)
 				)
 		);
 	if (!isEvergreen) {
 		inputIds.startTimestamp = "startTimestamp";
 		inputIds.endTimestamp = "endTimestamp";
-		const eventStartComponent = new TextInputBuilder().setCustomId("startTimestamp")
+		const eventStartComponent = new TextInputBuilder().setCustomId(inputIds.startTimestamp)
 			.setRequired(false)
 			.setStyle(TextInputStyle.Short)
 			.setPlaceholder("Required if making an event with the bounty");
-		const eventEndComponent = new TextInputBuilder().setCustomId("endTimestamp")
+		const eventEndComponent = new TextInputBuilder().setCustomId(inputIds.endTimestamp)
 			.setRequired(false)
 			.setStyle(TextInputStyle.Short)
 			.setPlaceholder("Required if making an event with the bounty");

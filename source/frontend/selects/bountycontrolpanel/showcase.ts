@@ -6,6 +6,8 @@ import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
+const labelIdChannel = "channel";
+
 export default new SelectOptionFunctionality("showcase",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
@@ -15,7 +17,6 @@ export default new SelectOptionFunctionality("showcase",
 				return;
 			}
 
-			const labelIdChannel = "channel";
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Showcase a Bounty")
 				.addTextDisplayComponents(new TextDisplayBuilder().setContent("You can showcase 1 bounty per week. The showcased bounty's XP reward will be increased."))

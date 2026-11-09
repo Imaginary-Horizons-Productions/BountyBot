@@ -6,11 +6,12 @@ import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
+const labelIdBountyHunters = "bounty-hunters";
+const maxHunters = 10;
+
 export default new SelectOptionFunctionality("revoketurnin",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
-			const labelIdBountyHunters = "bounty-hunters";
-			const maxHunters = 10;
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Revoke Bounty Turn-Ins")
 				.addLabelComponents(

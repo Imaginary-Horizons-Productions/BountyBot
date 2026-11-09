@@ -9,6 +9,9 @@ import { bountyEmbed, commandMention, getBountyBoardThread, isInteractionCollect
 let logicLayer: LogicLayer;
 
 const itemName = "Bounty Thumbnail";
+const labelIdBountyId = "bounty-id";
+const labelIdImage = "image";
+
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Adds an image to one of your open bounties!", 3000,
 		async (interaction, theater) => {
@@ -18,8 +21,6 @@ export default new ItemTemplateSet(
 				return 0;
 			}
 
-			const labelIdBountyId = "bounty-id";
-			const labelIdImage = "image";
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Add Bounty Thumbnail")
 				.addLabelComponents(

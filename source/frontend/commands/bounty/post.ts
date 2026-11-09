@@ -7,6 +7,12 @@ import { isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyControlPanelSelectRow, bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, emojiFromNumber, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, syncRankRoles, textsHaveAutoModInfraction, validateScheduledEventTimestamps } from "../../shared/index.ts";
 
+const titleId = "title";
+const descriptionId = "description";
+const startTimestampId = "startTimestamp";
+const endTimestampId = "endTimestamp";
+const imageId = "image";
+
 export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const existingBounties = await logicLayer.bounties.findOpenBounties(interaction.user.id, interaction.guildId);
@@ -64,11 +70,6 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 				return;
 			}
 
-			const titleId = "title";
-			const descriptionId = "description";
-			const startTimestampId = "startTimestamp";
-			const endTimestampId = "endTimestamp";
-			const imageId = "image";
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${collectedInteraction.id}`)
 				.setTitle(`New Bounty (Slot ${slotNumber})`)
 				.addLabelComponents(

@@ -8,10 +8,11 @@ import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
 //TODONOW type errors
+const labelIdBountyId = "bounty-id";
+const labelIdCustomMessage = "custom-message";
+
 export default new SubcommandFunctionality("showcase", "Show the embed for an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
-		const labelIdBountyId = "bounty-id";
-		const labelIdCustomMessage = "custom-message";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Showcase an Evergreen Bounty")
 			.addTextDisplayComponents(

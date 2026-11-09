@@ -6,11 +6,12 @@ import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, randomCongratulatoryPhrase, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 //TODONOW type errors
+const labelIdBountyId = "bounty-id";
+const labelIdBountyHunters = "bounty-hunters";
+const maxHunters = 10;
+
 export default new SubcommandFunctionality("record-turn-ins", "Record turn-ins of one of your bounties for up to 5 bounty hunters",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
-		const labelIdBountyId = "bounty-id";
-		const labelIdBountyHunters = "bounty-hunters";
-		const maxHunters = 10;
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Record Bounty Turn-Ins")
 			.addLabelComponents(

@@ -7,6 +7,10 @@ import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { auditReasonBountyComplete, bountyEmbed, butIgnoreErrorIf, butIgnoreInteractionCollectorErrors, butIgnoreMissingPermissionErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, isMissingPermissionError, isUnknownGuildScheduledEventError, refreshBountyBoardThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, sentenceListEN, syncRankRoles, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
 
+const labelIdChannel = "channel";
+const labelIdBountyHunters = "bounty-hunters";
+const maxHunters = 10;
+
 export default new SelectOptionFunctionality("complete",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
@@ -30,9 +34,6 @@ export default new SelectOptionFunctionality("complete",
 				}
 			}
 
-			const labelIdChannel = "channel";
-			const labelIdBountyHunters = "bounty-hunters";
-			const maxHunters = 10;
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Mark your Bounty Complete!")
 				.addTextDisplayComponents(new TextDisplayBuilder().setContent(`Pending Turn-Ins: ${pendingTurnInDisplayNames.length > 0 ? sentenceListEN(pendingTurnInDisplayNames) : "None yet!"}`))

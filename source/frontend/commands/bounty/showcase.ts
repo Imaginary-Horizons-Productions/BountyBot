@@ -6,6 +6,8 @@ import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
 
+const labelIdBountyId = "bounty-id";
+
 export default new SubcommandFunctionality("showcase", "Show the embed for one of your existing bounties and increase the reward",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, bounties) {
 		if (!isDevMode && theater.hunter.lastShowcaseTimestamp !== null && theater.hunter.lastShowcaseTimestamp > dateInPast({ w: 1 })) {
@@ -22,7 +24,6 @@ export default new SubcommandFunctionality("showcase", "Show the embed for one o
 			return;
 		}
 
-		const labelIdBountyId = "bounty-id";
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Showcase a Bounty")
 			.addTextDisplayComponents(

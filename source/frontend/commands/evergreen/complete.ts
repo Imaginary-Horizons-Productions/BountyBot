@@ -7,11 +7,12 @@ import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
 //TODONOW type errors
+const labelIdBountyId = "bounty-id";
+const labelIdBountyHunters = "bounty-hunters";
+const maxHunters = 10;
+
 export default new SubcommandFunctionality("complete", "Distribute rewards for turn-ins of an evergreen bounty to up to 5 bounty hunters",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
-		const labelIdBountyId = "bounty-id";
-		const labelIdBountyHunters = "bounty-hunters";
-		const maxHunters = 10;
 		const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 			.setTitle("Payout an Evergreen Bounty")
 			.addLabelComponents(

@@ -9,6 +9,8 @@ import { bountyEmbed, getBountyBoardThread, isInteractionCollectorError, selectO
 let logicLayer: LogicLayer;
 
 const itemName = "Bonus Bounty Showcase";
+const labelIdBountyId = "bounty-id";
+
 export default new ItemTemplateSet(
 	new ItemTemplate(itemName, "Showcase one of your bounties and increase its reward on a separate cooldown", timeConversion(1, "d", "ms"),
 		async (interaction, theater) => {
@@ -18,7 +20,6 @@ export default new ItemTemplateSet(
 				return 0;
 			}
 
-			const labelIdBountyId = "bounty-id";
 			const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${interaction.id}`)
 				.setTitle("Showcase Your Bounty")
 				.addLabelComponents(
