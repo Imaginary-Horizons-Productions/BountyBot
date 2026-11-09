@@ -1,4 +1,4 @@
-import { SlashCommandNumberOption, type Snowflake } from "discord.js";
+import { ChannelType, SlashCommandNumberOption, type Snowflake } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, updateBotNicknameForFestival } from "../../shared/index.ts";
@@ -7,7 +7,7 @@ import { ensureNumberFromSlashOptionIsGreaterThanOne } from "../_earlyOuts.ts";
 const multiplierOption = new SlashCommandNumberOption().setName("multiplier")
 	.setDescription("The amount to multiply XP by")
 	.setRequired(true);
-//TODONOW type errors
+
 export default new SubcommandFunctionality("start-xp", "Start an XP multiplier festival",
 	ensureNumberFromSlashOptionIsGreaterThanOne(multiplierOption.name, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, multiplier) {
 		theater.company.update({ "xpFestivalMultiplier": multiplier });
@@ -25,6 +25,9 @@ export default new SubcommandFunctionality("start-xp", "Start an XP multiplier f
 		}
 		if (theater.company.hasBountyBoard()) {
 			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
+			if (bountyBoard === null || bountyBoard.type !== ChannelType.GuildForum || interaction.guild.members.me === null) {
+				return;
+			}
 			const existingBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
 			const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
 			for (const bounty of existingBounties) {
