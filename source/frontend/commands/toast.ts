@@ -2,12 +2,11 @@ import type { Snowflake } from "discord.js";
 import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandAttachmentOption, SlashCommandStringOption, SlashCommandUserOption, unorderedList, userMention } from 'discord.js';
 import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic/index.ts';
-import type { CompanyReciept } from '../../shared/types.ts';
 import { CommandFunctionality } from '../classes/index.ts';
 import { consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, sentenceListEN, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const messageOption = new SlashCommandStringOption().setName("message")
 	.setDescription("The text of the toast to raise")
 	.setRequired(true);
@@ -35,6 +34,9 @@ const mainId = "toast";
 export default new CommandFunctionality(mainId, "Raise a toast to other bounty hunter(s), usually granting +1 XP", PermissionFlagsBits.SendMessages, false, [InteractionContextType.Guild], 30000,
 	/** Provide 1 XP to mentioned hunters up to author's quota (10/48 hours), roll for crit toast (grants author XP) */
 	async (interaction, theater, isDevMode) => {
+		if (interaction.channel === null) {
+			return;
+		}
 		// Find valid toastees
 		const bannedIds = new Set<Snowflake>();
 		const validatedToasteeIds = new Set<Snowflake>();
@@ -53,8 +55,11 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 		let bannedText: string | undefined;
 		if (bannedIds.size > 1) {
 			bannedText = `${sentenceListEN(Array.from(bannedIds).map(id => userMention(id)))} were skipped because they're banned from using BountyBot on this server.`;
-		} else if (bannedIds.size === 1) {
-			bannedText = `${userMention(bannedIds.values().next().value)} was skipped because they're banned from using BountyBot on this server.`;
+		} else {
+			const bannedUserId = bannedIds.values().next().value;
+			if (bannedUserId) {
+				bannedText = `${userMention(bannedUserId)} was skipped because they're banned from using BountyBot on this server.`;
+			}
 		}
 
 		const errors = [];
@@ -84,21 +89,19 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 
 		const season = await logicLayer.seasons.incrementSeasonStat(interaction.guild.id, "toastsRaised");
 		const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+		const hunter = hunterMap.get(interaction.user.id);
+		if (hunter === undefined) {
+			return;
+		}
 
 		const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 		const attachment = interaction.options.getAttachment(imageOption.name);
 		const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(interaction.guild, theater.company, interaction.user.id, Array.from(validatedToasteeIds), hunterMap, season.id, toastText, attachment?.url);
-		let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
-		let companyReceipt: CompanyReciept = {};
-		if (hunterReceipts.size > 0) {
-			const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap.get(interaction.user.id), season, true);
-			companyReceipt = results.companyReceipt;
-			goalProgress = results.goalProgress;
+		const { companyReceipt, goalProgress } = await logicLayer.goals.progressGoal(theater.company, "toasts", hunter, season, hunterReceipts.size > 0);
 
-			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
-			if (previousCompanyLevel < currentCompanyLevel) {
-				companyReceipt.levelUp = currentCompanyLevel;
-			}
+		const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
+		if (previousCompanyLevel < currentCompanyLevel) {
+			companyReceipt.levelUp = currentCompanyLevel;
 		}
 		companyReceipt.guildName = interaction.guild.name;
 
@@ -112,6 +115,9 @@ export default new CommandFunctionality(mainId, "Raise a toast to other bounty h
 			components: [secondingButtonRow(toastId)],
 			withResponse: true
 		}).then(async response => {
+			if (response.resource === null || response.resource.message === null) {
+				return;
+			}
 			if (bannedText) {
 				interaction.followUp({ content: bannedText, flags: MessageFlags.Ephemeral });
 			}
