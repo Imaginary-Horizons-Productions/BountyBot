@@ -5,7 +5,7 @@ import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, getBountyBoardThread, selectOptionsFromBounties, sentenceListEN, unarchiveAndUnlockThread } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 const labelIdBountyId = "bounty-id";
 const labelIdBountyHunters = "bounty-hunters";
 const maxHunters = 10;
@@ -41,15 +41,15 @@ export default new SubcommandFunctionality("revoke-turn-ins", "Revoke the turn-i
 			return;
 		}
 
-		const removedIds = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters).map((_, key) => key);
+		const removedIds = modalSubmission.fields.getSelectedUsers(labelIdBountyHunters, true).map((_, key) => key);
 		await logicLayer.bounties.deleteSelectedBountyCompletions(bounty.id, removedIds);
 		const mentionList = sentenceListEN(removedIds.map(id => userMention(id)));
 		modalSubmission.reply({ content: `These bounty hunters' turn-ins of ${bold(bounty.title)} have been revoked: ${mentionList}`, flags: MessageFlags.Ephemeral });
 
 		const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 		if (bountyThread) {
-			if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-				(await bountyThread.fetchStarterMessage()).edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
+			if (modalSubmission.guild.members.me?.permissions.has(PermissionFlagsBits.ManageThreads)) {
+				(await bountyThread.fetchStarterMessage())?.edit({ embeds: [bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), await bounty.getScheduledEvent(modalSubmission.guild.scheduledEvents))] });
 				await unarchiveAndUnlockThread(bountyThread, "bounty turn-ins revoked by poster");
 			}
 			if (bountyThread.sendable) {
