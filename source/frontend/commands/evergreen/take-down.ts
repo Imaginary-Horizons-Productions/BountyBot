@@ -1,10 +1,11 @@
-import { ActionRowBuilder, ComponentType, MessageFlags, StringSelectMenuBuilder } from "discord.js";
+import { ActionRowBuilder, ChannelType, ComponentType, MessageFlags, StringSelectMenuBuilder } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("take-down", "Take down one of the server's Evergreen Bounties",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		interaction.reply({
@@ -27,20 +28,24 @@ export default new SubcommandFunctionality("take-down", "Take down one of the se
 			const [bountyId] = collectedInteraction.values;
 			const [bounty] = evergreenBounties.splice(evergreenBounties.findIndex(bounty => bounty.id === bountyId), 1);
 			logicLayer.bounties.deleteBountyCompletions(bountyId);
-			if (theater.company.hasBountyBoard()) {
+			if (theater.company.hasBountyBoard() && isNotNull(theater.company.evergreenThreadId)) {
 				const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
-				if (evergreenBounties.length > 0) {
-					const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
-					const hunterIdMap = {};
-					for (const bounty of evergreenBounties) {
-						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+				if (isNotNull(bountyBoard)) {
+					if (evergreenBounties.length > 0 && bountyBoard.type === ChannelType.GuildForum && isNotNull(interaction.guild.members.me)) {
+						const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
+						const hunterIdMap: Record<string, Set<string>> = {};
+						for (const bounty of evergreenBounties) {
+							hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
+						}
+						refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap);
+					} else if (bountyBoard.isThreadOnly()) {
+						bountyBoard.threads.fetch(theater.company.evergreenThreadId).then(thread => {
+							if (isNotNull(thread)) {
+								thread.delete(`Last Evergreen Bounty taken down by ${interaction.member}`);
+								theater.company.update({ evergreenThreadId: null });
+							}
+						});
 					}
-					refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap);
-				} else {
-					bountyBoard.threads.fetch(theater.company.evergreenThreadId).then(thread => {
-						thread.delete(`Last Evergreen Bounty taken down by ${interaction.member}`);
-						theater.company.update({ evergreenThreadId: null });
-					});
 				}
 			} else if (!collectedInteraction.member.manageable) {
 				interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
