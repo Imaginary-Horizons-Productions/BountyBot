@@ -7,7 +7,7 @@ import { BountyState } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 const labelIdBountyId = "bounty-id";
 const labelIdCustomMessage = "custom-message";
 
@@ -36,7 +36,7 @@ export default new SubcommandFunctionality("showcase", "Show the embed for an ev
 		await interaction.showModal(modal);
 		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
 			.catch(butIgnoreInteractionCollectorErrors);
-		if (!modalSubmission) {
+		if (!modalSubmission || modalSubmission.guild.members.me === null) {
 			return;
 		}
 
