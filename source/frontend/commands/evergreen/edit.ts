@@ -1,11 +1,11 @@
-import { ActionRowBuilder, ComponentType, MessageFlags, StringSelectMenuBuilder, unorderedList } from "discord.js";
+import { ActionRowBuilder, ChannelType, ComponentType, MessageFlags, StringSelectMenuBuilder, unorderedList } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { BountyState } from "../../../shared/types.ts";
+import { BountyState, isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, refreshEvergreenBountiesThread, selectOptionsFromBounties, textsHaveAutoModInfraction } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("edit", "Change the name, description, or image of an evergreen bounty",
 	ensureCompanyHasEnoughOpenEvergreenBounties(1, async function executeSubcommand(interaction, theater, isDevMode, logicLayer, evergreenBounties) {
 		interaction.reply({
@@ -33,9 +33,12 @@ export default new SubcommandFunctionality("edit", "Change the name, description
 				return;
 			}
 
-			const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(selectedBounty, await selectedBounty.get(collectedInteraction.guild.scheduledEvents), true, collectedInteraction.id);
+			const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(selectedBounty, selectedBounty.scheduledEventId !== null ? await collectedInteraction.guild.scheduledEvents.fetch(selectedBounty.scheduledEventId) : null, true, collectedInteraction.id);
 			collectedInteraction.showModal(modal);
 			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
+				if (modalSubmission.channel === null || modalSubmission.guild.members.me === null) {
+					return;
+				}
 				interaction.deleteReply();
 				const title = modalSubmission.fields.getTextInputValue(inputIds.title);
 				const description = modalSubmission.fields.getTextInputValue(inputIds.description);
@@ -77,12 +80,14 @@ export default new SubcommandFunctionality("edit", "Change the name, description
 				// update bounty board
 				const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
 				if (theater.company.hasBountyBoard()) {
-					const hunterIdMap = {};
+					const hunterIdMap: Record<string, Set<string>> = {};
 					for (const bounty of evergreenBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
 					const bountyBoard = await modalSubmission.guild.channels.fetch(theater.company.bountyBoardId);
-					refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+					if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum) {
+						refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+					}
 				} else if (!modalSubmission.member.manageable) {
 					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 				}
