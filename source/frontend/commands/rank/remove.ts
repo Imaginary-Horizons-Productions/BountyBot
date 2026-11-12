@@ -1,14 +1,15 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags, StringSelectMenuBuilder } from "discord.js";
+import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { disabledSelectRow, selectOptionsFromRanks, sentenceListEN, syncRankRoles } from "../../shared/index.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("remove", "Remove one or more existing seasonal ranks",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 		const guildRoles = await interaction.guild.roles.fetch();
-		const rankNames = {};
+		const rankNames: Record<number, string> = {};
 		for (let i = 0; i < ranks.length; i++) {
 			rankNames[ranks[i].threshold] = ranks[i].getName(guildRoles, i);
 		}
@@ -24,16 +25,19 @@ export default new SubcommandFunctionality("remove", "Remove one or more existin
 			],
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
-		}).then(response => response.resource.message).then(message => {
-			const selectCollector = message.createMessageComponentCollector({ time: timeConversion(5, "m", "ms"), componentType: ComponentType.StringSelect })
-			const selectedRanks = [];
-			const selectedRankNames = [];
-			selectCollector.on("collect", selectInteraction => {
+		}).then(response => response.resource?.message).then(message => {
+			const selectCollector = message?.createMessageComponentCollector({ time: timeConversion(5, "m", "ms"), componentType: ComponentType.StringSelect })
+			const selectedRanks: DatabaseTypes.Rank[] = [];
+			const selectedRankNames: string[] = [];
+			selectCollector?.on("collect", selectInteraction => {
 				for (const varianceString of selectInteraction.values) {
-					selectedRanks.push(ranks.find(rank => {
+					const rank = ranks.find(rank => {
 						const threshold = parseFloat(varianceString);
 						return rank.threshold === threshold;
-					}))
+					})
+					if (rank) {
+						selectedRanks.push(rank);
+					}
 					selectedRankNames.push(rankNames[parseFloat(varianceString)]);
 				}
 				selectInteraction.update({
@@ -48,8 +52,8 @@ export default new SubcommandFunctionality("remove", "Remove one or more existin
 				})
 			})
 
-			const buttonCollector = message.createMessageComponentCollector({ time: timeConversion(5, "m", "ms"), componentType: ComponentType.Button });
-			buttonCollector.on("collect", buttonInteraction => {
+			const buttonCollector = message?.createMessageComponentCollector({ time: timeConversion(5, "m", "ms"), componentType: ComponentType.Button });
+			buttonCollector?.on("collect", buttonInteraction => {
 				for (const rank of selectedRanks) {
 					if (rank.roleId) {
 						interaction.guild.roles.delete(rank.roleId, 'Removing rank role during rank removal.')
