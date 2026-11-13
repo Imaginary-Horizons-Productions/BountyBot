@@ -3,12 +3,12 @@ import { DatabaseTypes } from '../../database/index.ts';
 import type { LogicLayer } from '../../logic';
 import { SKIP_INTERACTION_HANDLING } from '../../shared/constants.ts';
 import { timeConversion } from '../../shared/index.ts';
-import type { CompanyReciept } from '../../shared/types.ts';
+import { isNotNull } from '../../shared/types.ts';
 import { UserContextMenuFunctionality } from '../classes/index.ts';
 import { butIgnoreInteractionCollectorErrors, consolidateHunterReceipts, goalCompletionEmbed, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, secondingButtonRow, sendRewardMessage, syncRankRoles, textsHaveAutoModInfraction, toastEmbed } from '../shared/index.ts';
 
 let logicLayer: LogicLayer;
-//TODONOW type errors
+
 const mainId = "Raise a Toast";
 const labelIdMessage = "message";
 
@@ -42,6 +42,9 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 			);
 		interaction.showModal(modal);
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async modalSubmission => {
+			if (modalSubmission.channel === null) {
+				return;
+			}
 			const toastText = modalSubmission.fields.getTextInputValue(labelIdMessage);
 			const autoModInfraction = await textsHaveAutoModInfraction(modalSubmission.channel, modalSubmission.member, [toastText], "toast");
 			if (autoModInfraction == null) {
@@ -54,20 +57,17 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 
 			const season = await logicLayer.seasons.incrementSeasonStat(modalSubmission.guild.id, "toastsRaised");
 			const hunterMap = await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id);
+			const hunter = hunterMap.get(interaction.user.id);
+			if (hunter === undefined) {
+				return;
+			}
 
 			const previousCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
 			const { toastId, hunterReceipts } = await logicLayer.toasts.raiseToast(modalSubmission.guild, theater.company, interaction.user.id, [interaction.targetId], hunterMap, season.id, toastText);
-			let goalProgress = { goalCompleted: false, currentGP: 0, requiredGP: 0 };
-			let companyReceipt: CompanyReciept = {};
-			if (hunterReceipts.size > 0) {
-				const results = await logicLayer.goals.progressGoal(theater.company, "toasts", hunterMap.get(interaction.user.id), season, true);
-				companyReceipt = results.companyReceipt;
-				goalProgress = results.goalProgress;
-
-				const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
-				if (previousCompanyLevel < currentCompanyLevel) {
-					companyReceipt.levelUp = currentCompanyLevel;
-				}
+			const { goalProgress, companyReceipt } = await logicLayer.goals.progressGoal(theater.company, "toasts", hunter, season, hunterReceipts.size > 0);
+			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(hunterMap));
+			if (previousCompanyLevel < currentCompanyLevel) {
+				companyReceipt.levelUp = currentCompanyLevel;
 			}
 			companyReceipt.guildName = interaction.guild.name;
 
@@ -81,7 +81,7 @@ export default new UserContextMenuFunctionality(mainId, PermissionFlagsBits.Send
 				components: [secondingButtonRow(toastId)],
 				withResponse: true
 			}).then(async response => {
-				if (hunterReceipts.size > 0) {
+				if (hunterReceipts.size > 0 && isNotNull(response.resource) && isNotNull(response.resource.message)) {
 					const descendingRanks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
 					const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 					const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await interaction.guild.roles.fetch());
