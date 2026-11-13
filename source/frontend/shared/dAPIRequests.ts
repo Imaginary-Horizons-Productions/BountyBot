@@ -36,19 +36,16 @@ export async function refreshEvergreenBountiesThread(bountyBoardChannel: ForumCh
 
 	const embeds = evergreenBounties.sort(ascendingByProperty("slotNumber")).map(bounty => bountyEmbed(bounty, bountyBotGuildMember, companyLevel, false, company, hunterIdMap[bounty.id]));
 	if (company.evergreenThreadId) {
-		return bountyBoardChannel.threads.fetch(company.evergreenThreadId).then(async thread => {
-			if (isNotNull(thread)) {
-				const message = await thread.fetchStarterMessage();
-				if (isNotNull(message)) {
-					message.edit({ embeds });
-					return thread;
-				}
+		const thread = await bountyBoardChannel.threads.fetch(company.evergreenThreadId);
+		if (isNotNull(thread)) {
+			const message = await thread.fetchStarterMessage();
+			if (isNotNull(message)) {
+				message.edit({ embeds });
+				return thread;
 			}
-			return makeEvergreenBountiesThread(bountyBoardChannel.threads, embeds, company);
-		});
-	} else {
-		return makeEvergreenBountiesThread(bountyBoardChannel.threads, embeds, company);
+		}
 	}
+	return makeEvergreenBountiesThread(bountyBoardChannel.threads, embeds, company);
 }
 
 export async function unarchiveAndUnlockThread(thread: ThreadChannel, auditLogReason: string) {
