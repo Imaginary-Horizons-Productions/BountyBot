@@ -1,11 +1,12 @@
-import { LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, TextDisplayBuilder, bold } from "discord.js";
+import { ChannelType, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, TextDisplayBuilder, bold } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
-import { butIgnoreInteractionCollectorErrors, refreshEvergreenBountiesThread, selectOptionsFromBounties } from "../../shared/index.ts";
+import { butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, selectOptionsFromBounties } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 const labelIdSourceBountyId = "first-bounty-id";
 const labelIdDestinationBountyId = "second-bounty-id";
 
@@ -50,7 +51,7 @@ export default new SubcommandFunctionality("swap", "Swap the rewards of two ever
 		const sourceSlot = sourceBounty.slotNumber;
 
 		const destinationBounty = await logicLayer.bounties.findBounty(destinationBountyId);
-		if (!sourceBounty) {
+		if (!destinationBounty) {
 			modalSubmission.reply({ content: "The second bounty you selected appears to have been taken down before the swap could be resolved.", flags: MessageFlags.Ephemeral });
 			return;
 		}
@@ -65,12 +66,14 @@ export default new SubcommandFunctionality("swap", "Swap the rewards of two ever
 
 		if (theater.company.hasBountyBoard()) {
 			const reloadedBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
-			const hunterIdMap = {};
+			const hunterIdMap: Record<string, Set<string>> = {};
 			for (const bounty of reloadedBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
 			modalSubmission.guild.channels.fetch(theater.company.bountyBoardId).then(bountyBoard => {
-				refreshEvergreenBountiesThread(bountyBoard, reloadedBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+				if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(modalSubmission.guild.members.me)) {
+					refreshEvergreenBountiesThread(bountyBoard, reloadedBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+				}
 			})
 		} else if (!modalSubmission.member.manageable) {
 			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
