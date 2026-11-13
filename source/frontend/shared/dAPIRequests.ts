@@ -66,7 +66,7 @@ export const auditReasonBountyComplete = "bounty marked completed by poster";
  *
  * auditLogReason the reason to group all changes under in the server's audit log
  */
-export async function refreshBountyBoardThread(starterMessage: Message, { title, embed }: { title: string; embed: EmbedBuilder; }, auditLogReason: string) {
+export async function refreshBountyBoardThread(starterMessage: Message, { title, embed }: { title?: string; embed: EmbedBuilder; }, auditLogReason: string) {
 	if (starterMessage.channel.isDMBased()) {
 		return;
 	}

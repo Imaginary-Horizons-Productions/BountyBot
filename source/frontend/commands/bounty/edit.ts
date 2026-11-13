@@ -1,11 +1,11 @@
 import { ActionRowBuilder, bold, ComponentType, MessageFlags, PermissionFlagsBits, StringSelectMenuBuilder, unorderedList } from "discord.js";
 import type { DatabaseTypes } from "../../../database";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
-import { BountyState } from "../../../shared/types.ts";
+import { BountyState, isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, bountyScheduledEventPayload, butIgnoreInteractionCollectorErrors, commandMention, editBountyModalAndSubmissionOptions, getBountyBoardThread, refreshBountyBoardThread, selectOptionsFromBounties, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared/index.ts";
 import { ensureHunterHasOpenBounty } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("edit", "Edit the title, description, image, or time of one of your bounties",
 	ensureHunterHasOpenBounty(async function executeSubcommand(interaction, theater, isDevMode, logicLayer, openBounties) {
 		interaction.reply({
@@ -36,6 +36,9 @@ export default new SubcommandFunctionality("edit", "Edit the title, description,
 			const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(collectedInteraction.guild.scheduledEvents), false, interaction.id);
 			collectedInteraction.showModal(modal);
 			return interaction.awaitModalSubmit(submissionOptions).then(async modalSubmission => {
+				if (modalSubmission.channel === null) {
+					return;
+				}
 				await bounty.reload();
 				const errors = [];
 
@@ -81,7 +84,7 @@ export default new SubcommandFunctionality("edit", "Edit the title, description,
 
 				let event = null;
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, startTimestamp, endTimestamp, description, updatePayload.attachmentURL);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, startTimestamp, endTimestamp, updatePayload.attachmentURL, description);
 					if (bounty.scheduledEventId) {
 						event = await modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 					} else {
@@ -95,15 +98,18 @@ export default new SubcommandFunctionality("edit", "Edit the title, description,
 				await bounty.update(updatePayload);
 
 				const embed = bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bountyId), event);
-				modalSubmission.update({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [embed], components: [] });
+				modalSubmission.reply({ content: `Bounty edited! You can use ${commandMention("bounty showcase")} to let other bounty hunters know about the changes.`, embeds: [embed] });
 
 				// update bounty board
 				const auditLogReason = "bounty edited by poster";
 				const bountyThread = await getBountyBoardThread(modalSubmission.guild, theater.company.bountyBoardId, bounty.postingId);
 				if (bountyThread) {
-					if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
-						refreshBountyBoardThread(await bountyThread.fetchStarterMessage(), { embed }, auditLogReason);
-						await unarchiveAndUnlockThread(bountyThread, auditLogReason);
+					if (modalSubmission.guild.members.me?.permissions.has(PermissionFlagsBits.ManageThreads)) {
+						const starterMessage = await bountyThread.fetchStarterMessage();
+						if (isNotNull(starterMessage)) {
+							refreshBountyBoardThread(starterMessage, { embed }, auditLogReason);
+							await unarchiveAndUnlockThread(bountyThread, auditLogReason);
+						}
 					}
 					if (bountyThread.sendable) {
 						bountyThread.send({ content: "This bounty was edited.", flags: MessageFlags.SuppressNotifications });

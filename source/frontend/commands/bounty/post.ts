@@ -180,7 +180,7 @@ export default new SubcommandFunctionality("post", "Post your own bounty (+1 XP)
 
 				let event = null;
 				if (startTimestamp && endTimestamp && rawBounty.slotNumber !== undefined && isNotNull(rawBounty.attachmentURL)) {
-					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, rawBounty.slotNumber, startTimestamp, endTimestamp, description, rawBounty.attachmentURL);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, rawBounty.slotNumber, startTimestamp, endTimestamp, rawBounty.attachmentURL ?? null, description);
 					if (isNotNull(modalSubmission.guild.members.me) && modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.CreateEvents)) {
 						event = await modalSubmission.guild.scheduledEvents.create(eventPayload);
 						rawBounty.scheduledEventId = event.id;

@@ -113,7 +113,7 @@ export function bountyControlPanelSelectRow(bountyId: string) {
 	]
 }
 
-export function bountyScheduledEventPayload(title: string, posterName: string, slotNumber: number, startTimestamp: number, endTimestamp: number, description?: string, imageURL?: string) {
+export function bountyScheduledEventPayload(title: string, posterName: string, slotNumber: number, startTimestamp: number, endTimestamp: number, imageURL: string | null, description?: string) {
 	const payload: GuildScheduledEventCreateOptions = {
 		name: `Bounty: ${title}`,
 		scheduledStartTime: startTimestamp * 1000,
@@ -169,19 +169,21 @@ export function selectOptionsFromRanks(ranks: DatabaseTypes.Rank[], allGuildRole
 	}).slice(0, SelectMenuLimits.MaximumOptionsLength);
 }
 
+const editBountyModalInputIds = {
+	title: "title",
+	description: "description",
+	image: "image",
+	startTimestamp: "startTimestamp",
+	endTimestamp: "endTimestamp"
+} as const;
 /** key for constructing the ModalBuilder's customId uniquely */
 export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty, bountyScheduledEvent: GuildScheduledEvent | null, isEvergreen: boolean, key: string) {
-	const inputIds: { title: string; description: string; image: string; startTimestamp?: string; endTimestamp?: string; } = {
-		title: "title",
-		description: "description",
-		image: "image"
-	};
 	const modal = new ModalBuilder().setCustomId(`${SKIP_INTERACTION_HANDLING}${SAFE_DELIMITER}${key}`)
 		.setTitle(truncateTextToLength(`Edit Bounty: ${bounty.title}`, ModalLimits.MaximumTitleCharacters))
 		.addLabelComponents(
 			new LabelBuilder().setLabel("Title")
 				.setTextInputComponent(
-					new TextInputBuilder().setCustomId(inputIds.title)
+					new TextInputBuilder().setCustomId(editBountyModalInputIds.title)
 						.setRequired(false)
 						.setStyle(TextInputStyle.Short)
 						.setPlaceholder("Most Discord markdown allowed...")
@@ -190,7 +192,7 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 			new LabelBuilder().setLabel("Description")
 				.setDescription("A detailed description of the bounty. Leave empty to clear.")
 				.setTextInputComponent(
-					new TextInputBuilder().setCustomId(inputIds.description)
+					new TextInputBuilder().setCustomId(editBountyModalInputIds.description)
 						.setRequired(false)
 						.setStyle(TextInputStyle.Paragraph)
 						.setPlaceholder(isEvergreen ? "Bounties with clear instructions are easier to complete..." : "Get a 1 XP bonus on completion for the following: description, image, timestamps")
@@ -199,18 +201,16 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 			new LabelBuilder().setLabel("Image")
 				.setDescription("A diagram or splash image for the bounty. Reupload to keep.")
 				.setFileUploadComponent(
-					new FileUploadBuilder().setCustomId(inputIds.image)
+					new FileUploadBuilder().setCustomId(editBountyModalInputIds.image)
 						.setRequired(false)
 				)
 		);
 	if (!isEvergreen) {
-		inputIds.startTimestamp = "startTimestamp";
-		inputIds.endTimestamp = "endTimestamp";
-		const eventStartComponent = new TextInputBuilder().setCustomId(inputIds.startTimestamp)
+		const eventStartComponent = new TextInputBuilder().setCustomId(editBountyModalInputIds.startTimestamp)
 			.setRequired(false)
 			.setStyle(TextInputStyle.Short)
 			.setPlaceholder("Required if making an event with the bounty");
-		const eventEndComponent = new TextInputBuilder().setCustomId(inputIds.endTimestamp)
+		const eventEndComponent = new TextInputBuilder().setCustomId(editBountyModalInputIds.endTimestamp)
 			.setRequired(false)
 			.setStyle(TextInputStyle.Short)
 			.setPlaceholder("Required if making an event with the bounty");
@@ -229,7 +229,7 @@ export function editBountyModalAndSubmissionOptions(bounty: DatabaseTypes.Bounty
 		)
 	}
 	const submissionOptions: AwaitModalSubmitOptions<ModalSubmitInteraction> = { filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") };
-	return { modal, inputIds, submissionOptions };
+	return { modal, inputIds: editBountyModalInputIds, submissionOptions };
 }
 
 /** The version embed lists the following: changes in the most recent update, known issues in the most recent update, and links to support the project */

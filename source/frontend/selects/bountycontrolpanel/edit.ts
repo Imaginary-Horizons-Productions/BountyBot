@@ -54,7 +54,7 @@ export default new SelectOptionFunctionality("edit",
 
 				let event = null;
 				if (startTimestamp && endTimestamp) {
-					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, startTimestamp, endTimestamp, description, updatePayload.attachmentURL);
+					const eventPayload = bountyScheduledEventPayload(title, modalSubmission.member.displayName, bounty.slotNumber, startTimestamp, endTimestamp, updatePayload.attachmentURL, description);
 					if (bounty.scheduledEventId) {
 						event = await modalSubmission.guild.scheduledEvents.edit(bounty.scheduledEventId, eventPayload);
 					} else {
