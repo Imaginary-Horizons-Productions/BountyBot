@@ -1,14 +1,18 @@
-import { MessageFlags, PermissionFlagsBits } from "discord.js";
+import { bold, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SelectOptionFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, bountyScheduledEventPayload, editBountyModalAndSubmissionOptions, refreshBountyBoardThread, textsHaveAutoModInfraction, unarchiveAndUnlockThread, validateScheduledEventTimestamps } from "../../shared/index.ts";
 import { ensureBountyExistsAndInteractorIsPoster } from "./_earlyOuts.ts";
-//TODONOW type errors
+
 export default new SelectOptionFunctionality("edit",
 	ensureBountyExistsAndInteractorIsPoster(
 		async (interaction, theater, isDevMode, logicLayer, [bounty]) => {
 			const { modal, inputIds, submissionOptions } = editBountyModalAndSubmissionOptions(bounty, await bounty.getScheduledEvent(interaction.guild.scheduledEvents), false, interaction.id);
 			interaction.showModal(modal).then(() => interaction.awaitModalSubmit(submissionOptions)).then(async modalSubmission => {
+				if (modalSubmission.channel === null) {
+					return;
+				}
 				await bounty.reload();
 				const errors = [];
 
@@ -69,7 +73,7 @@ export default new SelectOptionFunctionality("edit",
 
 				// update bounty board
 				const auditLogReason = "bounty edited by poster";
-				if (modalSubmission.guild.members.me.permissions.has(PermissionFlagsBits.ManageThreads)) {
+				if (modalSubmission.guild.members.me?.permissions.has(PermissionFlagsBits.ManageThreads) && isNotNull(modalSubmission.message) && modalSubmission.channel.isThread()) {
 					refreshBountyBoardThread(modalSubmission.message, { title: bounty.title, embed: bountyEmbed(bounty, modalSubmission.member, theater.hunter.getLevel(theater.company.xpCoefficient), false, theater.company, await logicLayer.bounties.getHunterIdSet(bounty.id), event) }, auditLogReason);
 					await unarchiveAndUnlockThread(modalSubmission.channel, "Unarchived to update posting");
 				}
