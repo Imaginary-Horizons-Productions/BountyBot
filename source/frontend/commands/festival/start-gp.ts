@@ -28,7 +28,7 @@ export default new SubcommandFunctionality("start-gp", "Start a GP multiplier fe
 			const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
 			if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(interaction.guild.members.me)) {
 				const evergreenBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
-				const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
+				const hunterIdMap: Record<string, Set<Snowflake>> = {};
 				for (const bounty of evergreenBounties) {
 					hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 				}

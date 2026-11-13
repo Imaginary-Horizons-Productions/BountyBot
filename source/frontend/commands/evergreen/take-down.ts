@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ChannelType, ComponentType, MessageFlags, StringSelectMenuBuilder } from "discord.js";
+import { ActionRowBuilder, ChannelType, ComponentType, MessageFlags, type Snowflake, StringSelectMenuBuilder } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { isNotNull } from "../../../shared/types.ts";
@@ -33,7 +33,7 @@ export default new SubcommandFunctionality("take-down", "Take down one of the se
 				if (isNotNull(bountyBoard)) {
 					if (evergreenBounties.length > 0 && bountyBoard.type === ChannelType.GuildForum && isNotNull(interaction.guild.members.me)) {
 						const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(theater.company.id)));
-						const hunterIdMap: Record<string, Set<string>> = {};
+						const hunterIdMap: Record<string, Set<Snowflake>> = {};
 						for (const bounty of evergreenBounties) {
 							hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 						}

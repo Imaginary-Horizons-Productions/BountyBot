@@ -1,4 +1,4 @@
-import { ChannelType, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, TextDisplayBuilder, bold } from "discord.js";
+import { ChannelType, LabelBuilder, MessageFlags, ModalBuilder, type Snowflake, StringSelectMenuBuilder, TextDisplayBuilder, bold } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
@@ -66,7 +66,7 @@ export default new SubcommandFunctionality("swap", "Swap the rewards of two ever
 
 		if (theater.company.hasBountyBoard()) {
 			const reloadedBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
-			const hunterIdMap: Record<string, Set<string>> = {};
+			const hunterIdMap: Record<string, Set<Snowflake>> = {};
 			for (const bounty of reloadedBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}

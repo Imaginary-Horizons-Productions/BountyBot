@@ -29,7 +29,7 @@ export default new SubcommandFunctionality("start-xp", "Start an XP multiplier f
 				return;
 			}
 			const existingBounties = await logicLayer.bounties.findEvergreenBounties(theater.company.id);
-			const hunterIdMap: Record<Snowflake, Set<Snowflake>> = {};
+			const hunterIdMap: Record<string, Set<Snowflake>> = {};
 			for (const bounty of existingBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}

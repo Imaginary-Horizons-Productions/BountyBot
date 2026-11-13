@@ -1,4 +1,4 @@
-import { ChannelType, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } from "discord.js";
+import { ChannelType, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder, type Snowflake } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
@@ -135,7 +135,7 @@ export default new SubcommandFunctionality("complete", "Distribute rewards for t
 				break;
 		}
 		if (theater.company.hasBountyBoard()) {
-			const hunterIdMap: Record<string, Set<string>> = {};
+			const hunterIdMap: Record<string, Set<Snowflake>> = {};
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}

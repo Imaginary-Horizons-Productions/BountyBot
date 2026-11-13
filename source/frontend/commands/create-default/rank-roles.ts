@@ -1,4 +1,4 @@
-import { GuildPremiumTier, MessageFlags, resolveColor, Role, RoleCreateOptions } from "discord.js";
+import { GuildPremiumTier, MessageFlags, resolveColor, Role, type RoleCreateOptions } from "discord.js";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 
 const auditLogReason = "/create-default rank-roles";

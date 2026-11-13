@@ -1,5 +1,5 @@
 import { EmbedLimits } from "@sapphire/discord.js-utilities";
-import { ChannelType, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ChannelType, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, type Snowflake, TextInputBuilder, TextInputStyle } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { MAX_EVERGREEN_SLOTS, SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
@@ -95,7 +95,7 @@ export default new SubcommandFunctionality("post", `Post an evergreen bounty, li
 			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
 			await interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] }));
 			if (theater.company.hasBountyBoard()) {
-				const hunterIdMap: Record<string, Set<string>> = {};
+				const hunterIdMap: Record<string, Set<Snowflake>> = {};
 				for (const bounty of existingBounties) {
 					hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 				}

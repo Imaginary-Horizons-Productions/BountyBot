@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ChannelType, ComponentType, MessageFlags, StringSelectMenuBuilder, unorderedList } from "discord.js";
+import { ActionRowBuilder, ChannelType, ComponentType, MessageFlags, type Snowflake, StringSelectMenuBuilder, unorderedList } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { BountyState, isNotNull } from "../../../shared/types.ts";
@@ -80,7 +80,7 @@ export default new SubcommandFunctionality("edit", "Change the name, description
 				// update bounty board
 				const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(modalSubmission.guild.id)));
 				if (theater.company.hasBountyBoard()) {
-					const hunterIdMap: Record<string, Set<string>> = {};
+					const hunterIdMap: Record<string, Set<Snowflake>> = {};
 					for (const bounty of evergreenBounties) {
 						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 					}
