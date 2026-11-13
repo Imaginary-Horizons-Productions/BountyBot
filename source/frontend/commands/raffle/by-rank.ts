@@ -2,7 +2,7 @@ import { ActionRowBuilder, ComponentType, DiscordjsErrorCodes, MessageFlags, Str
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { butIgnoreCantDirectMessageThisUserErrors, raffleResultEmbed, selectOptionsFromRanks } from "../../shared/index.ts";
-//TODONOW type errors
+
 export default new SubcommandFunctionality("by-rank", "Select a user at or above a particular rank",
 	async function executeSubcommand(interaction, theater, isDevMode, logicLayer) {
 		const ranks = await logicLayer.ranks.findAllRanks(interaction.guild.id);
@@ -24,7 +24,7 @@ export default new SubcommandFunctionality("by-rank", "Select a user at or above
 			flags: MessageFlags.Ephemeral,
 			withResponse: true
 		}).then(response => response.resource?.message?.awaitMessageComponent({ time: 120000, componentType: ComponentType.StringSelect })).then(async collectedInteraction => {
-			if (!collectedInteraction) {
+			if (!collectedInteraction || collectedInteraction.channel === null) {
 				interaction.followUp({ content: "An error occured that prevented BountyBot from receiving a response from Discord.", flags: MessageFlags.Ephemeral });
 				return;
 			}
@@ -43,6 +43,9 @@ export default new SubcommandFunctionality("by-rank", "Select a user at or above
 				return;
 			}
 			const winner = eligibleMembers.at(Math.floor(Math.random() * eligibleMembers.size));
+			if (winner === undefined) {
+				return;
+			}
 			collectedInteraction.editReply({ components: [] });
 			collectedInteraction.channel.send({ embeds: [raffleResultEmbed(hunterMap.get(winner.id).profileColor, collectedInteraction.guild, theater.company.raffleThumbnailURL, winner, `Rank: ${rank.getMention(rankIndex)} or higher (${eligibleMembers.size} eligible entrant${eligibleMembers.size === 1 ? "" : "s"})`)] });
 			theater.company.update("nextRaffleString", null);
@@ -54,6 +57,7 @@ export default new SubcommandFunctionality("by-rank", "Select a user at or above
 			if (error.name === "SequelizeInstanceError") {
 				interaction.user.send({ content: "A raffle by ranks could not be started because there was an error with finding the rank you selected. Please try again." })
 					.catch(butIgnoreCantDirectMessageThisUserErrors);
+				// @ts-expect-error remove this check by validating emoji on rank storage instead
 			} else if (error.rawError && Object.values(error.rawError.errors.components).some(row => Object.values(row.components).some(component => Object.values(component.options).some(option => option.emoji.name._errors.some(error => error.code == "BUTTON_COMPONENT_INVALID_EMOJI"))))) {
 				interaction.user.send({ content: "A raffle by ranks could not be started because this server has a rank with a non-emoji as a rankmoji." })
 					.catch(butIgnoreCantDirectMessageThisUserErrors);
