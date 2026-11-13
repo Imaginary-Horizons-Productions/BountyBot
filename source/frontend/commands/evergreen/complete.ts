@@ -1,12 +1,12 @@
-import { LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } from "discord.js";
+import { ChannelType, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
-import type { CompanyReciept, HunterReceipt } from "../../../shared/types.ts";
+import { isNotNull, type CompanyReciept, type HunterReceipt } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, consolidateHunterReceipts, goalCompletionEmbed, refreshEvergreenBountiesThread, refreshReferenceChannelScoreboardOverall, refreshReferenceChannelScoreboardSeasonal, rewardSummary, selectOptionsFromBounties, sendRewardMessage, syncRankRoles } from "../../shared/index.ts";
 import { ensureCompanyHasEnoughOpenEvergreenBounties } from "../_earlyOuts.ts";
-//TODONOW type errors
+
 const labelIdBountyId = "bounty-id";
 const labelIdBountyHunters = "bounty-hunters";
 const maxHunters = 10;
@@ -32,14 +32,21 @@ export default new SubcommandFunctionality("complete", "Distribute rewards for t
 		await interaction.showModal(modal);
 		const modalSubmission = await interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") })
 			.catch(butIgnoreInteractionCollectorErrors);
-		if (!modalSubmission) {
+		if (!modalSubmission || modalSubmission.guild.members.me === null) {
 			return;
 		}
 
 		const bountyId = modalSubmission.fields.getStringSelectValues(labelIdBountyId)[0];
 		const bounty = await logicLayer.bounties.findBounty(bountyId);
+		if (bounty === null) {
+			return;
+		}
 		const validatedHunters = new Map();
-		for (const [memberId, guildMember] of modalSubmission.fields.getSelectedMembers(labelIdBountyHunters)) {
+		const selectedMemberCollection = modalSubmission.fields.getSelectedMembers(labelIdBountyHunters);
+		if (selectedMemberCollection === null) {
+			return;
+		}
+		for (const [memberId, guildMember] of selectedMemberCollection) {
 			const { hunter: [hunter] } = await logicLayer.hunters.findOrCreateBountyHunter(memberId, theater.company.id);
 			if (isDevMode || (!guildMember.user.bot && !hunter.isBanned)) {
 				validatedHunters.set(memberId, hunter);
@@ -74,8 +81,14 @@ export default new SubcommandFunctionality("complete", "Distribute rewards for t
 		for (const userId of validatedHunters.keys()) {
 			const hunterReceipt: HunterReceipt = { xp: bountyBaseValue, xpMultiplier: xpMultiplierString };
 			let hunter = await logicLayer.hunters.findOneHunter(userId, theater.company.id);
+			if (hunter === null) {
+				continue;
+			}
 			const previousHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
 			hunter = await hunter.increment({ othersFinished: 1, xp: bountyValue }).then(hunter => hunter.reload());
+			if (hunter === null) {
+				continue;
+			}
 			const currentHunterLevel = hunter.getLevel(theater.company.xpCoefficient);
 			if (currentHunterLevel > previousHunterLevel) {
 				hunterReceipt.levelUp = { achievedLevel: currentHunterLevel, previousLevel: previousHunterLevel };
@@ -95,18 +108,18 @@ export default new SubcommandFunctionality("complete", "Distribute rewards for t
 		if (previousCompanyLevel < currentCompanyLevel) {
 			companyReceipt.levelUp = currentCompanyLevel;
 		}
-		const announcementPayload = {
-			embeds: [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, theater.company, finalContributorIds, null, goalProgress)],
-			withResponse: true
-		};
 		if (goalProgress.totalGP > 0) {
 			companyReceipt.gp = goalProgress.totalGP;
 			companyReceipt.gpMultiplier = theater.company.festivalMultiplierString("gp");
 		}
+		const embeds = [bountyEmbed(bounty, modalSubmission.guild.members.me, currentCompanyLevel, false, theater.company, finalContributorIds, null, goalProgress)];
 		if (goalProgress.goalCompleted) {
-			announcementPayload.embeds.push(goalCompletionEmbed([...finalContributorIds.keys()]));
+			embeds.push(goalCompletionEmbed([...finalContributorIds.keys()]));
 		}
-		const response = await modalSubmission.reply(announcementPayload);
+		const response = await modalSubmission.reply({ embeds, withResponse: true });
+		if (response.resource === null || response.resource.message === null) {
+			return;
+		}
 		const descendingRanks = await logicLayer.ranks.findAllRanks(theater.company.id);
 		const participationMap = await logicLayer.seasons.getParticipationMap(season.id);
 		const seasonalHunterReceipts = await logicLayer.seasons.updatePlacementsAndRanks(participationMap, descendingRanks, await modalSubmission.guild.roles.fetch());
@@ -122,12 +135,13 @@ export default new SubcommandFunctionality("complete", "Distribute rewards for t
 				break;
 		}
 		if (theater.company.hasBountyBoard()) {
-			const hunterIdMap = {};
+			const hunterIdMap: Record<string, Set<string>> = {};
 			for (const bounty of evergreenBounties) {
 				hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 			}
 			const bountyBoard = await modalSubmission.guild.channels.fetch(theater.company.bountyBoardId);
-			refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
+			if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum && isNotNull(modalSubmission.guild.members.me))
+				refreshEvergreenBountiesThread(bountyBoard, evergreenBounties, theater.company, currentCompanyLevel, modalSubmission.guild.members.me, hunterIdMap);
 		} else if (!modalSubmission.member.manageable) {
 			modalSubmission.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
 		}
