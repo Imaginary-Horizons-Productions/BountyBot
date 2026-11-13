@@ -1,11 +1,12 @@
 import { EmbedLimits } from "@sapphire/discord.js-utilities";
-import { FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ChannelType, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { DatabaseTypes } from "../../../database/index.ts";
 import { MAX_EVERGREEN_SLOTS, SKIP_INTERACTION_HANDLING } from "../../../shared/constants.ts";
 import { timeConversion } from "../../../shared/index.ts";
+import { isNotNull } from "../../../shared/types.ts";
 import { SubcommandFunctionality } from "../../classes/index.ts";
 import { addCompanyAnnouncementPrefix, bountyEmbed, butIgnoreInteractionCollectorErrors, commandMention, refreshEvergreenBountiesThread, textsHaveAutoModInfraction } from "../../shared/index.ts";
-//TODONOW type errors
+
 const labelIdTitle = "title";
 const labelIdDescription = "description";
 const labelIdImage = "image";
@@ -53,6 +54,9 @@ export default new SubcommandFunctionality("post", `Post an evergreen bounty, li
 		interaction.showModal(modal);
 
 		return interaction.awaitModalSubmit({ filter: incoming => incoming.customId === modal.data.custom_id, time: timeConversion(5, "m", "ms") }).then(async interaction => {
+			if (interaction.channel === null || interaction.guild.members.me === null) {
+				return;
+			}
 			const title = interaction.fields.getTextInputValue(labelIdTitle);
 			const description = interaction.fields.getTextInputValue(labelIdDescription);
 
@@ -89,19 +93,22 @@ export default new SubcommandFunctionality("post", `Post an evergreen bounty, li
 
 			// post in bounty board forum
 			const currentCompanyLevel = DatabaseTypes.Company.getLevel(theater.company.getXP(await logicLayer.hunters.getCompanyHunterMap(interaction.guild.id)));
-			interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] })).then(async () => {
-				if (theater.company.hasBountyBoard()) {
-					const hunterIdMap = {};
-					for (const bounty of existingBounties) {
-						hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
-					}
-					interaction.guild.channels.fetch(theater.company.bountyBoardId).then(bountyBoard => refreshEvergreenBountiesThread(bountyBoard, existingBounties, theater.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap)).then(thread => {
-						bounty.update({ postingId: thread.id });
-					});
-				} else if (!interaction.member.manageable) {
-					interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
+			await interaction.reply(addCompanyAnnouncementPrefix(theater.company, { content: `A new evergreen bounty has been posted:`, embeds: [bountyEmbed(bounty, interaction.guild.members.me, currentCompanyLevel, false, theater.company, new Set())] }));
+			if (theater.company.hasBountyBoard()) {
+				const hunterIdMap: Record<string, Set<string>> = {};
+				for (const bounty of existingBounties) {
+					hunterIdMap[bounty.id] = await logicLayer.bounties.getHunterIdSet(bounty.id);
 				}
-			});
+				const bountyBoard = await interaction.guild.channels.fetch(theater.company.bountyBoardId);
+				if (isNotNull(bountyBoard) && bountyBoard.type === ChannelType.GuildForum) {
+					const thread = await refreshEvergreenBountiesThread(bountyBoard, existingBounties, theater.company, currentCompanyLevel, interaction.guild.members.me, hunterIdMap)
+					if (thread) {
+						bounty.update({ postingId: thread.id });
+					}
+				}
+			} else if (!interaction.member.manageable) {
+				interaction.followUp({ content: `Looks like your server doesn't have a bounty board channel. Make one with ${commandMention("create-default bounty-board-forum")}?`, flags: MessageFlags.Ephemeral });
+			}
 		}).catch(butIgnoreInteractionCollectorErrors);
 	}
 );
